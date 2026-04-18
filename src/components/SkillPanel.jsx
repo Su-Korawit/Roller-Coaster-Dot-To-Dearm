@@ -58,7 +58,7 @@ export default function SkillPanel({ onClose, onOpenCreateTask }) {
   const equippedActive  = ACTIVE_SKILLS.find((s) => s.id === equippedActiveSkill) || null
 
   return (
-    <div className="absolute inset-0 z-40 flex flex-col overflow-hidden" style={{ top: '8%' }}>
+    <div className="absolute inset-0 z-50 flex flex-col overflow-hidden" style={{ top: '8%' }}>
       {/* Drag handle */}
       <div className="flex justify-center pt-3 pb-1">
         <div className="w-10 h-1 bg-gray-300 rounded-full" />

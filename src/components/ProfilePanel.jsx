@@ -1,11 +1,12 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Settings, Share2 } from 'lucide-react'
+import { Settings, Share2, Loader2 } from 'lucide-react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { useUserStore } from '../stores/useUserStore'
 import { useSelectStore } from '../stores/useSelectStore'
 import { useTaskStore } from '../stores/useTaskStore'
-import { careers, masteries, universities } from '../data/onboardingData'
+import { careers, masteries, universities, programs } from '../data/onboardingData'
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
 
@@ -77,16 +78,39 @@ function PortfolioCircle({ label, image, progress, isActive, onPress, onLongPres
 // Modal uses absolute positioning to avoid backdrop-blur stacking context breaking fixed
 function InlineModal({ title, children, onClose }) {
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-2xl p-5 w-full max-w-xs space-y-3 shadow-xl">
-        <p className="pixel-font text-[10px] text-gray-700">{title}</p>
-        {children}
+    <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white rounded-2xl p-5 w-full max-w-xs shadow-xl flex flex-col max-h-[80vh]">
+        <p className="pixel-font text-[10px] text-gray-700 mb-3 shrink-0">{title}</p>
+        <div className="overflow-y-auto flex-1 space-y-3 pr-1 pb-1">
+          {children}
+        </div>
         <button
           onClick={onClose}
-          className="w-full text-gray-400 text-sm py-1 hover:text-gray-600"
+          className="w-full text-gray-400 text-sm py-2 hover:text-gray-600 shrink-0 mt-2"
         >
           Cancel
         </button>
+      </div>
+    </div>
+  )
+}
+
+// Bottom-sheet style panel for Add / Edit journey items
+function JourneySheet({ title, onClose, children }) {
+  return (
+    <div className="absolute inset-0 z-[60] flex flex-col justify-end">
+      {/* Backdrop — covers entire panel including nav area */}
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      {/* Sheet */}
+      <div className="relative bg-white rounded-t-[32px] px-6 pt-4 pb-10 shadow-2xl max-h-[85vh] flex flex-col">
+        {/* Drag handle */}
+        <div className="flex justify-center mb-3 shrink-0">
+          <div className="w-10 h-1 bg-gray-200 rounded-full" />
+        </div>
+        <h3 className="text-center font-bold text-gray-800 text-base mb-5 shrink-0">{title}</h3>
+        <div className="overflow-y-auto flex-1 space-y-3 pb-4">
+          {children}
+        </div>
       </div>
     </div>
   )
@@ -116,13 +140,14 @@ export default function ProfilePanel({ onClose }) {
     resetUser,
   } = useUserStore()
 
-  const { mbti, career, mastery, university, resetSelection } = useSelectStore()
+  const { mbti, career, mastery, university, program, resetSelection } = useSelectStore()
   const { tasks } = useTaskStore()
 
   // Resolve onboarding selections for default circle images
   const selectedCareer = careers.find((c) => c.id === career)
   const selectedMastery = masteries.find((m) => m.id === mastery)
   const selectedUniversity = universities.find((u) => u.id === university)
+  const selectedProgram = programs.find((p) => p.id === program)
 
   // Local UI state
   const [activeCategory, setActiveCategory] = useState('mastery')
@@ -136,6 +161,12 @@ export default function ProfilePanel({ onClose }) {
   // Journey edit modal state
   const [journeyModal, setJourneyModal] = useState(null) // null | { isNew, item }
   const [journeyEdit, setJourneyEdit] = useState({ title: '', desc: '' })
+
+  // AI generation state
+  const [isGenerating, setIsGenerating] = useState(false)
+
+  // Journey detail view state
+  const [viewingJourney, setViewingJourney] = useState(null)
 
   const completedTasks = tasks.filter((t) => t.completed).length
   const displayName = userName || user?.name || 'Player'
@@ -225,11 +256,61 @@ export default function ProfilePanel({ onClose }) {
     setJourneyModal(null)
   }
 
+  async function generateRoadmap() {
+    const desiredCareer = selectedCareer?.name || 'a chosen career'
+    const mbtiType = mbti || 'unknown'
+    const masteryLevel = selectedMastery?.name || 'general skills'
+    const universityName = selectedUniversity?.name || ''
+    const programName = selectedProgram?.name || ''
+    const currentSituation = [universityName, programName].filter(Boolean).join(' — ') || 'a student exploring career paths'
+
+    const prompt = `Act as an expert career and skills counselor. The user is currently in this situation: ${currentSituation}, their dream career is ${desiredCareer}, their current skill mastery level is ${masteryLevel}, and their MBTI personality type is ${mbtiType}. Generate a personalized 5-step "Mastery Journey" roadmap. The main focus MUST be on HOW to master the essential skills and overcome technical challenges for this career, tailored specifically to their ${mbtiType} learning style and their current ${masteryLevel} level. Output strictly as a JSON array of objects with 'title' and 'description' keys. Do not include markdown formatting.`
+
+    setIsGenerating(true)
+    try {
+      const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+      const result = await model.generateContent(prompt)
+      const text = result.response.text()
+
+      // Strip any accidental markdown code fences
+      const cleaned = text.replace(/```json|```/gi, '').trim()
+
+      let parsed
+      try {
+        parsed = JSON.parse(cleaned)
+      } catch (parseErr) {
+        console.error('Gemini JSON parse error:', parseErr, '\nRaw response:', text)
+        alert('AI returned an unexpected format. Please try again.')
+        return
+      }
+
+      if (!Array.isArray(parsed)) {
+        alert('AI returned an unexpected format. Please try again.')
+        return
+      }
+
+      const journeyItems = parsed.map((step) => ({
+        id: `journey-ai-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        title: step.title || 'Step',
+        desc: step.description || '',
+      }))
+
+      setJourneys('mastery', journeyItems)
+      setActiveCategory('mastery')
+    } catch (err) {
+      console.error('Gemini API error:', err)
+      alert('Failed to connect to AI. Please check your API key or network.')
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
     <div
-      className="absolute inset-0 z-40 flex flex-col bg-white/96 backdrop-blur-sm rounded-t-4xl overflow-hidden"
+      className="absolute inset-0 z-50 flex flex-col bg-white/96 backdrop-blur-sm rounded-t-4xl overflow-hidden"
       style={{ top: '6%' }}
     >
       {/* Handle */}
@@ -335,9 +416,27 @@ export default function ProfilePanel({ onClose }) {
 
         {/* Journey section */}
         <div>
-          <p className="pixel-font text-[9px] text-gray-500 mb-2">
-            Journey of {circleData[activeCategory].label}
-          </p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="pixel-font text-[9px] text-gray-500">
+              Journey of {circleData[activeCategory].label}
+            </p>
+            {activeCategory === 'mastery' && (
+              <button
+                onClick={generateRoadmap}
+                disabled={isGenerating}
+                className="flex items-center gap-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] rounded-xl px-3 py-1.5 font-semibold disabled:opacity-60 disabled:cursor-not-allowed transition-opacity"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 size={11} className="animate-spin" />
+                    AI is thinking...
+                  </>
+                ) : (
+                  '✨ Generate AI Roadmap'
+                )}
+              </button>
+            )}
+          </div>
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="journey-list" direction="horizontal">
               {(provided) => (
@@ -353,13 +452,24 @@ export default function ProfilePanel({ onClose }) {
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          onClick={() => openEditJourney(item)}
-                          className={`flex-shrink-0 w-20 h-20 rounded-xl bg-purple-50 border border-purple-100 flex flex-col items-center justify-center p-2 cursor-pointer transition-shadow ${snapshot.isDragging ? 'shadow-lg ring-2 ring-purple-300' : ''}`}
+                          className={`relative flex-shrink-0 w-20 h-20 rounded-xl bg-purple-50 border border-purple-100 transition-shadow ${snapshot.isDragging ? 'shadow-lg ring-2 ring-purple-300' : ''}`}
                         >
-                          <span className="text-[9px] font-semibold text-gray-700 text-center leading-tight line-clamp-4">
-                            {item.title || '—'}
-                          </span>
+                          {/* Dedicated drag handle — does NOT interfere with click */}
+                          <div
+                            {...provided.dragHandleProps}
+                            className="absolute top-1 right-1 text-gray-300 hover:text-gray-400 cursor-grab active:cursor-grabbing leading-none text-[10px] select-none"
+                          >
+                            ⠿
+                          </div>
+                          {/* Clickable area — opens detail view */}
+                          <button
+                            onClick={() => setViewingJourney(item)}
+                            className="w-full h-full flex items-center justify-center p-2"
+                          >
+                            <span className="text-[9px] font-semibold text-gray-700 text-center leading-tight line-clamp-4">
+                              {item.title || '—'}
+                            </span>
+                          </button>
                         </div>
                       )}
                     </Draggable>
@@ -386,6 +496,27 @@ export default function ProfilePanel({ onClose }) {
           ✏️ Edit your path
         </button>
       </div>
+
+      {/* Journey Detail View Modal */}
+      {viewingJourney && (
+        <InlineModal
+          title={viewingJourney.title || 'Journey Step'}
+          onClose={() => setViewingJourney(null)}
+        >
+          <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+            {viewingJourney.desc || viewingJourney.description || 'No description available.'}
+          </p>
+          <button
+            onClick={() => {
+              openEditJourney(viewingJourney)
+              setViewingJourney(null)
+            }}
+            className="w-full bg-[#a78bda] text-white rounded-xl py-2 text-sm"
+          >
+            Edit
+          </button>
+        </InlineModal>
+      )}
 
       {/* Portfolio Edit Modal */}
       {portfolioModal && (
@@ -421,9 +552,9 @@ export default function ProfilePanel({ onClose }) {
         </InlineModal>
       )}
 
-      {/* Journey Edit Modal */}
+      {/* Journey Add / Edit Bottom Sheet */}
       {journeyModal && (
-        <InlineModal
+        <JourneySheet
           title={journeyModal.isNew ? 'Add Journey' : 'Edit Journey'}
           onClose={() => setJourneyModal(null)}
         >
@@ -431,30 +562,36 @@ export default function ProfilePanel({ onClose }) {
             value={journeyEdit.title}
             onChange={(e) => setJourneyEdit({ ...journeyEdit, title: e.target.value })}
             placeholder="Title"
-            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-purple-400"
+            className="w-full bg-gray-50 border-0 rounded-2xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-purple-400"
           />
           <textarea
             value={journeyEdit.desc}
             onChange={(e) => setJourneyEdit({ ...journeyEdit, desc: e.target.value })}
             placeholder="Description"
-            rows={3}
-            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-purple-400 resize-none"
+            rows={4}
+            className="w-full bg-gray-50 border-0 rounded-2xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-purple-400 resize-none"
           />
           <button
             onClick={handleSaveJourney}
-            className="w-full bg-[#a78bda] text-white rounded-xl py-2 text-sm"
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl py-4 font-bold text-sm"
           >
             Save
           </button>
           {!journeyModal.isNew && (
             <button
               onClick={handleDeleteJourney}
-              className="w-full border border-red-200 text-red-500 rounded-xl py-2 text-sm hover:bg-red-50 transition-colors"
+              className="w-full border border-red-200 text-red-500 rounded-2xl py-3 text-sm hover:bg-red-50 transition-colors"
             >
               Delete
             </button>
           )}
-        </InlineModal>
+          <button
+            onClick={() => setJourneyModal(null)}
+            className="w-full text-gray-400 text-sm py-1 hover:text-gray-500"
+          >
+            Cancel
+          </button>
+        </JourneySheet>
       )}
     </div>
   )
