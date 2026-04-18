@@ -131,9 +131,11 @@ export default function ProfilePanel({ onClose }) {
     portfolioData,
     journeys,
     activeMasteryBlockId,
+    aiLanguage,
     setUser,
     setUserName,
     setActiveMasteryBlockId,
+    setAiLanguage,
     updatePortfolio,
     setJourneys,
     addJourneyItem,
@@ -266,7 +268,7 @@ export default function ProfilePanel({ onClose }) {
     const programName = selectedProgram?.name || ''
     const currentSituation = [universityName, programName].filter(Boolean).join(' — ') || 'a student exploring career paths'
 
-    const prompt = `Act as an expert career and skills counselor. The user is currently in this situation: ${currentSituation}, their dream career is ${desiredCareer}, their current skill mastery level is ${masteryLevel}, and their MBTI personality type is ${mbtiType}. Generate a personalized 5-step "Mastery Journey" roadmap. The main focus MUST be on HOW to master the essential skills and overcome technical challenges for this career, tailored specifically to their ${mbtiType} learning style and their current ${masteryLevel} level. Output strictly as a JSON array of objects with 'title' and 'description' keys. Do not include markdown formatting.`
+    const prompt = `Act as an expert career and skills counselor. The user is currently in this situation: ${currentSituation}, their dream career is ${desiredCareer}, their current skill mastery level is ${masteryLevel}, and their MBTI personality type is ${mbtiType}. Generate a personalized 5-step "Mastery Journey" roadmap. The main focus MUST be on HOW to master the essential skills and overcome technical challenges for this career, tailored specifically to their ${mbtiType} learning style and their current ${masteryLevel} level. Output strictly as a JSON array of objects with 'title' and 'description' keys. Do not include markdown formatting.\nIMPORTANT: Generate the content ('title', 'description', 'summary', etc.) STRICTLY in ${aiLanguage} language.`
 
     setIsGenerating(true)
     try {
@@ -389,6 +391,25 @@ export default function ProfilePanel({ onClose }) {
               >
                 Save
               </button>
+            </div>
+            {/* AI Language toggle */}
+            <div>
+              <p className="pixel-font text-[8px] text-purple-500 mb-1.5">AI Output Language</p>
+              <div className="flex gap-2">
+                {['Thai', 'English'].map((lang) => (
+                  <button
+                    key={lang}
+                    onClick={() => setAiLanguage(lang)}
+                    className={`flex-1 rounded-xl py-2 text-sm border transition-colors ${
+                      aiLanguage === lang
+                        ? 'bg-[#a78bda] border-[#a78bda] text-white font-semibold'
+                        : 'bg-white border-purple-200 text-purple-500'
+                    }`}
+                  >
+                    {lang === 'Thai' ? 'ภาษาไทย' : 'English'}
+                  </button>
+                ))}
+              </div>
             </div>
             <button
               onClick={handleLogout}

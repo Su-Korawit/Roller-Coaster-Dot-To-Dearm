@@ -38,10 +38,12 @@ export const useUserStore = create(
       portfolioData: defaultPortfolioData,
       journeys: defaultJourneys,
       activeMasteryBlockId: null,
+      aiLanguage: 'Thai',
 
       setUser: (user) => set({ user }),
       setUserName: (userName) => set({ userName }),
       setActiveMasteryBlockId: (id) => set({ activeMasteryBlockId: id }),
+      setAiLanguage: (lang) => set({ aiLanguage: lang }),
       addCoins: (amount) => set((state) => ({ coins: state.coins + amount })),
       setStreak: (streak) => set({ streak }),
 
@@ -110,7 +112,8 @@ export const useUserStore = create(
         if (!block) throw new Error('Pinned journey block not found in mastery journeys.')
 
         const progressLogs = (block.progressNotes || []).join('\n') || 'No previous progress logged yet.'
-        const prompt = `Based on the Milestone '${block.title}' and these past progress logs:\n${progressLogs}\nWhat is the specific next small step the user should take today? Output strictly as JSON with no markdown: { "title": "Task name", "description": "Short action plan", "progress_reward": 10 }`
+        const { aiLanguage } = useUserStore.getState()
+        const prompt = `Based on the Milestone '${block.title}' and these past progress logs:\n${progressLogs}\nWhat is the specific next small step the user should take today? Output strictly as JSON with no markdown: { "title": "Task name", "description": "Short action plan", "progress_reward": 10 }\nIMPORTANT: Generate the content ('title', 'description', 'summary', etc.) STRICTLY in ${aiLanguage} language.`
 
         const text = await callGemini(prompt)
         let parsed
@@ -141,7 +144,8 @@ export const useUserStore = create(
       // Evaluates a completed AI task with user reflection, appends to progressNotes
       evaluateAndCompleteTask: async (task, userReflection) => {
         const today = new Date().toLocaleDateString()
-        const prompt = `The user finished '${task.title}' and said: '${userReflection}'. Write a 1-sentence summary of this achievement starting with the date ${today}. Output strictly as JSON with no markdown: { "summary": "${today}: [achievement summary here]", "progress_inc": 10 }`
+        const { aiLanguage } = useUserStore.getState()
+        const prompt = `The user finished '${task.title}' and said: '${userReflection}'. Write a 1-sentence summary of this achievement starting with the date ${today}. Output strictly as JSON with no markdown: { "summary": "${today}: [achievement summary here]", "progress_inc": 10 }\nIMPORTANT: Generate the content ('title', 'description', 'summary', etc.) STRICTLY in ${aiLanguage} language.`
 
         // Fallback values
         let note = `${today}: ${task.title} - Completed with effort and dedication.`
@@ -178,6 +182,7 @@ export const useUserStore = create(
           portfolioData: defaultPortfolioData,
           journeys: defaultJourneys,
           activeMasteryBlockId: null,
+          aiLanguage: 'Thai',
         }),
     }),
     {
