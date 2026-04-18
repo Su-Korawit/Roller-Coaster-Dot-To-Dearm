@@ -19,6 +19,11 @@ function normalizeTask(task) {
     completed: Boolean(task.completed),
     createdAt: task.createdAt || Date.now(),
     updatedAt: task.updatedAt || null,
+    // AI-generated task fields (preserved if present)
+    isAIGenerated: task.isAIGenerated || false,
+    linkedJourneyKey: task.linkedJourneyKey || null,
+    linkedJourneyId: task.linkedJourneyId || null,
+    estimatedProgress: task.estimatedProgress ?? null,
   }
 }
 

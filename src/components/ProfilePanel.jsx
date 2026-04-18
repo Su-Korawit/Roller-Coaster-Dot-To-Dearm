@@ -130,8 +130,10 @@ export default function ProfilePanel({ onClose }) {
     userName,
     portfolioData,
     journeys,
+    activeMasteryBlockId,
     setUser,
     setUserName,
+    setActiveMasteryBlockId,
     updatePortfolio,
     setJourneys,
     addJourneyItem,
@@ -269,7 +271,8 @@ export default function ProfilePanel({ onClose }) {
     setIsGenerating(true)
     try {
       const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+      // const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+      const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' })
       const result = await model.generateContent(prompt)
       const text = result.response.text()
 
@@ -446,34 +449,66 @@ export default function ProfilePanel({ onClose }) {
                   className="flex gap-3 overflow-x-auto pb-2"
                   style={{ minHeight: '88px' }}
                 >
-                  {currentJourneys.map((item, index) => (
-                    <Draggable key={item.id} draggableId={item.id} index={index}>
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          className={`relative flex-shrink-0 w-20 h-20 rounded-xl bg-purple-50 border border-purple-100 transition-shadow ${snapshot.isDragging ? 'shadow-lg ring-2 ring-purple-300' : ''}`}
-                        >
-                          {/* Dedicated drag handle — does NOT interfere with click */}
+                  {currentJourneys.map((item, index) => {
+                    const isPinned = activeCategory === 'mastery' && activeMasteryBlockId === item.id
+                    return (
+                      <Draggable key={item.id} draggableId={item.id} index={index}>
+                        {(provided, snapshot) => (
                           <div
-                            {...provided.dragHandleProps}
-                            className="absolute top-1 right-1 text-gray-300 hover:text-gray-400 cursor-grab active:cursor-grabbing leading-none text-[10px] select-none"
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className={`relative flex-shrink-0 w-20 rounded-xl transition-shadow ${
+                              snapshot.isDragging
+                                ? 'shadow-lg'
+                                : isPinned
+                                ? 'shadow-md shadow-purple-300'
+                                : ''
+                            } ${
+                              isPinned
+                                ? 'bg-purple-100 border-2 border-purple-400 ring-2 ring-purple-300 ring-offset-1'
+                                : 'bg-purple-50 border border-purple-100'
+                            }`}
+                            style={{ height: isPinned ? '96px' : '80px' }}
                           >
-                            ⠿
+                            {/* Pinned badge */}
+                            {isPinned && (
+                              <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-purple-500 text-white text-[7px] rounded-full px-1.5 py-0.5 whitespace-nowrap z-10 pixel-font">
+                                Focus
+                              </div>
+                            )}
+                            {/* Dedicated drag handle */}
+                            <div
+                              {...provided.dragHandleProps}
+                              className="absolute top-1 right-1 text-gray-300 hover:text-gray-400 cursor-grab active:cursor-grabbing leading-none text-[10px] select-none"
+                            >
+                              ⠿
+                            </div>
+                            {/* Pin button (mastery only) */}
+                            {activeCategory === 'mastery' && (
+                              <button
+                                onClick={() => setActiveMasteryBlockId(isPinned ? null : item.id)}
+                                className={`absolute bottom-1 left-1 text-[11px] leading-none ${
+                                  isPinned ? 'text-purple-500' : 'text-gray-300 hover:text-purple-400'
+                                }`}
+                                title={isPinned ? 'Unpin block' : 'Set as active focus'}
+                              >
+                                📌
+                              </button>
+                            )}
+                            {/* Clickable area — opens detail view */}
+                            <button
+                              onClick={() => setViewingJourney(item)}
+                              className="w-full h-full flex items-center justify-center p-2 pt-3"
+                            >
+                              <span className="text-[9px] font-semibold text-gray-700 text-center leading-tight line-clamp-3">
+                                {item.title || '—'}
+                              </span>
+                            </button>
                           </div>
-                          {/* Clickable area — opens detail view */}
-                          <button
-                            onClick={() => setViewingJourney(item)}
-                            className="w-full h-full flex items-center justify-center p-2"
-                          >
-                            <span className="text-[9px] font-semibold text-gray-700 text-center leading-tight line-clamp-4">
-                              {item.title || '—'}
-                            </span>
-                          </button>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
+                        )}
+                      </Draggable>
+                    )
+                  })}
                   {provided.placeholder}
                   {/* Add button */}
                   <button
@@ -498,25 +533,51 @@ export default function ProfilePanel({ onClose }) {
       </div>
 
       {/* Journey Detail View Modal */}
-      {viewingJourney && (
-        <InlineModal
-          title={viewingJourney.title || 'Journey Step'}
-          onClose={() => setViewingJourney(null)}
-        >
-          <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
-            {viewingJourney.desc || viewingJourney.description || 'No description available.'}
-          </p>
-          <button
-            onClick={() => {
-              openEditJourney(viewingJourney)
-              setViewingJourney(null)
-            }}
-            className="w-full bg-[#a78bda] text-white rounded-xl py-2 text-sm"
+      {viewingJourney && (() => {
+        // Always read live data from store so progressNotes are current
+        const liveBlock = journeys?.[activeCategory]?.find((b) => b.id === viewingJourney.id) || viewingJourney
+        const notes = liveBlock.progressNotes || []
+        return (
+          <InlineModal
+            title={liveBlock.title || 'Journey Step'}
+            onClose={() => setViewingJourney(null)}
           >
-            Edit
-          </button>
-        </InlineModal>
-      )}
+            <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+              {liveBlock.desc || liveBlock.description || 'No description available.'}
+            </p>
+            {liveBlock.progress !== undefined && (
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-purple-400 rounded-full transition-all"
+                    style={{ width: `${Math.min(100, liveBlock.progress || 0)}%` }}
+                  />
+                </div>
+                <span className="text-[10px] text-purple-600 font-semibold">{liveBlock.progress || 0}%</span>
+              </div>
+            )}
+            {notes.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="pixel-font text-[8px] text-gray-400 uppercase tracking-wide">Progress History</p>
+                {notes.map((note, i) => (
+                  <div key={i} className="bg-purple-50 rounded-xl px-3 py-2">
+                    <p className="text-[11px] text-gray-600 leading-snug">{note}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => {
+                openEditJourney(viewingJourney)
+                setViewingJourney(null)
+              }}
+              className="w-full bg-[#a78bda] text-white rounded-xl py-2 text-sm"
+            >
+              Edit
+            </button>
+          </InlineModal>
+        )
+      })()}
 
       {/* Portfolio Edit Modal */}
       {portfolioModal && (

@@ -5,9 +5,52 @@ import { useTaskStore } from '../stores/useTaskStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useSkillStore } from '../stores/useSkillStore'
 
+// ── Reflection Bottom Sheet ───────────────────────────────────────────────────
+function ReflectionSheet({ task, onSubmit, onClose, isEvaluating }) {
+  const [reflection, setReflection] = useState('')
+  return (
+    <div className="absolute inset-0 z-[60] flex flex-col justify-end">
+      <div className="absolute inset-0 bg-black/50" onClick={!isEvaluating ? onClose : undefined} />
+      <div className="relative bg-white rounded-t-[32px] px-6 pt-4 pb-10 shadow-2xl max-h-[75vh] flex flex-col">
+        <div className="flex justify-center mb-3 shrink-0">
+          <div className="w-10 h-1 bg-gray-200 rounded-full" />
+        </div>
+        <h3 className="text-center font-bold text-gray-800 text-base mb-1 shrink-0">
+          📝 Daily Reflection
+        </h3>
+        <p className="text-center text-xs text-gray-500 mb-4 shrink-0 pixel-font">
+          {task.title}
+        </p>
+        <div className="overflow-y-auto flex-1 pb-2">
+          <textarea
+            rows={5}
+            value={reflection}
+            onChange={(e) => setReflection(e.target.value)}
+            placeholder="What did you do? What did you learn? Any obstacles?"
+            className="w-full rounded-xl border border-gray-200 shadow-sm px-4 py-3 outline-none focus:border-purple-400 resize-none text-sm"
+            disabled={isEvaluating}
+          />
+        </div>
+        <button
+          onClick={() => onSubmit(reflection)}
+          disabled={isEvaluating || !reflection.trim()}
+          className="mt-3 w-full rounded-xl border border-purple-300 bg-purple-50 py-3 pixel-font text-[10px] text-purple-800 disabled:opacity-50 shrink-0"
+        >
+          {isEvaluating ? '🤖 AI is evaluating your progress...' : 'Submit Reflection'}
+        </button>
+        {!isEvaluating && (
+          <button onClick={onClose} className="mt-2 w-full text-gray-400 text-sm py-1 shrink-0">
+            Cancel
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function TaskPanel({ onClose, initialView = 'list' }) {
   const { tasks, addTask, updateTask, toggleTask, removeTask, reorderTasks } = useTaskStore()
-  const { addCoins } = useUserStore()
+  const { addCoins, evaluateAndCompleteTask } = useUserStore()
   const [view, setView] = useState(initialView)
   const [editingTaskId, setEditingTaskId] = useState(null)
   const [form, setForm] = useState({
@@ -17,6 +60,11 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
     rewardCoins: 10,
     description: '',
   })
+
+  // Reflection sheet state
+  const [reflectionTask, setReflectionTask] = useState(null)
+  const [isEvaluating, setIsEvaluating] = useState(false)
+  const [evalResult, setEvalResult] = useState(null) // { note, gainedPercent }
 
   function openCreate() {
     setEditingTaskId(null)
@@ -65,11 +113,38 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
 
   function handleToggle(task) {
     if (!task.completed) {
+      // AI-generated tasks require a reflection before completing
+      if (task.isAIGenerated) {
+        setReflectionTask(task)
+        return
+      }
       const { equippedPassiveSkill } = useSkillStore.getState()
       const sparkBonus = equippedPassiveSkill === 'spark' ? 2 : 0
       addCoins((task.rewardCoins || 10) + sparkBonus)
     }
     toggleTask(task.id)
+  }
+
+  async function handleReflectionSubmit(reflection) {
+    if (!reflectionTask) return
+    setIsEvaluating(true)
+    try {
+      const result = await evaluateAndCompleteTask(reflectionTask, reflection)
+      setEvalResult(result)
+      // Award coins
+      const { equippedPassiveSkill } = useSkillStore.getState()
+      const sparkBonus = equippedPassiveSkill === 'spark' ? 2 : 0
+      addCoins((reflectionTask.rewardCoins || 15) + sparkBonus)
+      toggleTask(reflectionTask.id)
+    } catch (err) {
+      console.error('Evaluation failed:', err)
+      // Fallback: just complete the task
+      addCoins(reflectionTask.rewardCoins || 15)
+      toggleTask(reflectionTask.id)
+    } finally {
+      setIsEvaluating(false)
+      setReflectionTask(null)
+    }
   }
 
   // Pending tasks keep their manual order; completed tasks sink to the bottom
@@ -136,6 +211,34 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
           )}
         </div>
       </div>
+
+      {/* ── Reflection Sheet (AI tasks) ── */}
+      {reflectionTask && (
+        <ReflectionSheet
+          task={reflectionTask}
+          onSubmit={handleReflectionSubmit}
+          onClose={() => setReflectionTask(null)}
+          isEvaluating={isEvaluating}
+        />
+      )}
+
+      {/* ── AI Eval Result toast ── */}
+      {evalResult && (
+        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/40 p-6">
+          <div className="bg-white rounded-2xl p-5 w-full max-w-xs shadow-xl text-center">
+            <p className="text-2xl mb-2">🎉</p>
+            <p className="pixel-font text-[10px] text-purple-700 mb-3">AI Progress Report</p>
+            <p className="text-sm text-gray-700 mb-3">{evalResult.note}</p>
+            <p className="pixel-font text-[9px] text-green-600 mb-4">+{evalResult.gainedPercent}% Journey Progress</p>
+            <button
+              onClick={() => setEvalResult(null)}
+              className="w-full rounded-xl bg-purple-500 text-white py-2 text-sm font-medium"
+            >
+              Awesome!
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -167,6 +270,8 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onDragEnd }
                       className={`flex items-center gap-3 px-4 py-4 border-b border-gray-200 transition-shadow ${
                         snapshot.isDragging
                           ? 'shadow-xl scale-[1.02] bg-white/95 backdrop-blur-sm z-50 rounded-xl'
+                          : task.isAIGenerated && !task.completed
+                          ? 'bg-purple-50'
                           : 'bg-white'
                       }`}
                     >
@@ -191,6 +296,7 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onDragEnd }
                       {/* Task info */}
                       <button onClick={() => onEdit(task)} className="flex-1 text-left">
                         <p className={`pixel-font text-[11px] ${task.completed ? 'line-through text-gray-400' : 'text-black'}`}>
+                          {task.isAIGenerated && !task.completed && <span className="mr-1">✨</span>}
                           #{index + 1} | {task.title}
                         </p>
                         <p className="text-sm text-gray-500 mt-1">
