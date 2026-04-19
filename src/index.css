@@ -1,6 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+Thai:wght@400;600;700;800&display=swap');
 @import "tailwindcss";
 
+@keyframes marquee {
+  0%   { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+.animate-marquee {
+  animation: marquee 6s linear infinite;
+}
+
 :root {
   font-synthesis: none;
   text-rendering: optimizeLegibility;

@@ -38,8 +38,8 @@ const TRACKS = [
   { title: 'Miitopia - Present', start: 67 },
   { title: 'January 2014 - Nintendo eShop', start: 112 },
   { title: 'Miitomo Summer Shop Music', start: 282 },
-  { title: "Yoshi's On The Beach - Yoshi's Story", start: 370 },
 ]
+// { title: "Yoshi's On The Beach - Yoshi's Story", start: 370 },
 
 function fmtTime(s) {
   return `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`
@@ -204,24 +204,26 @@ function HomePage() {
         {/* Profile / Music alternating widget */}
         <button
           onClick={() => handleTabChange(isShowingProfile ? 'profile' : 'music')}
-          className="relative w-14 h-14"
+          className="flex items-center gap-2 w-36 h-10 bg-white/90 rounded-full shadow px-2 overflow-hidden shrink-0"
         >
-          {/* Profile view */}
-          <span
-            className={`absolute inset-0 rounded-full border-2 border-white shadow-lg overflow-hidden bg-purple-100 flex items-center justify-center transition-opacity duration-500 ${isShowingProfile ? 'opacity-100' : 'opacity-0'}`}
-          >
-            {user?.avatar
-              ? <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" />
-              : <span className="text-2xl">🎮</span>
+          {/* Icon circle */}
+          <span className="w-7 h-7 rounded-full border border-white/80 overflow-hidden bg-purple-100 flex items-center justify-center shrink-0 shadow-sm">
+            {isShowingProfile
+              ? (user?.avatar
+                  ? <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" />
+                  : <span className="text-base">🎮</span>)
+              : <span className="text-base">{isPlaying ? '🎵' : '🎶'}</span>
             }
           </span>
-          {/* Music view */}
-          <span
-            className={`absolute inset-0 rounded-2xl border-2 border-blue-200 shadow-lg bg-white/95 flex flex-col items-center justify-center gap-0.5 transition-opacity duration-500 ${isShowingProfile ? 'opacity-0' : 'opacity-100'}`}
-          >
-            <span className="text-lg leading-none">{isPlaying ? '🎵' : '🎶'}</span>
-            <span className="pixel-font text-[7px] text-blue-700 leading-tight px-1 text-center truncate w-full">
-              {isPlaying ? TRACKS[currentTrackIdx].title.split(' - ')[0] : 'Music'}
+          {/* Scrolling label */}
+          <span className="flex-1 overflow-hidden">
+            <span className={`block whitespace-nowrap pixel-font text-[9px] ${isShowingProfile ? 'text-gray-700' : 'text-blue-700'} ${
+              (!isShowingProfile && isPlaying && TRACKS[currentTrackIdx].title.length > 12) ? 'animate-marquee' : ''
+            }`}>
+              {isShowingProfile
+                ? (user?.name ?? 'Profile')
+                : (isPlaying ? TRACKS[currentTrackIdx].title : 'Music')
+              }
             </span>
           </span>
         </button>
