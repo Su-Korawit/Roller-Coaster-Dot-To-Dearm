@@ -14,9 +14,6 @@ dist-ssr
 .env.*
 *.local
 
-# Large audio/video files (exceed GitHub 100MB limit)
-assets/eachPageAssets/home/Background_Music_1.mp3
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
