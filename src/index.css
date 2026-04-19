@@ -30,14 +30,15 @@ html {
 }
 
 .title-gradient {
-  background: linear-gradient(90deg, #f15fa8 0%, #f89ccd 55%, #5f3457 100%);
+  /* background: linear-gradient(90deg, #f15fa8 0%, #f89ccd 55%, #5f3457 100%); */
+  background: linear-gradient(90deg, #d93d8c 0%, #e36aa8 55%, #3f1f3a 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .title-soft-gradient {
-  background: linear-gradient(90deg, #98dfe5 0%, #f5b6ce 52%, #9ce4b5 100%);
+  background: linear-gradient(90deg, #5cc5cf 0%, #e67aa5 52%, #4fd18a 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
