@@ -31,6 +31,38 @@ function getMbtiAssets(mbtiCode) {
 
 const fallbackBg = new URL('../../assets/eachPageAssets/home/04_Main_Home_Background_Referent.png', import.meta.url).href
 
+const musicSrc = new URL('../../assets/eachPageAssets/home/Background_Music_1.mp3', import.meta.url).href
+
+const TRACKS = [
+  { title: 'Miitopia - Catalog', start: 0 },
+  { title: 'Miitopia - Present', start: 67 },
+  { title: 'January 2014 - Nintendo eShop', start: 112 },
+  { title: 'Miitomo Summer Shop Music', start: 282 },
+  { title: "Yoshi's On The Beach - Yoshi's Story", start: 370 },
+  { title: 'Shopping Theme - Nintendogs', start: 476 },
+  { title: 'Daily Log (TV) - Nintendo Wii U', start: 646 },
+  { title: 'Nintendogs Record - Nintendogs', start: 796 },
+  { title: 'Mario Party 2 - Let the Game Begin', start: 924 },
+  { title: 'September 2015 - Nintendo eShop', start: 1054 },
+  { title: 'Mario Party 1 - Play A Mini-Game', start: 1140 },
+  { title: 'Editing a Mii (Mii Maker) - Nintendo Wii U', start: 1178 },
+  { title: 'Miitomo - Mii Studio', start: 1334 },
+  { title: 'Hula Hoop - Wii Fit', start: 1464 },
+  { title: 'January 2015 - Nintendo eShop Music', start: 1539 },
+  { title: 'Nintendo DSi Music - Camera', start: 1722 },
+  { title: 'Pokémon D/P/Pt - Prof. Rowan Laboratory', start: 1943 },
+  { title: 'Main Theme - Nintendogs', start: 2087 },
+  { title: "Reel Fishing Angler's Dream - Beach", start: 2235 },
+  { title: 'Main Forecast (Morning) - Forecast Channel', start: 2363 },
+  { title: 'eShop Theme - Nintendo Switch', start: 2498 },
+  { title: 'Coconut Mall - Mario Kart Wii', start: 2640 },
+  { title: 'Clothing Shop - Tomodachi Life', start: 2781 },
+]
+
+function fmtTime(s) {
+  return `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`
+}
+
 // Skill badge placeholder image (butterfly icon from overview)
 const skillIcon = '🦋'
 
@@ -41,7 +73,12 @@ function HomePage() {
   const [isAutoGenerating, setIsAutoGenerating] = useState(false)
   const [autoGenError, setAutoGenError] = useState('')
   const [isVideoLoaded, setIsVideoLoaded] = useState(false)
+  const [showTrackList, setShowTrackList] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentTrackIdx, setCurrentTrackIdx] = useState(0)
+  const [isShowingProfile, setIsShowingProfile] = useState(true)
   const videoRef = useRef(null)
+  const audioRef = useRef(null)
 
   const user = useUserStore((state) => state.user)
   const coins = useUserStore((state) => state.coins)
@@ -60,6 +97,29 @@ function HomePage() {
       videoRef.current.load()
     }
   }, [mbti])
+
+  // Keep currentTrackIdx in sync as audio plays through the file
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    function onTimeUpdate() {
+      const t = audio.currentTime
+      let idx = 0
+      for (let i = 0; i < TRACKS.length; i++) {
+        if (TRACKS[i].start <= t) idx = i
+        else break
+      }
+      setCurrentTrackIdx(idx)
+    }
+    audio.addEventListener('timeupdate', onTimeUpdate)
+    return () => audio.removeEventListener('timeupdate', onTimeUpdate)
+  }, [])
+
+  // Alternate profile / music view every 5 seconds
+  useEffect(() => {
+    const id = setInterval(() => setIsShowingProfile((v) => !v), 10000)
+    return () => clearInterval(id)
+  }, [])
 
   // Find MBTI character image
   const mbtiChar = mbtiCharacters.find((c) => c.code === mbti)
@@ -91,6 +151,11 @@ function HomePage() {
   }
 
   function handleTabChange(tab) {
+    if (tab === 'music') {
+      setShowTrackList((v) => !v)
+      return
+    }
+    setShowTrackList(false)
     setActiveTab(tab)
     if (tab === 'news') setNewsRead(true)
   }
@@ -100,8 +165,32 @@ function HomePage() {
     setTaskInitialView('list')
   }
 
+  function handleSelectTrack(idx) {
+    const audio = audioRef.current
+    if (!audio) return
+    audio.currentTime = TRACKS[idx].start
+    setCurrentTrackIdx(idx)
+    audio.play()
+    setIsPlaying(true)
+  }
+
+  function handleTogglePlay() {
+    const audio = audioRef.current
+    if (!audio) return
+    if (isPlaying) {
+      audio.pause()
+      setIsPlaying(false)
+    } else {
+      audio.play()
+      setIsPlaying(true)
+    }
+  }
+
   return (
     <section className="relative h-full overflow-hidden">
+      {/* ── BACKGROUND MUSIC ── */}
+      <audio ref={audioRef} src={musicSrc} onEnded={() => setIsPlaying(false)} />
+
       {/* ── MBTI BACKGROUND ── */}
       {/* Layer 1: static image (shown immediately as placeholder) */}
       <img
@@ -130,12 +219,29 @@ function HomePage() {
 
       {/* ── TOP HEADER ── */}
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-3 pb-2">
-        {/* Avatar */}
-        <button className="w-14 h-14 rounded-full border-2 border-white shadow-lg overflow-hidden bg-purple-100 flex items-center justify-center">
-          {user?.avatar
-            ? <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" />
-            : <span className="text-2xl">🎮</span>
-          }
+        {/* Profile / Music alternating widget */}
+        <button
+          onClick={() => handleTabChange(isShowingProfile ? 'profile' : 'music')}
+          className="relative w-14 h-14"
+        >
+          {/* Profile view */}
+          <span
+            className={`absolute inset-0 rounded-full border-2 border-white shadow-lg overflow-hidden bg-purple-100 flex items-center justify-center transition-opacity duration-500 ${isShowingProfile ? 'opacity-100' : 'opacity-0'}`}
+          >
+            {user?.avatar
+              ? <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" />
+              : <span className="text-2xl">🎮</span>
+            }
+          </span>
+          {/* Music view */}
+          <span
+            className={`absolute inset-0 rounded-2xl border-2 border-blue-200 shadow-lg bg-white/95 flex flex-col items-center justify-center gap-0.5 transition-opacity duration-500 ${isShowingProfile ? 'opacity-0' : 'opacity-100'}`}
+          >
+            <span className="text-lg leading-none">{isPlaying ? '🎵' : '🎶'}</span>
+            <span className="pixel-font text-[7px] text-blue-700 leading-tight px-1 text-center truncate w-full">
+              {isPlaying ? TRACKS[currentTrackIdx].title.split(' - ')[0] : 'Music'}
+            </span>
+          </span>
         </button>
 
         {/* Streak + Coins */}
@@ -209,6 +315,51 @@ function HomePage() {
             setActiveTab('task')
           }}
         />
+      )}
+
+      {/* ── TRACKLIST PANEL ── */}
+      {showTrackList && (
+        <div className="absolute bottom-36 right-4 z-30 w-72 bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl flex flex-col overflow-hidden max-h-[55vh]">
+          {/* Header */}
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between shrink-0">
+            <div className="min-w-0 flex-1">
+              <p className="pixel-font text-[10px] font-bold text-gray-800">🎵 Background Music</p>
+              {isPlaying && (
+                <p className="pixel-font text-[9px] text-blue-600 mt-0.5 truncate">
+                  ▶ {TRACKS[currentTrackIdx].title}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={handleTogglePlay}
+              className="ml-3 shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm active:scale-95 transition-transform"
+            >
+              {isPlaying ? '⏸' : '▶'}
+            </button>
+          </div>
+          {/* Track list */}
+          <div className="overflow-y-auto">
+            {TRACKS.map((t, i) => (
+              <button
+                key={i}
+                onClick={() => handleSelectTrack(i)}
+                className={`w-full flex items-center gap-2 px-4 py-2.5 text-left border-b border-gray-50 hover:bg-blue-50 transition-colors ${
+                  currentTrackIdx === i && isPlaying ? 'bg-blue-50' : ''
+                }`}
+              >
+                <span className="pixel-font text-[9px] text-gray-400 w-10 shrink-0">{fmtTime(t.start)}</span>
+                <span className={`pixel-font text-[9px] truncate flex-1 ${
+                  currentTrackIdx === i && isPlaying ? 'text-blue-700 font-bold' : 'text-gray-700'
+                }`}>
+                  {t.title}
+                </span>
+                {currentTrackIdx === i && isPlaying && (
+                  <span className="shrink-0 text-[10px] text-blue-500">♪</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* ── BOTTOM NAV ── */}
