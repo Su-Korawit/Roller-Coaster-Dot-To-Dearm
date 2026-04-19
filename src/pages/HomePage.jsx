@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { mbtiCharacters } from '../data/onboardingData'
 import { useSelectStore } from '../stores/useSelectStore'
 import { useUserStore } from '../stores/useUserStore'
@@ -9,7 +9,27 @@ import NewsPanel from '../components/NewsPanel'
 import ProfilePanel from '../components/ProfilePanel'
 import SkillPanel from '../components/SkillPanel'
 
-const homeBg = new URL('../../assets/eachPageAssets/home/04_Main_Home_Background_Referent.png', import.meta.url).href
+// ── MBTI background asset maps (eager glob, resolved at build time) ──────────
+const bgImages = import.meta.glob(
+  '../../assets/eachPageAssets/home/Background/*.png',
+  { eager: true, query: '?url', import: 'default' },
+)
+const bgVideos = import.meta.glob(
+  '../../assets/eachPageAssets/home/Background/*.mp4',
+  { eager: true, query: '?url', import: 'default' },
+)
+
+function getMbtiAssets(mbtiCode) {
+  if (!mbtiCode) return { image: null, video: null }
+  const imgKey = `../../assets/eachPageAssets/home/Background/${mbtiCode}.png`
+  const vidKey = `../../assets/eachPageAssets/home/Background/${mbtiCode}.mp4`
+  return {
+    image: bgImages[imgKey] ?? null,
+    video: bgVideos[vidKey] ?? null,
+  }
+}
+
+const fallbackBg = new URL('../../assets/eachPageAssets/home/04_Main_Home_Background_Referent.png', import.meta.url).href
 
 // Skill badge placeholder image (butterfly icon from overview)
 const skillIcon = '🦋'
@@ -20,6 +40,8 @@ function HomePage() {
   const [taskInitialView, setTaskInitialView] = useState('list')
   const [isAutoGenerating, setIsAutoGenerating] = useState(false)
   const [autoGenError, setAutoGenError] = useState('')
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false)
+  const videoRef = useRef(null)
 
   const user = useUserStore((state) => state.user)
   const coins = useUserStore((state) => state.coins)
@@ -28,6 +50,16 @@ function HomePage() {
   const generateAIDailyTask = useUserStore((state) => state.generateAIDailyTask)
   const { mbti } = useSelectStore()
   const { tasks, addTask } = useTaskStore()
+
+  // Resolve MBTI background assets and reset video state on mbti change
+  const mbtiAssets = getMbtiAssets(mbti)
+  useEffect(() => {
+    setIsVideoLoaded(false)
+    // If the video element already exists, reset its src to force reload
+    if (videoRef.current) {
+      videoRef.current.load()
+    }
+  }, [mbti])
 
   // Find MBTI character image
   const mbtiChar = mbtiCharacters.find((c) => c.code === mbti)
@@ -69,14 +101,33 @@ function HomePage() {
   }
 
   return (
-    <section
-      className="relative h-full overflow-hidden"
-      style={{
-        backgroundImage: `url(${homeBg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-    >
+    <section className="relative h-full overflow-hidden">
+      {/* ── MBTI BACKGROUND ── */}
+      {/* Layer 1: static image (shown immediately as placeholder) */}
+      <img
+        key={`bg-img-${mbti}`}
+        src={mbtiAssets.image || fallbackBg}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none select-none"
+      />
+      {/* Layer 2: video (fades in once ready, sits on top of image) */}
+      {mbtiAssets.video && (
+        <video
+          ref={videoRef}
+          key={`bg-vid-${mbti}`}
+          src={mbtiAssets.video}
+          autoPlay
+          muted
+          loop
+          playsInline
+          onCanPlayThrough={() => setIsVideoLoaded(true)}
+          className={`absolute inset-0 w-full h-full object-cover z-0 pointer-events-none select-none transition-opacity duration-1000 ${
+            isVideoLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+      )}
+
       {/* ── TOP HEADER ── */}
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-3 pb-2">
         {/* Avatar */}
@@ -122,28 +173,6 @@ function HomePage() {
           )}
         </button>
       </div>
-
-      {/* ── MBTI CHARACTER ── */}
-      {mbtiChar && (
-        <div className="absolute bottom-24 right-0 left-0 flex justify-center z-10 pointer-events-none">
-          <img
-            src={mbtiChar.image}
-            alt={mbtiChar.code}
-            className="h-72 object-contain"
-            style={{ imageRendering: 'pixelated' }}
-          />
-        </div>
-      )}
-
-      {/* ── TASK BUBBLE ── */}
-      {firstPending && (
-        <div className="absolute z-20" style={{ top: '42%', left: '50%', transform: 'translateX(-40%)' }}>
-          <div className="bg-white rounded-2xl shadow-lg px-5 py-3 flex items-center gap-3 min-w-40">
-            <div className="w-5 h-5 rounded border-2 border-gray-400 shrink-0" />
-            <span className="pixel-font text-[10px] text-gray-800">{firstPending.title}</span>
-          </div>
-        </div>
-      )}
 
       {/* ── AI AUTO-GENERATE BUTTON ── */}
       <div className="absolute z-20 bottom-24 left-4 flex flex-col items-start gap-1">
