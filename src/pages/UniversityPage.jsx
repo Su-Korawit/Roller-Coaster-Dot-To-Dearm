@@ -20,12 +20,15 @@ function UniversityPage() {
   )
 
   return (
-    <section className="h-full overflow-hidden bg-linear-to-b from-pink-200 via-pink-100 to-emerald-300">
+    <section className="flex h-full flex-col bg-linear-to-b from-pink-200 via-pink-100 to-emerald-300">
       <TopBar />
-      <div className="h-[calc(100%-138px)] overflow-y-auto px-6 pb-6">
+
+      <div className="shrink-0 px-6 pt-4">
         <h1 className="title-gradient pixel-font text-xl leading-tight">University</h1>
         <WizardStepper step={2} />
+      </div>
 
+      <div className="flex-1 overflow-y-auto px-6 pb-2">
         <div className="rounded-[20px] bg-white/55 p-4">
           <div className="grid grid-cols-3 gap-4">
             {filtered.map((university) => (
@@ -38,18 +41,19 @@ function UniversityPage() {
                 {university.image ? (
                   <img src={university.image} alt={university.name} className="mx-auto h-14 w-14 object-contain" />
                 ) : (
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br from-indigo-400 to-purple-500">
                     <span className="pixel-font text-[9px] font-bold text-white">{university.shortName}</span>
                   </div>
                 )}
-                {/* <p className="pixel-font mt-1 text-center text-[8px] text-black/50">{university.score}</p> */}
               </button>
             ))}
           </div>
         </div>
+      </div>
 
-        <p className="pixel-font mt-4 text-center text-[10px] text-black/60">↓ Scroll down or Search</p>
-        <div className="mt-3 flex items-center rounded-2xl bg-white px-4 py-3">
+      <div className="shrink-0 border-t border-white/50 bg-white/40 px-6 py-4 backdrop-blur-md">
+        <p className="pixel-font mb-2 text-center text-[10px] text-black/60">↓ Scroll down or Search</p>
+        <div className="flex items-center rounded-2xl bg-white px-4 py-3">
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -58,11 +62,10 @@ function UniversityPage() {
           />
           <span className="text-lg">⌕</span>
         </div>
-
         <button
           onClick={() => navigate('/select/program')}
           disabled={!selected}
-          className="pixel-font mt-4 h-11 w-full rounded-2xl bg-sky-300 text-sm text-black disabled:opacity-50"
+          className="pixel-font mt-3 h-11 w-full rounded-2xl bg-sky-300 text-sm text-black disabled:opacity-50"
         >
           Next
         </button>

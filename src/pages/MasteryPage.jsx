@@ -21,13 +21,16 @@ function MasteryPage() {
   )
 
   return (
-    <section className="h-full overflow-hidden bg-linear-to-b from-pink-200 via-pink-100 to-cyan-300">
+    <section className="flex h-full flex-col bg-linear-to-b from-pink-200 via-pink-100 to-cyan-300">
       <TopBar />
-      <div className="h-[calc(100%-138px)] overflow-y-auto px-6 pb-6">
+
+      <div className="shrink-0 px-6 pt-4">
         <h1 className="title-gradient pixel-font text-xl leading-tight">Mastery</h1>
         <WizardStepper step={1} />
-
         <h2 className="pixel-font text-sm font-bold">Recommend</h2>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-6 pb-2">
         <div className="mt-3 space-y-4">
           {filtered.map((mastery) => (
             <button
@@ -45,9 +48,11 @@ function MasteryPage() {
             </button>
           ))}
         </div>
+      </div>
 
-        <p className="pixel-font mt-4 text-center text-[10px] text-black/60">↓ Scroll down or Search</p>
-        <div className="mt-3 flex items-center rounded-2xl bg-white px-4 py-3">
+      <div className="shrink-0 border-t border-white/50 bg-white/40 px-6 py-4 backdrop-blur-md">
+        <p className="pixel-font mb-2 text-center text-[10px] text-black/60">↓ Scroll down or Search</p>
+        <div className="flex items-center rounded-2xl bg-white px-4 py-3">
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -56,11 +61,10 @@ function MasteryPage() {
           />
           <span className="text-lg">⌕</span>
         </div>
-
         <button
           onClick={() => navigate('/select/university')}
           disabled={!selected}
-          className="pixel-font mt-4 h-11 w-full rounded-2xl bg-sky-300 text-sm text-black disabled:opacity-50"
+          className="pixel-font mt-3 h-11 w-full rounded-2xl bg-sky-300 text-sm text-black disabled:opacity-50"
         >
           Next
         </button>
