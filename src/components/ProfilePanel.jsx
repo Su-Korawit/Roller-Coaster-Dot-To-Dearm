@@ -60,7 +60,7 @@ function PortfolioCircle({ label, image, progress, isActive, onPress, onLongPres
           {image ? (
             <img src={image} alt={label} className="w-full h-full object-cover" />
           ) : (
-            <span className="text-2xl text-gray-300">?</span>
+            <div className="w-full h-full bg-black" />
           )}
         </div>
         {/* Progress badge for mastery */}
@@ -179,12 +179,12 @@ export default function ProfilePanel({ onClose }) {
   const circleData = {
     mastery: {
       label: 'Mastery',
-      image: portfolioData?.mastery?.image || selectedMastery?.image || '',
+      image: null,
       progress: portfolioData?.mastery?.progress ?? 50,
     },
     career: {
       label: 'Career',
-      image: portfolioData?.career?.image || selectedCareer?.image || '',
+      image: null,
       progress: undefined,
     },
     university: {
@@ -303,6 +303,7 @@ export default function ProfilePanel({ onClose }) {
 
       setJourneys('mastery', journeyItems)
       setActiveCategory('mastery')
+      if (journeyItems.length > 0) setActiveMasteryBlockId(journeyItems[0].id)
     } catch (err) {
       console.error('Gemini API error:', err)
       alert('Failed to connect to AI. Please check your API key or network.')
@@ -429,12 +430,11 @@ export default function ProfilePanel({ onClose }) {
                 key={key}
                 label={circleData[key].label}
                 image={circleData[key].image}
-                progress={key === 'mastery' ? circleData[key].progress : undefined}
+                progress={undefined}
                 isActive={activeCategory === key}
                 onPress={() => setActiveCategory(key)}
                 onLongPress={() => openPortfolioEdit(key)}
-              />
-            ))}
+              />            ))}
           </div>
         </div>
 
