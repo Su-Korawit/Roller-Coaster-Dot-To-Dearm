@@ -46,8 +46,10 @@ html {
 }
 
 .title-soft-gradient {
-  background: linear-gradient(90deg, #5cc5cf 0%, #e67aa5 52%, #4fd18a 100%);
+  /* background: linear-gradient(90deg, #5cc5cf 0%, #e67aa5 52%, #4fd18a 100%); */
+  background: linear-gradient(90deg, #1f3a5f, #5a2a6e, #1f5f4a);
   -webkit-background-clip: text;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
   color: transparent;
 }

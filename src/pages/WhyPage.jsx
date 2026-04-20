@@ -41,17 +41,17 @@ function WhyPage() {
         {/* Stats row */}
         <div className="mt-2 grid grid-cols-3 gap-1 text-center">
           <div>
-            <p className="title-soft-gradient pixel-font text-2xl">8.60</p>
+            <p className="title-soft-gradient pixel-font text-2xl">12B</p>
             <p className="text-[9px] font-bold">บาทต่อปี</p>
             <p className="text-[8px] leading-tight text-black/65">มูลค่าความเสียหายต่อปี</p>
           </div>
           <div>
-            <p className="title-soft-gradient pixel-font text-2xl">86k+</p>
+            <p className="title-soft-gradient pixel-font text-2xl">100k+</p>
             <p className="text-[9px] font-bold">คนต่อปี</p>
             <p className="text-[8px] leading-tight text-black/65">จำนวนเด็กซิ่วโดยประมาณ</p>
           </div>
           <div>
-            <p className="title-soft-gradient pixel-font text-2xl">100k</p>
+            <p className="title-soft-gradient pixel-font text-2xl">120k</p>
             <p className="text-[9px] font-bold">บาทต่อปี</p>
             <p className="text-[8px] leading-tight text-black/65">ค่าใช้จ่ายการครองชีพ</p>
           </div>
