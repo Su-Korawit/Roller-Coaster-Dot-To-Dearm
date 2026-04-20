@@ -12,7 +12,10 @@ function UniversityPage() {
   const setUniversity = useSelectStore((state) => state.setUniversity)
 
   const filtered = useMemo(
-    () => universities.filter((item) => item.name.toLowerCase().includes(query.toLowerCase())),
+    () => universities.filter((item) => {
+      const q = query.toLowerCase()
+      return item.name.toLowerCase().includes(q) || item.shortName.toLowerCase().includes(q)
+    }),
     [query],
   )
 
@@ -29,10 +32,17 @@ function UniversityPage() {
               <button
                 key={university.id}
                 onClick={() => setUniversity(university.id)}
-                className={`rounded-2xl bg-white p-3 ${selected === university.id ? 'ring-4 ring-pink-400' : ''}`}
+                className={`relative rounded-2xl bg-white p-3 ${selected === university.id ? 'ring-4 ring-pink-400' : ''}`}
                 title={university.name}
               >
-                <img src={university.image} alt={university.name} className="mx-auto h-20 w-20 object-contain" />
+                {university.image ? (
+                  <img src={university.image} alt={university.name} className="mx-auto h-14 w-14 object-contain" />
+                ) : (
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500">
+                    <span className="pixel-font text-[9px] font-bold text-white">{university.shortName}</span>
+                  </div>
+                )}
+                {/* <p className="pixel-font mt-1 text-center text-[8px] text-black/50">{university.score}</p> */}
               </button>
             ))}
           </div>
