@@ -52,8 +52,6 @@ function HomePage() {
   const [activeTab, setActiveTab] = useState('home')
   const [newsRead, setNewsRead] = useState(false)
   const [taskInitialView, setTaskInitialView] = useState('list')
-  const [isAutoGenerating, setIsAutoGenerating] = useState(false)
-  const [autoGenError, setAutoGenError] = useState('')
   const [isVideoLoaded, setIsVideoLoaded] = useState(false)
   const [showTrackList, setShowTrackList] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -65,10 +63,8 @@ function HomePage() {
   const user = useUserStore((state) => state.user)
   const coins = useUserStore((state) => state.coins)
   const streak = useUserStore((state) => state.streak)
-  const activeMasteryBlockId = useUserStore((state) => state.activeMasteryBlockId)
-  const generateAIDailyTask = useUserStore((state) => state.generateAIDailyTask)
   const { mbti } = useSelectStore()
-  const { tasks, addTask } = useTaskStore()
+  const { tasks } = useTaskStore()
 
   // Resolve MBTI background assets and reset video state on mbti change
   const mbtiAssets = getMbtiAssets(mbti)
@@ -108,29 +104,6 @@ function HomePage() {
 
   // First pending task for the bubble
   const firstPending = tasks.find((t) => !t.completed)
-
-  // First mastery journey block (for auto-generate)
-  // Now uses activeMasteryBlockId — no need for explicit firstMasteryBlock reference
-
-  async function handleAutoGenerate() {
-    if (!activeMasteryBlockId) {
-      setAutoGenError('No focus block pinned. Pin a block (📌) in your Profile first.')
-      setTimeout(() => setAutoGenError(''), 4000)
-      return
-    }
-    setIsAutoGenerating(true)
-    setAutoGenError('')
-    try {
-      const newTask = await generateAIDailyTask()
-      addTask(newTask)
-    } catch (err) {
-      console.error('Auto-generate failed:', err)
-      setAutoGenError(err.message || 'AI generation failed. Please try again.')
-      setTimeout(() => setAutoGenError(''), 5000)
-    } finally {
-      setIsAutoGenerating(false)
-    }
-  }
 
   function handleTabChange(tab) {
     if (tab === 'music') {
@@ -262,29 +235,6 @@ function HomePage() {
             </span>
           )}
         </button>
-      </div>
-
-      {/* ── AI AUTO-GENERATE BUTTON ── */}
-      <div className="absolute z-20 bottom-24 left-4 flex flex-col items-start gap-1">
-        <button
-          onClick={handleAutoGenerate}
-          disabled={isAutoGenerating}
-          className="flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg px-4 py-2.5 border border-purple-200 active:scale-95 transition-transform disabled:opacity-60"
-        >
-          {isAutoGenerating ? (
-            <span className="inline-block w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <span>✨</span>
-          )}
-          <span className="pixel-font text-[9px] text-purple-700">
-            {isAutoGenerating ? 'Generating...' : "Today's Mastery Task"}
-          </span>
-        </button>
-        {autoGenError && (
-          <p className="pixel-font text-[8px] text-red-500 bg-white/90 rounded-xl px-3 py-1 shadow">
-            {autoGenError}
-          </p>
-        )}
       </div>
 
       {/* ── PANELS ── */}

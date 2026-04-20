@@ -4,6 +4,7 @@ import { GripVertical } from 'lucide-react'
 import { useTaskStore } from '../stores/useTaskStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useSkillStore } from '../stores/useSkillStore'
+import { Loader2 } from 'lucide-react'
 
 // ── Reflection Bottom Sheet ───────────────────────────────────────────────────
 function ReflectionSheet({ task, onSubmit, onClose, isEvaluating }) {
@@ -50,9 +51,11 @@ function ReflectionSheet({ task, onSubmit, onClose, isEvaluating }) {
 
 export default function TaskPanel({ onClose, initialView = 'list' }) {
   const { tasks, addTask, updateTask, toggleTask, removeTask, reorderTasks } = useTaskStore()
-  const { addCoins, evaluateAndCompleteTask } = useUserStore()
+  const { addCoins, evaluateAndCompleteTask, generateAIDailyTask, activeMasteryBlockId } = useUserStore()
   const [view, setView] = useState(initialView)
   const [editingTaskId, setEditingTaskId] = useState(null)
+  const [isAutoGenerating, setIsAutoGenerating] = useState(false)
+  const [autoGenError, setAutoGenError] = useState('')
   const [form, setForm] = useState({
     title: '',
     type: 'General',
@@ -148,6 +151,26 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
     }
   }
 
+  async function handleAutoGenerate() {
+    if (!activeMasteryBlockId) {
+      setAutoGenError('No focus block pinned. Pin a block (📌) in your Profile first.')
+      setTimeout(() => setAutoGenError(''), 4000)
+      return
+    }
+    setIsAutoGenerating(true)
+    setAutoGenError('')
+    try {
+      const newTask = await generateAIDailyTask()
+      addTask(newTask)
+    } catch (err) {
+      console.error('Auto-generate failed:', err)
+      setAutoGenError(err.message || 'AI generation failed. Please try again.')
+      setTimeout(() => setAutoGenError(''), 5000)
+    } finally {
+      setIsAutoGenerating(false)
+    }
+  }
+
   // Pending tasks keep their manual order; completed tasks sink to the bottom
   const pendingTasks = tasks.filter((t) => !t.completed)
   const completedTasks = tasks.filter((t) => t.completed)
@@ -202,6 +225,9 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
               onRemove={removeTask}
               onCreate={openCreate}
               onDragEnd={handleDragEnd}
+              onAutoGenerate={handleAutoGenerate}
+              isAutoGenerating={isAutoGenerating}
+              autoGenError={autoGenError}
             />
           ) : (
             <TaskFormView
@@ -244,7 +270,7 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
   )
 }
 
-function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onDragEnd }) {
+function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onDragEnd, onAutoGenerate, isAutoGenerating, autoGenError }) {
   return (
     <>
       <DragDropContext onDragEnd={onDragEnd}>
@@ -332,15 +358,33 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onDragEnd }
         </Droppable>
       </DragDropContext>
 
-      <div className="border-t border-gray-200 px-5 py-4 flex items-center justify-between">
-        <p className="pixel-font text-[9px] text-gray-500">Click task row to edit · drag ⠿ to reorder</p>
-        <button
-          onClick={onCreate}
-          className="w-14 h-14 rounded-full border-[3px] border-black text-4xl leading-none bg-white shadow-sm"
-          aria-label="Create task"
-        >
-          +
-        </button>
+      <div className="border-t border-gray-200 px-5 py-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={onAutoGenerate}
+            disabled={isAutoGenerating}
+            className="flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-2xl px-4 py-2.5 active:scale-95 transition-transform disabled:opacity-60"
+          >
+            {isAutoGenerating ? (
+              <Loader2 size={13} className="animate-spin text-purple-500" />
+            ) : (
+              <span>✨</span>
+            )}
+            <span className="pixel-font text-[9px] text-purple-700">
+              {isAutoGenerating ? 'Generating...' : "Today's Mastery Task"}
+            </span>
+          </button>
+          <button
+            onClick={onCreate}
+            className="w-14 h-14 rounded-full border-[3px] border-black text-4xl leading-none bg-white shadow-sm"
+            aria-label="Create task"
+          >
+            +
+          </button>
+        </div>
+        {autoGenError && (
+          <p className="pixel-font text-[8px] text-red-500 bg-red-50 rounded-xl px-3 py-1.5">{autoGenError}</p>
+        )}
       </div>
     </>
   )
