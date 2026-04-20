@@ -13,10 +13,11 @@ function MasteryPage() {
   const setMastery = useSelectStore((state) => state.setMastery)
 
   const filtered = useMemo(
-    () =>
-      masteries
-        .filter((item) => !career || item.careers.includes(career))
-        .filter((item) => item.name.toLowerCase().includes(query.toLowerCase())),
+    () => {
+      const q = query.toLowerCase()
+      const base = q ? masteries : masteries.filter((item) => !career || item.careers.includes(career))
+      return base.filter((item) => item.name.toLowerCase().includes(q))
+    },
     [career, query],
   )
 

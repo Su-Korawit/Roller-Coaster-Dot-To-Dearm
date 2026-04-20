@@ -95,7 +95,7 @@ function HomePage() {
 
   // Alternate profile / music view every 5 seconds
   useEffect(() => {
-    const id = setInterval(() => setIsShowingProfile((v) => !v), 10000)
+    const id = setInterval(() => setIsShowingProfile((v) => !v), 7000)
     return () => clearInterval(id)
   }, [])
 

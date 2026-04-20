@@ -15,13 +15,13 @@ function ProgramPage() {
   const uniMap = useMemo(() => Object.fromEntries(universities.map((item) => [item.id, item])), [])
 
   const filtered = useMemo(
-    () =>
-      programs
-        .filter((item) => !selectedUniv || item.uni === selectedUniv)
-        .filter((item) => {
-          const q = query.toLowerCase()
-          return item.name.toLowerCase().includes(q) || item.detail.toLowerCase().includes(q)
-        }),
+    () => {
+      const q = query.toLowerCase()
+      const base = q ? programs : programs.filter((item) => !selectedUniv || item.uni === selectedUniv)
+      return base.filter(
+        (item) => item.name.toLowerCase().includes(q) || item.detail.toLowerCase().includes(q),
+      )
+    },
     [selectedUniv, query],
   )
 

@@ -13,10 +13,11 @@ function CareerPage() {
   const setCareer = useSelectStore((state) => state.setCareer)
 
   const filtered = useMemo(
-    () =>
-      careers
-        .filter((item) => !mbti || item.mbti.includes(mbti))
-        .filter((item) => item.name.toLowerCase().includes(query.toLowerCase())),
+    () => {
+      const q = query.toLowerCase()
+      const base = q ? careers : careers.filter((item) => !mbti || item.mbti.includes(mbti))
+      return base.filter((item) => item.name.toLowerCase().includes(q))
+    },
     [mbti, query],
   )
 
