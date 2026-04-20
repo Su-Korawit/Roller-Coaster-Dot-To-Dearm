@@ -57,7 +57,7 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
     title: '',
     type: 'General',
     timeMinutes: 45,
-    rewardCoins: 10,
+    deadline: '',
     description: '',
   })
 
@@ -72,7 +72,7 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
       title: '',
       type: 'General',
       timeMinutes: 45,
-      rewardCoins: 10,
+      deadline: '',
       description: '',
     })
     setView('form')
@@ -84,7 +84,7 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
       title: task.title,
       type: task.type,
       timeMinutes: task.timeMinutes,
-      rewardCoins: task.rewardCoins,
+      deadline: task.deadline || '',
       description: task.description || '',
     })
     setView('form')
@@ -98,7 +98,8 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
       title,
       type: form.type || 'General',
       timeMinutes: Number(form.timeMinutes) || 45,
-      rewardCoins: Number(form.rewardCoins) || 10,
+      rewardCoins: 10,
+      deadline: form.deadline || '',
       description: form.description.trim(),
     }
 
@@ -387,12 +388,11 @@ function TaskFormView({ form, setForm, onSave }) {
           </label>
 
           <label className="block">
-            <span className="pixel-font text-[9px] text-gray-600">Reward Coins</span>
+            <span className="pixel-font text-[9px] text-gray-600">Deadline</span>
             <input
-              type="number"
-              min="1"
-              value={form.rewardCoins}
-              onChange={(e) => updateField('rewardCoins', e.target.value)}
+              type="date"
+              value={form.deadline}
+              onChange={(e) => updateField('deadline', e.target.value)}
               className="mt-2 w-full rounded-xl border border-gray-200 shadow-sm px-4 py-3 outline-none focus:border-gray-400"
             />
           </label>

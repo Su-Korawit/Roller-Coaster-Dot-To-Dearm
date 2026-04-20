@@ -7,6 +7,12 @@ import ProgramPage from './pages/ProgramPage'
 import RegisterPage from './pages/RegisterPage'
 import UniversityPage from './pages/UniversityPage'
 import WhyPage from './pages/WhyPage'
+import { useSelectStore } from './stores/useSelectStore'
+
+function RootRedirect() {
+  const program = useSelectStore((s) => s.program)
+  return program ? <Navigate to="/home" replace /> : <RegisterPage />
+}
 
 function MobileLayout() {
   return (
@@ -27,7 +33,7 @@ function App() {
   return (
     <Routes>
       <Route element={<MobileLayout />}>
-        <Route path="/" element={<RegisterPage />} />
+        <Route path="/" element={<RootRedirect />} />
         <Route path="/why" element={<WhyPage />} />
         <Route path="/select/mbti" element={<MbtiPage />} />
         <Route path="/select/career" element={<CareerPage />} />
