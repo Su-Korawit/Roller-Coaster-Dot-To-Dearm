@@ -18,7 +18,10 @@ function ProgramPage() {
     () =>
       programs
         .filter((item) => !selectedUniv || item.uni === selectedUniv)
-        .filter((item) => item.name.toLowerCase().includes(query.toLowerCase())),
+        .filter((item) => {
+          const q = query.toLowerCase()
+          return item.name.toLowerCase().includes(q) || item.detail.toLowerCase().includes(q)
+        }),
     [selectedUniv, query],
   )
 
