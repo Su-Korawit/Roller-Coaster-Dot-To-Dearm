@@ -1,18 +1,18 @@
 import { useState } from 'react'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
-import { GripVertical } from 'lucide-react'
+import { GripVertical, Loader2 } from 'lucide-react'
 import { useTaskStore } from '../stores/useTaskStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useSkillStore } from '../stores/useSkillStore'
-import { Loader2 } from 'lucide-react'
+import TaskForm from './TaskForm'
 
 // ── Reflection Bottom Sheet ───────────────────────────────────────────────────
 function ReflectionSheet({ task, onSubmit, onClose, isEvaluating }) {
   const [reflection, setReflection] = useState('')
   return (
-    <div className="absolute inset-0 z-[60] flex flex-col justify-end">
+    <div className="absolute inset-0 z-60 flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/50" onClick={!isEvaluating ? onClose : undefined} />
-      <div className="relative bg-white rounded-t-[32px] px-6 pt-4 pb-10 shadow-2xl max-h-[75vh] flex flex-col">
+      <div className="relative bg-white rounded-t-4xl px-6 pt-4 pb-10 shadow-2xl max-h-[75vh] flex flex-col">
         <div className="flex justify-center mb-3 shrink-0">
           <div className="w-10 h-1 bg-gray-200 rounded-full" />
         </div>
@@ -54,15 +54,9 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
   const { addCoins, evaluateAndCompleteTask, generateAIDailyTask, activeMasteryBlockId } = useUserStore()
   const [view, setView] = useState(initialView)
   const [editingTaskId, setEditingTaskId] = useState(null)
+  const [editInitialValues, setEditInitialValues] = useState({})
   const [isAutoGenerating, setIsAutoGenerating] = useState(false)
   const [autoGenError, setAutoGenError] = useState('')
-  const [form, setForm] = useState({
-    title: '',
-    type: 'General',
-    timeMinutes: 45,
-    deadline: '',
-    description: '',
-  })
 
   // Reflection sheet state
   const [reflectionTask, setReflectionTask] = useState(null)
@@ -71,47 +65,30 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
 
   function openCreate() {
     setEditingTaskId(null)
-    setForm({
-      title: '',
-      type: 'General',
-      timeMinutes: 45,
-      deadline: '',
-      description: '',
-    })
+    setEditInitialValues({})
     setView('form')
   }
 
   function openEdit(task) {
     setEditingTaskId(task.id)
-    setForm({
+    setEditInitialValues({
       title: task.title,
       type: task.type,
       timeMinutes: task.timeMinutes,
       deadline: task.deadline || '',
       description: task.description || '',
+      scheduledDate: task.scheduledDate || null,
     })
     setView('form')
   }
 
-  function handleSaveTask() {
-    const title = form.title.trim()
-    if (!title) return
-
-    const payload = {
-      title,
-      type: form.type || 'General',
-      timeMinutes: Number(form.timeMinutes) || 45,
-      rewardCoins: 10,
-      deadline: form.deadline || '',
-      description: form.description.trim(),
-    }
-
+  // Receives the complete validated payload from TaskForm
+  function handleSaveTask(payload) {
     if (editingTaskId) {
       updateTask(editingTaskId, payload)
     } else {
       addTask(payload)
     }
-
     setView('list')
   }
 
@@ -230,10 +207,10 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
               autoGenError={autoGenError}
             />
           ) : (
-            <TaskFormView
-              form={form}
-              setForm={setForm}
+            <TaskForm
+              initialValues={editInitialValues}
               onSave={handleSaveTask}
+              onCancel={() => setView('list')}
             />
           )}
         </div>
@@ -251,7 +228,7 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
 
       {/* ── AI Eval Result toast ── */}
       {evalResult && (
-        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/40 p-6">
+        <div className="absolute inset-0 z-60 flex items-center justify-center bg-black/40 p-6">
           <div className="bg-white rounded-2xl p-5 w-full max-w-xs shadow-xl text-center">
             <p className="text-2xl mb-2">🎉</p>
             <p className="pixel-font text-[10px] text-purple-700 mb-3">AI Progress Report</p>
@@ -390,76 +367,4 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onDragEnd, 
   )
 }
 
-function TaskFormView({ form, setForm, onSave }) {
-  function updateField(key, value) {
-    setForm((prev) => ({ ...prev, [key]: value }))
-  }
 
-  return (
-    <div className="flex-1 overflow-y-auto px-5 py-5">
-      <div className="space-y-4">
-        <label className="block">
-          <span className="pixel-font text-[9px] text-gray-600">Task Name</span>
-          <input
-            value={form.title}
-            onChange={(e) => updateField('title', e.target.value)}
-            placeholder="#1 | Hackathon"
-            className="mt-2 w-full rounded-xl border border-gray-200 shadow-sm px-4 py-3 outline-none focus:border-gray-400"
-          />
-        </label>
-
-        <label className="block">
-          <span className="pixel-font text-[9px] text-gray-600">Type</span>
-          <input
-            value={form.type}
-            onChange={(e) => updateField('type', e.target.value)}
-            placeholder="Competition / Study / Project"
-            className="mt-2 w-full rounded-xl border border-gray-200 shadow-sm px-4 py-3 outline-none focus:border-gray-400"
-          />
-        </label>
-
-        <div className="grid grid-cols-2 gap-3">
-          <label className="block">
-            <span className="pixel-font text-[9px] text-gray-600">Time (min)</span>
-            <input
-              type="number"
-              min="5"
-              step="5"
-              value={form.timeMinutes}
-              onChange={(e) => updateField('timeMinutes', e.target.value)}
-              className="mt-2 w-full rounded-xl border border-gray-200 shadow-sm px-4 py-3 outline-none focus:border-gray-400"
-            />
-          </label>
-
-          <label className="block">
-            <span className="pixel-font text-[9px] text-gray-600">Deadline</span>
-            <input
-              type="date"
-              value={form.deadline}
-              onChange={(e) => updateField('deadline', e.target.value)}
-              className="mt-2 w-full rounded-xl border border-gray-200 shadow-sm px-4 py-3 outline-none focus:border-gray-400"
-            />
-          </label>
-        </div>
-
-        <label className="block">
-          <span className="pixel-font text-[9px] text-gray-600">Detail</span>
-          <textarea
-            rows={4}
-            value={form.description}
-            onChange={(e) => updateField('description', e.target.value)}
-            placeholder="Additional detail..."
-            className="mt-2 w-full rounded-xl border border-gray-200 shadow-sm px-4 py-3 outline-none focus:border-gray-400 resize-none"
-          />
-        </label>
-      </div>
-
-      <button
-        onClick={onSave}
-        className="mt-6 w-full rounded-xl border border-gray-300 shadow-sm bg-white py-3 pixel-font text-[10px] text-gray-800"
-      >
-        Save Task
-      </button>
-    </div>
-  )
-}

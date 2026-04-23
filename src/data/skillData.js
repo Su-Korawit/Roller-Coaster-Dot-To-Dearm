@@ -57,6 +57,19 @@ export const SKILLS = [
     effect: 'Skip 1 streak penalty per week',
     mbtiMatch: ['ISFJ', 'INFP', 'ENFP', 'ESFJ'],
   },
+  {
+    id: 'planner',
+    name: 'Planner',
+    type: 'passive',
+    cost: 159,
+    emoji: '📅',
+    image: null,
+    tagline: 'Task Calendar',
+    description:
+      'เปิด Popup Calendar เพื่อวางแผน Task ในแต่ละวัน — กำหนดตารางงานล่วงหน้าได้อย่างเป็นระบบ',
+    effect: 'Unlock Calendar popup to schedule tasks per day',
+    mbtiMatch: ['INTJ', 'ISTJ', 'ENTJ', 'ESTJ'],
+  },
 
   // ── Active Skills ────────────────────────────────────────────────
   {

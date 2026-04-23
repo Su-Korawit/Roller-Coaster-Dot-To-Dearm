@@ -1,13 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
+import { Calendar } from 'lucide-react'
 import { mbtiCharacters } from '../data/onboardingData'
 import { useSelectStore } from '../stores/useSelectStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useTaskStore } from '../stores/useTaskStore'
+import { useSkillStore } from '../stores/useSkillStore'
+import { APP_VIEWS } from '../constants/appViews'
 import BottomNavBar from '../components/BottomNavBar'
 import TaskPanel from '../components/TaskPanel'
 import NewsPanel from '../components/NewsPanel'
 import ProfilePanel from '../components/ProfilePanel'
 import SkillPanel from '../components/SkillPanel'
+import CalendarPopup from '../components/CalendarPopup'
 
 // ── MBTI background asset maps (eager glob, resolved at build time) ──────────
 const bgImages = import.meta.glob(
@@ -57,6 +61,7 @@ function HomePage() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTrackIdx, setCurrentTrackIdx] = useState(0)
   const [isShowingProfile, setIsShowingProfile] = useState(true)
+  const [showCalendar, setShowCalendar] = useState(false)
   const videoRef = useRef(null)
   const audioRef = useRef(null)
 
@@ -65,6 +70,7 @@ function HomePage() {
   const streak = useUserStore((state) => state.streak)
   const { mbti } = useSelectStore()
   const { tasks } = useTaskStore()
+  const isPlannerActive = useSkillStore((state) => state.isPlannerActive)
 
   // Resolve MBTI background assets and reset video state on mbti change
   const mbtiAssets = getMbtiAssets(mbti)
@@ -106,18 +112,26 @@ function HomePage() {
   const firstPending = tasks.find((t) => !t.completed)
 
   function handleTabChange(tab) {
-    if (tab === 'music') {
+    if (tab === APP_VIEWS.MUSIC) {
       setShowTrackList((v) => !v)
       return
     }
     setShowTrackList(false)
     setActiveTab(tab)
-    if (tab === 'news') setNewsRead(true)
+    if (tab === APP_VIEWS.NEWS) setNewsRead(true)
   }
 
   function closePanel() {
-    setActiveTab('home')
+    setActiveTab(APP_VIEWS.HOME)
     setTaskInitialView('list')
+  }
+
+  // Opens the Calendar directly when the Planner passive skill is active.
+  // Centralises the 'PLANNER_CALENDAR' view transition so no raw strings
+  // are scattered across the component.
+  function handlePlannerTransition() {
+    setActiveTab(APP_VIEWS.PLANNER_CALENDAR)
+    setShowCalendar(true)
   }
 
   function handleSelectTrack(idx) {
@@ -176,7 +190,7 @@ function HomePage() {
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-3 pb-2">
         {/* Profile / Music alternating widget */}
         <button
-          onClick={() => handleTabChange(isShowingProfile ? 'profile' : 'music')}
+          onClick={() => handleTabChange(isShowingProfile ? APP_VIEWS.PROFILE : APP_VIEWS.MUSIC)}
           className="flex items-center gap-2 w-36 h-10 bg-white/90 rounded-full shadow px-2 overflow-hidden shrink-0"
         >
           {/* Icon circle */}
@@ -212,19 +226,23 @@ function HomePage() {
       </div>
 
       {/* ── SKILL BADGE (top-left below avatar) ── */}
+      {/* When Planner passive is equipped the badge becomes a Calendar shortcut. */}
       <div className="absolute top-20 left-4 z-20">
         <button
-          onClick={() => handleTabChange('skill')}
-          className="w-14 h-14 bg-white rounded-2xl shadow-lg flex items-center justify-center text-2xl border border-gray-100 active:scale-95 transition-transform"
+          onClick={isPlannerActive ? handlePlannerTransition : () => handleTabChange(APP_VIEWS.SKILL)}
+          className="w-14 h-14 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-gray-100 active:scale-95 transition-transform"
         >
-          {skillIcon}
+          {isPlannerActive
+            ? <Calendar size={28} strokeWidth={1.5} className="text-purple-500" />
+            : <span className="text-2xl">{skillIcon}</span>
+          }
         </button>
       </div>
 
       {/* ── NEWS BUTTON (top-right below coins) ── */}
       <div className="absolute top-20 right-4 z-20">
         <button
-          onClick={() => handleTabChange('news')}
+          onClick={() => handleTabChange(APP_VIEWS.NEWS)}
           className="relative flex items-center gap-2 bg-white/90 rounded-2xl shadow-lg px-4 py-2 active:scale-95 transition-transform"
         >
           <span className="text-base">📰</span>
@@ -238,15 +256,26 @@ function HomePage() {
       </div>
 
       {/* ── PANELS ── */}
-      {activeTab === 'task' && <TaskPanel onClose={closePanel} initialView={taskInitialView} />}
-      {activeTab === 'news' && <NewsPanel onClose={closePanel} />}
-      {activeTab === 'profile' && <ProfilePanel onClose={closePanel} />}
-      {activeTab === 'skill' && (
+      {activeTab === APP_VIEWS.TASK && <TaskPanel onClose={closePanel} initialView={taskInitialView} />}
+      {activeTab === APP_VIEWS.NEWS && <NewsPanel onClose={closePanel} />}
+      {activeTab === APP_VIEWS.PROFILE && <ProfilePanel onClose={closePanel} />}
+      {activeTab === APP_VIEWS.SKILL && (
         <SkillPanel
           onClose={closePanel}
           onOpenCreateTask={() => {
             setTaskInitialView('form')
-            setActiveTab('task')
+            setActiveTab(APP_VIEWS.TASK)
+          }}
+          onOpenCalendar={handlePlannerTransition}
+        />
+      )}
+
+      {/* ── CALENDAR POPUP (PLANNER_CALENDAR view) ── */}
+      {showCalendar && (
+        <CalendarPopup
+          onClose={() => {
+            setShowCalendar(false)
+            setActiveTab(APP_VIEWS.HOME)
           }}
         />
       )}

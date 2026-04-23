@@ -8,13 +8,13 @@ import { PASSIVE_SKILLS, ACTIVE_SKILLS } from '../data/skillData'
 // ─────────────────────────────────────────────────────────────
 // Unlocked skill ids (mock data — 2 unlocked, 2 locked each type)
 // ─────────────────────────────────────────────────────────────
-const UNLOCKED_PASSIVE_IDS = ['spark', 'flow']
+const UNLOCKED_PASSIVE_IDS = ['spark', 'flow', 'planner']
 const UNLOCKED_ACTIVE_IDS = ['ignite', 'capsule']
 
 // ─────────────────────────────────────────────────────────────
 // SkillPanel — Passive / Active tabs with DnD equip slots
 // ─────────────────────────────────────────────────────────────
-export default function SkillPanel({ onClose, onOpenCreateTask }) {
+export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }) {
   const [tab, setTab] = useState('passive')
   const [showCountdown, setShowCountdown] = useState(false)
   const [countNum, setCountNum] = useState(5)
@@ -97,7 +97,10 @@ export default function SkillPanel({ onClose, onOpenCreateTask }) {
                         >
                           {equippedPassive ? (
                             <div className="flex flex-col items-center gap-1 pointer-events-none">
-                              <img src={equippedPassive.image} alt={equippedPassive.name} className="w-10 h-10 object-contain" />
+                              {equippedPassive.image
+                                ? <img src={equippedPassive.image} alt={equippedPassive.name} className="w-10 h-10 object-contain" />
+                                : <span className="text-4xl leading-none">{equippedPassive.emoji}</span>
+                              }
                               <span className="pixel-font text-[9px] text-gray-800 font-bold">{equippedPassive.name}</span>
                               <span className="pixel-font text-[7px] text-pink-500 text-center px-2">{equippedPassive.effect}</span>
                             </div>
@@ -127,7 +130,10 @@ export default function SkillPanel({ onClose, onOpenCreateTask }) {
                                     ${equippedPassiveSkill === skill.id ? 'border-pink-400 bg-pink-50' : 'border-gray-200 bg-white'}
                                     ${snapshot.isDragging ? 'shadow-xl scale-105 z-50' : ''}`}
                                 >
-                                  <img src={skill.image} alt={skill.name} className="w-10 h-10 object-contain" />
+                                  {skill.image
+                                    ? <img src={skill.image} alt={skill.name} className="w-10 h-10 object-contain" />
+                                    : <span className="text-3xl leading-none">{skill.emoji}</span>
+                                  }
                                   <span className="pixel-font text-[8px] text-gray-700">{skill.name}</span>
                                   {equippedPassiveSkill === skill.id && (
                                     <span className="pixel-font text-[7px] text-pink-400">✓ Active</span>
@@ -148,7 +154,10 @@ export default function SkillPanel({ onClose, onOpenCreateTask }) {
                           key={skill.id}
                           className="flex-1 rounded-2xl border-2 border-gray-200 bg-gray-50 p-3 flex flex-col items-center gap-1 opacity-50 grayscale select-none"
                         >
-                          <img src={skill.image} alt={skill.name} className="w-10 h-10 object-contain" />
+                          {skill.image
+                            ? <img src={skill.image} alt={skill.name} className="w-10 h-10 object-contain" />
+                            : <span className="text-3xl leading-none">{skill.emoji}</span>
+                          }
                           <span className="pixel-font text-[8px] text-gray-500">{skill.name}</span>
                           <Lock size={10} className="text-gray-400" />
                         </div>
@@ -160,6 +169,14 @@ export default function SkillPanel({ onClose, onOpenCreateTask }) {
                     <div className="rounded-xl bg-pink-50 border border-pink-100 px-4 py-3">
                       <p className="pixel-font text-[9px] text-pink-600 font-bold mb-1">{equippedPassive.name} — Active Effect</p>
                       <p className="text-xs text-gray-600 leading-relaxed">{equippedPassive.description}</p>
+                      {equippedPassive.id === 'planner' && (
+                        <button
+                          onClick={() => onOpenCalendar?.()}
+                          className="mt-3 w-full rounded-xl bg-purple-500 text-white py-2.5 pixel-font text-[10px] active:scale-95 transition-transform shadow"
+                        >
+                          📅 Open Calendar
+                        </button>
+                      )}
                     </div>
                   )}
                 </>

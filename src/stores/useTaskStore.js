@@ -24,6 +24,8 @@ function normalizeTask(task) {
     linkedJourneyKey: task.linkedJourneyKey || null,
     linkedJourneyId: task.linkedJourneyId || null,
     estimatedProgress: task.estimatedProgress ?? null,
+    // Calendar scheduling — 'YYYY-MM-DD' string or null
+    scheduledDate: typeof task.scheduledDate === 'string' ? task.scheduledDate : null,
   }
 }
 

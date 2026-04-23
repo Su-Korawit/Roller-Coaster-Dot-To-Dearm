@@ -17,7 +17,9 @@ export const useSkillStore = create(
       // ── DnD single-slot equipped skills ──────────────────
       equippedPassiveSkill: null, // skill id or null
       equippedActiveSkill: null,  // skill id or null
-      setEquippedPassiveSkill: (id) => set({ equippedPassiveSkill: id }),
+      // Derived flag — true when the Planner passive skill is the equipped passive
+      isPlannerActive: false,
+      setEquippedPassiveSkill: (id) => set({ equippedPassiveSkill: id, isPlannerActive: id === 'planner' }),
       setEquippedActiveSkill: (id) => set({ equippedActiveSkill: id }),
 
       buySkill: (skillId, cost, coins, spendCoins) => {
