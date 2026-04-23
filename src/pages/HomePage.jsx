@@ -99,7 +99,8 @@ function HomePage() {
     return () => audio.removeEventListener('timeupdate', onTimeUpdate)
   }, [])
 
-  // Alternate profile / music view every 5 seconds
+  // Alternate profile / music view every 5 seconds — kept for backward compat
+  // (no longer drives header UI, state retained to avoid removing setIsShowingProfile refs)
   useEffect(() => {
     const id = setInterval(() => setIsShowingProfile((v) => !v), 7000)
     return () => clearInterval(id)
@@ -199,33 +200,39 @@ function HomePage() {
       )}
 
       {/* ── TOP HEADER ── */}
-      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-3 pb-2">
-        {/* Profile / Music alternating widget */}
-        <button
-          onClick={() => handleTabChange(isShowingProfile ? APP_VIEWS.PROFILE : APP_VIEWS.MUSIC)}
-          className="flex items-center gap-2 w-36 h-10 bg-white/90 rounded-full shadow px-2 overflow-hidden shrink-0"
-        >
-          {/* Icon circle */}
-          <span className="w-7 h-7 rounded-full border border-white/80 overflow-hidden bg-purple-100 flex items-center justify-center shrink-0 shadow-sm">
-            {isShowingProfile
-              ? (user?.avatar
-                  ? <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" />
-                  : <span className="text-base">🎮</span>)
-              : <span className="text-base">{isPlaying ? '🎵' : '🎶'}</span>
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-3 pb-2 gap-2">
+
+        {/* Left side: Avatar pill + Music pill */}
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+
+          {/* Avatar button */}
+          <button
+            onClick={() => handleTabChange(APP_VIEWS.PROFILE)}
+            className="w-10 h-10 rounded-full bg-white/90 shadow flex items-center justify-center shrink-0 border border-white/60 active:scale-95 transition-transform"
+          >
+            {user?.avatar
+              ? <img src={user.avatar} alt="avatar" className="w-full h-full object-cover rounded-full" />
+              : <span className="text-lg">🎮</span>
             }
-          </span>
-          {/* Scrolling label */}
-          <span className="flex-1 overflow-hidden">
-            <span className={`block whitespace-nowrap pixel-font text-[9px] ${isShowingProfile ? 'text-gray-700' : 'text-blue-700'} ${
-              (!isShowingProfile && isPlaying && TRACKS[currentTrackIdx].title.length > 12) ? 'animate-marquee' : ''
-            }`}>
-              {isShowingProfile
-                ? (user?.name ?? 'Profile')
-                : (isPlaying ? TRACKS[currentTrackIdx].title : 'Music')
-              }
+          </button>
+
+          {/* Music status pill */}
+          <button
+            onClick={() => handleTabChange(APP_VIEWS.MUSIC)}
+            className="flex items-center gap-1.5 h-10 bg-white/90 rounded-full shadow px-3 overflow-hidden min-w-0 flex-1 active:scale-95 transition-transform"
+          >
+            <span className="text-sm shrink-0">{isPlaying ? '🎵' : '🎶'}</span>
+            <span className="overflow-hidden flex-1">
+              <span
+                className={`block whitespace-nowrap pixel-font text-[8px] text-blue-700 ${
+                  isPlaying && TRACKS[currentTrackIdx].title.length > 14 ? 'animate-marquee' : ''
+                }`}
+              >
+                {isPlaying ? TRACKS[currentTrackIdx].title : 'Music'}
+              </span>
             </span>
-          </span>
-        </button>
+          </button>
+        </div>
 
         {/* Streak + Coins */}
         <div className="flex items-center gap-3 bg-white/90 rounded-full px-4 py-1.5 shadow">
