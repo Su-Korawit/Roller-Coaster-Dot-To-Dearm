@@ -158,7 +158,19 @@ function HomePage() {
   return (
     <section className="relative h-full overflow-hidden">
       {/* ── BACKGROUND MUSIC ── */}
-      <audio ref={audioRef} src={musicSrc} onEnded={() => setIsPlaying(false)} />
+      <audio
+        ref={audioRef}
+        src={musicSrc}
+        onEnded={() => {
+          // Loop back to first track seamlessly
+          const audio = audioRef.current
+          if (!audio) return
+          audio.currentTime = TRACKS[0].start
+          setCurrentTrackIdx(0)
+          audio.play()
+          setIsPlaying(true)
+        }}
+      />
 
       {/* ── MBTI BACKGROUND ── */}
       {/* Layer 1: static image (shown immediately as placeholder) */}
@@ -282,7 +294,7 @@ function HomePage() {
 
       {/* ── TRACKLIST PANEL ── */}
       {showTrackList && (
-        <div className="absolute bottom-36 right-4 z-30 w-72 bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl flex flex-col overflow-hidden max-h-[55vh]">
+        <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-30 w-[90%] max-w-sm bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl flex flex-col overflow-hidden max-h-[55vh]">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between shrink-0">
             <div className="min-w-0 flex-1">
@@ -310,7 +322,6 @@ function HomePage() {
                   currentTrackIdx === i && isPlaying ? 'bg-blue-50' : ''
                 }`}
               >
-                <span className="pixel-font text-[9px] text-gray-400 w-10 shrink-0">{fmtTime(t.start)}</span>
                 <span className={`pixel-font text-[9px] truncate flex-1 ${
                   currentTrackIdx === i && isPlaying ? 'text-blue-700 font-bold' : 'text-gray-700'
                 }`}>
