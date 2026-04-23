@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { Lock } from 'lucide-react'
-import { useSkillStore } from '../stores/useSkillStore'
+import { useSkillStore, PASSIVE_UNLOCK_THRESHOLDS } from '../stores/useSkillStore'
 import { useUserStore } from '../stores/useUserStore'
+import { useTaskStore } from '../stores/useTaskStore'
 import { PASSIVE_SKILLS, ACTIVE_SKILLS } from '../data/skillData'
+import SkillExecutionPopup from './SkillExecutionPopup'
 
 // ─────────────────────────────────────────────────────────────
 // Unlocked skill ids (mock data — 2 unlocked, 2 locked each type)
@@ -16,36 +18,57 @@ const UNLOCKED_ACTIVE_IDS = ['ignite', 'capsule']
 // ─────────────────────────────────────────────────────────────
 export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }) {
   const [tab, setTab] = useState('passive')
-  const [showCountdown, setShowCountdown] = useState(false)
-  const [countNum, setCountNum] = useState(5)
+  // Tracks which skill card is being dragged (for the dynamic hint box)
+  const [draggingSkillId, setDraggingSkillId] = useState(null)
+  // Task that has an active skill popup open
+  const [activeSkillTask, setActiveSkillTask] = useState(null)
 
   const {
     equippedPassiveSkill,
     equippedActiveSkill,
     setEquippedPassiveSkill,
     setEquippedActiveSkill,
+    passiveSlots,
+    equipPassiveSkill,
+    clearPassiveSlot,
   } = useSkillStore()
 
-  // ── Ignite countdown: 5 → 0 → open Add Task ─────────────
-  useEffect(() => {
-    if (!showCountdown) return
-    if (countNum === 0) {
-      setShowCountdown(false)
-      setCountNum(5)
-      onOpenCreateTask?.()
-      return
-    }
-    const timer = setTimeout(() => setCountNum((n) => n - 1), 1000)
-    return () => clearTimeout(timer)
-  }, [showCountdown, countNum, onOpenCreateTask])
+  const totalStacks = useUserStore((s) => s.totalStacks)
+  const { tasks, applySkillToTask } = useTaskStore()
+  const pendingTasks = tasks.filter((t) => !t.completed)
+
+  function handleDragStart(start) {
+    setDraggingSkillId(start.draggableId)
+  }
 
   function handleDragEnd(result) {
+    setDraggingSkillId(null)
     const { destination, draggableId } = result
     if (!destination) return
-    if (destination.droppableId === 'slot-passive') {
-      setEquippedPassiveSkill(draggableId)
-    } else if (destination.droppableId === 'slot-active') {
-      setEquippedActiveSkill(draggableId)
+
+    // Passive slot drop: slot-0, slot-1, slot-2
+    if (destination.droppableId.startsWith('slot-')) {
+      const slotIdx = parseInt(destination.droppableId.replace('slot-', ''), 10)
+      if (!isNaN(slotIdx)) {
+        const isUnlocked = totalStacks >= PASSIVE_UNLOCK_THRESHOLDS[slotIdx]
+        if (!isUnlocked) return
+        equipPassiveSkill(draggableId, slotIdx)
+        // Keep the legacy single-skill field in sync for backward compat
+        setEquippedPassiveSkill(draggableId)
+        return
+      }
+    }
+
+    // Active skill → task drop
+    if (destination.droppableId.startsWith('task-')) {
+      const rawId = destination.droppableId.replace('task-', '')
+      const task = pendingTasks.find((t) => String(t.id) === rawId)
+      if (!task || task.assignedSkill) return
+      const skillId = draggableId
+      const timerEnd = skillId === 'capsule' ? Date.now() + 30 * 60 * 1000 : null
+      applySkillToTask(task.id, skillId, timerEnd)
+      setEquippedActiveSkill(skillId)
+      setActiveSkillTask({ ...task, assignedSkill: skillId, timerEnd })
     }
   }
 
@@ -79,44 +102,95 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
           </div>
 
           {/* DnD context wraps both tab bodies */}
-          <DragDropContext onDragEnd={handleDragEnd}>
+          <DragDropContext onDragEnd={handleDragEnd} onDragStart={handleDragStart}>
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
 
               {tab === 'passive' ? (
                 <>
-                  {/* Equipped Passive Slot */}
+                  {/* ── 3 Passive Slots ───────────────────────────────── */}
                   <div>
-                    <p className="pixel-font text-[9px] text-gray-500 mb-2">Equipped Passive</p>
-                    <Droppable droppableId="slot-passive">
-                      {(provided, snapshot) => (
+                    <p className="pixel-font text-[9px] text-gray-500 mb-3">Equipped Passive Slots</p>
+                    <div className="flex gap-2">
+                      {PASSIVE_UNLOCK_THRESHOLDS.map((threshold, slotIdx) => {
+                        const isUnlocked = totalStacks >= threshold
+                        const slotData = passiveSlots[slotIdx] ?? { equippedSkillId: null }
+                        const equipped = PASSIVE_SKILLS.find((s) => s.id === slotData.equippedSkillId) || null
+
+                        return (
+                          <div key={slotIdx} className="flex-1 flex flex-col gap-1">
+                            {/* Slot header label */}
+                            <p className={`pixel-font text-[7px] text-center ${
+                              isUnlocked ? 'text-pink-400' : 'text-gray-400'
+                            }`}>
+                              {isUnlocked ? `Slot ${slotIdx + 1}` : `🔒 ${threshold} stacks`}
+                            </p>
+
+                            <Droppable droppableId={`slot-${slotIdx}`} isDropDisabled={!isUnlocked}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.droppableProps}
+                                  className={`relative border-2 border-dashed rounded-xl h-24 flex flex-col items-center justify-center transition-all duration-150 overflow-hidden ${
+                                    !isUnlocked
+                                      ? 'border-gray-200 bg-gray-50 opacity-50 grayscale'
+                                      : snapshot.isDraggingOver
+                                      ? 'border-pink-400 bg-pink-50 scale-[1.02]'
+                                      : equipped
+                                      ? 'border-pink-300 bg-pink-50'
+                                      : 'border-gray-300 bg-gray-50'
+                                  }`}
+                                >
+                                  {!isUnlocked ? (
+                                    <Lock size={18} className="text-gray-300" />
+                                  ) : equipped ? (
+                                    <>
+                                      {equipped.image
+                                        ? <img src={equipped.image} alt={equipped.name} className="w-9 h-9 object-contain" />
+                                        : <span className="text-3xl leading-none">{equipped.emoji}</span>
+                                      }
+                                      <span className="pixel-font text-[8px] text-gray-800 font-bold mt-0.5">{equipped.name}</span>
+                                      {/* Tap-to-clear button */}
+                                      <button
+                                        onClick={() => clearPassiveSlot(slotIdx)}
+                                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-gray-200 text-gray-500 text-[10px] leading-none flex items-center justify-center active:scale-95"
+                                        title="Remove skill"
+                                      >
+                                        ✕
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <p className="pixel-font text-[8px] text-gray-400 text-center px-1">Drop here</p>
+                                  )}
+                                  {provided.placeholder}
+                                </div>
+                              )}
+                            </Droppable>
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    {/* Stack progress bar */}
+                    <div className="mt-3 px-1">
+                      <div className="flex justify-between mb-1">
+                        <p className="pixel-font text-[7px] text-gray-400">Stacks: {totalStacks}</p>
+                        <p className="pixel-font text-[7px] text-gray-400">
+                          Next unlock: {PASSIVE_UNLOCK_THRESHOLDS.find((t) => totalStacks < t) ?? 'MAX ✓'}
+                        </p>
+                      </div>
+                      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                         <div
-                          ref={provided.innerRef}
-                          {...provided.droppableProps}
-                          className={`border-2 border-dashed rounded-xl h-24 flex items-center justify-center transition-colors
-                            ${snapshot.isDraggingOver ? 'border-pink-400 bg-pink-50' : 'border-gray-300 bg-gray-50'}`}
-                        >
-                          {equippedPassive ? (
-                            <div className="flex flex-col items-center gap-1 pointer-events-none">
-                              {equippedPassive.image
-                                ? <img src={equippedPassive.image} alt={equippedPassive.name} className="w-10 h-10 object-contain" />
-                                : <span className="text-4xl leading-none">{equippedPassive.emoji}</span>
-                              }
-                              <span className="pixel-font text-[9px] text-gray-800 font-bold">{equippedPassive.name}</span>
-                              <span className="pixel-font text-[7px] text-pink-500 text-center px-2">{equippedPassive.effect}</span>
-                            </div>
-                          ) : (
-                            <p className="pixel-font text-[9px] text-gray-400">Drag skill here to equip</p>
-                          )}
-                          {provided.placeholder}
-                        </div>
-                      )}
-                    </Droppable>
+                          className="h-full bg-pink-400 rounded-full transition-all duration-500"
+                          style={{ width: `${Math.min(100, (totalStacks / 7) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Available passive skills */}
+                  {/* ── Available passive skills ───────────────────────── */}
                   <div>
                     <p className="pixel-font text-[9px] text-gray-500 mb-2">Available Skills</p>
-                    <Droppable droppableId="list-passive" direction="horizontal">
+                    <Droppable droppableId="list-passive" direction="horizontal" isDropDisabled>
                       {(provided) => (
                         <div ref={provided.innerRef} {...provided.droppableProps} className="flex gap-3">
                           {passiveUnlocked.map((skill, index) => (
@@ -126,17 +200,17 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  className={`flex-1 rounded-2xl border-2 p-3 flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing transition-all
-                                    ${equippedPassiveSkill === skill.id ? 'border-pink-400 bg-pink-50' : 'border-gray-200 bg-white'}
-                                    ${snapshot.isDragging ? 'shadow-xl scale-105 z-50' : ''}`}
+                                  className={`flex-1 rounded-2xl border-2 p-3 flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing transition-all select-none
+                                    ${passiveSlots.some((s) => s.equippedSkillId === skill.id) ? 'border-pink-400 bg-pink-50' : 'border-gray-200 bg-white'}
+                                    ${snapshot.isDragging ? 'shadow-xl scale-105 z-50 rotate-1' : ''}`}
                                 >
                                   {skill.image
-                                    ? <img src={skill.image} alt={skill.name} className="w-10 h-10 object-contain" />
+                                    ? <img src={skill.image} alt={skill.name} className="w-10 h-10 object-contain" draggable={false} />
                                     : <span className="text-3xl leading-none">{skill.emoji}</span>
                                   }
                                   <span className="pixel-font text-[8px] text-gray-700">{skill.name}</span>
-                                  {equippedPassiveSkill === skill.id && (
-                                    <span className="pixel-font text-[7px] text-pink-400">✓ Active</span>
+                                  {passiveSlots.some((s) => s.equippedSkillId === skill.id) && (
+                                    <span className="pixel-font text-[7px] text-pink-400">✓ Equipped</span>
                                   )}
                                 </div>
                               )}
@@ -165,66 +239,131 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                     </div>
                   </div>
 
-                  {equippedPassive && (
-                    <div className="rounded-xl bg-pink-50 border border-pink-100 px-4 py-3">
-                      <p className="pixel-font text-[9px] text-pink-600 font-bold mb-1">{equippedPassive.name} — Active Effect</p>
-                      <p className="text-xs text-gray-600 leading-relaxed">{equippedPassive.description}</p>
-                      {equippedPassive.id === 'planner' && (
-                        <button
-                          onClick={() => onOpenCalendar?.()}
-                          className="mt-3 w-full rounded-xl bg-purple-500 text-white py-2.5 pixel-font text-[10px] active:scale-95 transition-transform shadow"
-                        >
-                          📅 Open Calendar
-                        </button>
-                      )}
+                  {/* Active-effect info for each equipped passive */}
+                  {passiveSlots.some((s) => s.equippedSkillId) && (
+                    <div className="space-y-2">
+                      {passiveSlots
+                        .filter((s) => s.equippedSkillId)
+                        .map((s) => {
+                          const skill = PASSIVE_SKILLS.find((p) => p.id === s.equippedSkillId)
+                          if (!skill) return null
+                          return (
+                            <div key={skill.id} className="rounded-xl bg-pink-50 border border-pink-100 px-4 py-3">
+                              <p className="pixel-font text-[9px] text-pink-600 font-bold mb-1">{skill.name} — Active Effect</p>
+                              <p className="text-xs text-gray-600 leading-relaxed">{skill.description}</p>
+                              {skill.id === 'planner' && (
+                                <button
+                                  onClick={() => onOpenCalendar?.()}
+                                  className="mt-3 w-full rounded-xl bg-purple-500 text-white py-2.5 pixel-font text-[10px] active:scale-95 transition-transform shadow"
+                                >
+                                  📅 Open Calendar
+                                </button>
+                              )}
+                            </div>
+                          )
+                        })}
                     </div>
                   )}
                 </>
               ) : (
                 <>
-                  {/* Equipped Active Slot */}
+                  {/* ── Task Drop Zone (TOP) ─────────────────────────────── */}
                   <div>
-                    <p className="pixel-font text-[9px] text-gray-500 mb-2">Equipped Active</p>
-                    <Droppable droppableId="slot-active">
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.droppableProps}
-                          className={`border-2 border-dashed rounded-xl h-24 flex items-center justify-center transition-colors
-                            ${snapshot.isDraggingOver ? 'border-sky-400 bg-sky-50' : 'border-gray-300 bg-gray-50'}`}
-                        >
-                          {equippedActive ? (
-                            <button
-                              onClick={
-                                equippedActive.id === 'ignite'
-                                  ? () => { setCountNum(5); setShowCountdown(true) }
-                                  : undefined
-                              }
-                              className={`flex flex-col items-center gap-1 transition-transform
-                                ${equippedActive.id === 'ignite' ? 'active:scale-95 cursor-pointer' : 'cursor-default'}`}
-                            >
-                              <img src={equippedActive.image} alt={equippedActive.name} className="w-10 h-10 object-contain" />
-                              <span className="pixel-font text-[9px] text-gray-800 font-bold">{equippedActive.name}</span>
-                              {equippedActive.id === 'ignite' && (
-                                <span className="pixel-font text-[7px] text-orange-500">🚀 Tap to Launch!</span>
-                              )}
-                              {equippedActive.id !== 'ignite' && (
-                                <span className="pixel-font text-[7px] text-sky-500">{equippedActive.tagline}</span>
-                              )}
-                            </button>
-                          ) : (
-                            <p className="pixel-font text-[9px] text-gray-400">Drag skill here to equip</p>
-                          )}
-                          {provided.placeholder}
-                        </div>
-                      )}
-                    </Droppable>
+                    <p className="pixel-font text-[9px] text-gray-500 mb-2">
+                      {pendingTasks.length > 0 ? `Tasks (${pendingTasks.length})` : 'No Active Tasks'}
+                    </p>
+                    {pendingTasks.length === 0 ? (
+                      <div className="border-2 border-dashed border-gray-200 rounded-xl py-10 flex flex-col items-center gap-2">
+                        <span className="text-3xl">📋</span>
+                        <p className="pixel-font text-[9px] text-gray-300">Create a task first!</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 max-h-56 overflow-y-auto pr-0.5">
+                        {pendingTasks.map((task) => (
+                          <Droppable key={task.id} droppableId={`task-${task.id}`}>
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                                className={`rounded-xl border-2 px-4 py-3 flex items-center gap-3 transition-all duration-150 min-h-16 ${
+                                  task.assignedSkill === 'ignite'
+                                    ? 'border-orange-300 bg-orange-50 shadow-[0_0_10px_rgba(251,146,60,0.35)]'
+                                    : task.assignedSkill === 'capsule'
+                                    ? 'border-sky-300 bg-sky-50 shadow-[0_0_10px_rgba(56,189,248,0.35)]'
+                                    : snapshot.isDraggingOver
+                                    ? 'border-purple-400 bg-purple-50 scale-[1.01] shadow-md'
+                                    : 'border-gray-200 bg-white'
+                                }`}
+                              >
+                                {/* Skill badge or drop target indicator */}
+                                {task.assignedSkill ? (
+                                  <span className="text-2xl shrink-0">
+                                    {task.assignedSkill === 'ignite' ? '🚀' : '⏳'}
+                                  </span>
+                                ) : (
+                                  <div className={`w-8 h-8 rounded-lg border-2 border-dashed flex items-center justify-center shrink-0 transition-colors ${
+                                    snapshot.isDraggingOver ? 'border-purple-400 bg-purple-100' : 'border-gray-200'
+                                  }`}>
+                                    <span className="text-sm text-gray-300">+</span>
+                                  </div>
+                                )}
+
+                                {/* Task info */}
+                                <div className="flex-1 min-w-0">
+                                  <p className="pixel-font text-[10px] text-gray-800 truncate">{task.title}</p>
+                                  <p className="text-xs text-gray-400 mt-0.5">
+                                    {task.type} · {task.timeMinutes}min · {task.rewardCoins}💰
+                                  </p>
+                                </div>
+
+                                {/* Launch / View button when skill is active on this task */}
+                                {task.assignedSkill && (
+                                  <button
+                                    onClick={() => setActiveSkillTask(task)}
+                                    className={`pixel-font text-[8px] text-white rounded-xl px-3 py-1.5 active:scale-95 transition-transform shrink-0 shadow ${
+                                      task.assignedSkill === 'ignite' ? 'bg-orange-400' : 'bg-sky-400'
+                                    }`}
+                                  >
+                                    {task.assignedSkill === 'ignite' ? '🚀 Go' : '⏳ View'}
+                                  </button>
+                                )}
+
+                                {/* DnD placeholder must be inside Droppable */}
+                                <div className="hidden">{provided.placeholder}</div>
+                              </div>
+                            )}
+                          </Droppable>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Available active skills */}
+                  {/* ── Dynamic how-to-use / drag hint ──────────────────── */}
+                  <div className={`rounded-xl px-4 py-3 transition-colors duration-200 ${
+                    draggingSkillId === 'ignite'
+                      ? 'bg-orange-50 border border-orange-200'
+                      : draggingSkillId === 'capsule'
+                      ? 'bg-sky-50 border border-sky-200'
+                      : 'bg-gray-50 border border-gray-100'
+                  }`}>
+                    <p className="pixel-font text-[9px] font-bold mb-1 text-gray-700">
+                      {draggingSkillId === 'ignite' ? '🚀 Ignite — Drop on a task!'
+                        : draggingSkillId === 'capsule' ? '⏳ Capsule — Drop on a task!'
+                        : '💡 How to Use'}
+                    </p>
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      {draggingSkillId === 'ignite'
+                        ? 'Drop onto any task above to start a 5-second launch countdown!'
+                        : draggingSkillId === 'capsule'
+                        ? 'Drop onto any task to lock it for 30 min and earn +50% coins on finish!'
+                        : 'Drag a skill card below and drop it onto a task above to activate a focus mode.'}
+                    </p>
+                  </div>
+
+                  {/* ── Available Active Skills — drag source (BOTTOM) ──── */}
                   <div>
-                    <p className="pixel-font text-[9px] text-gray-500 mb-2">Available Skills</p>
-                    <Droppable droppableId="list-active" direction="horizontal">
+                    <p className="pixel-font text-[9px] text-gray-500 mb-2">Available Skills — Drag onto a Task ↑</p>
+                    <Droppable droppableId="list-active" direction="horizontal" isDropDisabled>
                       {(provided) => (
                         <div ref={provided.innerRef} {...provided.droppableProps} className="flex gap-3">
                           {activeUnlocked.map((skill, index) => (
@@ -234,15 +373,20 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  className={`flex-1 rounded-2xl border-2 p-3 flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing transition-all
-                                    ${equippedActiveSkill === skill.id ? 'border-sky-400 bg-sky-50' : 'border-gray-200 bg-white'}
-                                    ${snapshot.isDragging ? 'shadow-xl scale-105 z-50' : ''}`}
+                                  className={`flex-1 rounded-2xl border-2 p-4 flex flex-col items-center gap-1.5 cursor-grab active:cursor-grabbing transition-all select-none
+                                    ${skill.id === 'ignite'
+                                      ? 'border-orange-300 bg-orange-50'
+                                      : 'border-sky-300 bg-sky-50'}
+                                    ${snapshot.isDragging ? 'shadow-2xl scale-110 z-50 opacity-90 rotate-2' : ''}`}
                                 >
-                                  <img src={skill.image} alt={skill.name} className="w-10 h-10 object-contain" />
+                                  {skill.image
+                                    ? <img src={skill.image} alt={skill.name} className="w-12 h-12 object-contain" draggable={false} />
+                                    : <span className="text-3xl leading-none">{skill.emoji}</span>
+                                  }
                                   <span className="pixel-font text-[8px] text-gray-700">{skill.name}</span>
-                                  {equippedActiveSkill === skill.id && (
-                                    <span className="pixel-font text-[7px] text-sky-400">✓ Active</span>
-                                  )}
+                                  <span className={`pixel-font text-[7px] ${skill.id === 'ignite' ? 'text-orange-400' : 'text-sky-400'}`}>
+                                    {skill.tagline}
+                                  </span>
                                 </div>
                               )}
                             </Draggable>
@@ -252,27 +396,24 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                       )}
                     </Droppable>
 
-                    {/* Locked active skills */}
-                    <div className="flex gap-3 mt-3">
-                      {activeLocked.map((skill) => (
-                        <div
-                          key={skill.id}
-                          className="flex-1 rounded-2xl border-2 border-gray-200 bg-gray-50 p-3 flex flex-col items-center gap-1 opacity-50 grayscale select-none"
-                        >
-                          <img src={skill.image} alt={skill.name} className="w-10 h-10 object-contain" />
-                          <span className="pixel-font text-[8px] text-gray-500">{skill.name}</span>
-                          <Lock size={10} className="text-gray-400" />
-                        </div>
-                      ))}
-                    </div>
+                    {activeLocked.length > 0 && (
+                      <div className="flex gap-3 mt-3">
+                        {activeLocked.map((skill) => (
+                          <div
+                            key={skill.id}
+                            className="flex-1 rounded-2xl border-2 border-gray-200 bg-gray-50 p-3 flex flex-col items-center gap-1 opacity-50 grayscale select-none"
+                          >
+                            {skill.image
+                              ? <img src={skill.image} alt={skill.name} className="w-10 h-10 object-contain" />
+                              : <span className="text-3xl leading-none">{skill.emoji}</span>
+                            }
+                            <span className="pixel-font text-[8px] text-gray-500">{skill.name}</span>
+                            <Lock size={10} className="text-gray-400" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-
-                  {equippedActive && (
-                    <div className="rounded-xl bg-sky-50 border border-sky-100 px-4 py-3">
-                      <p className="pixel-font text-[9px] text-sky-600 font-bold mb-1">{equippedActive.name} — How to use</p>
-                      <p className="text-xs text-gray-600 leading-relaxed">{equippedActive.description}</p>
-                    </div>
-                  )}
                 </>
               )}
             </div>
@@ -280,19 +421,12 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
         </div>
       </div>
 
-      {/* ── Ignite Countdown Overlay ── */}
-      {showCountdown && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center rounded-t-2xl">
-          <p className="pixel-font text-white text-[11px] mb-6 tracking-widest opacity-80">🚀 IGNITE</p>
-          <p className="pixel-font text-[96px] leading-none text-orange-400">{countNum}</p>
-          <p className="pixel-font text-white text-[9px] mt-8 opacity-60">Get ready to start your task!</p>
-          <button
-            onClick={() => { setShowCountdown(false); setCountNum(5) }}
-            className="mt-6 pixel-font text-[9px] text-gray-400 border border-gray-600 rounded-full px-4 py-2"
-          >
-            Cancel
-          </button>
-        </div>
+      {/* ── Skill Execution Popup ── */}
+      {activeSkillTask && (
+        <SkillExecutionPopup
+          task={tasks.find((t) => t.id === activeSkillTask.id) ?? activeSkillTask}
+          onClose={() => setActiveSkillTask(null)}
+        />
       )}
     </div>
   )

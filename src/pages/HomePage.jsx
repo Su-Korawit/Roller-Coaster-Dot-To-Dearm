@@ -4,7 +4,8 @@ import { mbtiCharacters } from '../data/onboardingData'
 import { useSelectStore } from '../stores/useSelectStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useTaskStore } from '../stores/useTaskStore'
-import { useSkillStore } from '../stores/useSkillStore'
+import { useSkillStore, PASSIVE_UNLOCK_THRESHOLDS } from '../stores/useSkillStore'
+import { PASSIVE_SKILLS } from '../data/skillData'
 import { APP_VIEWS } from '../constants/appViews'
 import BottomNavBar from '../components/BottomNavBar'
 import TaskPanel from '../components/TaskPanel'
@@ -12,6 +13,7 @@ import NewsPanel from '../components/NewsPanel'
 import ProfilePanel from '../components/ProfilePanel'
 import SkillPanel from '../components/SkillPanel'
 import CalendarPopup from '../components/CalendarPopup'
+import DailyLoginModal from '../components/DailyLoginModal'
 
 // ── MBTI background asset maps (eager glob, resolved at build time) ──────────
 const bgImages = import.meta.glob(
@@ -62,6 +64,7 @@ function HomePage() {
   const [currentTrackIdx, setCurrentTrackIdx] = useState(0)
   const [isShowingProfile, setIsShowingProfile] = useState(true)
   const [showCalendar, setShowCalendar] = useState(false)
+  const [showDailyModal, setShowDailyModal] = useState(false)
   const videoRef = useRef(null)
   const audioRef = useRef(null)
 
@@ -71,6 +74,16 @@ function HomePage() {
   const { mbti } = useSelectStore()
   const { tasks } = useTaskStore()
   const isPlannerActive = useSkillStore((state) => state.isPlannerActive)
+  const passiveSlots = useSkillStore((state) => state.passiveSlots)
+  const totalStacks = useUserStore((s) => s.totalStacks)
+  const lastLoginDate = useUserStore((s) => s.lastLoginDate)
+
+  // Show daily check-in modal on first mount if not yet checked in today
+  useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10)
+    if (lastLoginDate !== today) setShowDailyModal(true)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Resolve MBTI background assets and reset video state on mbti change
   const mbtiAssets = getMbtiAssets(mbti)
@@ -236,7 +249,7 @@ function HomePage() {
 
         {/* Streak + Coins */}
         <div className="flex items-center gap-3 bg-white/90 rounded-full px-4 py-1.5 shadow">
-          <span className="pixel-font text-[11px] text-orange-500">🔥 {streak}</span>
+          <span className="pixel-font text-[11px] text-orange-500">🔥 {totalStacks}</span>
           <span className="pixel-font text-[11px] text-yellow-700">
             {coins}
             <span className="inline-block ml-1 w-5 h-5 rounded-full border-2 border-yellow-600 text-center text-[9px] leading-4">$</span>
@@ -244,18 +257,60 @@ function HomePage() {
         </div>
       </div>
 
-      {/* ── SKILL BADGE (top-left below avatar) ── */}
-      {/* When Planner passive is equipped the badge becomes a Calendar shortcut. */}
-      <div className="absolute top-20 left-4 z-20">
-        <button
-          onClick={isPlannerActive ? handlePlannerTransition : () => handleTabChange(APP_VIEWS.SKILL)}
-          className="w-14 h-14 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-gray-100 active:scale-95 transition-transform"
-        >
-          {isPlannerActive
-            ? <Calendar size={28} strokeWidth={1.5} className="text-purple-500" />
-            : <span className="text-2xl">{skillIcon}</span>
+      {/* ── PASSIVE SKILL FABs (left side, below avatar) ── */}
+      {/* Each slot: visible only when unlocked. Shows skill icon; Planner triggers CalendarPopup. */}
+      <div className="absolute top-20 left-4 z-20 flex flex-col gap-2">
+        {PASSIVE_UNLOCK_THRESHOLDS.map((threshold, slotIdx) => {
+          const isUnlocked = totalStacks >= threshold
+          const slot = passiveSlots[slotIdx] ?? { equippedSkillId: null }
+          const skill = PASSIVE_SKILLS.find((s) => s.id === slot.equippedSkillId)
+
+          // Locked & empty slot: show a small lock indicator
+          if (!isUnlocked) {
+            return (
+              <div
+                key={slotIdx}
+                className="w-12 h-12 bg-white/60 rounded-2xl shadow flex items-center justify-center border border-gray-100 opacity-40 grayscale"
+                title={`Unlock at ${threshold} stacks`}
+              >
+                <span className="text-base">🔒</span>
+              </div>
+            )
           }
-        </button>
+
+          // Unlocked but empty
+          if (!skill) {
+            return (
+              <button
+                key={slotIdx}
+                onClick={() => handleTabChange(APP_VIEWS.SKILL)}
+                className="w-12 h-12 bg-white/80 rounded-2xl shadow flex items-center justify-center border-2 border-dashed border-gray-300 active:scale-95 transition-transform"
+                title={`Slot ${slotIdx + 1}: tap to equip`}
+              >
+                <span className="pixel-font text-[8px] text-gray-400">{slotIdx + 1}</span>
+              </button>
+            )
+          }
+
+          // Unlocked & equipped
+          const isPlanner = skill.id === 'planner'
+          return (
+            <button
+              key={slotIdx}
+              onClick={isPlanner ? handlePlannerTransition : () => handleTabChange(APP_VIEWS.SKILL)}
+              className="w-12 h-12 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-gray-100 active:scale-95 transition-transform animate-[fadeInLeft_0.3s_ease]"
+              title={skill.name}
+            >
+              {isPlanner ? (
+                <Calendar size={22} strokeWidth={1.5} className="text-purple-500" />
+              ) : skill.image ? (
+                <img src={skill.image} alt={skill.name} className="w-8 h-8 object-contain" />
+              ) : (
+                <span className="text-xl">{skill.emoji}</span>
+              )}
+            </button>
+          )
+        })}
       </div>
 
       {/* ── NEWS BUTTON (top-right below coins) ── */}
@@ -297,6 +352,11 @@ function HomePage() {
             setActiveTab(APP_VIEWS.HOME)
           }}
         />
+      )}
+
+      {/* ── DAILY MOOD CHECK-IN ── */}
+      {showDailyModal && (
+        <DailyLoginModal onClose={() => setShowDailyModal(false)} />
       )}
 
       {/* ── TRACKLIST PANEL ── */}

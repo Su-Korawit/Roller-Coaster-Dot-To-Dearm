@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { useUserStore } from './useUserStore'
 
 const DEFAULT_TASK = {
   type: 'General',
@@ -26,6 +27,10 @@ function normalizeTask(task) {
     estimatedProgress: task.estimatedProgress ?? null,
     // Calendar scheduling — 'YYYY-MM-DD' string or null
     scheduledDate: typeof task.scheduledDate === 'string' ? task.scheduledDate : null,
+    // Active skill assignment — one skill per task at a time
+    assignedSkill: typeof task.assignedSkill === 'string' ? task.assignedSkill : null,
+    // Unix ms timestamp when the skill timer expires (Capsule), or null
+    timerEnd: typeof task.timerEnd === 'number' ? task.timerEnd : null,
   }
 }
 
@@ -51,19 +56,44 @@ export const useTaskStore = create(
           ),
         })),
       toggleTask: (taskId) =>
-        set((state) => ({
-          tasks: state.tasks.map((task) =>
-            task.id === taskId
-              ? normalizeTask({ ...task, completed: !task.completed, updatedAt: Date.now() })
-              : normalizeTask(task),
-          ),
-        })),
+        set((state) => {
+          const task = state.tasks.find((t) => t.id === taskId)
+          // Only count completing a task (not un-completing it)
+          if (task && !task.completed) {
+            useUserStore.getState().incrementStacks()
+          }
+          return {
+            tasks: state.tasks.map((t) =>
+              t.id === taskId
+                ? normalizeTask({ ...t, completed: !t.completed, updatedAt: Date.now() })
+                : normalizeTask(t),
+            ),
+          }
+        }),
       removeTask: (taskId) =>
         set((state) => ({
           tasks: state.tasks.filter((task) => task.id !== taskId),
         })),
       reorderTasks: (newOrder) => set({ tasks: newOrder }),
       clearTasks: () => set({ tasks: [] }),
+      // Assign an active skill to a specific task (one skill per task)
+      applySkillToTask: (taskId, skillId, timerEnd = null) =>
+        set((state) => ({
+          tasks: state.tasks.map((t) =>
+            t.id === taskId
+              ? normalizeTask({ ...t, assignedSkill: skillId, timerEnd, updatedAt: Date.now() })
+              : normalizeTask(t),
+          ),
+        })),
+      // Remove skill assignment from a task
+      clearSkillFromTask: (taskId) =>
+        set((state) => ({
+          tasks: state.tasks.map((t) =>
+            t.id === taskId
+              ? normalizeTask({ ...t, assignedSkill: null, timerEnd: null, updatedAt: Date.now() })
+              : normalizeTask(t),
+          ),
+        })),
     }),
     {
       name: 'rc-task-store',

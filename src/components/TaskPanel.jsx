@@ -5,6 +5,7 @@ import { useTaskStore } from '../stores/useTaskStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useSkillStore } from '../stores/useSkillStore'
 import TaskForm from './TaskForm'
+import SkillExecutionPopup from './SkillExecutionPopup'
 
 // ── Reflection Bottom Sheet ───────────────────────────────────────────────────
 function ReflectionSheet({ task, onSubmit, onClose, isEvaluating }) {
@@ -50,13 +51,15 @@ function ReflectionSheet({ task, onSubmit, onClose, isEvaluating }) {
 }
 
 export default function TaskPanel({ onClose, initialView = 'list' }) {
-  const { tasks, addTask, updateTask, toggleTask, removeTask, reorderTasks } = useTaskStore()
+  const { tasks, addTask, updateTask, toggleTask, removeTask, reorderTasks, applySkillToTask } = useTaskStore()
   const { addCoins, evaluateAndCompleteTask, generateAIDailyTask, activeMasteryBlockId } = useUserStore()
   const [view, setView] = useState(initialView)
   const [editingTaskId, setEditingTaskId] = useState(null)
   const [editInitialValues, setEditInitialValues] = useState({})
   const [isAutoGenerating, setIsAutoGenerating] = useState(false)
   const [autoGenError, setAutoGenError] = useState('')
+  // Skill execution popup state
+  const [skillTask, setSkillTask] = useState(null)
 
   // Reflection sheet state
   const [reflectionTask, setReflectionTask] = useState(null)
@@ -93,6 +96,11 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
   }
 
   function handleToggle(task) {
+    // If a skill is active on this task, open execution popup instead
+    if (task.assignedSkill && !task.completed) {
+      setSkillTask(task)
+      return
+    }
     if (!task.completed) {
       // AI-generated tasks require a reflection before completing
       if (task.isAIGenerated) {
@@ -201,6 +209,13 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
               onEdit={openEdit}
               onRemove={removeTask}
               onCreate={openCreate}
+              onSkill={(task) => {
+                const { equippedActiveSkill } = useSkillStore.getState()
+                if (!equippedActiveSkill || task.completed) return
+                const timerEnd = equippedActiveSkill === 'capsule' ? Date.now() + 30 * 60 * 1000 : null
+                applySkillToTask(task.id, equippedActiveSkill, timerEnd)
+                setSkillTask({ ...task, assignedSkill: equippedActiveSkill, timerEnd })
+              }}
               onDragEnd={handleDragEnd}
               onAutoGenerate={handleAutoGenerate}
               isAutoGenerating={isAutoGenerating}
@@ -215,6 +230,14 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
           )}
         </div>
       </div>
+
+      {/* ── Skill Execution Popup ── */}
+      {skillTask && (
+        <SkillExecutionPopup
+          task={tasks.find((t) => t.id === skillTask.id) ?? skillTask}
+          onClose={() => setSkillTask(null)}
+        />
+      )}
 
       {/* ── Reflection Sheet (AI tasks) ── */}
       {reflectionTask && (
@@ -247,7 +270,8 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
   )
 }
 
-function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onDragEnd, onAutoGenerate, isAutoGenerating, autoGenError }) {
+function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onSkill, onDragEnd, onAutoGenerate, isAutoGenerating, autoGenError }) {
+  const equippedActiveSkill = useSkillStore((s) => s.equippedActiveSkill)
   return (
     <>
       <DragDropContext onDragEnd={onDragEnd}>
@@ -271,12 +295,16 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onDragEnd, 
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
-                      className={`flex items-center gap-3 px-4 py-4 border-b border-gray-200 transition-shadow ${
+                      className={`flex items-center gap-3 px-4 py-4 border-b transition-shadow ${
                         snapshot.isDragging
-                          ? 'shadow-xl scale-[1.02] bg-white/95 backdrop-blur-sm z-50 rounded-xl'
+                          ? 'shadow-xl scale-[1.02] bg-white/95 backdrop-blur-sm z-50 rounded-xl border-transparent'
+                          : task.assignedSkill === 'ignite' && !task.completed
+                          ? 'border-orange-300 bg-orange-50 shadow-[0_0_8px_2px_rgba(251,146,60,0.3)]'
+                          : task.assignedSkill === 'capsule' && !task.completed
+                          ? 'border-sky-300 bg-sky-50 shadow-[0_0_8px_2px_rgba(56,189,248,0.3)]'
                           : task.isAIGenerated && !task.completed
-                          ? 'bg-purple-50'
-                          : 'bg-white'
+                          ? 'border-gray-200 bg-purple-50'
+                          : 'border-gray-200 bg-white'
                       }`}
                     >
                       {/* Drag handle */}
@@ -301,12 +329,29 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onDragEnd, 
                       <button onClick={() => onEdit(task)} className="flex-1 text-left">
                         <p className={`pixel-font text-[11px] ${task.completed ? 'line-through text-gray-400' : 'text-black'}`}>
                           {task.isAIGenerated && !task.completed && <span className="mr-1">✨</span>}
+                          {task.assignedSkill === 'ignite' && !task.completed && <span className="mr-1">🚀</span>}
+                          {task.assignedSkill === 'capsule' && !task.completed && <span className="mr-1">⏳</span>}
                           #{index + 1} | {task.title}
                         </p>
                         <p className="text-sm text-gray-500 mt-1">
                           {task.type} - {task.timeMinutes} min - {task.rewardCoins} coins
                         </p>
                       </button>
+
+                      {/* Skill trigger button (only when an active skill is equipped and task not completed) */}
+                      {equippedActiveSkill && !task.completed && (
+                        <button
+                          onClick={() => onSkill?.(task)}
+                          className={`text-xl leading-none px-1 active:scale-95 transition-transform ${
+                            task.assignedSkill ? 'opacity-40' : ''
+                          }`}
+                          title={task.assignedSkill ? 'Skill already active' : `Apply ${equippedActiveSkill}`}
+                          aria-label="Apply skill to task"
+                          disabled={!!task.assignedSkill}
+                        >
+                          {equippedActiveSkill === 'ignite' ? '🚀' : '⏳'}
+                        </button>
+                      )}
 
                       {/* Edit */}
                       <button

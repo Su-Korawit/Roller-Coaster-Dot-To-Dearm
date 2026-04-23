@@ -34,7 +34,11 @@ export const useUserStore = create(
       user: null,
       coins: 0,
       streak: 0,
+      totalStacks: 0,   // incremented each time a task is marked complete
       userName: '',
+      // Daily mood check-in
+      feelingNotes: [],   // [{ date: 'YYYY-MM-DD', feel: 1-5 }]
+      lastLoginDate: null, // 'YYYY-MM-DD' — guards one check-in per day
       portfolioData: defaultPortfolioData,
       journeys: defaultJourneys,
       activeMasteryBlockId: null,
@@ -46,6 +50,29 @@ export const useUserStore = create(
       setAiLanguage: (lang) => set({ aiLanguage: lang }),
       addCoins: (amount) => set((state) => ({ coins: state.coins + amount })),
       setStreak: (streak) => set({ streak }),
+      incrementStacks: () => set((state) => ({ totalStacks: state.totalStacks + 1 })),
+
+      // Daily feel check-in (max once per day). Increments stacks.
+      addDailyFeel: (level) => {
+        const today = new Date().toISOString().slice(0, 10)
+        set((state) => {
+          if (state.lastLoginDate === today) return state // already checked in
+          return {
+            lastLoginDate: today,
+            totalStacks: state.totalStacks + 1,
+            feelingNotes: [
+              ...state.feelingNotes,
+              { date: today, feel: level },
+            ],
+          }
+        })
+      },
+
+      // Returns true if the user has NOT yet checked in today
+      needsDailyCheckIn: () => {
+        const today = new Date().toISOString().slice(0, 10)
+        return useUserStore.getState().lastLoginDate !== today
+      },
 
       updatePortfolio: (key, data) =>
         set((state) => ({
@@ -178,7 +205,10 @@ export const useUserStore = create(
           user: null,
           coins: 0,
           streak: 0,
+          totalStacks: 0,
           userName: '',
+          feelingNotes: [],
+          lastLoginDate: null,
           portfolioData: defaultPortfolioData,
           journeys: defaultJourneys,
           activeMasteryBlockId: null,
