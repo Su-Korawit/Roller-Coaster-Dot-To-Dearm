@@ -12,6 +12,7 @@ import TaskPanel from '../components/TaskPanel'
 import NewsPanel from '../components/NewsPanel'
 import ProfilePanel from '../components/ProfilePanel'
 import SkillPanel from '../components/SkillPanel'
+import SocialPanel from '../components/SocialPanel'
 import CalendarPopup from '../components/CalendarPopup'
 import DailyLoginModal from '../components/DailyLoginModal'
 
@@ -333,6 +334,7 @@ function HomePage() {
       {activeTab === APP_VIEWS.TASK && <TaskPanel onClose={closePanel} initialView={taskInitialView} />}
       {activeTab === APP_VIEWS.NEWS && <NewsPanel onClose={closePanel} />}
       {activeTab === APP_VIEWS.PROFILE && <ProfilePanel onClose={closePanel} />}
+      {activeTab === APP_VIEWS.SOCIAL && <SocialPanel onClose={closePanel} />}
       {activeTab === APP_VIEWS.SKILL && (
         <SkillPanel
           onClose={closePanel}

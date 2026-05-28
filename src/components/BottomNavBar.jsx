@@ -1,4 +1,6 @@
-// Bottom Navigation Bar — Home | Task | Skill | Profile
+import { Users } from 'lucide-react'
+
+// Bottom Navigation Bar — Home | Task | Social | Profile
 export default function BottomNavBar({ active, onChange }) {
   const tabs = [
     {
@@ -26,13 +28,9 @@ export default function BottomNavBar({ active, onChange }) {
       ),
     },
     {
-      id: 'skill',
-      label: 'Skill',
-      icon: (
-        <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      ),
+      id: 'social',
+      label: 'Social',
+      icon: <Users size={22} strokeWidth={2} />,
     },
     {
       id: 'profile',

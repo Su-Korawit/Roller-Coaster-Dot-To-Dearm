@@ -7,6 +7,7 @@ export const APP_VIEWS = {
   NEWS: 'news',
   PROFILE: 'profile',
   SKILL: 'skill',
+  SOCIAL: 'social',
   MUSIC: 'music',
   PLANNER_CALENDAR: 'planner_calendar',
 }
