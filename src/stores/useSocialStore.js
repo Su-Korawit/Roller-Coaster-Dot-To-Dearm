@@ -132,6 +132,16 @@ export const useSocialStore = create((set) => ({
     }))
   },
 
+  // Removes targetUid from my following and removes me from their followers.
+  unfollowUser: async (targetUid) => {
+    const uid = myUid()
+    const batch = writeBatch(db)
+    batch.update(doc(db, 'users', uid), { following: arrayRemove(targetUid) })
+    batch.update(doc(db, 'users', targetUid), { followers: arrayRemove(uid) })
+    await batch.commit()
+    set((s) => ({ following: s.following.filter((id) => id !== targetUid) }))
+  },
+
   // Removes fromUid from my followRequests without creating a follow relationship.
   rejectFollowRequest: async (fromUid) => {
     const uid = myUid()

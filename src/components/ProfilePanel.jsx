@@ -1,12 +1,15 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Settings, Share2, Loader2 } from 'lucide-react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '../firebase'
+import { useAuthStore } from '../stores/useAuthStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useSelectStore } from '../stores/useSelectStore'
-import { useTaskStore } from '../stores/useTaskStore'
 import { careers, masteries, universities, programs } from '../data/onboardingData'
+import SettingsSheet from './SettingsSheet'
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
 
@@ -78,7 +81,7 @@ function PortfolioCircle({ label, image, progress, isActive, onPress, onLongPres
 // Modal uses absolute positioning to avoid backdrop-blur stacking context breaking fixed
 function InlineModal({ title, children, onClose }) {
   return (
-    <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+    <div className="absolute inset-0 z-60 flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white rounded-2xl p-5 w-full max-w-xs shadow-xl flex flex-col max-h-[80vh]">
         <p className="pixel-font text-[10px] text-gray-700 mb-3 shrink-0">{title}</p>
         <div className="overflow-y-auto flex-1 space-y-3 pr-1 pb-1">
@@ -98,11 +101,11 @@ function InlineModal({ title, children, onClose }) {
 // Bottom-sheet style panel for Add / Edit journey items
 function JourneySheet({ title, onClose, children }) {
   return (
-    <div className="absolute inset-0 z-[60] flex flex-col justify-end">
+    <div className="absolute inset-0 z-60 flex flex-col justify-end">
       {/* Backdrop — covers entire panel including nav area */}
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       {/* Sheet */}
-      <div className="relative bg-white rounded-t-[32px] px-6 pt-4 pb-10 shadow-2xl max-h-[85vh] flex flex-col">
+      <div className="relative bg-white rounded-t-4xl px-6 pt-4 pb-10 shadow-2xl max-h-[85vh] flex flex-col">
         {/* Drag handle */}
         <div className="flex justify-center mb-3 shrink-0">
           <div className="w-10 h-1 bg-gray-200 rounded-full" />
@@ -123,29 +126,22 @@ const PORTFOLIO_KEYS = ['mastery', 'career', 'university']
 export default function ProfilePanel({ onClose }) {
   const navigate = useNavigate()
 
+  const authUser = useAuthStore((s) => s.user)
+
   const {
-    user,
-    coins,
-    streak,
-    userName,
     portfolioData,
     journeys,
     activeMasteryBlockId,
     aiLanguage,
-    setUser,
-    setUserName,
     setActiveMasteryBlockId,
-    setAiLanguage,
     updatePortfolio,
     setJourneys,
     addJourneyItem,
     updateJourneyItem,
     deleteJourneyItem,
-    resetUser,
   } = useUserStore()
 
-  const { mbti, career, mastery, university, program, resetSelection } = useSelectStore()
-  const { tasks } = useTaskStore()
+  const { mbti, career, mastery, university, program } = useSelectStore()
 
   // Resolve onboarding selections for default circle images
   const selectedCareer = careers.find((c) => c.id === career)
@@ -153,17 +149,16 @@ export default function ProfilePanel({ onClose }) {
   const selectedUniversity = universities.find((u) => u.id === university)
   const selectedProgram = programs.find((p) => p.id === program)
 
-  // Local UI state
-  const [activeCategory, setActiveCategory] = useState('mastery')
-  const [showSettings, setShowSettings] = useState(false)
-  const [editName, setEditName] = useState(userName || user?.name || '')
+  // Firestore profile (displayName, bio, photoURL)
+  const [firestoreProfile, setFirestoreProfile] = useState(null)
+  const [showSettingsSheet, setShowSettingsSheet] = useState(false)
 
   // Portfolio edit modal state
-  const [portfolioModal, setPortfolioModal] = useState(null) // null | key string
+  const [portfolioModal, setPortfolioModal] = useState(null)
   const [portfolioEdit, setPortfolioEdit] = useState({ title: '', image: '', description: '' })
 
   // Journey edit modal state
-  const [journeyModal, setJourneyModal] = useState(null) // null | { isNew, item }
+  const [journeyModal, setJourneyModal] = useState(null)
   const [journeyEdit, setJourneyEdit] = useState({ title: '', desc: '' })
 
   // AI generation state
@@ -172,8 +167,24 @@ export default function ProfilePanel({ onClose }) {
   // Journey detail view state
   const [viewingJourney, setViewingJourney] = useState(null)
 
-  const completedTasks = tasks.filter((t) => t.completed).length
-  const displayName = userName || user?.name || 'Player'
+  // Active category tab
+  const [activeCategory, setActiveCategory] = useState('mastery')
+
+  function fetchFirestoreProfile() {
+    if (!authUser?.uid) return
+    getDoc(doc(db, 'users', authUser.uid)).then((snap) => {
+      if (snap.exists()) setFirestoreProfile(snap.data())
+    })
+  }
+
+  useEffect(() => {
+    fetchFirestoreProfile()
+  }, [authUser?.uid])
+
+  const displayName = firestoreProfile?.displayName || authUser?.displayName || 'Player'
+  const photoURL = firestoreProfile?.photoURL || authUser?.photoURL
+  const bio = firestoreProfile?.bio
+  const initials = displayName.charAt(0).toUpperCase()
 
   // Build circle data (store overrides > onboarding fallbacks)
   const circleData = {
@@ -197,18 +208,6 @@ export default function ProfilePanel({ onClose }) {
   const currentJourneys = journeys?.[activeCategory] || []
 
   // ── Handlers ──────────────────────────────────────────────────────────────────
-
-  function handleLogout() {
-    resetUser()
-    resetSelection()
-    navigate('/')
-  }
-
-  function handleSaveName() {
-    setUserName(editName)
-    setUser({ ...user, name: editName })
-    setShowSettings(false)
-  }
 
   function openPortfolioEdit(key) {
     setPortfolioEdit({
@@ -268,18 +267,15 @@ export default function ProfilePanel({ onClose }) {
     const programName = selectedProgram?.name || ''
     const currentSituation = [universityName, programName].filter(Boolean).join(' — ') || 'a student exploring career paths'
 
-    // const prompt = `Act as an expert career and skills counselor. The user is currently in this situation: ${currentSituation}, their dream career is ${desiredCareer}, their current skill mastery level is ${masteryLevel}, and their MBTI personality type is ${mbtiType}. Generate a personalized 5-step "Mastery Journey" roadmap. The main focus MUST be on HOW to master the essential skills and overcome technical challenges for this career, tailored specifically to their ${mbtiType} learning style and their current ${masteryLevel} level. Output strictly as a JSON array of objects with 'title' and 'description' keys. Do not include markdown formatting.\nIMPORTANT: Generate the content ('title', 'description', 'summary', etc.) STRICTLY in ${aiLanguage} language.`
-    const prompt = `Act as an expert career and skills counselor. The user is currently in this situation: ${currentSituation}, their dream career is ${desiredCareer}, their current skill mastery level is ${masteryLevel}, and their MBTI personality type is ${mbtiType}. In addition to skill mastery, the user is also preparing for university admission under the Thai system (TCAS / TGAT / TPAT, often referred to as TCAT). You MUST design a dual-track roadmap that integrates BOTH: 1) Mastery development (career skills, portfolio, real-world capability) and 2) University admission preparation (especially TCAS Round 3: exam-based track requiring TGAT/TPAT and academic subjects). Generate a personalized 5-step "Dual Mastery Journey" roadmap. REQUIREMENTS: Each step MUST clearly explain HOW to practice and master essential career skills (hands-on methods, project-based learning, feedback loops, etc.) AND ALSO include HOW to prepare for TCAS Round 3 (study system, exam strategies, subject prioritization, past papers, score optimization). Explicitly reference the structure of TCAS (Portfolio vs Round 3) and how the user should balance both paths. Tailor everything to the user’s ${mbtiType} learning style and adapt to the user’s current ${masteryLevel} level. Focus on actionable systems, not theory. Output strictly as a JSON array of objects with 'title' and 'description' keys. Do not include markdown formatting. IMPORTANT: Generate the content STRICTLY in ${aiLanguage} language.`
-    
+    const prompt = `Act as an expert career and skills counselor. The user is currently in this situation: ${currentSituation}, their dream career is ${desiredCareer}, their current skill mastery level is ${masteryLevel}, and their MBTI personality type is ${mbtiType}. In addition to skill mastery, the user is also preparing for university admission under the Thai system (TCAS / TGAT / TPAT, often referred to as TCAT). You MUST design a dual-track roadmap that integrates BOTH: 1) Mastery development (career skills, portfolio, real-world capability) and 2) University admission preparation (especially TCAS Round 3: exam-based track requiring TGAT/TPAT and academic subjects). Generate a personalized 5-step "Dual Mastery Journey" roadmap. REQUIREMENTS: Each step MUST clearly explain HOW to practice and master essential career skills (hands-on methods, project-based learning, feedback loops, etc.) AND ALSO include HOW to prepare for TCAS Round 3 (study system, exam strategies, subject prioritization, past papers, score optimization). Explicitly reference the structure of TCAS (Portfolio vs Round 3) and how the user should balance both paths. Tailor everything to the user's ${mbtiType} learning style and adapt to the user's current ${masteryLevel} level. Focus on actionable systems, not theory. Output strictly as a JSON array of objects with 'title' and 'description' keys. Do not include markdown formatting. IMPORTANT: Generate the content STRICTLY in ${aiLanguage} language.`
+
     setIsGenerating(true)
     try {
       const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
-      // const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
       const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' })
       const result = await model.generateContent(prompt)
       const text = result.response.text()
 
-      // Strip any accidental markdown code fences
       const cleaned = text.replace(/```json|```/gi, '').trim()
 
       let parsed
@@ -328,10 +324,7 @@ export default function ProfilePanel({ onClose }) {
       {/* Top-right icons */}
       <div className="flex justify-end items-center gap-2 px-5 pt-1">
         <button
-          onClick={() => {
-            setEditName(userName || user?.name || '')
-            setShowSettings(!showSettings)
-          }}
+          onClick={() => setShowSettingsSheet(true)}
           className="text-gray-400 hover:text-gray-600"
         >
           <Settings size={19} />
@@ -348,79 +341,22 @@ export default function ProfilePanel({ onClose }) {
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 pb-4 space-y-4">
-        {/* Avatar + Name */}
+        {/* Avatar + Name + Bio */}
         <div className="flex flex-col items-center gap-2 pt-2">
           <div className="relative">
-            <div className="w-20 h-20 rounded-full bg-linear-to-br from-purple-200 to-pink-200 flex items-center justify-center text-4xl shadow-md border-4 border-white">
-              {user?.avatar || '🎮'}
+            <div className="w-20 h-20 rounded-full overflow-hidden bg-purple-100 flex items-center justify-center shadow-md border-4 border-white">
+              {photoURL
+                ? <img src={photoURL} alt="" className="w-full h-full object-cover" />
+                : <span className="text-3xl font-bold text-purple-400">{initials}</span>}
             </div>
             <div className="absolute bottom-1 right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white" />
           </div>
           <p className="pixel-font text-[13px] text-gray-800">{displayName}</p>
-          <p className="text-xs text-gray-400">MBTI: {mbti || '-'}</p>
-          <div className="flex gap-5 mt-0.5">
-            <div className="flex flex-col items-center">
-              <span className="text-sm font-bold text-orange-500">{streak}</span>
-              <span className="text-[9px] text-gray-400">Streak 🔥</span>
-            </div>
-            <div className="w-px bg-gray-200" />
-            <div className="flex flex-col items-center">
-              <span className="text-sm font-bold text-yellow-600">{coins}</span>
-              <span className="text-[9px] text-gray-400">Coins 🪙</span>
-            </div>
-            <div className="w-px bg-gray-200" />
-            <div className="flex flex-col items-center">
-              <span className="text-sm font-bold text-green-600">{completedTasks}</span>
-              <span className="text-[9px] text-gray-400">Done ✅</span>
-            </div>
-          </div>
-        </div>
+          <p className="text-xs text-gray-400 text-center leading-snug max-w-50">
+            {bio || `MBTI: ${mbti || '-'}`}
+          </p>
 
-        {/* Settings panel */}
-        {showSettings && (
-          <div className="bg-purple-50 rounded-2xl p-4 space-y-3 border border-purple-100">
-            <p className="pixel-font text-[9px] text-purple-600">Settings</p>
-            <div className="flex gap-2">
-              <input
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                placeholder="Display name"
-                className="flex-1 rounded-xl border border-purple-200 px-3 py-2 text-sm outline-none focus:border-purple-400"
-              />
-              <button
-                onClick={handleSaveName}
-                className="bg-[#a78bda] text-white rounded-xl px-3 py-2 text-sm"
-              >
-                Save
-              </button>
-            </div>
-            {/* AI Language toggle */}
-            <div>
-              <p className="pixel-font text-[8px] text-purple-500 mb-1.5">AI Output Language</p>
-              <div className="flex gap-2">
-                {['Thai', 'English'].map((lang) => (
-                  <button
-                    key={lang}
-                    onClick={() => setAiLanguage(lang)}
-                    className={`flex-1 rounded-xl py-2 text-sm border transition-colors ${
-                      aiLanguage === lang
-                        ? 'bg-[#a78bda] border-[#a78bda] text-white font-semibold'
-                        : 'bg-white border-purple-200 text-purple-500'
-                    }`}
-                  >
-                    {lang === 'Thai' ? 'ภาษาไทย' : 'English'}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="w-full rounded-xl border border-red-200 text-red-500 py-2 text-sm hover:bg-red-50 transition-colors"
-            >
-              Logout
-            </button>
-          </div>
-        )}
+        </div>
 
         {/* Portfolio circles */}
         <div>
@@ -435,7 +371,8 @@ export default function ProfilePanel({ onClose }) {
                 isActive={activeCategory === key}
                 onPress={() => setActiveCategory(key)}
                 onLongPress={() => openPortfolioEdit(key)}
-              />            ))}
+              />
+            ))}
           </div>
         </div>
 
@@ -449,7 +386,7 @@ export default function ProfilePanel({ onClose }) {
               <button
                 onClick={generateRoadmap}
                 disabled={isGenerating}
-                className="flex items-center gap-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] rounded-xl px-3 py-1.5 font-semibold disabled:opacity-60 disabled:cursor-not-allowed transition-opacity"
+                className="flex items-center gap-1.5 bg-linear-to-r from-purple-500 to-pink-500 text-white text-[10px] rounded-xl px-3 py-1.5 font-semibold disabled:opacity-60 disabled:cursor-not-allowed transition-opacity"
               >
                 {isGenerating ? (
                   <>
@@ -479,7 +416,7 @@ export default function ProfilePanel({ onClose }) {
                           <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
-                            className={`relative flex-shrink-0 w-20 rounded-xl transition-shadow ${
+                            className={`relative shrink-0 w-20 rounded-xl transition-shadow ${
                               snapshot.isDragging
                                 ? 'shadow-lg'
                                 : isPinned
@@ -563,7 +500,7 @@ export default function ProfilePanel({ onClose }) {
                   {/* Add button */}
                   <button
                     onClick={openAddJourney}
-                    className="flex-shrink-0 w-20 h-20 rounded-xl border-2 border-dashed border-purple-200 flex items-center justify-center text-purple-400 hover:border-purple-400 hover:text-purple-500 transition-colors"
+                    className="shrink-0 w-20 h-20 rounded-xl border-2 border-dashed border-purple-200 flex items-center justify-center text-purple-400 hover:border-purple-400 hover:text-purple-500 transition-colors"
                   >
                     <span className="text-2xl leading-none">+</span>
                   </button>
@@ -584,7 +521,6 @@ export default function ProfilePanel({ onClose }) {
 
       {/* Journey Detail View Modal */}
       {viewingJourney && (() => {
-        // Always read live data from store so progressNotes are current
         const liveBlock = journeys?.[activeCategory]?.find((b) => b.id === viewingJourney.id) || viewingJourney
         const notes = liveBlock.progressNotes || []
         return (
@@ -684,7 +620,7 @@ export default function ProfilePanel({ onClose }) {
           />
           <button
             onClick={handleSaveJourney}
-            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl py-4 font-bold text-sm"
+            className="w-full bg-linear-to-r from-purple-500 to-pink-500 text-white rounded-2xl py-4 font-bold text-sm"
           >
             Save
           </button>
@@ -703,6 +639,14 @@ export default function ProfilePanel({ onClose }) {
             Cancel
           </button>
         </JourneySheet>
+      )}
+
+      {/* Settings Sheet */}
+      {showSettingsSheet && (
+        <SettingsSheet
+          onClose={() => setShowSettingsSheet(false)}
+          onProfileUpdated={fetchFirestoreProfile}
+        />
       )}
     </div>
   )

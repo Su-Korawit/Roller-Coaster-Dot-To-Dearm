@@ -7,7 +7,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSocialStore, calculateMatchScore } from '../stores/useSocialStore'
-import UserProfileSheet from './UserProfileSheet'
+import PublicProfileSheet from './PublicProfileSheet'
 
 // ─── MBTI group colours ──────────────────────────────────────────────────────
 const MBTI_COLORS = {
@@ -605,7 +605,7 @@ export default function SocialPanel({ onClose, onOpenChat }) {
 
       {/* User profile sheet — rendered inside panel so z-60 stacks above z-50 panel content */}
       {selectedUserId && (
-        <UserProfileSheet
+        <PublicProfileSheet
           userId={selectedUserId}
           onClose={() => setSelectedUserId(null)}
           onOpenChat={onOpenChat}
