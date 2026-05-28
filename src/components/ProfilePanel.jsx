@@ -520,11 +520,39 @@ export default function ProfilePanel({ onClose }) {
                             {/* Clickable area — opens detail view */}
                             <button
                               onClick={() => setViewingJourney(item)}
-                              className="w-full h-full flex items-center justify-center p-2 pt-3"
+                              className="w-full h-full flex flex-col items-center justify-center p-2 pt-3 gap-1"
                             >
-                              <span className="text-[9px] font-semibold text-gray-700 text-center leading-tight line-clamp-3">
+                              <span className="text-[9px] font-semibold text-gray-700 text-center leading-tight line-clamp-2">
                                 {item.title || '—'}
                               </span>
+                              {/* Credited friends avatar stack */}
+                              {(() => {
+                                const credited = (item.progressNotes || []).filter((n) => n?.creditedFriend)
+                                if (!credited.length) return null
+                                return (
+                                  <div className="flex items-center justify-center" title="ทำร่วมกับเพื่อน">
+                                    {credited.slice(0, 3).map((c, i) => (
+                                      <div
+                                        key={i}
+                                        className="w-3.5 h-3.5 rounded-full overflow-hidden border border-white shrink-0 bg-purple-200"
+                                        style={{ marginLeft: i > 0 ? '-5px' : 0, zIndex: credited.length - i }}
+                                      >
+                                        {c.creditedFriend.photoURL
+                                          ? <img src={c.creditedFriend.photoURL} alt="" className="w-full h-full object-cover" />
+                                          : <span className="text-[5px] flex items-center justify-center w-full h-full">👤</span>}
+                                      </div>
+                                    ))}
+                                    {credited.length > 3 && (
+                                      <div
+                                        className="w-3.5 h-3.5 rounded-full bg-gray-300 border border-white flex items-center justify-center shrink-0"
+                                        style={{ marginLeft: '-5px', zIndex: 0 }}
+                                      >
+                                        <span className="text-[4px] text-gray-600">+{credited.length - 3}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                )
+                              })()}
                             </button>
                           </div>
                         )}

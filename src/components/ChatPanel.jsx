@@ -109,6 +109,112 @@ function GiftModal({ chatId, myUid, onClose }) {
   )
 }
 
+// ─── Credit helpers (localStorage) ───────────────────────────────────────────
+function getCreditedTasks() {
+  try { return JSON.parse(localStorage.getItem('rc-credited-tasks') || '[]') } catch { return [] }
+}
+function markTaskCredited(taskId) {
+  const list = getCreditedTasks()
+  if (!list.includes(taskId)) localStorage.setItem('rc-credited-tasks', JSON.stringify([...list, taskId]))
+}
+
+// ─── CreditModal ──────────────────────────────────────────────────────────────
+function CreditModal({ msg, friendUser, onDone, onClose }) {
+  const user = useAuthStore((s) => s.user)
+  const addCreditToJourney = useUserStore((s) => s.addCreditToJourney)
+  const [note, setNote] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setVisible(true))
+    return () => cancelAnimationFrame(id)
+  }, [])
+
+  const snap = msg?.taskSnapshot ?? {}
+
+  async function handleConfirm() {
+    if (busy) return
+    setBusy(true)
+    setError('')
+    try {
+      const today = new Date().toISOString().slice(0, 10)
+      const creditNote = {
+        date: today,
+        note: `ทำร่วมกับ ${friendUser?.displayName ?? 'เพื่อน'}${note.trim() ? `: ${note.trim()}` : ''}`,
+        creditedFriend: {
+          uid: friendUser?.uid ?? '',
+          displayName: friendUser?.displayName ?? '',
+          photoURL: friendUser?.photoURL ?? null,
+        },
+        taskTitle: snap.title,
+      }
+      if (snap.linkedJourneyKey && snap.linkedJourneyId) {
+        addCreditToJourney(snap.linkedJourneyKey, snap.linkedJourneyId, creditNote)
+      }
+      await addDoc(collection(db, 'users', friendUser?.uid, 'receivedCredits'), {
+        fromUid: user?.uid ?? '',
+        fromName: user?.displayName ?? '',
+        taskTitle: snap.title,
+        journeyKey: snap.linkedJourneyKey ?? null,
+        message: note.trim(),
+        createdAt: serverTimestamp(),
+      })
+      markTaskCredited(snap.taskId)
+      onDone(snap.taskId)
+    } catch (e) {
+      console.error('[Credit]', e)
+      setError('เกิดข้อผิดพลาด กรุณาลองใหม่')
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="absolute inset-0 z-70 flex flex-col justify-end" onClick={onClose}>
+      <div
+        className="relative bg-white rounded-t-3xl shadow-2xl px-5 pb-6 pt-4"
+        style={{ transform: visible ? 'translateY(0)' : 'translateY(100%)', transition: 'transform 0.3s ease-out' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-center mb-4">
+          <div className="w-10 h-1 bg-gray-300 rounded-full" />
+        </div>
+        <p className="pixel-font text-[10px] text-gray-800 text-center mb-1">🏅 ให้ Credit เพื่อน</p>
+        <p className="text-center text-gray-500 mb-4 text-[11px]" style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
+          ให้ Credit แก่ <strong>{friendUser?.displayName ?? 'เพื่อน'}</strong> สำหรับ "{snap.title}"?
+        </p>
+        <textarea
+          rows={3}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="เขียนข้อความขอบคุณ (optional)..."
+          className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-[#a78bda] resize-none mb-3"
+          style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 13 }}
+          disabled={busy}
+        />
+        {error && <p className="pixel-font text-[7px] text-red-400 text-center mb-3">{error}</p>}
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            disabled={busy}
+            className="flex-1 py-3 rounded-2xl bg-gray-100 text-gray-500 pixel-font text-[8px] active:scale-95 transition-transform"
+          >
+            ยกเลิก
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={busy}
+            className="flex-1 py-3 rounded-2xl bg-amber-400 text-white pixel-font text-[8px] active:scale-95 transition-transform disabled:opacity-60 flex items-center justify-center gap-1"
+          >
+            {busy ? <Loader2 size={12} className="animate-spin" /> : '🏅 ยืนยัน'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── ChatWindowView ───────────────────────────────────────────────────────────
 function ChatWindowView({ user, onBack }) {
   const { activeChat, messages, sendMessage, subscribeMessages } = useChatStore()
@@ -121,6 +227,8 @@ function ChatWindowView({ user, onBack }) {
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [showGift, setShowGift] = useState(false)
+  const [creditTarget, setCreditTarget] = useState(null)
+  const [creditedTaskIds, setCreditedTaskIds] = useState(() => getCreditedTasks())
   const bottomRef = useRef(null)
 
   // Fire-stacks pop animation
@@ -216,16 +324,18 @@ function ChatWindowView({ user, onBack }) {
         )}
         {messages.map((msg) => {
           const isMe = msg.senderId === user?.uid
+          const isCard = msg.type === 'news' || msg.type === 'shared_task'
           return (
             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={`max-w-[72%] rounded-2xl shadow-sm overflow-hidden ${
-                  msg.type === 'news' ? '' : 'px-3.5 py-2.5'
-                } ${
-                  isMe
-                    ? 'bg-[#a78bda] text-white rounded-br-sm'
-                    : 'bg-gray-100 text-gray-800 rounded-bl-sm'
+                className={`max-w-[76%] rounded-2xl shadow-sm overflow-hidden ${isCard ? '' : 'px-3.5 py-2.5'} ${
+                  msg.type === 'shared_task'
+                    ? 'bg-gray-900 border border-[#a78bda]/40'
+                    : isMe
+                      ? 'bg-[#a78bda] text-white rounded-br-sm'
+                      : 'bg-gray-100 text-gray-800 rounded-bl-sm'
                 }`}
+                style={msg.type === 'shared_task' ? { borderLeft: '3px solid #a78bda' } : {}}
               >
                 {msg.type === 'gift' ? (
                   <div className="flex flex-col items-center gap-1 py-0.5 px-2">
@@ -237,48 +347,80 @@ function ChatWindowView({ user, onBack }) {
                       {msg.giftItem?.coins} coins
                     </span>
                   </div>
+
                 ) : msg.type === 'news' ? (
                   <div className="flex flex-col w-48">
                     {msg.newsItem?.thumbnail && (
-                      <img
-                        src={msg.newsItem.thumbnail}
-                        alt={msg.newsItem.title}
-                        className="w-full h-24 object-cover"
-                      />
+                      <img src={msg.newsItem.thumbnail} alt={msg.newsItem.title} className="w-full h-24 object-cover" />
                     )}
                     <div className="px-3 py-2">
-                      <p className={`pixel-font text-[6px] mb-1 ${isMe ? 'text-purple-200' : 'text-gray-400'}`}>
-                        📰 CAMPHUB
-                      </p>
-                      <p
-                        className={`text-[11px] font-semibold leading-snug mb-2 ${isMe ? 'text-white' : 'text-gray-800'}`}
-                        style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
-                      >
+                      <p className={`pixel-font text-[6px] mb-1 ${isMe ? 'text-purple-200' : 'text-gray-400'}`}>📰 CAMPHUB</p>
+                      <p className={`text-[11px] font-semibold leading-snug mb-2 ${isMe ? 'text-white' : 'text-gray-800'}`}
+                        style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
                         {msg.newsItem?.title}
                       </p>
                       <button
                         onClick={() => window.open(msg.newsItem?.url, '_blank', 'noopener,noreferrer')}
                         className={`pixel-font text-[6px] px-2 py-1 rounded-lg active:scale-95 transition-transform ${
-                          isMe
-                            ? 'bg-white/20 text-white'
-                            : 'bg-white text-[#a78bda] border border-purple-100'
+                          isMe ? 'bg-white/20 text-white' : 'bg-white text-[#a78bda] border border-purple-100'
                         }`}
-                      >
-                        อ่านต่อ →
-                      </button>
+                      >อ่านต่อ →</button>
                     </div>
                     <p className={`pixel-font text-[5px] px-3 pb-2 ${isMe ? 'text-right text-purple-200' : 'text-gray-400'}`}>
                       {fmtTime(msg.createdAt)}
                     </p>
                   </div>
-                ) : (
-                  <p
-                    style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 13, lineHeight: 1.55 }}
-                  >
+
+                ) : msg.type === 'shared_task' ? (() => {
+                  const snap = msg.taskSnapshot ?? {}
+                  const isCompleted = snap.status === 'completed'
+                  const isOwner = user?.uid === snap.ownerUid
+                  const alreadyCredited = creditedTaskIds.includes(snap.taskId)
+                  const showCredit = isOwner && isCompleted && !alreadyCredited
+                  return (
+                    <div className="flex flex-col w-52">
+                      {/* Header row */}
+                      <div className="flex items-start gap-2 px-3 pt-3 pb-2 border-b border-[#a78bda]/20">
+                        <span className="text-lg leading-none shrink-0">📋</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="pixel-font text-[6px] text-[#a78bda] mb-0.5">Task ของ {snap.ownerName}</p>
+                          <p className="text-[12px] font-semibold text-white leading-snug"
+                            style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
+                            {snap.title}
+                          </p>
+                        </div>
+                      </div>
+                      {/* Status + badges */}
+                      <div className="px-3 py-2 flex flex-col gap-1.5">
+                        <span className={`pixel-font text-[7px] ${isCompleted ? 'text-green-400' : 'text-gray-400'}`}>
+                          {isCompleted ? '✅ เสร็จแล้ว' : '⏳ กำลังทำอยู่'}
+                        </span>
+                        {snap.linkedJourneyKey && (
+                          <span className="pixel-font text-[6px] px-1.5 py-0.5 rounded bg-[#a78bda]/20 text-[#c4a4f0] self-start">
+                            {snap.linkedJourneyKey}
+                          </span>
+                        )}
+                        {showCredit && (
+                          <button
+                            onClick={() => setCreditTarget(msg)}
+                            className="mt-0.5 w-full pixel-font text-[7px] py-1.5 rounded-lg bg-amber-400 text-white active:scale-95 transition-transform"
+                          >
+                            🏅 ให้ Credit เพื่อน
+                          </button>
+                        )}
+                      </div>
+                      <p className="pixel-font text-[5px] text-right text-gray-500 px-3 pb-2">
+                        {fmtTime(msg.createdAt)}
+                      </p>
+                    </div>
+                  )
+                })() : (
+                  <p style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 13, lineHeight: 1.55 }}>
                     {msg.text}
                   </p>
                 )}
-                {msg.type !== 'news' && (
+
+                {!isCard && (
                   <p className={`pixel-font text-[5px] mt-1 ${isMe ? 'text-right text-purple-200' : 'text-gray-400'}`}>
                     {fmtTime(msg.createdAt)}
                   </p>
@@ -326,12 +468,18 @@ function ChatWindowView({ user, onBack }) {
         </button>
       </div>
 
-      {/* Gift modal — absolute inside the panel, z-[70] */}
+      {/* Gift modal */}
       {showGift && (
-        <GiftModal
-          chatId={chatId}
-          myUid={user?.uid}
-          onClose={() => setShowGift(false)}
+        <GiftModal chatId={chatId} myUid={user?.uid} onClose={() => setShowGift(false)} />
+      )}
+
+      {/* Credit modal */}
+      {creditTarget && (
+        <CreditModal
+          msg={creditTarget}
+          friendUser={activeChat?.otherUser}
+          onDone={(taskId) => { setCreditedTaskIds((p) => [...p, taskId]); setCreditTarget(null) }}
+          onClose={() => setCreditTarget(null)}
         />
       )}
     </div>

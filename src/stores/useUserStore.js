@@ -113,6 +113,20 @@ export const useUserStore = create(
           },
         })),
 
+      // Pushes a credit object into a journey item's progressNotes.
+      // creditNote: { date, note, creditedFriend: { uid, displayName, photoURL }, taskTitle }
+      addCreditToJourney: (journeyKey, journeyItemId, creditNote) =>
+        set((state) => ({
+          journeys: {
+            ...state.journeys,
+            [journeyKey]: (state.journeys[journeyKey] || []).map((item) =>
+              item.id === journeyItemId
+                ? { ...item, progressNotes: [...(item.progressNotes || []), creditNote] }
+                : item,
+            ),
+          },
+        })),
+
       // Append a formatted progress note + increase progress on a specific journey item
       updateJourneyProgress: (key, id, noteString, gainedPercent) =>
         set((state) => ({

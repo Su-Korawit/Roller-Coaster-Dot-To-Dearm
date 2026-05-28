@@ -1,11 +1,163 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
-import { GripVertical, Loader2 } from 'lucide-react'
+import { GripVertical, Loader2, Share2 } from 'lucide-react'
+import { addDoc, collection, doc, getDoc, increment, serverTimestamp, updateDoc } from 'firebase/firestore'
+import { db } from '../firebase'
+import { useAuthStore } from '../stores/useAuthStore'
+import { useChatStore } from '../stores/useChatStore'
 import { useTaskStore } from '../stores/useTaskStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useSkillStore } from '../stores/useSkillStore'
 import TaskForm from './TaskForm'
 import SkillExecutionPopup from './SkillExecutionPopup'
+
+// ─── Shared-task ref helpers (localStorage) ───────────────────────────────────
+// Track which Firestore message docs contain each task so we can sync status.
+function getSharedRefs() {
+  try { return JSON.parse(localStorage.getItem('rc-shared-task-refs') || '{}') } catch { return {} }
+}
+function addSharedRef(taskId, chatId, msgId) {
+  const refs = getSharedRefs()
+  refs[taskId] = [...(refs[taskId] ?? []), { chatId, msgId }]
+  localStorage.setItem('rc-shared-task-refs', JSON.stringify(refs))
+}
+async function syncSharedTaskStatus(taskId) {
+  const refs = getSharedRefs()[taskId] ?? []
+  for (const { chatId, msgId } of refs) {
+    try {
+      await updateDoc(doc(db, 'chats', chatId, 'messages', msgId), {
+        'taskSnapshot.status': 'completed',
+      })
+    } catch (e) {
+      console.warn('[syncSharedTask]', e.message)
+    }
+  }
+}
+
+// ─── TaskShareSheet ───────────────────────────────────────────────────────────
+function TaskShareSheet({ task, onClose }) {
+  const user = useAuthStore((s) => s.user)
+  const chats = useChatStore((s) => s.chats)
+  const loadChats = useChatStore((s) => s.loadChats)
+  const [participants, setParticipants] = useState({})
+  const [sending, setSending] = useState(null)
+
+  useEffect(() => {
+    if (!user?.uid) return
+    const unsub = loadChats(user.uid)
+    return () => unsub?.()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid])
+
+  useEffect(() => {
+    if (!user?.uid) return
+    const needed = [
+      ...new Set(chats.flatMap((c) => c.members?.filter((uid) => uid !== user.uid) ?? [])),
+    ].filter((uid) => !participants[uid])
+    needed.forEach(async (uid) => {
+      const snap = await getDoc(doc(db, 'users', uid))
+      if (snap.exists()) setParticipants((p) => ({ ...p, [uid]: snap.data() }))
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chats, user?.uid])
+
+  async function handleSend(chat) {
+    const uid = user?.uid
+    if (!uid || sending) return
+    setSending(chat.id)
+    try {
+      const msgRef = await addDoc(collection(db, 'chats', chat.id, 'messages'), {
+        senderId: uid,
+        text: `📋 ${task.title}`,
+        type: 'shared_task',
+        taskSnapshot: {
+          title: task.title,
+          estimatedProgress: task.estimatedProgress ?? null,
+          linkedJourneyKey: task.linkedJourneyKey ?? null,
+          linkedJourneyId: task.linkedJourneyId ?? null,
+          taskId: task.id,
+          ownerUid: uid,
+          ownerName: user.displayName ?? '',
+          status: task.completed ? 'completed' : 'in_progress',
+        },
+        giftItem: null,
+        newsItem: null,
+        createdAt: serverTimestamp(),
+      })
+      await updateDoc(doc(db, 'chats', chat.id), {
+        lastMessage: `📋 ${task.title}`,
+        lastMessageAt: serverTimestamp(),
+        fireStacks: increment(1),
+      })
+      useUserStore.getState().incrementStacks()
+      addSharedRef(task.id, chat.id, msgRef.id)
+      onClose()
+    } catch (e) {
+      console.error('[TaskShare] send failed:', e)
+    } finally {
+      setSending(null)
+    }
+  }
+
+  return (
+    <div className="absolute inset-0 z-60 flex flex-col justify-end" onClick={onClose}>
+      <div
+        className="relative bg-white rounded-t-3xl shadow-2xl"
+        style={{ paddingBottom: '80px' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-center pt-3 pb-3">
+          <div className="w-10 h-1 bg-gray-300 rounded-full" />
+        </div>
+        <p className="pixel-font text-[9px] text-center text-gray-700 mb-1 px-5">ส่ง Task ให้เพื่อน</p>
+        <p
+          className="text-center text-gray-500 mb-4 px-6 truncate"
+          style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 11 }}
+        >
+          📋 {task.title}
+        </p>
+        {chats.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 py-8 opacity-50">
+            <span className="text-3xl">💬</span>
+            <p className="pixel-font text-[7px] text-gray-400 text-center leading-relaxed">ยังไม่มีการสนทนา</p>
+          </div>
+        ) : (
+          <div className="max-h-60 overflow-y-auto">
+            {chats.map((chat) => {
+              const otherUid = chat.members?.find((uid) => uid !== user?.uid)
+              const other = participants[otherUid]
+              return (
+                <button
+                  key={chat.id}
+                  onClick={() => handleSend(chat)}
+                  disabled={!!sending}
+                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 text-left"
+                >
+                  <div className="w-9 h-9 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center shrink-0 border border-gray-200">
+                    {other?.photoURL
+                      ? <img src={other.photoURL} alt="" className="w-full h-full object-cover" />
+                      : <span className="text-base">🎮</span>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="pixel-font text-[8px] text-gray-800 truncate">
+                      {other?.displayName ?? '...'}
+                    </p>
+                    <p className="text-gray-400 truncate mt-0.5" style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 11 }}>
+                      {chat.lastMessage || 'เริ่มการสนทนา'}
+                    </p>
+                  </div>
+                  {sending === chat.id
+                    ? <Loader2 size={14} className="text-purple-400 animate-spin shrink-0" />
+                    : <span className="pixel-font text-[7px] text-[#a78bda] shrink-0">ส่ง</span>}
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 // ── Reflection Bottom Sheet ───────────────────────────────────────────────────
 function ReflectionSheet({ task, onSubmit, onClose, isEvaluating }) {
@@ -65,6 +217,8 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
   const [reflectionTask, setReflectionTask] = useState(null)
   const [isEvaluating, setIsEvaluating] = useState(false)
   const [evalResult, setEvalResult] = useState(null) // { note, gainedPercent }
+  // Share sheet state
+  const [sharingTask, setSharingTask] = useState(null)
 
   function openCreate() {
     setEditingTaskId(null)
@@ -112,6 +266,8 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
       addCoins((task.rewardCoins || 10) + sparkBonus)
     }
     toggleTask(task.id)
+    // Sync status to any Firestore messages that shared this task
+    if (!task.completed) syncSharedTaskStatus(task.id)
   }
 
   async function handleReflectionSubmit(reflection) {
@@ -125,11 +281,13 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
       const sparkBonus = equippedPassiveSkill === 'spark' ? 2 : 0
       addCoins((reflectionTask.rewardCoins || 15) + sparkBonus)
       toggleTask(reflectionTask.id)
+      syncSharedTaskStatus(reflectionTask.id)
     } catch (err) {
       console.error('Evaluation failed:', err)
       // Fallback: just complete the task
       addCoins(reflectionTask.rewardCoins || 15)
       toggleTask(reflectionTask.id)
+      syncSharedTaskStatus(reflectionTask.id)
     } finally {
       setIsEvaluating(false)
       setReflectionTask(null)
@@ -209,6 +367,7 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
               onEdit={openEdit}
               onRemove={removeTask}
               onCreate={openCreate}
+              onShare={setSharingTask}
               onSkill={(task) => {
                 const { equippedActiveSkill } = useSkillStore.getState()
                 if (!equippedActiveSkill || task.completed) return
@@ -237,6 +396,11 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
           task={tasks.find((t) => t.id === skillTask.id) ?? skillTask}
           onClose={() => setSkillTask(null)}
         />
+      )}
+
+      {/* ── Task Share Sheet ── */}
+      {sharingTask && (
+        <TaskShareSheet task={sharingTask} onClose={() => setSharingTask(null)} />
       )}
 
       {/* ── Reflection Sheet (AI tasks) ── */}
@@ -270,7 +434,7 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
   )
 }
 
-function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onSkill, onDragEnd, onAutoGenerate, isAutoGenerating, autoGenError }) {
+function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onShare, onSkill, onDragEnd, onAutoGenerate, isAutoGenerating, autoGenError }) {
   const equippedActiveSkill = useSkillStore((s) => s.equippedActiveSkill)
   return (
     <>
@@ -352,6 +516,15 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onSkill, on
                           {equippedActiveSkill === 'ignite' ? '🚀' : '⏳'}
                         </button>
                       )}
+
+                      {/* Share */}
+                      <button
+                        onClick={() => onShare?.(task)}
+                        className="text-gray-300 hover:text-purple-400 px-1 active:scale-95 transition-transform"
+                        aria-label="Share task to chat"
+                      >
+                        <Share2 size={15} />
+                      </button>
 
                       {/* Edit */}
                       <button
