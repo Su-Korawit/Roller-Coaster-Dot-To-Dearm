@@ -219,7 +219,9 @@ function ChatWindowView({ user, onBack }) {
           return (
             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={`max-w-[72%] rounded-2xl px-3.5 py-2.5 shadow-sm ${
+                className={`max-w-[72%] rounded-2xl shadow-sm overflow-hidden ${
+                  msg.type === 'news' ? '' : 'px-3.5 py-2.5'
+                } ${
                   isMe
                     ? 'bg-[#a78bda] text-white rounded-br-sm'
                     : 'bg-gray-100 text-gray-800 rounded-bl-sm'
@@ -235,6 +237,40 @@ function ChatWindowView({ user, onBack }) {
                       {msg.giftItem?.coins} coins
                     </span>
                   </div>
+                ) : msg.type === 'news' ? (
+                  <div className="flex flex-col w-48">
+                    {msg.newsItem?.thumbnail && (
+                      <img
+                        src={msg.newsItem.thumbnail}
+                        alt={msg.newsItem.title}
+                        className="w-full h-24 object-cover"
+                      />
+                    )}
+                    <div className="px-3 py-2">
+                      <p className={`pixel-font text-[6px] mb-1 ${isMe ? 'text-purple-200' : 'text-gray-400'}`}>
+                        📰 CAMPHUB
+                      </p>
+                      <p
+                        className={`text-[11px] font-semibold leading-snug mb-2 ${isMe ? 'text-white' : 'text-gray-800'}`}
+                        style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
+                      >
+                        {msg.newsItem?.title}
+                      </p>
+                      <button
+                        onClick={() => window.open(msg.newsItem?.url, '_blank', 'noopener,noreferrer')}
+                        className={`pixel-font text-[6px] px-2 py-1 rounded-lg active:scale-95 transition-transform ${
+                          isMe
+                            ? 'bg-white/20 text-white'
+                            : 'bg-white text-[#a78bda] border border-purple-100'
+                        }`}
+                      >
+                        อ่านต่อ →
+                      </button>
+                    </div>
+                    <p className={`pixel-font text-[5px] px-3 pb-2 ${isMe ? 'text-right text-purple-200' : 'text-gray-400'}`}>
+                      {fmtTime(msg.createdAt)}
+                    </p>
+                  </div>
                 ) : (
                   <p
                     style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 13, lineHeight: 1.55 }}
@@ -242,9 +278,11 @@ function ChatWindowView({ user, onBack }) {
                     {msg.text}
                   </p>
                 )}
-                <p className={`pixel-font text-[5px] mt-1 ${isMe ? 'text-right text-purple-200' : 'text-gray-400'}`}>
-                  {fmtTime(msg.createdAt)}
-                </p>
+                {msg.type !== 'news' && (
+                  <p className={`pixel-font text-[5px] mt-1 ${isMe ? 'text-right text-purple-200' : 'text-gray-400'}`}>
+                    {fmtTime(msg.createdAt)}
+                  </p>
+                )}
               </div>
             </div>
           )
