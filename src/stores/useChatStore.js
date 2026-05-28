@@ -54,25 +54,22 @@ export const useChatStore = create((set) => ({
   },
 
   // Sets the active chat in state and ensures the chat document exists in
-  // Firestore (merge:true preserves existing data on re-open).
+  // Firestore. Only `members` is merged so re-opening never resets fireStacks
+  // or lastMessage — those fields are written only by sendMessage.
   openChat: async (chatId, otherUser) => {
     const uid = auth.currentUser?.uid
     if (!uid) return
     set({ activeChat: { chatId, otherUser }, messages: [] })
     await setDoc(
       doc(db, 'chats', chatId),
-      {
-        members: [uid, otherUser.uid].sort(),
-        lastMessage: '',
-        lastMessageAt: serverTimestamp(),
-        fireStacks: 0,
-      },
+      { members: [uid, otherUser.uid].sort() },
       { merge: true },
     )
   },
 
-  // Writes a text message to the messages subcollection, updates chat metadata,
-  // and increments fireStacks + useUserStore.totalStacks in one Firestore write.
+  // Writes a text message to the messages subcollection and updates chat
+  // metadata. fireStacks increments at most once per calendar day per chat —
+  // subsequent messages on the same day don't count as a new stack.
   sendMessage: async (chatId, text) => {
     const uid = auth.currentUser?.uid
     if (!uid || !text.trim()) return
@@ -86,15 +83,19 @@ export const useChatStore = create((set) => ({
       createdAt: serverTimestamp(),
     })
 
-    // Merge lastMessage update + fireStacks increment in a single write
+    const today = new Date().toISOString().slice(0, 10)
+    const chat = useChatStore.getState().chats.find((c) => c.id === chatId)
+    const grantStack = chat?.lastStackDate !== today
+
     await updateDoc(doc(db, 'chats', chatId), {
       lastMessage: trimmed,
       lastMessageAt: serverTimestamp(),
-      fireStacks: increment(1),
+      ...(grantStack && { fireStacks: increment(1), lastStackDate: today }),
     })
 
-    // Mirror to local stacks store (persisted in localStorage via rc-user-store)
-    useUserStore.getState().incrementStacks()
+    if (grantStack) {
+      useUserStore.getState().incrementStacks()
+    }
   },
 
   // Attaches a real-time listener to a chat's messages, ordered oldest-first.
@@ -111,10 +112,17 @@ export const useChatStore = create((set) => ({
     return _messagesUnsub
   },
 
-  // Standalone stacks increment — used for gifts, appointments, or any
-  // non-text message type that should also count as a stack.
+  // Standalone stacks increment — used for gifts/appointments.
+  // Same 1-per-day-per-chat rule as sendMessage.
   incrementFireStacks: async (chatId) => {
-    await updateDoc(doc(db, 'chats', chatId), { fireStacks: increment(1) })
+    const today = new Date().toISOString().slice(0, 10)
+    const chat = useChatStore.getState().chats.find((c) => c.id === chatId)
+    const grantStack = chat?.lastStackDate !== today
+    if (!grantStack) return
+    await updateDoc(doc(db, 'chats', chatId), {
+      fireStacks: increment(1),
+      lastStackDate: today,
+    })
     useUserStore.getState().incrementStacks()
   },
 }))
