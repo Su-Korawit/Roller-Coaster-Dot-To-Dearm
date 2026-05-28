@@ -6,7 +6,7 @@ import { Bell, Loader2, MapIcon, Search, UserCheck, UserPlus, Users, X } from 'l
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuthStore } from '../stores/useAuthStore'
-import { useSocialStore } from '../stores/useSocialStore'
+import { useSocialStore, calculateMatchScore } from '../stores/useSocialStore'
 import UserProfileSheet from './UserProfileSheet'
 
 // ─── MBTI group colours ──────────────────────────────────────────────────────
@@ -204,11 +204,12 @@ function MapTab({ myProfile, nearbyUsers, uid, onSchoolSaved, onUserTap }) {
 }
 
 // ─── UserCard (Discover tab) ─────────────────────────────────────────────────
-function UserCard({ user, following, sentRequests, onFollow, onTap }) {
+function UserCard({ user, following, sentRequests, onFollow, onTap, score = 0 }) {
   const [busy, setBusy] = useState(false)
   const isFollowing = following.includes(user.uid)
   const isPending = sentRequests.includes(user.uid)
-  const isMatch = (user.matchScore ?? 0) > MATCH_THRESHOLD
+  const isHighMatch = score >= 80
+  const isMatch = score >= 60
 
   async function handleFollow(e) {
     e.stopPropagation()
@@ -220,7 +221,9 @@ function UserCard({ user, following, sentRequests, onFollow, onTap }) {
   return (
     <div
       className={`flex items-center gap-3 rounded-xl px-3 py-2.5 border transition-colors cursor-pointer active:brightness-95 ${
-        isMatch ? 'border-purple-200 bg-purple-50/60' : 'border-gray-100 bg-gray-50'
+        isHighMatch ? 'border-amber-200 bg-amber-50/60'
+        : isMatch   ? 'border-purple-200 bg-purple-50/60'
+        :             'border-gray-100 bg-gray-50'
       }`}
       onClick={() => onTap?.(user.uid)}
     >
@@ -238,9 +241,11 @@ function UserCard({ user, following, sentRequests, onFollow, onTap }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <span className="pixel-font text-[9px] text-gray-800 truncate">{user.displayName || 'ผู้ใช้'}</span>
-          {isMatch && (
-            <span className="pixel-font text-[6px] text-purple-600 shrink-0">✦ Match</span>
-          )}
+          {isHighMatch
+            ? <span className="pixel-font text-[6px] text-amber-500 shrink-0">⚡ High Match</span>
+            : isMatch
+              ? <span className="pixel-font text-[6px] text-purple-600 shrink-0">✦ Match</span>
+              : null}
         </div>
         <div className="flex items-center gap-1 mt-0.5 flex-wrap">
           {user.mbti && (
@@ -277,10 +282,15 @@ function UserCard({ user, following, sentRequests, onFollow, onTap }) {
 }
 
 // ─── DiscoverTab ─────────────────────────────────────────────────────────────
-function DiscoverTab({ nearbyUsers, following, sentRequests, sendFollowRequest, onUserTap }) {
+function DiscoverTab({ nearbyUsers, following, sentRequests, sendFollowRequest, onUserTap, myProfile }) {
   const [search, setSearch] = useState('')
 
-  const filtered = nearbyUsers.filter((u) =>
+  // Score every user then sort highest first
+  const scored = nearbyUsers
+    .map((u) => ({ ...u, _score: calculateMatchScore(myProfile, u) }))
+    .sort((a, b) => b._score - a._score)
+
+  const filtered = scored.filter((u) =>
     !search.trim() || (u.displayName ?? '').toLowerCase().includes(search.toLowerCase())
   )
 
@@ -326,6 +336,7 @@ function DiscoverTab({ nearbyUsers, following, sentRequests, sendFollowRequest, 
               sentRequests={sentRequests}
               onFollow={sendFollowRequest}
               onTap={onUserTap}
+              score={u._score}
             />
           ))
         )}
@@ -455,6 +466,7 @@ export default function SocialPanel({ onClose, onOpenChat }) {
     sendFollowRequest,
     acceptFollowRequest,
     rejectFollowRequest,
+    computeAndSaveMatchScores,
   } = useSocialStore()
 
   const [tab, setTab] = useState('map')
@@ -473,7 +485,11 @@ export default function SocialPanel({ onClose, onOpenChat }) {
         if (snap.exists()) {
           const data = snap.data()
           setMyProfile(data)
-          if (data.schoolId) loadNearbyUsers(data.schoolId)
+          if (data.schoolId) {
+            await loadNearbyUsers(data.schoolId)
+            const nearby = useSocialStore.getState().nearbyUsers
+            computeAndSaveMatchScores(data, nearby)
+          }
         }
         await loadMyProfile()
       } finally {
@@ -561,6 +577,7 @@ export default function SocialPanel({ onClose, onOpenChat }) {
               sentRequests={sentRequests}
               sendFollowRequest={sendFollowRequest}
               onUserTap={setSelectedUserId}
+              myProfile={myProfile}
             />
           )}
           {tab === 'requests' && (

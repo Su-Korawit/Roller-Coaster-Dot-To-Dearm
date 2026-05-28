@@ -3,7 +3,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { Flame, Lock, Loader2, MessageCircle, UserCheck, UserPlus } from 'lucide-react'
 import { db } from '../firebase'
 import { useAuthStore } from '../stores/useAuthStore'
-import { useSocialStore } from '../stores/useSocialStore'
+import { useSocialStore, calculateMatchScore } from '../stores/useSocialStore'
 
 // ─── MBTI colours ────────────────────────────────────────────────────────────
 const MBTI_COLORS = {
@@ -14,27 +14,43 @@ const MBTI_COLORS = {
 }
 function mbtiColor(mbti) { return MBTI_COLORS[mbti] ?? '#a78bda' }
 
-// ─── Match score bar ──────────────────────────────────────────────────────────
+// ─── Match score bar — pixel-art segmented style ─────────────────────────────
 function MatchBar({ score }) {
-  const fill = score >= 70
-    ? 'linear-gradient(90deg, #a78bda, #7c3aed)'
-    : score >= 40
-      ? 'linear-gradient(90deg, #fbbf24, #a78bda)'
-      : 'linear-gradient(90deg, #f87171, #fbbf24)'
+  // Animate fill from 0 → score after a short delay so the transition plays
+  const [filled, setFilled] = useState(false)
+  useEffect(() => {
+    const id = setTimeout(() => setFilled(true), 200)
+    return () => clearTimeout(id)
+  }, [])
+
+  const label = score >= 80 ? '⚡ High Match' : score >= 60 ? '✦ Match' : 'Match Score'
+  const labelColor = score >= 80 ? '#d97706' : score >= 60 ? '#a78bda' : '#9ca3af'
+  const segmentColor = score >= 80 ? '#f59e0b' : score >= 60 ? '#a78bda' : '#c084fc'
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="pixel-font text-[7px] text-gray-500">Match Score</span>
-        <span className="pixel-font text-[8px]" style={{ color: mbtiColor(null) }}>
-          {score}%
-        </span>
+      <div className="flex items-center justify-between mb-2">
+        <span className="pixel-font text-[7px]" style={{ color: labelColor }}>{label}</span>
+        <span className="pixel-font text-[8px]" style={{ color: labelColor }}>{score}%</span>
       </div>
-      <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-700 ease-out"
-          style={{ width: `${score}%`, background: fill }}
-        />
+      {/* 10-segment pixel bar — each block lights up with a staggered delay */}
+      <div className="flex gap-0.5 h-3.5">
+        {Array.from({ length: 10 }, (_, i) => {
+          const segmentThreshold = (i + 1) * 10
+          const isLit = filled && score >= segmentThreshold
+          return (
+            <div
+              key={i}
+              className="flex-1 rounded-sm"
+              style={{
+                background: isLit ? segmentColor : '#e5e7eb',
+                transition: `background 0.12s ease`,
+                transitionDelay: isLit ? `${i * 55}ms` : '0ms',
+                boxShadow: isLit && score >= 60 ? `0 0 4px ${segmentColor}80` : 'none',
+              }}
+            />
+          )
+        })}
       </div>
     </div>
   )
@@ -71,6 +87,7 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
   const sendFollowRequest = useSocialStore((s) => s.sendFollowRequest)
 
   const [profile, setProfile] = useState(null)
+  const [myProfileDoc, setMyProfileDoc] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [followBusy, setFollowBusy] = useState(false)
@@ -81,19 +98,23 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
     return () => cancelAnimationFrame(id)
   }, [])
 
-  // Fetch target user profile
+  // Fetch target user profile + own profile (for match scoring)
   useEffect(() => {
     if (!userId) return
     setLoading(true)
     setError('')
-    getDoc(doc(db, 'users', userId))
-      .then((snap) => {
+    Promise.all([
+      getDoc(doc(db, 'users', userId)),
+      currentUser?.uid ? getDoc(doc(db, 'users', currentUser.uid)) : Promise.resolve(null),
+    ])
+      .then(([snap, mySnap]) => {
         if (snap.exists()) setProfile(snap.data())
         else setError('ไม่พบผู้ใช้')
+        if (mySnap?.exists()) setMyProfileDoc(mySnap.data())
       })
       .catch(() => setError('โหลดข้อมูลไม่สำเร็จ'))
       .finally(() => setLoading(false))
-  }, [userId])
+  }, [userId, currentUser?.uid])
 
   // Relationship state
   const iFollow = following.includes(userId)
@@ -226,10 +247,10 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
               )}
             </div>
 
-            {/* ── Match score bar (mutual only) ── */}
+            {/* ── Match score bar (mutual only, computed from both profiles) ── */}
             {isMutual && !isSelf && (
               <div className="bg-purple-50 rounded-2xl px-4 py-3 mb-4 border border-purple-100">
-                <MatchBar score={profile.matchScore ?? 0} />
+                <MatchBar score={calculateMatchScore(myProfileDoc, profile)} />
               </div>
             )}
 

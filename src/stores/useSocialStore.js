@@ -7,6 +7,8 @@ import {
   limit,
   onSnapshot,
   query,
+  serverTimestamp,
+  setDoc,
   updateDoc,
   where,
   writeBatch,
@@ -14,6 +16,64 @@ import {
   arrayUnion,
 } from 'firebase/firestore'
 import { auth, db } from '../firebase'
+
+// ─── Career family mapping ────────────────────────────────────────────────────
+// Groups career ids into families so "similar program" scoring works.
+// Handles both id (e.g. 'data-scientist') and display name (e.g. 'Data Scientist').
+const CAREER_FAMILY_MAP = {
+  'data-scientist': 'analyst',    'Data Scientist': 'analyst',
+  'ml-engineer': 'analyst',       'AI / ML Specialist': 'analyst',
+  'ai-architect': 'analyst',      'AI Solutions Architect': 'analyst',
+  'prompt-engineer': 'analyst',   'Prompt Engineer': 'analyst',
+  'product-manager': 'analyst',   'Product Manager': 'analyst',
+  'fintech-developer': 'analyst', 'Fintech Developer': 'analyst',
+  'ui-ux': 'diplomat',            'UI/UX Designer': 'diplomat',
+  'content-strategist': 'diplomat','Content Strategist': 'diplomat',
+  'learning-designer': 'diplomat','Learning Experience Designer': 'diplomat',
+  'wellness-coach': 'diplomat',   'Digital Wellness Coach': 'diplomat',
+  'hr-tech': 'diplomat',          'HR Tech Specialist': 'diplomat',
+  'cybersecurity': 'sentinel',    'Cybersecurity Analyst': 'sentinel',
+  'compliance-officer': 'sentinel','Digital Compliance Officer': 'sentinel',
+  'project-manager': 'sentinel',  'Project Manager (Agile)': 'sentinel',
+  'cloud-ops': 'sentinel',        'Cloud Operations Engineer': 'sentinel',
+  'business-analyst': 'sentinel', 'Business Analyst': 'sentinel',
+  'fullstack-dev': 'explorer',    'Full-Stack Developer': 'explorer',
+  'digital-artist': 'explorer',   'Digital Artist / 3D Creator': 'explorer',
+  'game-developer': 'explorer',   'Game Developer': 'explorer',
+  'growth-hacker': 'explorer',    'Growth Hacker': 'explorer',
+  'iot-engineer': 'explorer',     'IoT / Hardware Engineer': 'explorer',
+}
+
+// ─── Match scoring ─────────────────────────────────────────────────────────────
+export function calculateMatchScore(a, b) {
+  if (!a || !b) return 0
+  let score = 0
+
+  // Program: 40 pts exact match, 20 pts same career family
+  if (a.program && b.program) {
+    if (a.program === b.program) {
+      score += 40
+    } else {
+      const fa = CAREER_FAMILY_MAP[a.program]
+      const fb = CAREER_FAMILY_MAP[b.program]
+      if (fa && fb && fa === fb) score += 20
+    }
+  }
+
+  // Mastery track: 25 pts
+  if (a.mastery && b.mastery && a.mastery === b.mastery) score += 25
+
+  // MBTI type: 15 pts
+  if (a.mbti && b.mbti && a.mbti === b.mbti) score += 15
+
+  // University: 10 pts
+  if (a.university && b.university && a.university === b.university) score += 10
+
+  // Same school (schoolId): 10 pts
+  if (a.schoolId && b.schoolId && a.schoolId === b.schoolId) score += 10
+
+  return Math.min(score, 100)
+}
 
 // Throws if called before auth is ready — actions guard against this.
 function myUid() {
@@ -136,7 +196,6 @@ export const useSocialStore = create((set) => ({
   },
 
   // Fetches users whose matchScore is above 0, excluding the current user.
-  // matchScore is incremented externally (e.g. shared MBTI/program/mastery).
   loadMatchedUsers: async () => {
     const uid = myUid()
     const q = query(
@@ -147,5 +206,25 @@ export const useSocialStore = create((set) => ({
     const snap = await getDocs(q)
     const users = snap.docs.map((d) => d.data()).filter((u) => u.uid !== uid)
     set({ matchedUsers: users })
+  },
+
+  // Scores each nearby user against myProfile, writes docs for score >= 60,
+  // and updates matchedUsers in the store.
+  computeAndSaveMatchScores: async (myProfile, nearbyUsers) => {
+    const uid = myUid()
+    const matched = []
+    await Promise.all(
+      nearbyUsers.map(async (other) => {
+        const score = calculateMatchScore(myProfile, other)
+        if (score >= 60) {
+          await setDoc(
+            doc(db, 'users', uid, 'matches', other.uid),
+            { score, matchedAt: serverTimestamp() },
+          )
+          matched.push({ ...other, matchScore: score })
+        }
+      }),
+    )
+    set({ matchedUsers: matched })
   },
 }))
