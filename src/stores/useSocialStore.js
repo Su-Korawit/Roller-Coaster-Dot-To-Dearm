@@ -104,6 +104,10 @@ export const useSocialStore = create((set) => ({
   sentRequests: [],
   matchedUsers: [],
   searchResults: [],
+  // Match feature state
+  matchResult: null,        // { matched, score, targetUser } | null
+  checkedMatches: {},       // { [targetUid]: { score, status:'checking'|'matched'|'no-match', checkedAt } }
+  matches: [],              // MatchedTab list: [{ uid, score, checkedAt, user }]
 
   // Adds myUid to target's followRequests array and targetUid to my sentRequests.
   // arrayUnion is idempotent — safe to call if a request was already sent.
@@ -248,6 +252,89 @@ export const useSocialStore = create((set) => ({
     const snap = await getDocs(q)
     const users = snap.docs.map((d) => d.data()).filter((u) => u.uid !== uid)
     set({ matchedUsers: users })
+  },
+
+  setMatchResult: (result) => set({ matchResult: result }),
+  clearMatchResult: () => set({ matchResult: null }),
+
+  // Fetch both profiles, compute score, save to subcollection, trigger overlay.
+  checkAndAnimateMatch: async (targetUid) => {
+    let uid
+    try { uid = myUid() } catch { return }
+
+    set((s) => ({
+      checkedMatches: { ...s.checkedMatches, [targetUid]: { status: 'checking' } },
+    }))
+
+    try {
+      const [mySnap, theirSnap] = await Promise.all([
+        getDoc(doc(db, 'users', uid)),
+        getDoc(doc(db, 'users', targetUid)),
+      ])
+
+      if (!mySnap.exists() || !theirSnap.exists()) {
+        set((s) => { const n = { ...s.checkedMatches }; delete n[targetUid]; return { checkedMatches: n } })
+        return
+      }
+
+      const myData = mySnap.data()
+      const theirData = theirSnap.data()
+      const score = calculateMatchScore(myData, theirData)
+      const status = score >= 60 ? 'matched' : 'no-match'
+      const checkedAt = new Date()
+
+      await setDoc(
+        doc(db, 'users', uid, 'matches', targetUid),
+        { score, checkedAt: serverTimestamp() },
+        { merge: true },
+      )
+
+      set((s) => ({
+        checkedMatches: { ...s.checkedMatches, [targetUid]: { score, status, checkedAt } },
+        matchResult: { matched: score >= 60, score, targetUser: theirData },
+      }))
+    } catch (err) {
+      console.error('[checkAndAnimateMatch] error:', err)
+      set((s) => { const n = { ...s.checkedMatches }; delete n[targetUid]; return { checkedMatches: n } })
+    }
+  },
+
+  // Load matches subcollection → populate checkedMatches + matches list.
+  loadMatches: async () => {
+    let uid
+    try { uid = myUid() } catch { return }
+
+    try {
+      const snap = await getDocs(collection(db, 'users', uid, 'matches'))
+      if (snap.empty) return
+
+      const allChecked = {}
+      const highScore = []
+
+      for (const d of snap.docs) {
+        const data = d.data()
+        const checkedAt = data.checkedAt?.toDate?.() ?? null
+        const status = data.score >= 60 ? 'matched' : 'no-match'
+        allChecked[d.id] = { score: data.score, status, checkedAt }
+        if (data.score >= 60) highScore.push({ uid: d.id, score: data.score, checkedAt })
+      }
+
+      const matchesWithUsers = (
+        await Promise.all(
+          highScore.map(async (m) => {
+            const userSnap = await getDoc(doc(db, 'users', m.uid))
+            return userSnap.exists() ? { ...m, user: userSnap.data() } : null
+          }),
+        )
+      ).filter(Boolean).sort((a, b) => b.score - a.score)
+
+      set((s) => ({
+        checkedMatches: { ...s.checkedMatches, ...allChecked },
+        matches: matchesWithUsers,
+      }))
+    } catch (err) {
+      console.error('[loadMatches] error:', err)
+    }
   },
 
   // Scores each nearby user against myProfile, writes docs for score >= 60,

@@ -2,12 +2,13 @@ import 'leaflet/dist/leaflet.css'
 import { useEffect, useRef, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
-import { Bell, Loader2, MapIcon, Search, UserCheck, UserPlus, Users, X } from 'lucide-react'
+import { Bell, Loader2, MapIcon, MessageCircle, Search, UserCheck, UserPlus, Users, X, Zap } from 'lucide-react'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSocialStore, calculateMatchScore } from '../stores/useSocialStore'
 import PublicProfileSheet from './PublicProfileSheet'
+import KawaiiMatchOverlay from './KawaiiMatchOverlay'
 
 // ─── MBTI group colours ──────────────────────────────────────────────────────
 const MBTI_COLORS = {
@@ -204,12 +205,21 @@ function MapTab({ myProfile, nearbyUsers, uid, onSchoolSaved, onUserTap }) {
 }
 
 // ─── UserCard (Discover tab) ─────────────────────────────────────────────────
-function UserCard({ user, following, sentRequests, onFollow, onTap, score = 0 }) {
+function UserCard({ user, following, sentRequests, onFollow, onTap, score = 0, onMatchCheck, checkedMatches = {} }) {
   const [busy, setBusy] = useState(false)
   const isFollowing = following.includes(user.uid)
   const isPending = sentRequests.includes(user.uid)
   const isHighMatch = score >= 80
   const isMatch = score >= 60
+
+  const matchState = checkedMatches[user.uid]
+  const isChecking = matchState?.status === 'checking'
+  const isMatched  = matchState?.status === 'matched'
+  const isNoMatch  = matchState?.status === 'no-match'
+  const canRetry   = isNoMatch ? (() => {
+    if (!matchState.checkedAt) return true
+    return (Date.now() - new Date(matchState.checkedAt).getTime()) >= 24 * 60 * 60 * 1000
+  })() : true
 
   async function handleFollow(e) {
     e.stopPropagation()
@@ -218,9 +228,15 @@ function UserCard({ user, following, sentRequests, onFollow, onTap, score = 0 })
     try { await onFollow(user.uid) } finally { setBusy(false) }
   }
 
+  function handleMatch(e) {
+    e.stopPropagation()
+    if (isChecking || isMatched || (isNoMatch && !canRetry)) return
+    onMatchCheck?.(user.uid)
+  }
+
   return (
     <div
-      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 border transition-colors cursor-pointer active:brightness-95 ${
+      className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 border transition-colors cursor-pointer active:brightness-95 ${
         isHighMatch ? 'border-amber-200 bg-amber-50/60'
         : isMatch   ? 'border-purple-200 bg-purple-50/60'
         :             'border-gray-100 bg-gray-50'
@@ -262,27 +278,44 @@ function UserCard({ user, following, sentRequests, onFollow, onTap, score = 0 })
         </div>
       </div>
 
+      {/* Match button */}
+      <button
+        onClick={handleMatch}
+        disabled={isChecking || isMatched || (isNoMatch && !canRetry)}
+        className={`shrink-0 px-2 py-1.5 rounded-xl pixel-font text-[7px] transition-all active:scale-95 disabled:cursor-not-allowed ${
+          isMatched           ? 'bg-amber-400 text-white shadow-sm'
+          : isChecking        ? 'bg-purple-100 text-purple-500 animate-pulse'
+          : (isNoMatch && !canRetry) ? 'bg-gray-100 text-gray-400'
+          : 'border border-[#a78bda] text-[#a78bda]'
+        }`}
+      >
+        {isMatched    ? '⚡ Matched!'
+          : isChecking  ? '～ checking'
+          : (isNoMatch && !canRetry) ? '✦ Try Again'
+          : '✦ Match'}
+      </button>
+
       {/* Follow button */}
       <button
         onClick={handleFollow}
         disabled={busy || isFollowing || isPending}
-        className={`shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl pixel-font text-[7px] transition-all active:scale-95 disabled:opacity-60 ${
+        className={`shrink-0 flex items-center gap-1 px-2 py-1.5 rounded-xl pixel-font text-[7px] transition-all active:scale-95 disabled:opacity-60 ${
           isFollowing ? 'bg-gray-100 text-gray-500'
           : isPending ? 'bg-amber-50 text-amber-600 border border-amber-200'
           : 'bg-[#a78bda] text-white shadow-sm'
         }`}
       >
         {busy ? <Loader2 size={10} className="animate-spin" />
-          : isFollowing ? <><UserCheck size={10} /> ติดตามแล้ว</>
+          : isFollowing ? <UserCheck size={10} />
           : isPending ? 'รอ...'
-          : <><UserPlus size={10} /> ติดตาม</>}
+          : <UserPlus size={10} />}
       </button>
     </div>
   )
 }
 
 // ─── DiscoverTab ─────────────────────────────────────────────────────────────
-function DiscoverTab({ nearbyUsers, following, sentRequests, sendFollowRequest, onUserTap, myProfile }) {
+function DiscoverTab({ nearbyUsers, following, sentRequests, sendFollowRequest, onUserTap, myProfile, onMatchCheck, checkedMatches }) {
   const [search, setSearch] = useState('')
   const [searching, setSearching] = useState(false)
   const searchResults = useSocialStore((s) => s.searchResults)
@@ -350,6 +383,8 @@ function DiscoverTab({ nearbyUsers, following, sentRequests, sendFollowRequest, 
               onFollow={sendFollowRequest}
               onTap={onUserTap}
               score={u._score}
+              onMatchCheck={onMatchCheck}
+              checkedMatches={checkedMatches}
             />
           ))
         )}
@@ -459,11 +494,100 @@ function RequestsTab({ pendingRequests, acceptFollowRequest, rejectFollowRequest
   )
 }
 
+// ─── MatchedTab ──────────────────────────────────────────────────────────────
+function MatchedTab({ onUserTap, onOpenChat, following }) {
+  const matches = useSocialStore((s) => s.matches)
+  const loadMatches = useSocialStore((s) => s.loadMatches)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadMatches().finally(() => setLoading(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000
+
+  function tierColor(score) {
+    if (score >= 90) return '#EF9F27'
+    if (score >= 71) return '#7F77DD'
+    return '#378ADD'
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-2">
+      {loading && (
+        <div className="flex justify-center py-10">
+          <Loader2 size={22} className="text-purple-400 animate-spin" />
+        </div>
+      )}
+      {!loading && matches.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-12 gap-3">
+          <span className="text-3xl">⚡</span>
+          <p className="pixel-font text-[8px] text-gray-400 text-center leading-relaxed">
+            ยังไม่มี Match<br />กด ✦ Match ในแท็บ Discover
+          </p>
+        </div>
+      )}
+      {matches.map((m) => {
+        const isMutual = following.includes(m.uid)
+        const isOld = !m.checkedAt || (Date.now() - new Date(m.checkedAt).getTime()) > sevenDaysMs
+        return (
+          <div
+            key={m.uid}
+            className="flex items-center gap-3 bg-white rounded-xl px-3 py-2.5 border border-gray-100 shadow-sm cursor-pointer active:brightness-95"
+            onClick={() => onUserTap?.(m.uid)}
+          >
+            <div
+              className="w-10 h-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-gray-100 border-2"
+              style={{ borderColor: mbtiColor(m.user?.mbti) }}
+            >
+              {m.user?.photoURL
+                ? <img src={m.user.photoURL} alt="" className="w-full h-full object-cover" />
+                : <span className="text-lg">🎮</span>}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="pixel-font text-[9px] text-gray-800 truncate">{m.user?.displayName || 'ผู้ใช้'}</p>
+              <div className="flex items-center gap-1 mt-0.5">
+                {m.user?.mbti && (
+                  <span className="pixel-font text-[6px] px-1.5 py-0.5 rounded-md text-white"
+                    style={{ background: mbtiColor(m.user.mbti) }}>
+                    {m.user.mbti}
+                  </span>
+                )}
+                {isOld && (
+                  <span className="pixel-font text-[6px] text-gray-400">· ✦ Match Again?</span>
+                )}
+              </div>
+            </div>
+            {/* Score pill */}
+            <span
+              className="pixel-font text-[8px] font-bold px-2 py-1 rounded-lg text-white shrink-0"
+              style={{ background: tierColor(m.score) }}
+            >
+              {m.score}%
+            </span>
+            {/* Chat button (mutual follows only) */}
+            {isMutual && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onOpenChat?.(m.uid) }}
+                className="shrink-0 p-1.5 rounded-xl bg-[#a78bda]/10 text-[#a78bda] hover:bg-[#a78bda]/20 transition-colors"
+              >
+                <MessageCircle size={14} />
+              </button>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ─── SocialPanel (main export) ───────────────────────────────────────────────
 const TABS = [
   { id: 'map',      label: 'Map',      Icon: MapIcon },
   { id: 'discover', label: 'Discover', Icon: Search  },
   { id: 'requests', label: 'Requests', Icon: Bell    },
+  { id: 'matched',  label: 'Matched',  Icon: Zap     },
 ]
 
 export default function SocialPanel({ onClose, onOpenChat }) {
@@ -480,6 +604,10 @@ export default function SocialPanel({ onClose, onOpenChat }) {
     acceptFollowRequest,
     rejectFollowRequest,
     computeAndSaveMatchScores,
+    matchResult,
+    clearMatchResult,
+    checkAndAnimateMatch,
+    checkedMatches,
   } = useSocialStore()
 
   const [tab, setTab] = useState('map')
@@ -591,6 +719,8 @@ export default function SocialPanel({ onClose, onOpenChat }) {
               sendFollowRequest={sendFollowRequest}
               onUserTap={setSelectedUserId}
               myProfile={myProfile}
+              onMatchCheck={checkAndAnimateMatch}
+              checkedMatches={checkedMatches}
             />
           )}
           {tab === 'requests' && (
@@ -598,6 +728,13 @@ export default function SocialPanel({ onClose, onOpenChat }) {
               pendingRequests={pendingRequests}
               acceptFollowRequest={acceptFollowRequest}
               rejectFollowRequest={rejectFollowRequest}
+            />
+          )}
+          {tab === 'matched' && (
+            <MatchedTab
+              onUserTap={setSelectedUserId}
+              onOpenChat={onOpenChat}
+              following={following}
             />
           )}
         </div>
@@ -609,6 +746,17 @@ export default function SocialPanel({ onClose, onOpenChat }) {
           userId={selectedUserId}
           onClose={() => setSelectedUserId(null)}
           onOpenChat={onOpenChat}
+        />
+      )}
+
+      {/* Kawaii match overlay — portaled above everything via fixed positioning */}
+      {matchResult && (
+        <KawaiiMatchOverlay
+          matchResult={matchResult}
+          myUser={myProfile}
+          onClose={clearMatchResult}
+          onOpenChat={(uid) => { clearMatchResult(); onOpenChat?.(uid) }}
+          onViewProfile={(uid) => { clearMatchResult(); setSelectedUserId(uid) }}
         />
       )}
     </div>
