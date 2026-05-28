@@ -13,8 +13,12 @@ import NewsPanel from '../components/NewsPanel'
 import ProfilePanel from '../components/ProfilePanel'
 import SkillPanel from '../components/SkillPanel'
 import SocialPanel from '../components/SocialPanel'
+import ChatPanel from '../components/ChatPanel'
 import CalendarPopup from '../components/CalendarPopup'
 import DailyLoginModal from '../components/DailyLoginModal'
+import { doc, getDoc } from 'firebase/firestore'
+import { auth, db } from '../firebase'
+import { useChatStore, buildChatId } from '../stores/useChatStore'
 
 // ── MBTI background asset maps (eager glob, resolved at build time) ──────────
 const bgImages = import.meta.glob(
@@ -136,9 +140,22 @@ function HomePage() {
     if (tab === APP_VIEWS.NEWS) setNewsRead(true)
   }
 
+  const openChatAction = useChatStore((s) => s.openChat)
+
   function closePanel() {
     setActiveTab(APP_VIEWS.HOME)
     setTaskInitialView('list')
+  }
+
+  async function handleOpenChat(userId) {
+    const myUid = auth.currentUser?.uid
+    if (!myUid || !userId) return
+    const snap = await getDoc(doc(db, 'users', userId))
+    const otherUser = snap.exists()
+      ? snap.data()
+      : { uid: userId, displayName: 'Unknown', photoURL: null }
+    openChatAction(buildChatId(myUid, userId), otherUser)
+    setActiveTab(APP_VIEWS.CHAT)
   }
 
   // Opens the Calendar directly when the Planner passive skill is active.
@@ -334,7 +351,8 @@ function HomePage() {
       {activeTab === APP_VIEWS.TASK && <TaskPanel onClose={closePanel} initialView={taskInitialView} />}
       {activeTab === APP_VIEWS.NEWS && <NewsPanel onClose={closePanel} />}
       {activeTab === APP_VIEWS.PROFILE && <ProfilePanel onClose={closePanel} />}
-      {activeTab === APP_VIEWS.SOCIAL && <SocialPanel onClose={closePanel} />}
+      {activeTab === APP_VIEWS.SOCIAL && <SocialPanel onClose={closePanel} onOpenChat={handleOpenChat} />}
+      {activeTab === APP_VIEWS.CHAT && <ChatPanel onClose={closePanel} />}
       {activeTab === APP_VIEWS.SKILL && (
         <SkillPanel
           onClose={closePanel}

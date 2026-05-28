@@ -14,6 +14,16 @@
   to   { opacity: 1; transform: translateX(0); }
 }
 
+@keyframes stackPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.45); }
+  70%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+.animate-stack-pop {
+  animation: stackPop 0.35s ease-out;
+}
+
 :root {
   font-synthesis: none;
   text-rendering: optimizeLegibility;

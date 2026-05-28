@@ -442,7 +442,7 @@ const TABS = [
   { id: 'requests', label: 'Requests', Icon: Bell    },
 ]
 
-export default function SocialPanel({ onClose }) {
+export default function SocialPanel({ onClose, onOpenChat }) {
   const user = useAuthStore((s) => s.user)
   const {
     nearbyUsers,
@@ -578,6 +578,7 @@ export default function SocialPanel({ onClose }) {
         <UserProfileSheet
           userId={selectedUserId}
           onClose={() => setSelectedUserId(null)}
+          onOpenChat={onOpenChat}
         />
       )}
     </div>

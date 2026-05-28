@@ -8,6 +8,7 @@ export const APP_VIEWS = {
   PROFILE: 'profile',
   SKILL: 'skill',
   SOCIAL: 'social',
+  CHAT: 'chat',
   MUSIC: 'music',
   PLANNER_CALENDAR: 'planner_calendar',
 }

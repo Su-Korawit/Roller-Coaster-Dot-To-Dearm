@@ -39,10 +39,16 @@ export const useChatStore = create((set) => ({
     const q = query(
       collection(db, 'chats'),
       where('members', 'array-contains', uid),
-      orderBy('lastMessageAt', 'desc'),
     )
     _chatsUnsub = onSnapshot(q, (snap) => {
-      set({ chats: snap.docs.map((d) => ({ id: d.id, ...d.data() })) })
+      const chats = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => {
+          const ta = a.lastMessageAt?.toMillis?.() ?? 0
+          const tb = b.lastMessageAt?.toMillis?.() ?? 0
+          return tb - ta
+        })
+      set({ chats })
     })
     return _chatsUnsub
   },

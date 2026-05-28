@@ -1,6 +1,6 @@
-import { Users } from 'lucide-react'
+import { MessageCircle, Users } from 'lucide-react'
 
-// Bottom Navigation Bar — Home | Task | Social | Profile
+// Bottom Navigation Bar — Home | Task | Social | Chat | Profile
 export default function BottomNavBar({ active, onChange }) {
   const tabs = [
     {
@@ -33,6 +33,11 @@ export default function BottomNavBar({ active, onChange }) {
       icon: <Users size={22} strokeWidth={2} />,
     },
     {
+      id: 'chat',
+      label: 'Chat',
+      icon: <MessageCircle size={22} strokeWidth={2} />,
+    },
+    {
       id: 'profile',
       label: 'Profile',
       icon: (
@@ -53,7 +58,7 @@ export default function BottomNavBar({ active, onChange }) {
             <button
               key={tab.id}
               onClick={() => onChange(tab.id)}
-              className={`flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-2xl transition-all
+              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl transition-all
                 ${isActive
                   ? 'text-[#a78bda]'
                   : 'text-gray-400 hover:text-gray-600'
