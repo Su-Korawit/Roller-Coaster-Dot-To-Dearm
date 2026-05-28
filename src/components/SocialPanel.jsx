@@ -284,15 +284,24 @@ function UserCard({ user, following, sentRequests, onFollow, onTap, score = 0 })
 // ─── DiscoverTab ─────────────────────────────────────────────────────────────
 function DiscoverTab({ nearbyUsers, following, sentRequests, sendFollowRequest, onUserTap, myProfile }) {
   const [search, setSearch] = useState('')
+  const [searching, setSearching] = useState(false)
+  const searchResults = useSocialStore((s) => s.searchResults)
+  const searchUsers = useSocialStore((s) => s.searchUsers)
 
-  // Score every user then sort highest first
-  const scored = nearbyUsers
+  // When a search term is typed, hit Firestore directly so users outside the
+  // same school are discoverable. Without a term, fall back to nearbyUsers.
+  useEffect(() => {
+    if (!search.trim()) { searchUsers(''); return }
+    setSearching(true)
+    searchUsers(search).finally(() => setSearching(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search])
+
+  const base = search.trim() ? searchResults : nearbyUsers
+  const scored = base
     .map((u) => ({ ...u, _score: calculateMatchScore(myProfile, u) }))
     .sort((a, b) => b._score - a._score)
-
-  const filtered = scored.filter((u) =>
-    !search.trim() || (u.displayName ?? '').toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = scored
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -318,13 +327,17 @@ function DiscoverTab({ nearbyUsers, following, sentRequests, sendFollowRequest, 
 
       {/* User list */}
       <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-2">
-        {filtered.length === 0 ? (
+        {searching ? (
+          <div className="flex justify-center py-10">
+            <Loader2 size={20} className="text-purple-400 animate-spin" />
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <span className="text-3xl">{nearbyUsers.length === 0 ? '🏫' : '🔍'}</span>
+            <span className="text-3xl">{search.trim() ? '🔍' : '🏫'}</span>
             <p className="pixel-font text-[8px] text-gray-400 text-center leading-relaxed">
-              {nearbyUsers.length === 0
-                ? 'ยังไม่มีผู้ใช้ในโรงเรียนเดียวกัน'
-                : 'ไม่พบผู้ใช้ที่ค้นหา'}
+              {search.trim()
+                ? 'ไม่พบผู้ใช้ที่ค้นหา'
+                : 'ยังไม่มีผู้ใช้ในโรงเรียนเดียวกัน'}
             </p>
           </div>
         ) : (

@@ -92,6 +92,7 @@ export const useSocialStore = create((set) => ({
   pendingRequests: [],
   sentRequests: [],
   matchedUsers: [],
+  searchResults: [],
 
   // Adds myUid to target's followRequests array and targetUid to my sentRequests.
   // arrayUnion is idempotent — safe to call if a request was already sent.
@@ -193,6 +194,26 @@ export const useSocialStore = create((set) => ({
       })
     })
     return _unsub
+  },
+
+  // Prefix search on displayName across all users — works regardless of schoolId.
+  // Uses Firestore range query ( trick) so no extra index is needed.
+  // Clears results when term is empty.
+  searchUsers: async (term) => {
+    const uid = myUid()
+    if (!term.trim()) {
+      set({ searchResults: [] })
+      return
+    }
+    const q = query(
+      collection(db, 'users'),
+      where('displayName', '>=', term),
+      where('displayName', '<=', term + ''),
+      limit(20),
+    )
+    const snap = await getDocs(q)
+    const results = snap.docs.map((d) => d.data()).filter((u) => u.uid !== uid)
+    set({ searchResults: results })
   },
 
   // Fetches users whose matchScore is above 0, excluding the current user.
