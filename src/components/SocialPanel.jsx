@@ -7,6 +7,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSocialStore } from '../stores/useSocialStore'
+import UserProfileSheet from './UserProfileSheet'
 
 // ─── MBTI group colours ──────────────────────────────────────────────────────
 const MBTI_COLORS = {
@@ -148,7 +149,7 @@ function SchoolPicker({ uid, onSaved }) {
 }
 
 // ─── MapTab ──────────────────────────────────────────────────────────────────
-function MapTab({ myProfile, nearbyUsers, uid, onSchoolSaved }) {
+function MapTab({ myProfile, nearbyUsers, uid, onSchoolSaved, onUserTap }) {
   if (!myProfile?.schoolId) {
     return <SchoolPicker uid={uid} onSaved={onSchoolSaved} />
   }
@@ -188,17 +189,12 @@ function MapTab({ myProfile, nearbyUsers, uid, onSchoolSaved }) {
             const r = 0.00009
             const pos = [center[0] + Math.sin(angle) * r, center[1] + Math.cos(angle) * r]
             return (
-              <Marker key={u.uid} position={pos} icon={makeUserIcon(u)}>
-                <Popup>
-                  <div style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 12, minWidth: 80 }}>
-                    <strong>{u.displayName || 'ผู้ใช้'}</strong>
-                    {u.mbti && (
-                      <div style={{ color: mbtiColor(u.mbti), fontWeight: 'bold', marginTop: 2 }}>{u.mbti}</div>
-                    )}
-                    {u.program && <div style={{ color: '#666', fontSize: 11 }}>{u.program}</div>}
-                  </div>
-                </Popup>
-              </Marker>
+              <Marker
+                key={u.uid}
+                position={pos}
+                icon={makeUserIcon(u)}
+                eventHandlers={{ click: () => onUserTap?.(u.uid) }}
+              />
             )
           })}
         </MapContainer>
@@ -208,22 +204,26 @@ function MapTab({ myProfile, nearbyUsers, uid, onSchoolSaved }) {
 }
 
 // ─── UserCard (Discover tab) ─────────────────────────────────────────────────
-function UserCard({ user, following, sentRequests, onFollow }) {
+function UserCard({ user, following, sentRequests, onFollow, onTap }) {
   const [busy, setBusy] = useState(false)
   const isFollowing = following.includes(user.uid)
   const isPending = sentRequests.includes(user.uid)
   const isMatch = (user.matchScore ?? 0) > MATCH_THRESHOLD
 
-  async function handleFollow() {
+  async function handleFollow(e) {
+    e.stopPropagation()
     if (isFollowing || isPending || busy) return
     setBusy(true)
     try { await onFollow(user.uid) } finally { setBusy(false) }
   }
 
   return (
-    <div className={`flex items-center gap-3 rounded-xl px-3 py-2.5 border transition-colors ${
-      isMatch ? 'border-purple-200 bg-purple-50/60' : 'border-gray-100 bg-gray-50'
-    }`}>
+    <div
+      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 border transition-colors cursor-pointer active:brightness-95 ${
+        isMatch ? 'border-purple-200 bg-purple-50/60' : 'border-gray-100 bg-gray-50'
+      }`}
+      onClick={() => onTap?.(user.uid)}
+    >
       {/* Avatar with MBTI ring */}
       <div
         className="w-10 h-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-white border-2"
@@ -277,7 +277,7 @@ function UserCard({ user, following, sentRequests, onFollow }) {
 }
 
 // ─── DiscoverTab ─────────────────────────────────────────────────────────────
-function DiscoverTab({ nearbyUsers, following, sentRequests, sendFollowRequest }) {
+function DiscoverTab({ nearbyUsers, following, sentRequests, sendFollowRequest, onUserTap }) {
   const [search, setSearch] = useState('')
 
   const filtered = nearbyUsers.filter((u) =>
@@ -325,6 +325,7 @@ function DiscoverTab({ nearbyUsers, following, sentRequests, sendFollowRequest }
               following={following}
               sentRequests={sentRequests}
               onFollow={sendFollowRequest}
+              onTap={onUserTap}
             />
           ))
         )}
@@ -459,6 +460,7 @@ export default function SocialPanel({ onClose }) {
   const [tab, setTab] = useState('map')
   const [myProfile, setMyProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [selectedUserId, setSelectedUserId] = useState(null)
 
   useEffect(() => {
     if (!user?.uid) return
@@ -549,6 +551,7 @@ export default function SocialPanel({ onClose }) {
               nearbyUsers={nearbyUsers}
               uid={user?.uid}
               onSchoolSaved={handleSchoolSaved}
+              onUserTap={setSelectedUserId}
             />
           )}
           {tab === 'discover' && (
@@ -557,6 +560,7 @@ export default function SocialPanel({ onClose }) {
               following={following}
               sentRequests={sentRequests}
               sendFollowRequest={sendFollowRequest}
+              onUserTap={setSelectedUserId}
             />
           )}
           {tab === 'requests' && (
@@ -567,6 +571,14 @@ export default function SocialPanel({ onClose }) {
             />
           )}
         </div>
+      )}
+
+      {/* User profile sheet — rendered inside panel so z-60 stacks above z-50 panel content */}
+      {selectedUserId && (
+        <UserProfileSheet
+          userId={selectedUserId}
+          onClose={() => setSelectedUserId(null)}
+        />
       )}
     </div>
   )

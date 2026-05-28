@@ -1,0 +1,280 @@
+import { useEffect, useState } from 'react'
+import { doc, getDoc } from 'firebase/firestore'
+import { Flame, Lock, Loader2, MessageCircle, UserCheck, UserPlus } from 'lucide-react'
+import { db } from '../firebase'
+import { useAuthStore } from '../stores/useAuthStore'
+import { useSocialStore } from '../stores/useSocialStore'
+
+// ─── MBTI colours ────────────────────────────────────────────────────────────
+const MBTI_COLORS = {
+  INTJ: '#7c3aed', INTP: '#7c3aed', ENTJ: '#7c3aed', ENTP: '#7c3aed',
+  INFJ: '#059669', INFP: '#059669', ENFJ: '#059669', ENFP: '#059669',
+  ISTJ: '#2563eb', ISFJ: '#2563eb', ESTJ: '#2563eb', ESFJ: '#2563eb',
+  ISTP: '#d97706', ISFP: '#d97706', ESTP: '#d97706', ESFP: '#d97706',
+}
+function mbtiColor(mbti) { return MBTI_COLORS[mbti] ?? '#a78bda' }
+
+// ─── Match score bar ──────────────────────────────────────────────────────────
+function MatchBar({ score }) {
+  const fill = score >= 70
+    ? 'linear-gradient(90deg, #a78bda, #7c3aed)'
+    : score >= 40
+      ? 'linear-gradient(90deg, #fbbf24, #a78bda)'
+      : 'linear-gradient(90deg, #f87171, #fbbf24)'
+
+  return (
+    <div className="w-full">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="pixel-font text-[7px] text-gray-500">Match Score</span>
+        <span className="pixel-font text-[8px]" style={{ color: mbtiColor(null) }}>
+          {score}%
+        </span>
+      </div>
+      <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-700 ease-out"
+          style={{ width: `${score}%`, background: fill }}
+        />
+      </div>
+    </div>
+  )
+}
+
+// ─── Stat cell ────────────────────────────────────────────────────────────────
+function StatCell({ value, label }) {
+  return (
+    <div className="flex flex-col items-center gap-0.5">
+      <span className="pixel-font text-[11px] text-gray-800">{value}</span>
+      <span className="pixel-font text-[6px] text-gray-400">{label}</span>
+    </div>
+  )
+}
+
+// ─── Tag pill ─────────────────────────────────────────────────────────────────
+function Tag({ label, color = 'bg-gray-100 text-gray-600', blurred }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 pixel-font text-[7px] px-2 py-1 rounded-lg ${color} ${blurred ? 'select-none' : ''}`}
+      style={blurred ? { filter: 'blur(5px)', userSelect: 'none' } : undefined}
+    >
+      {label}
+    </span>
+  )
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
+  const currentUser = useAuthStore((s) => s.user)
+  const following = useSocialStore((s) => s.following)
+  const followers = useSocialStore((s) => s.followers)
+  const sentRequests = useSocialStore((s) => s.sentRequests)
+  const sendFollowRequest = useSocialStore((s) => s.sendFollowRequest)
+
+  const [profile, setProfile] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [followBusy, setFollowBusy] = useState(false)
+  // Trigger slide-up on next frame so the transition actually plays
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setVisible(true))
+    return () => cancelAnimationFrame(id)
+  }, [])
+
+  // Fetch target user profile
+  useEffect(() => {
+    if (!userId) return
+    setLoading(true)
+    setError('')
+    getDoc(doc(db, 'users', userId))
+      .then((snap) => {
+        if (snap.exists()) setProfile(snap.data())
+        else setError('ไม่พบผู้ใช้')
+      })
+      .catch(() => setError('โหลดข้อมูลไม่สำเร็จ'))
+      .finally(() => setLoading(false))
+  }, [userId])
+
+  // Relationship state
+  const iFollow = following.includes(userId)
+  const theyFollow = followers.includes(userId)
+  const isMutual = iFollow && theyFollow
+  const isPending = sentRequests.includes(userId)
+  const isSelf = currentUser?.uid === userId
+
+  // Privacy: blur program/mastery if private and not following
+  const isPrivate = profile?.isPrivate === true
+  const canSeeDetails = !isPrivate || iFollow || isSelf
+
+  async function handleFollow() {
+    if (iFollow || isPending || isSelf) return
+    setFollowBusy(true)
+    try { await sendFollowRequest(userId) } finally { setFollowBusy(false) }
+  }
+
+  return (
+    <div className="absolute inset-0 z-60 flex flex-col justify-end">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+
+      {/* Sheet */}
+      <div
+        className="relative bg-white rounded-t-4xl shadow-2xl flex flex-col overflow-hidden transition-transform duration-300 ease-out"
+        style={{
+          maxHeight: '85%',
+          transform: visible ? 'translateY(0)' : 'translateY(100%)',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-10 h-1 bg-gray-300 rounded-full" />
+        </div>
+
+        {/* Loading */}
+        {loading && (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 size={24} className="text-purple-400 animate-spin" />
+          </div>
+        )}
+
+        {/* Error */}
+        {!loading && error && (
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <span className="text-3xl">😕</span>
+            <p className="pixel-font text-[8px] text-gray-400">{error}</p>
+          </div>
+        )}
+
+        {/* Content */}
+        {!loading && profile && (
+          <div className="overflow-y-auto flex-1 px-5 pb-6 pt-2">
+
+            {/* ── Avatar + Name + MBTI ── */}
+            <div className="flex flex-col items-center gap-2.5 mb-5">
+              {/* Avatar */}
+              <div
+                className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 shrink-0"
+                style={{
+                  border: `4px solid ${mbtiColor(profile.mbti)}`,
+                  boxShadow: `0 0 0 3px ${mbtiColor(profile.mbti)}22`,
+                }}
+              >
+                {profile.photoURL
+                  ? <img src={profile.photoURL} alt="" className="w-full h-full object-cover" />
+                  : <span className="text-4xl">🎮</span>}
+              </div>
+
+              {/* Name */}
+              <p className="pixel-font text-[12px] text-gray-800 text-center">
+                {profile.displayName || 'ผู้ใช้'}
+              </p>
+
+              {/* MBTI badge */}
+              {profile.mbti && (
+                <span
+                  className="pixel-font text-[8px] px-3 py-1 rounded-xl text-white"
+                  style={{ background: mbtiColor(profile.mbti) }}
+                >
+                  {profile.mbti}
+                </span>
+              )}
+            </div>
+
+            {/* ── Stats row ── */}
+            <div className="flex items-center justify-around bg-gray-50 rounded-2xl px-4 py-3 mb-4 border border-gray-100">
+              <StatCell value={(profile.followers ?? []).length} label="Followers" />
+              <div className="w-px h-6 bg-gray-200" />
+              <StatCell value={(profile.following ?? []).length} label="Following" />
+              <div className="w-px h-6 bg-gray-200" />
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="pixel-font text-[11px] text-orange-500 flex items-center gap-1">
+                  <Flame size={12} />
+                  {profile.fireStacks ?? 0}
+                </span>
+                <span className="pixel-font text-[6px] text-gray-400">Stacks</span>
+              </div>
+            </div>
+
+            {/* ── Program / University / Mastery tags ── */}
+            <div className="flex flex-wrap gap-1.5 mb-4">
+              {profile.program && (
+                <Tag
+                  label={canSeeDetails ? profile.program : '████████'}
+                  color="bg-blue-50 text-blue-700"
+                  blurred={!canSeeDetails}
+                />
+              )}
+              {profile.university && (
+                <Tag
+                  label={canSeeDetails ? profile.university : '████████'}
+                  color="bg-purple-50 text-purple-700"
+                  blurred={!canSeeDetails}
+                />
+              )}
+              {profile.mastery && (
+                <Tag
+                  label={canSeeDetails ? profile.mastery : '████'}
+                  color="bg-amber-50 text-amber-700"
+                  blurred={!canSeeDetails}
+                />
+              )}
+              {!canSeeDetails && (
+                <span className="inline-flex items-center gap-1 pixel-font text-[7px] px-2 py-1 rounded-lg bg-gray-100 text-gray-500">
+                  <Lock size={9} /> Private
+                </span>
+              )}
+            </div>
+
+            {/* ── Match score bar (mutual only) ── */}
+            {isMutual && !isSelf && (
+              <div className="bg-purple-50 rounded-2xl px-4 py-3 mb-4 border border-purple-100">
+                <MatchBar score={profile.matchScore ?? 0} />
+              </div>
+            )}
+
+            {/* ── Action buttons ── */}
+            {!isSelf && (
+              <div className="flex gap-3">
+                {/* Follow / Pending / Following */}
+                <button
+                  onClick={handleFollow}
+                  disabled={followBusy || iFollow || isPending}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl pixel-font text-[8px] transition-all active:scale-95 disabled:opacity-60 ${
+                    iFollow
+                      ? 'bg-gray-100 text-gray-500'
+                      : isPending
+                        ? 'bg-amber-50 text-amber-600 border border-amber-200'
+                        : 'bg-[#a78bda] text-white shadow-md'
+                  }`}
+                >
+                  {followBusy
+                    ? <Loader2 size={12} className="animate-spin" />
+                    : iFollow
+                      ? <><UserCheck size={12} /> ติดตามแล้ว</>
+                      : isPending
+                        ? 'รอดำเนินการ'
+                        : <><UserPlus size={12} /> ติดตาม</>}
+                </button>
+
+                {/* Message — enabled only if mutually following */}
+                <button
+                  onClick={() => isMutual && onOpenChat?.(userId)}
+                  disabled={!isMutual}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl pixel-font text-[8px] transition-all active:scale-95 ${
+                    isMutual
+                      ? 'bg-white border-2 border-[#a78bda] text-[#a78bda] shadow-sm'
+                      : 'bg-gray-50 border border-gray-200 text-gray-300 cursor-not-allowed'
+                  }`}
+                >
+                  <MessageCircle size={12} />
+                  {isMutual ? 'ข้อความ' : 'ข้อความ 🔒'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
