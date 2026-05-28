@@ -45,31 +45,42 @@ const CAREER_FAMILY_MAP = {
 }
 
 // ─── Match scoring ─────────────────────────────────────────────────────────────
+// Reads nested profile.* fields first (synced via syncSelectToFirestore),
+// then falls back to flat top-level fields for backwards compatibility.
 export function calculateMatchScore(a, b) {
   if (!a || !b) return 0
   let score = 0
 
+  const aProgram    = a.profile?.program      ?? a.program
+  const bProgram    = b.profile?.program      ?? b.program
+  const aMastery    = a.profile?.masteryTrack ?? a.mastery
+  const bMastery    = b.profile?.masteryTrack ?? b.mastery
+  const aMbti       = a.profile?.mbti         ?? a.mbti
+  const bMbti       = b.profile?.mbti         ?? b.mbti
+  const aUniversity = a.profile?.university   ?? a.university
+  const bUniversity = b.profile?.university   ?? b.university
+
   // Program: 40 pts exact match, 20 pts same career family
-  if (a.program && b.program) {
-    if (a.program === b.program) {
+  if (aProgram && bProgram) {
+    if (aProgram === bProgram) {
       score += 40
     } else {
-      const fa = CAREER_FAMILY_MAP[a.program]
-      const fb = CAREER_FAMILY_MAP[b.program]
+      const fa = CAREER_FAMILY_MAP[aProgram]
+      const fb = CAREER_FAMILY_MAP[bProgram]
       if (fa && fb && fa === fb) score += 20
     }
   }
 
   // Mastery track: 25 pts
-  if (a.mastery && b.mastery && a.mastery === b.mastery) score += 25
+  if (aMastery && bMastery && aMastery === bMastery) score += 25
 
   // MBTI type: 15 pts
-  if (a.mbti && b.mbti && a.mbti === b.mbti) score += 15
+  if (aMbti && bMbti && aMbti === bMbti) score += 15
 
   // University: 10 pts
-  if (a.university && b.university && a.university === b.university) score += 10
+  if (aUniversity && bUniversity && aUniversity === bUniversity) score += 10
 
-  // Same school (schoolId): 10 pts
+  // Same school (schoolId): 10 pts — always top-level
   if (a.schoolId && b.schoolId && a.schoolId === b.schoolId) score += 10
 
   return Math.min(score, 100)

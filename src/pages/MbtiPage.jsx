@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import TopBar from '../components/TopBar'
 import { mbtiCharacters, mbtiDescriptions } from '../data/onboardingData'
 import { useSelectStore } from '../stores/useSelectStore'
+import { useAuthStore } from '../stores/useAuthStore'
+import { syncSelectToFirestore } from '../utils/syncSelectToFirestore'
 
 const mbtiBg = new URL('../../assets/eachPageAssets/mbti/03_Setup_MBTI_Background.png', import.meta.url).href
 
@@ -60,6 +62,7 @@ function MbtiPage() {
           <button
             onClick={() => {
               setMbti(current.code)
+              syncSelectToFirestore(useAuthStore.getState().user?.uid)
               navigate('/select/career')
             }}
             className={`pixel-font px-3 py-4 text-sm transition-colors ${selectedMbti === current.code ? 'bg-pink-100 text-pink-500' : 'text-[#beb6d9] hover:bg-[#f0eeff] hover:text-[#5D3FD3]'}`}

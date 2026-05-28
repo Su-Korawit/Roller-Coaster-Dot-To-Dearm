@@ -4,6 +4,8 @@ import TopBar from '../components/TopBar'
 import WizardStepper from '../components/WizardStepper'
 import { programs, universities } from '../data/onboardingData'
 import { useSelectStore } from '../stores/useSelectStore'
+import { useAuthStore } from '../stores/useAuthStore'
+import { syncSelectToFirestore } from '../utils/syncSelectToFirestore'
 
 function ProgramPage() {
   const navigate = useNavigate()
@@ -40,7 +42,10 @@ function ProgramPage() {
           {filtered.map((program) => (
             <button
               key={program.id}
-              onClick={() => setProgram(program.id)}
+              onClick={() => {
+              setProgram(program.id)
+              syncSelectToFirestore(useAuthStore.getState().user?.uid)
+            }}
               className={`w-full rounded-2xl bg-white px-4 py-3 text-left ${
                 selected === program.id ? 'ring-4 ring-pink-400' : ''
               }`}

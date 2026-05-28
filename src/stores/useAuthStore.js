@@ -9,6 +9,7 @@ import {
 } from 'firebase/auth'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from '../firebase'
+import { syncSelectToFirestore, hydrateSelectStoreFromFirestore } from '../utils/syncSelectToFirestore'
 
 function readSelectStore() {
   try {
@@ -52,8 +53,10 @@ export const useAuthStore = create((set) => {
     if (firebaseUser) {
       try {
         await ensureUserDoc(firebaseUser)
+        await syncSelectToFirestore(firebaseUser.uid)
+        await hydrateSelectStoreFromFirestore(firebaseUser.uid)
       } catch (e) {
-        console.warn('[useAuthStore] ensureUserDoc failed:', e.message)
+        console.warn('[useAuthStore] post-auth sync failed:', e.message)
       }
     }
     set({ user: firebaseUser ?? null, loading: false })

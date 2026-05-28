@@ -4,6 +4,8 @@ import TopBar from '../components/TopBar'
 import WizardStepper from '../components/WizardStepper'
 import { careers } from '../data/onboardingData'
 import { useSelectStore } from '../stores/useSelectStore'
+import { useAuthStore } from '../stores/useAuthStore'
+import { syncSelectToFirestore } from '../utils/syncSelectToFirestore'
 
 function CareerPage() {
   const navigate = useNavigate()
@@ -36,7 +38,10 @@ function CareerPage() {
           {filtered.map((career) => (
             <button
               key={career.id}
-              onClick={() => setCareer(career.id)}
+              onClick={() => {
+              setCareer(career.id)
+              syncSelectToFirestore(useAuthStore.getState().user?.uid)
+            }}
               className={`flex w-full items-center overflow-hidden rounded-2xl bg-white text-left ${
                 selected === career.id ? 'ring-4 ring-pink-400' : ''
               }`}

@@ -4,6 +4,8 @@ import TopBar from '../components/TopBar'
 import WizardStepper from '../components/WizardStepper'
 import { masteries } from '../data/onboardingData'
 import { useSelectStore } from '../stores/useSelectStore'
+import { useAuthStore } from '../stores/useAuthStore'
+import { syncSelectToFirestore } from '../utils/syncSelectToFirestore'
 
 function MasteryPage() {
   const navigate = useNavigate()
@@ -36,7 +38,10 @@ function MasteryPage() {
           {filtered.map((mastery) => (
             <button
               key={mastery.id}
-              onClick={() => setMastery(mastery.id)}
+              onClick={() => {
+              setMastery(mastery.id)
+              syncSelectToFirestore(useAuthStore.getState().user?.uid)
+            }}
               className={`flex w-full items-center overflow-hidden rounded-2xl bg-white text-left ${
                 selected === mastery.id ? 'ring-4 ring-pink-400' : ''
               }`}
