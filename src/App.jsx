@@ -7,7 +7,29 @@ import ProgramPage from './pages/ProgramPage'
 import RegisterPage from './pages/RegisterPage'
 import UniversityPage from './pages/UniversityPage'
 import WhyPage from './pages/WhyPage'
+import AuthPage from './pages/AuthPage'
 import { useSelectStore } from './stores/useSelectStore'
+import { useAuthStore } from './stores/useAuthStore'
+
+function RequireAuth() {
+  const user = useAuthStore((s) => s.user)
+  const loading = useAuthStore((s) => s.loading)
+
+  if (loading) {
+    return (
+      <div
+        className="h-full flex flex-col items-center justify-center"
+        style={{ background: 'linear-gradient(160deg, #0f0824 0%, #1a1035 50%, #0d1f3c 100%)' }}
+      >
+        <span className="text-4xl mb-4">🎢</span>
+        <span className="pixel-font text-[8px] text-purple-300 animate-pulse">Loading...</span>
+      </div>
+    )
+  }
+
+  if (!user) return <AuthPage />
+  return <Outlet />
+}
 
 function RootRedirect() {
   const program = useSelectStore((s) => s.program)
@@ -33,14 +55,16 @@ function App() {
   return (
     <Routes>
       <Route element={<MobileLayout />}>
-        <Route path="/" element={<RootRedirect />} />
-        <Route path="/why" element={<WhyPage />} />
-        <Route path="/select/mbti" element={<MbtiPage />} />
-        <Route path="/select/career" element={<CareerPage />} />
-        <Route path="/select/mastery" element={<MasteryPage />} />
-        <Route path="/select/university" element={<UniversityPage />} />
-        <Route path="/select/program" element={<ProgramPage />} />
-        <Route path="/home" element={<HomePage />} />
+        <Route element={<RequireAuth />}>
+          <Route path="/" element={<RootRedirect />} />
+          <Route path="/why" element={<WhyPage />} />
+          <Route path="/select/mbti" element={<MbtiPage />} />
+          <Route path="/select/career" element={<CareerPage />} />
+          <Route path="/select/mastery" element={<MasteryPage />} />
+          <Route path="/select/university" element={<UniversityPage />} />
+          <Route path="/select/program" element={<ProgramPage />} />
+          <Route path="/home" element={<HomePage />} />
+        </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
