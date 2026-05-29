@@ -70,6 +70,7 @@ export const useChatStore = create((set) => ({
   // Writes a text message to the messages subcollection and updates chat
   // metadata. fireStacks increments at most once per calendar day per chat —
   // subsequent messages on the same day don't count as a new stack.
+  // Admin chats (isAdminChat: true) never grant stacks.
   sendMessage: async (chatId, text) => {
     const uid = auth.currentUser?.uid
     if (!uid || !text.trim()) return
@@ -85,7 +86,7 @@ export const useChatStore = create((set) => ({
 
     const today = new Date().toISOString().slice(0, 10)
     const chat = useChatStore.getState().chats.find((c) => c.id === chatId)
-    const grantStack = chat?.lastStackDate !== today
+    const grantStack = chat?.lastStackDate !== today && !chat?.isAdminChat
 
     await updateDoc(doc(db, 'chats', chatId), {
       lastMessage: trimmed,

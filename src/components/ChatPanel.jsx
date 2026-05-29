@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { addDoc, collection, doc, getDoc, increment, serverTimestamp, updateDoc } from 'firebase/firestore'
-import { ArrowLeft, Loader2, Send } from 'lucide-react'
+import { ArrowLeft, Loader2, Send, Wrench } from 'lucide-react'
 import { db } from '../firebase'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useChatStore, buildChatId } from '../stores/useChatStore'
+import { ADMIN_UID, ADMIN_DISPLAY_NAME, ADMIN_EMAIL } from '../constants/admin'
 import { useSocialStore } from '../stores/useSocialStore'
 import { useUserStore } from '../stores/useUserStore'
 
@@ -216,13 +217,14 @@ function CreditModal({ msg, friendUser, onDone, onClose }) {
 }
 
 // ─── ChatWindowView ───────────────────────────────────────────────────────────
-function ChatWindowView({ user, onBack }) {
+function ChatWindowView({ user, onBack, onAdminContacted }) {
   const { activeChat, messages, sendMessage, subscribeMessages } = useChatStore()
   const chats = useChatStore((s) => s.chats)
 
   const { chatId, otherUser } = activeChat ?? {}
   const chatDoc = chats.find((c) => c.id === chatId)
   const fireStacks = chatDoc?.fireStacks ?? 0
+  const isAdminChat = otherUser?.isAdmin === true || chatDoc?.isAdminChat === true
 
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
@@ -262,7 +264,10 @@ function ChatWindowView({ user, onBack }) {
     const draft = text
     setText('')
     setSending(true)
-    try { await sendMessage(chatId, draft) } finally { setSending(false) }
+    try {
+      await sendMessage(chatId, draft)
+      if (isAdminChat) onAdminContacted?.()
+    } finally { setSending(false) }
   }
 
   function handleKeyDown(e) {
@@ -279,48 +284,88 @@ function ChatWindowView({ user, onBack }) {
           <ArrowLeft size={18} />
         </button>
         {/* Avatar */}
-        <div
-          className="w-9 h-9 rounded-full overflow-hidden bg-gray-100 shrink-0 border-2 flex items-center justify-center"
-          style={{ borderColor: mbtiColor(otherUser?.mbti) }}
-        >
-          {otherUser?.photoURL
-            ? <img src={otherUser.photoURL} alt="" className="w-full h-full object-cover" />
-            : <span className="text-base">🎮</span>}
-        </div>
-        {/* Name + MBTI */}
+        {isAdminChat ? (
+          <div
+            className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #a78bda, #7c3aed)' }}
+          >
+            <Wrench size={15} className="text-white" />
+          </div>
+        ) : (
+          <div
+            className="w-9 h-9 rounded-full overflow-hidden bg-gray-100 shrink-0 border-2 flex items-center justify-center"
+            style={{ borderColor: mbtiColor(otherUser?.mbti) }}
+          >
+            {otherUser?.photoURL
+              ? <img src={otherUser.photoURL} alt="" className="w-full h-full object-cover" />
+              : <span className="text-base">🎮</span>}
+          </div>
+        )}
+        {/* Name */}
         <div className="flex-1 min-w-0">
-          <p className="pixel-font text-[9px] text-gray-800 truncate">
-            {otherUser?.displayName || '...'}
-          </p>
-          {otherUser?.mbti && (
-            <span
-              className="pixel-font text-[6px] px-1.5 py-0.5 rounded-md text-white inline-block mt-0.5"
-              style={{ background: mbtiColor(otherUser.mbti) }}
-            >
-              {otherUser.mbti}
-            </span>
+          {isAdminChat ? (
+            <>
+              <div className="flex items-center gap-1.5">
+                <p className="pixel-font text-[9px] text-gray-800 truncate">{ADMIN_DISPLAY_NAME}</p>
+                <span className="pixel-font text-[5px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-600 shrink-0">Admin</span>
+              </div>
+              <p className="pixel-font text-[6px] text-gray-400 mt-0.5">{ADMIN_EMAIL}</p>
+            </>
+          ) : (
+            <>
+              <p className="pixel-font text-[9px] text-gray-800 truncate">
+                {otherUser?.displayName || '...'}
+              </p>
+              {otherUser?.mbti && (
+                <span
+                  className="pixel-font text-[6px] px-1.5 py-0.5 rounded-md text-white inline-block mt-0.5"
+                  style={{ background: mbtiColor(otherUser.mbti) }}
+                >
+                  {otherUser.mbti}
+                </span>
+              )}
+            </>
           )}
         </div>
-        {/* Fire stacks badge — animates on increment */}
-        <div
-          className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-orange-50 border border-orange-100 shrink-0 ${
-            stackAnimating ? 'animate-stack-pop' : ''
-          }`}
-        >
-          <span className="text-sm leading-none">🔥</span>
-          <span className="pixel-font text-[9px] text-orange-500">{fireStacks}</span>
-        </div>
+        {/* Fire stacks badge — hidden for admin chats */}
+        {!isAdminChat && (
+          <div
+            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-orange-50 border border-orange-100 shrink-0 ${
+              stackAnimating ? 'animate-stack-pop' : ''
+            }`}
+          >
+            <span className="text-sm leading-none">🔥</span>
+            <span className="pixel-font text-[9px] text-orange-500">{fireStacks}</span>
+          </div>
+        )}
       </div>
 
       {/* ── Messages ── */}
       <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-2">
         {messages.length === 0 && (
-          <div className="flex-1 flex flex-col items-center justify-center gap-3 py-16 opacity-50">
-            <span className="text-4xl">💬</span>
-            <p className="pixel-font text-[7px] text-gray-400 text-center leading-relaxed">
-              เริ่มการสนทนาเลย!
-            </p>
-          </div>
+          isAdminChat ? (
+            <div className="flex-1 flex flex-col items-center justify-center px-6 py-10">
+              <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 text-center max-w-70">
+                <p className="text-3xl mb-3">👋</p>
+                <p
+                  className="text-gray-500 leading-relaxed"
+                  style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 13 }}
+                >
+                  สวัสดีครับ/ค่ะ<br />
+                  ติดต่อสอบถามหรือแจ้งปัญหา<br />
+                  เกี่ยวกับ RollerCoaster<br />
+                  ได้เลยครับ
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center gap-3 py-16 opacity-50">
+              <span className="text-4xl">💬</span>
+              <p className="pixel-font text-[7px] text-gray-400 text-center leading-relaxed">
+                เริ่มการสนทนาเลย!
+              </p>
+            </div>
+          )
         )}
         {messages.map((msg) => {
           const isMe = msg.senderId === user?.uid
@@ -489,7 +534,7 @@ function ChatWindowView({ user, onBack }) {
 // ─── ChatListView ─────────────────────────────────────────────────────────────
 // Receives mutualUids (all friends) + chats (existing docs) separately so it
 // can show every mutual follow even before the first message is sent.
-function ChatListView({ user, participants, mutualUids, chats, onSelectFriend }) {
+function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, adminChat, onOpenAdminChat, isCurrentUserAdmin }) {
   const [chatTab, setChatTab] = useState('friends')
   const totalStacks = chats.reduce((sum, c) => sum + (c.fireStacks ?? 0), 0)
 
@@ -533,10 +578,79 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend })
           <span className="text-3xl">{chatTab === 'school' ? '🏫' : '🌏'}</span>
           <p className="pixel-font text-[8px] text-gray-400">Coming Soon</p>
         </div>
-      ) : (
+      ) : isCurrentUserAdmin ? (
+        /* ── Admin view: show all user conversations ── */
         <div className="flex-1 overflow-y-auto">
-          {mutualUids.length === 0 && (
+          {chats.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 gap-3 opacity-60">
+              <span className="text-4xl">📩</span>
+              <p className="pixel-font text-[8px] text-gray-400 text-center">ยังไม่มีข้อความจากผู้ใช้</p>
+            </div>
+          )}
+          {chats.map((chat) => {
+            const otherUid = chat.members?.find((uid) => uid !== user.uid)
+            if (!otherUid) return null
+            const other = participants[otherUid]
+            return (
+              <button
+                key={chat.id}
+                onClick={() => onSelectFriend(otherUid)}
+                className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-gray-50 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left"
+              >
+                <div
+                  className="w-11 h-11 rounded-full overflow-hidden bg-gray-100 shrink-0 border-2 flex items-center justify-center"
+                  style={{ borderColor: mbtiColor(other?.mbti) }}
+                >
+                  {other?.photoURL
+                    ? <img src={other.photoURL} alt="" className="w-full h-full object-cover" />
+                    : <span className="text-lg">🎮</span>}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="pixel-font text-[9px] text-gray-800 truncate">
+                    {other?.displayName ?? otherUid.slice(0, 8) + '…'}
+                  </p>
+                  <p className="text-gray-400 truncate mt-0.5" style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 11 }}>
+                    {chat.lastMessage || 'ส่งข้อความแล้ว'}
+                  </p>
+                </div>
+                {chat.lastMessageAt && (
+                  <span className="pixel-font text-[6px] text-gray-400 shrink-0">{fmtTime(chat.lastMessageAt)}</span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      ) : (
+        /* ── Regular user view: admin row at top + mutual friends ── */
+        <div className="flex-1 overflow-y-auto">
+          {/* Admin contact row — always visible */}
+          <button
+            onClick={onOpenAdminChat}
+            className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-purple-50 hover:bg-purple-50 active:bg-purple-100 transition-colors text-left"
+          >
+            <div
+              className="w-11 h-11 rounded-full shrink-0 flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, #a78bda, #7c3aed)' }}
+            >
+              <Wrench size={18} className="text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <p className="pixel-font text-[9px] text-gray-800 truncate">{ADMIN_DISPLAY_NAME}</p>
+                <span className="pixel-font text-[5px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-600 shrink-0">Admin</span>
+              </div>
+              <p className="text-gray-400 truncate mt-0.5" style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 11 }}>
+                {adminChat?.lastMessage || 'ติดต่อสอบถาม / แจ้งปัญหา'}
+              </p>
+            </div>
+            {adminChat?.lastMessageAt && (
+              <span className="pixel-font text-[6px] text-gray-400 shrink-0">{fmtTime(adminChat.lastMessageAt)}</span>
+            )}
+          </button>
+
+          {/* Mutual friends */}
+          {mutualUids.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-12 gap-3 opacity-60">
               <span className="text-4xl">👥</span>
               <p className="pixel-font text-[8px] text-gray-400 text-center leading-relaxed">
                 ยังไม่มีเพื่อนที่ติดตามกัน
@@ -548,7 +662,6 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend })
           )}
           {mutualUids.map((uid) => {
             const other = participants[uid]
-            // Look up any existing chat with this friend
             const chat = chats.find((c) => c.members?.includes(uid))
             return (
               <button
@@ -556,7 +669,6 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend })
                 onClick={() => onSelectFriend(uid)}
                 className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-gray-50 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left"
               >
-                {/* Avatar */}
                 <div
                   className="w-11 h-11 rounded-full overflow-hidden bg-gray-100 shrink-0 border-2 flex items-center justify-center"
                   style={{ borderColor: mbtiColor(other?.mbti) }}
@@ -565,24 +677,17 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend })
                     ? <img src={other.photoURL} alt="" className="w-full h-full object-cover" />
                     : <span className="text-lg">🎮</span>}
                 </div>
-                {/* Info */}
                 <div className="flex-1 min-w-0">
                   <p className="pixel-font text-[9px] text-gray-800 truncate">
                     {other?.displayName ?? '...'}
                   </p>
-                  <p
-                    className="text-gray-400 truncate mt-0.5"
-                    style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 11 }}
-                  >
+                  <p className="text-gray-400 truncate mt-0.5" style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 11 }}>
                     {chat?.lastMessage || 'เริ่มการสนทนา'}
                   </p>
                 </div>
-                {/* Meta */}
                 <div className="flex flex-col items-end gap-1 shrink-0">
                   {chat?.lastMessageAt && (
-                    <span className="pixel-font text-[6px] text-gray-400">
-                      {fmtTime(chat.lastMessageAt)}
-                    </span>
+                    <span className="pixel-font text-[6px] text-gray-400">{fmtTime(chat.lastMessageAt)}</span>
                   )}
                   {(chat?.fireStacks ?? 0) > 0 && (
                     <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-lg bg-orange-50 border border-orange-100">
@@ -601,7 +706,7 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend })
 }
 
 // ─── ChatPanel (main export) ──────────────────────────────────────────────────
-export default function ChatPanel({ onClose }) {
+export default function ChatPanel({ onClose, initialView = 'list', onAdminContacted }) {
   const user = useAuthStore((s) => s.user)
   const { chats, loadChats, openChat } = useChatStore()
   // Mutual follows = people I follow who also follow me back
@@ -610,7 +715,7 @@ export default function ChatPanel({ onClose }) {
   const loadMyProfile = useSocialStore((s) => s.loadMyProfile)
   const mutualUids = following.filter((uid) => followers.includes(uid))
 
-  const [view, setView] = useState('list')
+  const [view, setView] = useState(initialView)
   const [participants, setParticipants] = useState({})
 
   // Load chats + social profile in one effect so friends appear without
@@ -641,6 +746,8 @@ export default function ChatPanel({ onClose }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chats, mutualUids.join(','), user?.uid])
 
+  const isCurrentUserAdmin = user?.uid === ADMIN_UID
+
   // Open (or create) a chat with any friend — works whether a chat doc exists yet or not.
   async function handleSelectFriend(uid) {
     let other = participants[uid]
@@ -650,6 +757,16 @@ export default function ChatPanel({ onClose }) {
       setParticipants((p) => ({ ...p, [uid]: other }))
     }
     await openChat(buildChatId(user.uid, uid), other)
+    setView('window')
+  }
+
+  async function handleOpenAdminChat() {
+    await openChat(buildChatId(user.uid, ADMIN_UID), {
+      uid: ADMIN_UID,
+      displayName: ADMIN_DISPLAY_NAME,
+      photoURL: null,
+      isAdmin: true,
+    })
     setView('window')
   }
 
@@ -680,11 +797,15 @@ export default function ChatPanel({ onClose }) {
               mutualUids={mutualUids}
               chats={chats}
               onSelectFriend={handleSelectFriend}
+              adminChat={chats.find((c) => c.isAdminChat === true)}
+              onOpenAdminChat={handleOpenAdminChat}
+              isCurrentUserAdmin={isCurrentUserAdmin}
             />
           ) : (
             <ChatWindowView
               user={user}
               onBack={() => setView('list')}
+              onAdminContacted={onAdminContacted}
             />
           )}
         </div>

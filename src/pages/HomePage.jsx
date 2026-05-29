@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Calendar } from 'lucide-react'
+import { Calendar, MessageCircle } from 'lucide-react'
 import { mbtiCharacters } from '../data/onboardingData'
 import { useSelectStore } from '../stores/useSelectStore'
 import { useUserStore } from '../stores/useUserStore'
@@ -16,9 +16,10 @@ import SocialPanel from '../components/SocialPanel'
 import ChatPanel from '../components/ChatPanel'
 import CalendarPopup from '../components/CalendarPopup'
 import DailyLoginModal from '../components/DailyLoginModal'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 import { useChatStore, buildChatId } from '../stores/useChatStore'
+import { ADMIN_UID, ADMIN_DISPLAY_NAME } from '../constants/admin'
 
 // ── MBTI background asset maps (eager glob, resolved at build time) ──────────
 const bgImages = import.meta.glob(
@@ -63,6 +64,8 @@ function HomePage() {
   const [activeTab, setActiveTab] = useState('home')
   const [newsRead, setNewsRead] = useState(false)
   const [taskInitialView, setTaskInitialView] = useState('list')
+  const [chatInitialView, setChatInitialView] = useState('list')
+  const [contactedAdmin, setContactedAdmin] = useState(() => localStorage.getItem('rc-contacted-admin') === 'true')
   const [isVideoLoaded, setIsVideoLoaded] = useState(false)
   const [showTrackList, setShowTrackList] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -145,6 +148,30 @@ function HomePage() {
   function closePanel() {
     setActiveTab(APP_VIEWS.HOME)
     setTaskInitialView('list')
+    setChatInitialView('list')
+  }
+
+  async function openAdminChat() {
+    const myUid = auth.currentUser?.uid
+    if (!myUid) return
+    const chatId = [myUid, ADMIN_UID].sort().join('_')
+    await setDoc(doc(db, 'chats', chatId), {
+      members: [myUid, ADMIN_UID].sort(),
+      isAdminChat: true,
+    }, { merge: true })
+    useChatStore.getState().openChat(chatId, {
+      uid: ADMIN_UID,
+      displayName: ADMIN_DISPLAY_NAME,
+      photoURL: null,
+      isAdmin: true,
+    })
+    setChatInitialView('window')
+    setActiveTab(APP_VIEWS.CHAT)
+  }
+
+  function handleAdminContacted() {
+    localStorage.setItem('rc-contacted-admin', 'true')
+    setContactedAdmin(true)
   }
 
   async function handleOpenChat(userId) {
@@ -352,7 +379,13 @@ function HomePage() {
       {activeTab === APP_VIEWS.NEWS && <NewsPanel onClose={closePanel} />}
       {activeTab === APP_VIEWS.PROFILE && <ProfilePanel onClose={closePanel} />}
       {activeTab === APP_VIEWS.SOCIAL && <SocialPanel onClose={closePanel} onOpenChat={handleOpenChat} />}
-      {activeTab === APP_VIEWS.CHAT && <ChatPanel onClose={closePanel} />}
+      {activeTab === APP_VIEWS.CHAT && (
+        <ChatPanel
+          onClose={closePanel}
+          initialView={chatInitialView}
+          onAdminContacted={handleAdminContacted}
+        />
+      )}
       {activeTab === APP_VIEWS.SKILL && (
         <SkillPanel
           onClose={closePanel}
@@ -420,6 +453,37 @@ function HomePage() {
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* ── CONTACT DEVELOPER FAB ── */}
+      {auth.currentUser && auth.currentUser.uid !== ADMIN_UID && (
+        <div className="absolute bottom-18 right-4 z-55 group">
+          {/* Tooltip — left of button */}
+          <div className="absolute right-14 top-1/2 -translate-y-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+            <div
+              className="bg-gray-900/90 text-white rounded-full px-3 py-1 shadow-lg"
+              style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 11 }}
+            >
+              ติดต่อผู้พัฒนา
+            </div>
+          </div>
+          <button
+            onClick={openAdminChat}
+            className="relative w-12 h-12 rounded-full flex items-center justify-center active:scale-95 transition-transform"
+            style={{
+              background: 'linear-gradient(135deg, #a78bda, #7c3aed)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3), 0 0 12px rgba(167,139,218,0.4)',
+            }}
+          >
+            {!contactedAdmin && (
+              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+              </span>
+            )}
+            <MessageCircle size={22} className="text-white" />
+          </button>
         </div>
       )}
 
