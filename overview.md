@@ -112,7 +112,7 @@ D:\Ikkyusan\Desktop\Roller Coaster\assets\04_Main_Task_Edit.png
 
 ---
 
-### Prompt 11 — Skill Popup
+### Prompt 11 — Skill Popup (ถอดออกชั่วคราว)
 D:\Ikkyusan\Desktop\Roller Coaster\assets\04_Main_Skill_Passive.png
 D:\Ikkyusan\Desktop\Roller Coaster\assets\04_Main_Skill_Passive.png
 D:\Ikkyusan\Desktop\Roller Coaster\assets\04_Main_Task_Edit.png
