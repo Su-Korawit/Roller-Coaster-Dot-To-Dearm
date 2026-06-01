@@ -4,8 +4,7 @@ import { mbtiCharacters } from '../data/onboardingData'
 import { useSelectStore } from '../stores/useSelectStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useTaskStore } from '../stores/useTaskStore'
-import { useSkillStore, PASSIVE_UNLOCK_THRESHOLDS } from '../stores/useSkillStore'
-import { PASSIVE_SKILLS } from '../data/skillData'
+import { useSkillStore } from '../stores/useSkillStore'
 import { APP_VIEWS } from '../constants/appViews'
 import BottomNavBar from '../components/BottomNavBar'
 import TaskPanel from '../components/TaskPanel'
@@ -82,7 +81,6 @@ function HomePage() {
   const { mbti } = useSelectStore()
   const { tasks } = useTaskStore()
   const isPlannerActive = useSkillStore((state) => state.isPlannerActive)
-  const passiveSlots = useSkillStore((state) => state.passiveSlots)
   const totalStacks = useUserStore((s) => s.totalStacks)
   const lastLoginDate = useUserStore((s) => s.lastLoginDate)
 
@@ -302,60 +300,15 @@ function HomePage() {
         </div>
       </div>
 
-      {/* ── PASSIVE SKILL FABs (left side, below avatar) ── */}
-      {/* Each slot: visible only when unlocked. Shows skill icon; Planner triggers CalendarPopup. */}
-      <div className="absolute top-20 left-4 z-20 flex flex-col gap-2">
-        {PASSIVE_UNLOCK_THRESHOLDS.map((threshold, slotIdx) => {
-          const isUnlocked = totalStacks >= threshold
-          const slot = passiveSlots[slotIdx] ?? { equippedSkillId: null }
-          const skill = PASSIVE_SKILLS.find((s) => s.id === slot.equippedSkillId)
-
-          // Locked & empty slot: show a small lock indicator
-          if (!isUnlocked) {
-            return (
-              <div
-                key={slotIdx}
-                className="w-12 h-12 bg-white/60 rounded-2xl shadow flex items-center justify-center border border-gray-100 opacity-40 grayscale"
-                title={`Unlock at ${threshold} stacks`}
-              >
-                <span className="text-base">🔒</span>
-              </div>
-            )
-          }
-
-          // Unlocked but empty
-          if (!skill) {
-            return (
-              <button
-                key={slotIdx}
-                onClick={() => handleTabChange(APP_VIEWS.SKILL)}
-                className="w-12 h-12 bg-white/80 rounded-2xl shadow flex items-center justify-center border-2 border-dashed border-gray-300 active:scale-95 transition-transform"
-                title={`Slot ${slotIdx + 1}: tap to equip`}
-              >
-                <span className="pixel-font text-[8px] text-gray-400">{slotIdx + 1}</span>
-              </button>
-            )
-          }
-
-          // Unlocked & equipped
-          const isPlanner = skill.id === 'planner'
-          return (
-            <button
-              key={slotIdx}
-              onClick={isPlanner ? handlePlannerTransition : () => handleTabChange(APP_VIEWS.SKILL)}
-              className="w-12 h-12 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-gray-100 active:scale-95 transition-transform animate-[fadeInLeft_0.3s_ease]"
-              title={skill.name}
-            >
-              {isPlanner ? (
-                <Calendar size={22} strokeWidth={1.5} className="text-purple-500" />
-              ) : skill.image ? (
-                <img src={skill.image} alt={skill.name} className="w-8 h-8 object-contain" />
-              ) : (
-                <span className="text-xl">{skill.emoji}</span>
-              )}
-            </button>
-          )
-        })}
+      {/* ── PASSIVE SKILL FAB (Calendar shortcut) ── */}
+      <div className="absolute top-20 left-4 z-20">
+        <button
+          onClick={handlePlannerTransition}
+          className="w-12 h-12 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-gray-100 active:scale-95 transition-transform"
+          title="Calendar"
+        >
+          <Calendar size={22} strokeWidth={1.5} className="text-purple-500" />
+        </button>
       </div>
 
       {/* ── NEWS BUTTON (top-right below coins) ── */}
