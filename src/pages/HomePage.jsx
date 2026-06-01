@@ -87,11 +87,11 @@ function HomePage() {
   const lastLoginDate = useUserStore((s) => s.lastLoginDate)
 
   // Show daily check-in modal on first mount if not yet checked in today
-  useEffect(() => {
-    const today = new Date().toISOString().slice(0, 10)
-    if (lastLoginDate !== today) setShowDailyModal(true)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  // useEffect(() => {
+  //   const today = new Date().toISOString().slice(0, 10)
+  //   if (lastLoginDate !== today) setShowDailyModal(true)
+  // // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [])
 
   // Resolve MBTI background assets and reset video state on mbti change
   const mbtiAssets = getMbtiAssets(mbti)
