@@ -46,7 +46,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
   const navigate = useNavigate()
   const authUser = useAuthStore((s) => s.user)
   const signOut = useAuthStore((s) => s.signOut)
-  const { aiLanguage, setAiLanguage, resetUser } = useUserStore()
+  const { aiLanguage, setAiLanguage, resetUser, setProfilePhotoURL } = useUserStore()
   const { resetSelection } = useSelectStore()
 
   const uid = authUser?.uid
@@ -107,6 +107,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
       setNewPhotoFile(null)
       setNewPhotoPreview(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
+      setProfilePhotoURL(finalPhotoURL)
       onProfileUpdated?.()
     } catch (err) {
       console.error('Save profile error:', err)

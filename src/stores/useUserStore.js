@@ -43,8 +43,10 @@ export const useUserStore = create(
       journeys: defaultJourneys,
       activeMasteryBlockId: null,
       aiLanguage: 'Thai',
+      profilePhotoURL: null,
 
       setUser: (user) => set({ user }),
+      setProfilePhotoURL: (url) => set({ profilePhotoURL: url }),
       setUserName: (userName) => set({ userName }),
       setActiveMasteryBlockId: (id) => set({ activeMasteryBlockId: id }),
       setAiLanguage: (lang) => set({ aiLanguage: lang }),
@@ -227,6 +229,7 @@ export const useUserStore = create(
           journeys: defaultJourneys,
           activeMasteryBlockId: null,
           aiLanguage: 'Thai',
+          profilePhotoURL: null,
         }),
     }),
     {

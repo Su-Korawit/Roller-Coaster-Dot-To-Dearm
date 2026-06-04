@@ -4,6 +4,7 @@ import { ArrowLeft, Loader2, Lock, MessageCircle, UserCheck, UserPlus } from 'lu
 import { db } from '../firebase'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSocialStore, calculateMatchScore } from '../stores/useSocialStore'
+import { universities } from '../data/onboardingData'
 
 const MBTI_COLORS = {
   INTJ: '#7c3aed', INTP: '#7c3aed', ENTJ: '#7c3aed', ENTP: '#7c3aed',
@@ -51,16 +52,18 @@ function MatchScoreBar({ score }) {
   )
 }
 
-function PortfolioCirclePublic({ label, emoji, canSee }) {
+function PortfolioCirclePublic({ label, emoji, image, canSee }) {
   return (
     <div className="flex flex-col items-center gap-1.5">
       <div className="relative">
         <div
-          className={`w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center border-2 border-purple-200 transition-all ${
+          className={`w-16 h-16 rounded-full overflow-hidden bg-purple-100 flex items-center justify-center border-2 border-purple-200 transition-all ${
             !canSee ? 'blur-sm' : ''
           }`}
         >
-          <span className="text-2xl">{emoji}</span>
+          {image
+            ? <img src={image} alt={label} className="w-full h-full object-cover" />
+            : <span className="text-2xl">{emoji}</span>}
         </div>
         {!canSee && (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -166,6 +169,13 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
 
   const matchScore = (isMutual && !isSelf) ? calculateMatchScore(myProfileDoc, profile) : 0
   const journeys = profile?.journeys?.mastery || []
+
+  // University logo comes from onboarding data (not portfolioData) — resolve it
+  // from the stored university id as a fallback, mirroring ProfilePanel.
+  // Prefer profile.profile.university (synced on every login) over the
+  // top-level field (written once at signup and may be stale).
+  const uniId = profile?.profile?.university || profile?.university
+  const universityLogo = universities.find((u) => u.id === uniId)?.image || null
 
   return (
     <div className="absolute inset-0 z-60 flex flex-col justify-end">
@@ -312,14 +322,20 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
             <div>
               <p className="pixel-font text-[9px] text-gray-500 mb-3">Portfolio</p>
               <div className="flex justify-around">
-                {PORTFOLIO_ITEMS.map(({ key, label, emoji }) => (
-                  <PortfolioCirclePublic
-                    key={key}
-                    label={label}
-                    emoji={emoji}
-                    canSee={canSeeItem(key)}
-                  />
-                ))}
+                {PORTFOLIO_ITEMS.map(({ key, label, emoji }) => {
+                  const visible = canSeeItem(key)
+                  let image = profile?.portfolioData?.[key]?.image || null
+                  if (!image && key === 'university') image = universityLogo
+                  return (
+                    <PortfolioCirclePublic
+                      key={key}
+                      label={label}
+                      emoji={emoji}
+                      image={visible ? image : null}
+                      canSee={visible}
+                    />
+                  )
+                })}
               </div>
             </div>
 

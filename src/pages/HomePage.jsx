@@ -3,6 +3,7 @@ import { Calendar, MessageCircle } from 'lucide-react'
 import { mbtiCharacters } from '../data/onboardingData'
 import { useSelectStore } from '../stores/useSelectStore'
 import { useUserStore } from '../stores/useUserStore'
+import { useAuthStore } from '../stores/useAuthStore'
 import { useTaskStore } from '../stores/useTaskStore'
 import { useSkillStore } from '../stores/useSkillStore'
 import { APP_VIEWS } from '../constants/appViews'
@@ -76,6 +77,8 @@ function HomePage() {
   const audioRef = useRef(null)
 
   const user = useUserStore((state) => state.user)
+  const profilePhotoURL = useUserStore((s) => s.profilePhotoURL)
+  const authUser = useAuthStore((s) => s.user)
   const coins = useUserStore((state) => state.coins)
   const streak = useUserStore((state) => state.streak)
   const { mbti } = useSelectStore()
@@ -266,8 +269,8 @@ function HomePage() {
             onClick={() => handleTabChange(APP_VIEWS.PROFILE)}
             className="w-10 h-10 rounded-full bg-white/90 shadow flex items-center justify-center shrink-0 border border-white/60 active:scale-95 transition-transform"
           >
-            {user?.avatar
-              ? <img src={user.avatar} alt="avatar" className="w-full h-full object-cover rounded-full" />
+            {(profilePhotoURL || authUser?.photoURL)
+              ? <img src={profilePhotoURL || authUser.photoURL} alt="avatar" className="w-full h-full object-cover rounded-full" />
               : <span className="text-lg">🎮</span>
             }
           </button>

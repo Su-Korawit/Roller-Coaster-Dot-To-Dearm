@@ -10,6 +10,7 @@ import {
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 import { syncSelectToFirestore, hydrateSelectStoreFromFirestore } from '../utils/syncSelectToFirestore'
+import { hydratePortfolioFromFirestore, setPortfolioSyncUser } from '../utils/syncPortfolioToFirestore'
 
 function readSelectStore() {
   try {
@@ -55,9 +56,13 @@ export const useAuthStore = create((set) => {
         await ensureUserDoc(firebaseUser)
         await syncSelectToFirestore(firebaseUser.uid)
         await hydrateSelectStoreFromFirestore(firebaseUser.uid)
+        await hydratePortfolioFromFirestore(firebaseUser.uid)
+        setPortfolioSyncUser(firebaseUser.uid)
       } catch (e) {
         console.warn('[useAuthStore] post-auth sync failed:', e.message)
       }
+    } else {
+      setPortfolioSyncUser(null)
     }
     set({ user: firebaseUser ?? null, loading: false })
   })
