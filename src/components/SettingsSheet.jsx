@@ -3,6 +3,7 @@ import { X, Loader2, Camera } from 'lucide-react'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { updateProfile } from 'firebase/auth'
 import { db, auth } from '../firebase'
+import { compressImage } from '../utils/compressImage'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useSelectStore } from '../stores/useSelectStore'
@@ -22,30 +23,6 @@ const PRIVACY_ITEMS = [
   { key: 'journey',    label: 'Journey of Mastery' },
 ]
 
-// Resize + compress an image file to a small JPEG data URL so it fits well
-// under Firestore's 1MB doc limit and needs no Storage/CORS setup.
-async function compressImage(file, maxSize = 400, quality = 0.85) {
-  const dataUrl = await new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-  const img = await new Promise((resolve, reject) => {
-    const image = new Image()
-    image.onload = () => resolve(image)
-    image.onerror = reject
-    image.src = dataUrl
-  })
-  const scale = Math.min(1, maxSize / Math.max(img.width, img.height))
-  const w = Math.round(img.width * scale)
-  const h = Math.round(img.height * scale)
-  const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-  return canvas.toDataURL('image/jpeg', quality)
-}
 
 function Toggle({ value, onChange }) {
   return (

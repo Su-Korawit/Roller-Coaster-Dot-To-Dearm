@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Settings, Share2, Loader2 } from 'lucide-react'
+import { Settings, Share2, Loader2, Camera } from 'lucide-react'
+import { compressImage } from '../utils/compressImage'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { doc, getDoc } from 'firebase/firestore'
@@ -156,6 +157,7 @@ export default function ProfilePanel({ onClose }) {
   // Portfolio edit modal state
   const [portfolioModal, setPortfolioModal] = useState(null)
   const [portfolioEdit, setPortfolioEdit] = useState({ title: '', image: '', description: '' })
+  const portfolioFileInputRef = useRef(null)
 
   // Journey edit modal state
   const [journeyModal, setJourneyModal] = useState(null)
@@ -190,12 +192,12 @@ export default function ProfilePanel({ onClose }) {
   const circleData = {
     mastery: {
       label: 'Mastery',
-      image: null,
+      image: portfolioData?.mastery?.image || null,
       progress: portfolioData?.mastery?.progress ?? 50,
     },
     career: {
       label: 'Career',
-      image: null,
+      image: portfolioData?.career?.image || null,
       progress: undefined,
     },
     university: {
@@ -216,6 +218,14 @@ export default function ProfilePanel({ onClose }) {
       description: portfolioData?.[key]?.description || '',
     })
     setPortfolioModal(key)
+  }
+
+  async function handlePortfolioImageChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const compressed = await compressImage(file)
+    setPortfolioEdit((prev) => ({ ...prev, image: compressed }))
+    if (portfolioFileInputRef.current) portfolioFileInputRef.current.value = ''
   }
 
   function handleSavePortfolio() {
@@ -578,11 +588,35 @@ export default function ProfilePanel({ onClose }) {
             className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-purple-400"
           />
           <input
-            value={portfolioEdit.image}
-            onChange={(e) => setPortfolioEdit({ ...portfolioEdit, image: e.target.value })}
-            placeholder="Image URL"
-            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-purple-400"
+            ref={portfolioFileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handlePortfolioImageChange}
           />
+          <div className="flex items-center gap-3">
+            <div className="relative shrink-0">
+              <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200 flex items-center justify-center">
+                {portfolioEdit.image
+                  ? <img src={portfolioEdit.image} alt="preview" className="w-full h-full object-cover" />
+                  : <div className="w-full h-full bg-gray-200" />}
+              </div>
+              <button
+                type="button"
+                onClick={() => portfolioFileInputRef.current?.click()}
+                className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#a78bda] rounded-full flex items-center justify-center shadow"
+              >
+                <Camera size={11} className="text-white" />
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => portfolioFileInputRef.current?.click()}
+              className="text-xs text-[#a78bda] font-semibold hover:underline text-left"
+            >
+              Upload image
+            </button>
+          </div>
           <textarea
             value={portfolioEdit.description}
             onChange={(e) => setPortfolioEdit({ ...portfolioEdit, description: e.target.value })}
