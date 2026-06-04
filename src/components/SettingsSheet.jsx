@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { X, Loader2, Camera } from 'lucide-react'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { updateProfile } from 'firebase/auth'
-import { db, auth, storage } from '../firebase'
+import { db, auth } from '../firebase'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useSelectStore } from '../stores/useSelectStore'
@@ -22,6 +21,31 @@ const PRIVACY_ITEMS = [
   { key: 'university', label: 'Portfolio: University' },
   { key: 'journey',    label: 'Journey of Mastery' },
 ]
+
+// Resize + compress an image file to a small JPEG data URL so it fits well
+// under Firestore's 1MB doc limit and needs no Storage/CORS setup.
+async function compressImage(file, maxSize = 400, quality = 0.85) {
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+  const img = await new Promise((resolve, reject) => {
+    const image = new Image()
+    image.onload = () => resolve(image)
+    image.onerror = reject
+    image.src = dataUrl
+  })
+  const scale = Math.min(1, maxSize / Math.max(img.width, img.height))
+  const w = Math.round(img.width * scale)
+  const h = Math.round(img.height * scale)
+  const canvas = document.createElement('canvas')
+  canvas.width = w
+  canvas.height = h
+  canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+  return canvas.toDataURL('image/jpeg', quality)
+}
 
 function Toggle({ value, onChange }) {
   return (
@@ -93,13 +117,11 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
       let finalPhotoURL = photoURL
 
       if (newPhotoFile) {
-        const sRef = storageRef(storage, `avatars/${uid}`)
-        await uploadBytes(sRef, newPhotoFile)
-        finalPhotoURL = await getDownloadURL(sRef)
-        if (auth.currentUser) {
-          await updateProfile(auth.currentUser, { displayName, photoURL: finalPhotoURL })
-        }
-      } else if (auth.currentUser && auth.currentUser.displayName !== displayName) {
+        finalPhotoURL = await compressImage(newPhotoFile)
+      }
+      // Auth profile only stores displayName — base64 data URLs are too long
+      // for the Auth photoURL field, and the app reads photoURL from Firestore.
+      if (auth.currentUser && auth.currentUser.displayName !== displayName) {
         await updateProfile(auth.currentUser, { displayName })
       }
 
@@ -107,6 +129,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
       setPhotoURL(finalPhotoURL)
       setNewPhotoFile(null)
       setNewPhotoPreview(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
       onProfileUpdated?.()
     } catch (err) {
       console.error('Save profile error:', err)
