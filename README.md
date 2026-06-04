@@ -97,12 +97,12 @@ Status key:
 ### Profile
 | Feature | Status | Notes |
 |---|---|---|
-| Avatar upload (Firebase Storage) | ✅ | Also supports "restore Google photo" |
+| Avatar upload & compression | ✅ | Stores base64 in Firestore to prevent CORS issues; also supports "restore Google photo" |
 | Display name & bio editing | ✅ | 100-char bio cap |
 | Privacy toggles (public / followers) per field | ✅ | Fires Firestore update on every toggle |
 | AI Output Language toggle (Thai / English) | ✅ | Stored in `useUserStore.aiLanguage` |
-| Portfolio circles (Mastery / Career / University) | ✅ | Short-press switches journey category; long-press opens edit modal |
-| Journey blocks (drag-drop, pin, progress) | ✅ | Per portfolio category; credited friend avatar stack |
+| Portfolio circles with image upload | ✅ | Mastery / Career / University circles now support custom images; synced to Firestore |
+| Journey blocks (drag-drop, pin, progress) | ✅ | Per portfolio category; credited friend avatar stack; synced to Firestore |
 | AI Roadmap Generator | ✅ | Gemini 5-step dual-track plan (skill mastery + TCAS Round 3) |
 | Reset Onboarding | ✅ | Navigates to `/select/mbti` |
 | Sign Out | ✅ | Clears all local state + Firebase `signOut()` |
@@ -136,8 +136,12 @@ Status key:
 ### News
 | Feature | Status | Notes |
 |---|---|---|
-| News panel UI | ✅ | Share-to-chat button per item |
-| Live news feed | 🚧 | Feed is currently hardcoded (2 CAMPHUB items); no live API integration yet |
+| News panel UI with 2 tabs | ✅ | Camphub tab + RollerCoaster (App Updates) tab; share-to-chat button per item |
+| Camphub live feed | ✅ | Vercel serverless function (api/camphub.js) scrapes camphub.in.th/computer/ real-time via cheerio, caches 30 min |
+| RollerCoaster (App Updates) | ✅ | Admin (`o.korawitt@gmail.com`) adds app announcements via bottom sheet; stored in Firestore `appUpdates` collection; real-time sync via onSnapshot |
+| Update badges | ✅ | 3 types — ใหม่ (green) / อัปเดต (blue) / แก้บั๊ก (orange) |
+| Admin update form | ✅ | Add title, description, badge type, optional image URL; form inside NewsPanel |
+| Admin delete button | ✅ | Firestore updates only; delete icon visible to admin only |
 
 ### Calendar / Planner
 | Feature | Status | Notes |
@@ -327,7 +331,7 @@ All panels are `absolute inset-0` overlays with a `top: X%` offset (slides up fr
 | **ProfilePanel** | ✅ | Own profile: avatar, bio, portfolio circles, journey blocks, AI roadmap generator |
 | **SettingsSheet** | ✅ | Edit profile, privacy toggles, AI language, sign out (slides over ProfilePanel) |
 | **TaskPanel** | ✅ | Task list + create/edit form + active skill assignment |
-| **NewsPanel** | ✅ | News feed UI (static content — live feed 🚧) |
+| **NewsPanel** | ✅ | 2-tab news feed: **Camphub** (live via Vercel scraper) + **RollerCoaster** (app updates, admin-managed) |
 | **SkillPanel** | ✅ | Skill shop, equip passive/active slots |
 | **CalendarPopup** | ✅ | Month-view planner; accessible via Calendar FAB (no longer requires Planner skill) |
 | **SocialPanel** | ✅ | Map, Discover, Requests, Matched — 4-tab social hub |
@@ -599,11 +603,104 @@ Skills are purchased with coins. `useSkillStore` is persisted in `rc-skill-store
 
 ---
 
+## Deployment & Infrastructure
+
+### Vercel Serverless Functions
+
+The app uses Vercel serverless functions for features that require server-side logic:
+
+#### API Endpoint: `/api/camphub`
+
+Scrapes `camphub.in.th/computer/` using cheerio and returns a JSON array of camp data. Runs on request (no build step required) and caches responses for 30 minutes at the Vercel CDN edge.
+
+**Response format:**
+```json
+[
+  {
+    "title": "Camp Name",
+    "link": "https://camphub.in.th/...",
+    "small_description": "Short description",
+    "poster_image": "https://camphub.in.th/image.jpg"
+  }
+]
+```
+
+**Development:** Vite dev middleware plugin runs the handler inline in `npm run dev` (see `vite.config.js` → `camphubApiPlugin`).
+
+### Firestore Security Rules
+
+Update the Firestore rules in Firebase Console to include:
+
+```
+match /appUpdates/{updateId} {
+  // Any signed-in user can read updates
+  allow read: if request.auth != null;
+  
+  // Only the admin account may create, edit, or delete updates
+  allow write: if request.auth != null
+               && request.auth.uid == 'IaltEhO0mPVfK3ng8npr4CdqnEE3';
+}
+```
+
+This enables the Admin to post app announcements from within the RollerCoaster tab while preventing unauthorized writes.
+
+### Environment Setup
+
+Copy `.env.example` to `.env` and fill in all keys:
+
+```env
+# Firebase
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+VITE_FIREBASE_DATABASE_URL=...
+
+# AI & Maps
+VITE_GEMINI_API_KEY=...
+VITE_GOOGLE_MAPS_KEY=...
+```
+
+---
+
 ## Getting Started
 
 ```bash
+# Install dependencies
 npm install
+
+# Run dev server (includes Vite + API middleware)
 npm run dev
+
+# Build for production (Vercel will serve functions from /api)
+npm run build
+
+# Preview production build locally
+npm run preview
 ```
 
-Copy `.env.example` to `.env` and fill in all Firebase and API keys before running.
+---
+
+## Recent Updates (Latest 17 Commits)
+
+| Date | Feature | Details |
+|---|---|---|
+| 2026-06-04 | **App Updates Feed** ✅ | RollerCoaster tab in NewsPanel — admin-managed announcements with badge types (ใหม่/อัปเดต/แก้บั๊ก) |
+| 2026-06-04 | **Portfolio & Journeys Sync** ✅ | Firestore integration for portfolio circles and journey blocks |
+| 2026-06-04 | **Portfolio Image Upload** ✅ | Mastery & Career circles now support image uploads |
+| 2026-06-04 | **Profile Photo Fix** ✅ | Compressed base64 storage to bypass CORS issues |
+| 2026-06-04 | **Camphub Live Feed** ✅ | Real-time camp data via Vercel serverless scraper |
+| 2026-06-01 | **Skill Lock Calendar Fix** ✅ | Corrected calendar and CFR logic |
+| 2026-06-01 | **NavBar Fix** ✅ | Resolved blocking issues on Task page |
+| 2026-05-30 | **Contact Developer** ✅ | Floating FAB opens admin chat |
+| 2026-05-29 | **Fire Stack Limits** ✅ | Capped at 1 per chat per day |
+| 2026-05-29 | **Match UI & Animation** ✅ | KawaiiMatchOverlay with particles and smooth transitions |
+| 2026-05-29 | **Onboarding Sync** ✅ | Selections persisted to Firestore |
+| 2026-05-29 | **Profile Overhaul** ✅ | Privacy settings, public profiles, portfolio redesign |
+| 2026-05-29 | **Social Search** ✅ | Improved user discovery |
+| 2026-05-29 | **Task Share to Chat** ✅ | Tag friends on task completion |
+| 2026-05-28 | **News Share to Chat** ✅ | Share Camphub camps via messaging |
+| 2026-05-28 | **Match Score Algorithm** ✅ | Automated compatibility scoring |
+| 2026-05-28 | **Chat Panel** ✅ | 1-to-1 messaging with fire stacks & gift system |
