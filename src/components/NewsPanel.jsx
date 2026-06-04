@@ -7,29 +7,8 @@ import { useChatStore } from '../stores/useChatStore'
 import { useUserStore } from '../stores/useUserStore'
 
 // ─── Assets ──────────────────────────────────────────────────────────────────
-const camphubLogo   = new URL('../../assets/eachPageAssets/news/camphub_logo.png',   import.meta.url).href
-const camphubPoster = new URL('../../assets/eachPageAssets/news/camphub_poster.jpg', import.meta.url).href
-
-const NEWS_ITEMS = [
-  {
-    id: 'n1',
-    source: 'CAMPHUB',
-    title: 'Hackathon Thailand 2026 — เปิดรับสมัครแล้ว!',
-    desc: 'ประกวดไอเดีย AI & Tech Solutions ชิงทุนกว่า 500,000 บาท',
-    poster: camphubPoster,
-    url: 'https://camphub.in.th',
-    date: '14 เม.ย. 2026',
-  },
-  {
-    id: 'n2',
-    source: 'CAMPHUB',
-    title: 'Data Science Bootcamp รุ่น 12',
-    desc: 'เรียนเข้มข้น 3 เดือน พร้อมหางานหลังจบ — สมัครได้ถึง 30 เม.ย.',
-    poster: camphubPoster,
-    url: 'https://camphub.in.th',
-    date: '10 เม.ย. 2026',
-  },
-]
+const camphubLogo = new URL('../../assets/eachPageAssets/news/camphub_logo.png', import.meta.url).href
+const placeholderPoster = new URL('../../assets/eachPageAssets/news/camphub_poster.jpg', import.meta.url).href
 
 // ─── ShareSheet ───────────────────────────────────────────────────────────────
 function ShareSheet({ item, onClose }) {
@@ -158,7 +137,30 @@ function ShareSheet({ item, onClose }) {
 
 // ─── NewsPanel ────────────────────────────────────────────────────────────────
 export default function NewsPanel({ onClose }) {
+  const [camps, setCamps] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [sharingItem, setSharingItem] = useState(null)
+
+  useEffect(() => {
+    fetchCamps()
+  }, [])
+
+  async function fetchCamps() {
+    try {
+      setLoading(true)
+      setError(null)
+      const res = await fetch('/api/camphub')
+      if (!res.ok) throw new Error('Failed to fetch camps')
+      const data = await res.json()
+      setCamps(data)
+    } catch (err) {
+      setError(err.message)
+      console.error('Error fetching camps:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   function openLink(url) {
     window.open(url, '_blank', 'noopener,noreferrer')
@@ -185,49 +187,96 @@ export default function NewsPanel({ onClose }) {
 
       {/* Feed */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        {NEWS_ITEMS.map((item) => (
-          <div
-            key={item.id}
-            className="rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-white"
-          >
-            {/* Tappable content area → opens link */}
-            <button
-              onClick={() => openLink(item.url)}
-              className="w-full text-left active:brightness-95 transition-all"
-            >
-              <img
-                src={item.poster}
-                alt={item.title}
-                className="w-full h-36 object-cover"
-              />
-              <div className="px-4 pt-3 pb-2">
-                <div className="flex items-center gap-1 mb-1">
-                  <img src={camphubLogo} alt="" className="w-4 h-4 rounded object-contain" />
-                  <span className="text-[10px] text-purple-500 font-semibold">{item.source}</span>
-                  <span className="text-[10px] text-gray-400 ml-auto">{item.date}</span>
-                </div>
-                <p className="text-sm font-semibold text-gray-800 leading-snug">{item.title}</p>
-                <p className="text-xs text-gray-500 mt-1 leading-relaxed">{item.desc}</p>
-              </div>
-            </button>
-
-            {/* Share to chat */}
-            <div className="px-4 pb-3 pt-1 border-t border-gray-50 flex justify-end">
-              <button
-                onClick={() => setSharingItem(item)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 text-[#a78bda] border border-purple-100 active:scale-95 transition-transform"
+        {loading ? (
+          // Skeleton loading
+          <>
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-white animate-pulse"
               >
-                <MessageCircle size={13} strokeWidth={2} />
-                <span className="pixel-font text-[7px]">Share to chat</span>
-              </button>
-            </div>
+                <div className="w-full h-36 bg-gray-200" />
+                <div className="px-4 py-4 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  <div className="h-3 bg-gray-100 rounded w-full" />
+                </div>
+              </div>
+            ))}
+          </>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-12 gap-4">
+            <span className="text-3xl">⚠️</span>
+            <p className="text-sm text-gray-500 text-center">{error}</p>
+            <button
+              onClick={fetchCamps}
+              className="px-4 py-2 text-[11px] rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200"
+            >
+              ลองใหม่
+            </button>
           </div>
-        ))}
+        ) : camps.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 gap-2">
+            <span className="text-3xl">📭</span>
+            <p className="text-sm text-gray-500">ไม่พบข้อมูลค่าย</p>
+          </div>
+        ) : (
+          camps.map((camp, idx) => (
+            <div
+              key={idx}
+              className="rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-white"
+            >
+              {/* Tappable content area → opens link */}
+              <button
+                onClick={() => openLink(camp.link)}
+                className="w-full text-left active:brightness-95 transition-all"
+              >
+                <img
+                  src={camp.poster_image || placeholderPoster}
+                  alt={camp.title}
+                  className="w-full h-36 object-cover bg-gray-200"
+                  onError={(e) => {
+                    e.target.src = placeholderPoster
+                  }}
+                />
+                <div className="px-4 pt-3 pb-2">
+                  <div className="flex items-center gap-1 mb-1">
+                    <img src={camphubLogo} alt="" className="w-4 h-4 rounded object-contain" />
+                    <span className="text-[10px] text-purple-500 font-semibold">CAMPHUB</span>
+                  </div>
+                  <p className="text-sm font-semibold text-gray-800 leading-snug line-clamp-2">
+                    {camp.title}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1 leading-relaxed line-clamp-2">
+                    {camp.small_description}
+                  </p>
+                </div>
+              </button>
+
+              {/* Share to chat */}
+              <div className="px-4 pb-3 pt-1 border-t border-gray-50 flex justify-end">
+                <button
+                  onClick={() => setSharingItem(camp)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 text-[#a78bda] border border-purple-100 active:scale-95 transition-transform"
+                >
+                  <MessageCircle size={13} strokeWidth={2} />
+                  <span className="pixel-font text-[7px]">Share to chat</span>
+                </button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Share sheet overlay */}
       {sharingItem && (
-        <ShareSheet item={sharingItem} onClose={() => setSharingItem(null)} />
+        <ShareSheet
+          item={{
+            title: sharingItem.title,
+            url: sharingItem.link,
+            poster: sharingItem.poster_image || placeholderPoster,
+          }}
+          onClose={() => setSharingItem(null)}
+        />
       )}
     </div>
   )

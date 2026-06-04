@@ -1,4 +1,5 @@
 {
+  "name": "roller-coaster-dot-to-dearm",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
