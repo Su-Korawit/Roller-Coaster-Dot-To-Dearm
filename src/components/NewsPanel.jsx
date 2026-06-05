@@ -225,6 +225,44 @@ function AddUpdateSheet({ onClose }) {
   )
 }
 
+// ─── UpdateDetailSheet ────────────────────────────────────────────────────────
+function UpdateDetailSheet({ update, onClose }) {
+  const badge = UPDATE_TYPES[update.type] ?? UPDATE_TYPES.update
+  return (
+    <div className="absolute inset-0 z-70 flex items-end" onClick={onClose}>
+      <div
+        className="w-full bg-white rounded-t-3xl shadow-2xl overflow-y-auto"
+        style={{ maxHeight: '80vh', paddingBottom: '80px' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-center pt-3 pb-3">
+          <div className="w-10 h-1 bg-gray-300 rounded-full" />
+        </div>
+        {update.image && (
+          <img
+            src={update.image}
+            alt={update.title}
+            className="w-full h-48 object-cover bg-gray-200"
+            onError={(e) => { e.target.style.display = 'none' }}
+          />
+        )}
+        <div className="px-5 pt-4 pb-2">
+          <div className="flex items-center gap-2 mb-2">
+            <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${badge.color}`}>
+              {badge.label}
+            </span>
+            <span className="text-[10px] text-gray-400">
+              {new Date(update._ts).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </span>
+          </div>
+          <p className="text-base font-bold text-gray-800 leading-snug mb-3">{update.title}</p>
+          <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{update.description}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── NewsPanel ────────────────────────────────────────────────────────────────
 export default function NewsPanel({ onClose }) {
   const user = useAuthStore((s) => s.user)
@@ -237,6 +275,7 @@ export default function NewsPanel({ onClose }) {
   const [sharingItem, setSharingItem] = useState(null)
   const [fsUpdates, setFsUpdates] = useState([])
   const [showAddForm, setShowAddForm] = useState(false)
+  const [detailUpdate, setDetailUpdate] = useState(null)
 
   useEffect(() => {
     fetchCamps()
@@ -430,26 +469,32 @@ export default function NewsPanel({ onClose }) {
                 key={u.id}
                 className="rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-white"
               >
-                {u.image && (
-                  <img
-                    src={u.image}
-                    alt={u.title}
-                    className="w-full h-36 object-cover bg-gray-200"
-                    onError={(e) => { e.target.style.display = 'none' }}
-                  />
-                )}
-                <div className="px-4 pt-3 pb-2">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${badge.color}`}>
-                      {badge.label}
-                    </span>
-                    <span className="text-[10px] text-gray-400">
-                      {new Date(u._ts).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </span>
+                {/* Tappable area → opens detail sheet */}
+                <button
+                  onClick={() => setDetailUpdate(u)}
+                  className="w-full text-left active:brightness-95 transition-all"
+                >
+                  {u.image && (
+                    <img
+                      src={u.image}
+                      alt={u.title}
+                      className="w-full h-36 object-cover bg-gray-200"
+                      onError={(e) => { e.target.style.display = 'none' }}
+                    />
+                  )}
+                  <div className="px-4 pt-3 pb-2">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${badge.color}`}>
+                        {badge.label}
+                      </span>
+                      <span className="text-[10px] text-gray-400">
+                        {new Date(u._ts).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </span>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-800 leading-snug">{u.title}</p>
+                    <p className="text-xs text-gray-500 mt-1 leading-relaxed line-clamp-3">{u.description}</p>
                   </div>
-                  <p className="text-sm font-semibold text-gray-800 leading-snug">{u.title}</p>
-                  <p className="text-xs text-gray-500 mt-1 leading-relaxed whitespace-pre-line">{u.description}</p>
-                </div>
+                </button>
 
                 {/* Actions */}
                 <div className="px-4 pb-3 pt-1 border-t border-gray-50 flex justify-end items-center gap-2">
@@ -479,6 +524,9 @@ export default function NewsPanel({ onClose }) {
 
       {/* Add update form (admin) */}
       {showAddForm && <AddUpdateSheet onClose={() => setShowAddForm(false)} />}
+
+      {/* Update detail sheet */}
+      {detailUpdate && <UpdateDetailSheet update={detailUpdate} onClose={() => setDetailUpdate(null)} />}
 
       {/* Share sheet overlay */}
       {sharingItem && (

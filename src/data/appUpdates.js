@@ -10,6 +10,30 @@ export const UPDATE_TYPES = {
 // เรียงจากใหม่สุด → เก่าสุด (newest first)
 export const STATIC_UPDATES = [
   {
+    id: 'su-20',
+    type: 'new',
+    title: 'RollerCoaster Update Cards — กดดูรายละเอียดได้แล้ว',
+    description: 'กด Card ใด ๆ ใน RollerCoaster tab เพื่อเปิดรายละเอียดเต็มของอัปเดตนั้นในหน้าต่างล่าง',
+    image: null,
+    date: '2026-06-05',
+  },
+  {
+    id: 'su-19',
+    type: 'fix',
+    title: 'Search & Next ติดขอบล่างตลอด',
+    description: 'หน้า Career, Mastery, University, Program — Search bar และปุ่ม Next ติดขอบล่างของจอตลอดเวลา ไม่ต้องเลื่อนลงไปกดอีกต่อไป\n\nแก้โดยเปลี่ยน h-full → h-dvh บน <section> ของทั้ง 4 หน้า ให้ความสูงผูกกับ viewport โดยตรง',
+    image: null,
+    date: '2026-06-05',
+  },
+  {
+    id: 'su-18',
+    type: 'update',
+    title: 'ดึงข้อมูลมหาวิทยาลัย & หลักสูตรจาก TCAS API จริง',
+    description: 'หน้าเลือกมหาวิทยาลัยแสดงข้อมูลจริงจาก mytcas.com (82 มหาวิทยาลัย, 4,424 หลักสูตร)\n\n• เพิ่มขั้นตอนเลือกคณะก่อนเลือกหลักสูตร (University → Faculty → Program)\n• แสดงรอบรับสมัคร TCAS จริงบนทุก Card (Portfolio / Quota / Admission)\n• โลโก้ใช้ CDN ทางการ → สำรองรูปเก่า → ตัวอักษรย่อ\n• เพิ่ม Vercel Serverless Function api/mytcas.js + hooks useMytcas.js',
+    image: null,
+    date: '2026-06-05',
+  },
+  {
     id: 'su-17',
     type: 'new',
     title: 'App Updates Feed — แท็บ RollerCoaster ใน News',

@@ -10,6 +10,7 @@ import { useAuthStore } from '../stores/useAuthStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useSelectStore } from '../stores/useSelectStore'
 import { careers, masteries, universities, programs } from '../data/onboardingData'
+import { tcasLogoUrl } from '../hooks/useMytcas'
 import SettingsSheet from './SettingsSheet'
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
@@ -202,7 +203,7 @@ export default function ProfilePanel({ onClose }) {
     },
     university: {
       label: 'University',
-      image: portfolioData?.university?.image || selectedUniversity?.image || '',
+      image: portfolioData?.university?.image || selectedUniversity?.image || (university ? tcasLogoUrl(university) : ''),
       progress: undefined,
     },
   }

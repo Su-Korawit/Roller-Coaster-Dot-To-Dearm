@@ -5,6 +5,7 @@ import { db } from '../firebase'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSocialStore, calculateMatchScore } from '../stores/useSocialStore'
 import { universities } from '../data/onboardingData'
+import { tcasLogoUrl } from '../hooks/useMytcas'
 
 const MBTI_COLORS = {
   INTJ: '#7c3aed', INTP: '#7c3aed', ENTJ: '#7c3aed', ENTP: '#7c3aed',
@@ -175,7 +176,7 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
   // Prefer profile.profile.university (synced on every login) over the
   // top-level field (written once at signup and may be stale).
   const uniId = profile?.profile?.university || profile?.university
-  const universityLogo = universities.find((u) => u.id === uniId)?.image || null
+  const universityLogo = universities.find((u) => u.id === uniId)?.image || (uniId ? tcasLogoUrl(uniId) : null)
 
   return (
     <div className="absolute inset-0 z-60 flex flex-col justify-end">

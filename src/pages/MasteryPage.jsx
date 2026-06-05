@@ -24,7 +24,7 @@ function MasteryPage() {
   )
 
   return (
-    <section className="flex h-full flex-col bg-linear-to-b from-pink-200 via-pink-100 to-cyan-300">
+    <section className="flex h-dvh flex-col bg-linear-to-b from-pink-200 via-pink-100 to-cyan-300">
       <TopBar />
 
       <div className="shrink-0 px-6 pt-4">
