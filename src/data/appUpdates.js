@@ -10,6 +10,14 @@ export const UPDATE_TYPES = {
 // เรียงจากใหม่สุด → เก่าสุด (newest first)
 export const STATIC_UPDATES = [
   {
+    id: 'su-21',
+    type: 'update',
+    title: 'เพิ่มอาชีพกว่า 900 รายการ + ค้นหาภาษาไทยได้แล้ว',
+    description: 'หน้าเลือกอาชีพขยายจาก 23 → 946 อาชีพ โดยเพิ่มข้อมูลจากฐานข้อมูล O*NET (U.S. Department of Labor) ซึ่งครอบคลุมอาชีพกว่า 900 สาขา\n\n• อาชีพใหม่ปรากฏเมื่อพิมพ์ค้นหา (ไม่ขึ้นในรายการ Recommend)\n• พิมพ์ภาษาไทยเพื่อค้นหาได้ เช่น "พยาบาล", "บัญชี", "วิศวกร"\n• นำกล่องสีดำออกจากการ์ดอาชีพและ Mastery\n• เพิ่ม attribution ให้ O*NET ตาม CC BY 4.0',
+    image: null,
+    date: '2026-06-07',
+  },
+  {
     id: 'su-20',
     type: 'new',
     title: 'RollerCoaster Update Cards — กดดูรายละเอียดได้แล้ว',

@@ -18,7 +18,11 @@ function CareerPage() {
     () => {
       const q = query.toLowerCase()
       const base = q ? careers : careers.filter((item) => !mbti || item.mbti.includes(mbti))
-      return base.filter((item) => item.name.toLowerCase().includes(q))
+      return base.filter((item) =>
+        item.name.toLowerCase().includes(q) ||
+        item.detail.toLowerCase().includes(q) ||
+        (item.keywords?.some((k) => k.toLowerCase().includes(q)) ?? false)
+      )
     },
     [mbti, query],
   )
@@ -46,7 +50,6 @@ function CareerPage() {
                 selected === career.id ? 'ring-4 ring-pink-400' : ''
               }`}
             >
-              <div className="h-20 w-20 shrink-0 bg-black" />
               <div className="px-3 py-2">
                 <p className="pixel-font text-sm font-bold text-black">{career.name}</p>
                 <p className="pixel-font mt-1 text-[10px] leading-tight text-black/70">{career.detail}</p>
@@ -74,6 +77,9 @@ function CareerPage() {
         >
           Next
         </button>
+        <p className="pixel-font mt-2 text-center text-[8px] text-black/30">
+          Occupation data: O*NET Web Services · U.S. DOL/ETA · CC BY 4.0
+        </p>
       </div>
     </section>
   )

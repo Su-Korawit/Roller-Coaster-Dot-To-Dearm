@@ -46,7 +46,6 @@ function MasteryPage() {
                 selected === mastery.id ? 'ring-4 ring-pink-400' : ''
               }`}
             >
-              <div className="h-20 w-20 shrink-0 bg-black" />
               <div className="px-3 py-2">
                 <p className="pixel-font text-sm font-bold text-black">{mastery.name}</p>
                 <p className="pixel-font mt-1 text-[10px] leading-tight text-black/70">{mastery.detail}</p>

@@ -49,7 +49,7 @@ Status key:
 | Email / password sign-in & registration | ✅ | Firebase Auth |
 | Two-way Firestore ↔ localStorage sync | ✅ | On every selection + on login |
 | MBTI selection (16 types, pixel-art characters) | ✅ | Step 1 of 5 |
-| Career selection (30 careers, MBTI-filtered) | ✅ | Step 2 of 5 |
+| Career selection (946 careers — 23 curated MBTI-filtered + 923 O*NET via search) | ✅ | Step 2 of 5 |
 | Mastery track selection (18 tracks, career-filtered) | ✅ | Step 3 of 5 |
 | University selection (30+ Thai institutions) | ✅ | Step 4 of 5 |
 | Program / major selection | ✅ | Step 5 of 5 — also stores TCAS round |
@@ -662,6 +662,17 @@ VITE_FIREBASE_DATABASE_URL=...
 VITE_GEMINI_API_KEY=...
 VITE_GOOGLE_MAPS_KEY=...
 ```
+
+---
+
+## Data Sources & Attribution
+
+| Data | Source | License |
+|---|---|---|
+| Occupation database (923 O*NET occupations) | [O*NET Web Services](https://services.onetcenter.org/), U.S. Department of Labor, Employment and Training Administration | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| Thai translations of occupation titles | Generated with Google Gemini 2.5 Flash | Output owned by project author |
+
+> This site incorporates information from O*NET Web Services by the U.S. Department of Labor, Employment and Training Administration (USDOL/ETA). Used under the [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) license. O*NET® is a trademark of USDOL/ETA.
 
 ---
 

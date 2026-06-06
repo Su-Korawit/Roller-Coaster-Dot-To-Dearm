@@ -1,3 +1,5 @@
+import occupationsRaw from './occupations.json'
+
 export const registerAssets = {
   bg: new URL('../../assets/eachPageAssets/register/01_Register_Background.png', import.meta.url).href,
 }
@@ -43,7 +45,7 @@ export const mbtiCharacters = [
 const cardImage = new URL('../../assets/03_Setup_Carrer_Refferent.png', import.meta.url).href
 const cardImage2 = new URL('../../assets/03_Setup_Mastery_Refferent.png', import.meta.url).href
 
-export const careers = [
+const baseCareers = [
   // — Analysts (NT): INTJ, INTP, ENTJ, ENTP —
   { id: 'data-scientist',       name: 'Data Scientist',          detail: 'วิเคราะห์ข้อมูลและสร้าง insight ด้วย AI/ML',                       image: cardImage, mbti: ['INTJ', 'INTP', 'ENTJ'] },
   { id: 'ml-engineer',          name: 'AI / ML Specialist',      detail: 'พัฒนาโมเดล Machine Learning และระบบอัจฉริยะ',                      image: cardImage, mbti: ['INTP', 'INTJ', 'ENTP'] },
@@ -73,6 +75,19 @@ export const careers = [
   { id: 'growth-hacker',        name: 'Growth Hacker',           detail: 'ทดลองกลยุทธ์ Marketing แบบ Data-driven เพื่อขยายฐานผู้ใช้',        image: cardImage, mbti: ['ESTP', 'ENTP', 'ESFP'] },
   { id: 'iot-engineer',         name: 'IoT / Hardware Engineer', detail: 'เชื่อมโลก Physical และ Digital ด้วยอุปกรณ์ Embedded และ Sensor',    image: cardImage, mbti: ['ISTP', 'ESTP', 'INTJ'] },
 ]
+
+// O*NET occupations (923) sourced from the JobsAPI project. No MBTI tags, so mbti: []
+// keeps them out of the MBTI "Recommend" list — they surface only via search.
+const occupationCareers = occupationsRaw.map((o) => ({
+  id: o.code,
+  name: o.en,
+  detail: o.formal,
+  image: cardImage,
+  mbti: [],
+  keywords: [o.formal, o.informal, ...(o.keywords ?? [])].filter(Boolean),
+}))
+
+export const careers = [...baseCareers, ...occupationCareers]
 
 export const masteries = [
   // — Data & AI —
