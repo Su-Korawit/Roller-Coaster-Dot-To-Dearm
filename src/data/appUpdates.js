@@ -10,6 +10,14 @@ export const UPDATE_TYPES = {
 // เรียงจากใหม่สุด → เก่าสุด (newest first)
 export const STATIC_UPDATES = [
   {
+    id: 'su-22',
+    type: 'update',
+    title: 'ซิงค์ Tasks ขึ้น Firestore แล้ว',
+    description: 'Task ที่สร้างในแอปจะถูกบันทึกลง Cloud อัตโนมัติ ใช้งานต่อได้ทุกอุปกรณ์ เมื่อล็อกอินครั้งแรกระบบจะย้าย Task เดิมจาก localStorage ขึ้น Firestore ให้อัตโนมัติ',
+    image: null,
+    date: '2026-06-08',
+  },
+  {
     id: 'su-21',
     type: 'update',
     title: 'เพิ่มอาชีพกว่า 900 รายการ + ค้นหาภาษาไทยได้แล้ว',
