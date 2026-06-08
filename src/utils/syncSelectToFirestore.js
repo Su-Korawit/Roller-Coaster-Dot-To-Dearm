@@ -35,8 +35,10 @@ export async function syncSelectToFirestore(uid) {
 }
 
 /**
- * Read Firestore users/{uid}.profile back into useSelectStore.
- * Only hydrates fields that are empty in localStorage — new-device fallback.
+ * Load profile selections from Firestore into useSelectStore (Firestore wins).
+ * If Firestore has no profile yet, migrate local values up — first-time push.
+ * Call this BEFORE any local push so the most recently saved Cloud values
+ * always take precedence over stale local state on a second device.
  */
 export async function hydrateSelectStoreFromFirestore(uid) {
   if (!uid) return
@@ -46,16 +48,21 @@ export async function hydrateSelectStoreFromFirestore(uid) {
     if (!snap.exists()) return
 
     const profile = snap.data()?.profile
-    if (!profile) return
+    if (!profile) {
+      // First-time migration: push whatever is local up to Firestore.
+      await syncSelectToFirestore(uid)
+      return
+    }
 
-    const store = useSelectStore.getState()
-    const { setMbti, setCareer, setMastery, setUniversity, setProgram } = store
+    const { setMbti, setCareer, setMastery, setUniversity, setProgram } = useSelectStore.getState()
 
-    if (!store.mbti && profile.mbti)             setMbti(profile.mbti)
-    if (!store.career && profile.career)         setCareer(profile.career)
-    if (!store.mastery && profile.masteryTrack)  setMastery(profile.masteryTrack)
-    if (!store.university && profile.university) setUniversity(profile.university)
-    if (!store.program && profile.program)       setProgram(profile.program)
+    // Firestore-wins: always overwrite local so background/character stays
+    // consistent across devices.
+    if (profile.mbti)        setMbti(profile.mbti)
+    if (profile.career)      setCareer(profile.career)
+    if (profile.masteryTrack) setMastery(profile.masteryTrack)
+    if (profile.university)  setUniversity(profile.university)
+    if (profile.program)     setProgram(profile.program)
   } catch (error) {
     console.error('[hydrateSelectStoreFromFirestore] failed:', error)
   }

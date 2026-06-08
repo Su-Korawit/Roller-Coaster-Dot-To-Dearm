@@ -10,6 +10,14 @@ export const UPDATE_TYPES = {
 // เรียงจากใหม่สุด → เก่าสุด (newest first)
 export const STATIC_UPDATES = [
   {
+    id: 'su-23',
+    type: 'fix',
+    title: 'แก้ Background ตัวละครไม่ตรงกันข้ามอุปกรณ์',
+    description: 'แก้ปัญหา MBTI (ที่กำหนดภาพพื้นหลัง/ตัวละคร) ไม่ sync ข้ามอุปกรณ์\n\n• เปลี่ยนจาก "local wins" เป็น "Firestore wins" — ค่าใน Cloud จะทับค่า local เสมอ\n• แก้ลำดับ sync: อ่าน Firestore ก่อน แล้วค่อย push ถ้า Firestore ว่าง (migration)\n• ป้องกัน device เก่าทับข้อมูล Cloud ที่อัปเดตแล้ว',
+    image: null,
+    date: '2026-06-08',
+  },
+  {
     id: 'su-22',
     type: 'update',
     title: 'ซิงค์ Tasks ขึ้น Firestore แล้ว',

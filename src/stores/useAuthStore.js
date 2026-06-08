@@ -9,7 +9,7 @@ import {
 } from 'firebase/auth'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from '../firebase'
-import { syncSelectToFirestore, hydrateSelectStoreFromFirestore } from '../utils/syncSelectToFirestore'
+import { hydrateSelectStoreFromFirestore } from '../utils/syncSelectToFirestore'
 import { hydratePortfolioFromFirestore, setPortfolioSyncUser } from '../utils/syncPortfolioToFirestore'
 import { hydrateTasksFromFirestore, setTaskSyncUser } from '../utils/syncTasksToFirestore'
 
@@ -55,7 +55,6 @@ export const useAuthStore = create((set) => {
     if (firebaseUser) {
       try {
         await ensureUserDoc(firebaseUser)
-        await syncSelectToFirestore(firebaseUser.uid)
         await hydrateSelectStoreFromFirestore(firebaseUser.uid)
         await hydratePortfolioFromFirestore(firebaseUser.uid)
         setPortfolioSyncUser(firebaseUser.uid)
