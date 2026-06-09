@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
-import { GripVertical, Loader2, Share2 } from 'lucide-react'
+import { GripVertical, Loader2, Share2, Trash, Trash2 } from 'lucide-react'
 import { addDoc, collection, doc, getDoc, increment, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuthStore } from '../stores/useAuthStore'
@@ -203,7 +203,8 @@ function ReflectionSheet({ task, onSubmit, onClose, isEvaluating }) {
 }
 
 export default function TaskPanel({ onClose, initialView = 'list' }) {
-  const { tasks, addTask, updateTask, toggleTask, removeTask, reorderTasks, applySkillToTask } = useTaskStore()
+  const { tasks, addTask, updateTask, toggleTask, trashTask, restoreTask, purgeTask, emptyTrash, reorderTasks, applySkillToTask } = useTaskStore()
+  const trash = useTaskStore((s) => s.trash)
   const { addCoins, evaluateAndCompleteTask, generateAIDailyTask, activeMasteryBlockId } = useUserStore()
   const [view, setView] = useState(initialView)
   const [editingTaskId, setEditingTaskId] = useState(null)
@@ -219,6 +220,28 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
   const [evalResult, setEvalResult] = useState(null) // { note, gainedPercent }
   // Share sheet state
   const [sharingTask, setSharingTask] = useState(null)
+  // Undo-delete state
+  const [deletedTask, setDeletedTask] = useState(null)
+  const [deleteTimerId, setDeleteTimerId] = useState(null)
+
+  function handleRemove(task) {
+    if (deleteTimerId) clearTimeout(deleteTimerId)
+    trashTask(task)
+    setDeletedTask(task)
+    const id = setTimeout(() => {
+      setDeletedTask(null)
+      setDeleteTimerId(null)
+    }, 4000)
+    setDeleteTimerId(id)
+  }
+
+  function handleUndoDelete() {
+    if (!deletedTask) return
+    clearTimeout(deleteTimerId)
+    restoreTask(deletedTask.id)
+    setDeletedTask(null)
+    setDeleteTimerId(null)
+  }
 
   function openCreate() {
     setEditingTaskId(null)
@@ -342,13 +365,30 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
       </div>
 
       <div className="px-4 pb-4">
-        <div className="rounded-xl bg-white border border-gray-200 shadow-sm overflow-hidden min-h-[74vh] flex flex-col">
+        <div className="rounded-xl bg-white border border-gray-200 shadow-sm overflow-hidden h-[82vh] flex flex-col">
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
             <h2 className="pixel-font text-[12px] text-gray-800">
-              {view === 'list' ? 'Task List' : editingTaskId ? 'Edit Task' : 'Create Task'}
+              {view === 'list' ? 'Task List'
+                : view === 'trash' ? 'Trash'
+                : editingTaskId ? 'Edit Task'
+                : 'Create Task'}
             </h2>
             <div className="flex items-center gap-2">
-              {view === 'form' && (
+              {view === 'list' && (
+                <button
+                  onClick={() => setView('trash')}
+                  className="relative text-gray-400 hover:text-gray-700 p-1"
+                  aria-label="Trash"
+                >
+                  <Trash size={16} />
+                  {trash.length > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-red-400 pixel-font text-[7px] text-white flex items-center justify-center leading-none">
+                      {trash.length > 9 ? '9+' : trash.length}
+                    </span>
+                  )}
+                </button>
+              )}
+              {(view === 'form' || view === 'trash') && (
                 <button
                   onClick={() => setView('list')}
                   className="text-sm rounded-xl px-3 py-1.5 bg-gray-100 text-gray-600"
@@ -365,7 +405,7 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
               tasks={sortedTasks}
               onToggle={handleToggle}
               onEdit={openEdit}
-              onRemove={removeTask}
+              onRemove={handleRemove}
               onCreate={openCreate}
               onShare={setSharingTask}
               onSkill={(task) => {
@@ -379,6 +419,13 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
               onAutoGenerate={handleAutoGenerate}
               isAutoGenerating={isAutoGenerating}
               autoGenError={autoGenError}
+            />
+          ) : view === 'trash' ? (
+            <TrashView
+              trash={trash}
+              onRestore={restoreTask}
+              onPurge={purgeTask}
+              onEmpty={emptyTrash}
             />
           ) : (
             <TaskForm
@@ -413,6 +460,21 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
         />
       )}
 
+      {/* ── Undo-delete toast ── */}
+      {deletedTask && (
+        <div className="absolute bottom-4 left-4 right-4 z-70 flex items-center justify-between bg-gray-900 text-white rounded-2xl px-4 py-3 shadow-xl">
+          <span className="pixel-font text-[9px] opacity-80 truncate mr-3">
+            Deleted: {deletedTask.title}
+          </span>
+          <button
+            onClick={handleUndoDelete}
+            className="pixel-font text-[9px] text-purple-300 shrink-0 active:opacity-70"
+          >
+            Undo
+          </button>
+        </div>
+      )}
+
       {/* ── AI Eval Result toast ── */}
       {evalResult && (
         <div className="absolute inset-0 z-60 flex items-center justify-center bg-black/40 p-6">
@@ -434,8 +496,7 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
   )
 }
 
-function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onShare, onSkill, onDragEnd, onAutoGenerate, isAutoGenerating, autoGenError }) {
-  const equippedActiveSkill = useSkillStore((s) => s.equippedActiveSkill)
+function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onShare, onDragEnd, onAutoGenerate, isAutoGenerating, autoGenError }) {
   return (
     <>
       <DragDropContext onDragEnd={onDragEnd}>
@@ -459,7 +520,7 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onShare, on
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
-                      className={`flex items-center gap-3 px-4 py-4 border-b transition-shadow ${
+                      className={`flex flex-col gap-1.5 px-4 py-3 border-b transition-shadow ${
                         snapshot.isDragging
                           ? 'shadow-xl scale-[1.02] bg-white/95 backdrop-blur-sm z-50 rounded-xl border-transparent'
                           : task.assignedSkill === 'ignite' && !task.completed
@@ -471,78 +532,60 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onShare, on
                           : 'border-gray-200 bg-white'
                       }`}
                     >
-                      {/* Drag handle */}
-                      <span
-                        {...provided.dragHandleProps}
-                        className="shrink-0 text-gray-300 cursor-grab active:cursor-grabbing touch-none"
-                        aria-label="Drag to reorder"
-                      >
-                        <GripVertical size={18} />
-                      </span>
-
-                      {/* Checkbox */}
-                      <button
-                        onClick={() => onToggle(task)}
-                        className={`w-10 h-10 rounded-xl border-[3px] flex items-center justify-center shrink-0
-                          ${task.completed ? 'bg-black border-black text-white' : 'border-black text-transparent'}`}
-                      >
-                        ✓
-                      </button>
-
-                      {/* Task info */}
-                      <button onClick={() => onEdit(task)} className="flex-1 text-left">
-                        <p className={`pixel-font text-[11px] ${task.completed ? 'line-through text-gray-400' : 'text-black'}`}>
-                          {task.isAIGenerated && !task.completed && <span className="mr-1">✨</span>}
-                          {task.assignedSkill === 'ignite' && !task.completed && <span className="mr-1">🚀</span>}
-                          {task.assignedSkill === 'capsule' && !task.completed && <span className="mr-1">⏳</span>}
-                          #{index + 1} | {task.title}
-                        </p>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {task.type} - {task.timeMinutes} min - {task.rewardCoins} coins
-                        </p>
-                      </button>
-
-                      {/* Skill trigger button (only when an active skill is equipped and task not completed) */}
-                      {equippedActiveSkill && !task.completed && (
+                      {/* ── Top row: checkbox · content · drag handle ── */}
+                      <div className="flex items-center gap-3">
+                        {/* Checkbox */}
                         <button
-                          onClick={() => onSkill?.(task)}
-                          className={`text-xl leading-none px-1 active:scale-95 transition-transform ${
-                            task.assignedSkill ? 'opacity-40' : ''
-                          }`}
-                          title={task.assignedSkill ? 'Skill already active' : `Apply ${equippedActiveSkill}`}
-                          aria-label="Apply skill to task"
-                          disabled={!!task.assignedSkill}
+                          onClick={() => onToggle(task)}
+                          className={`w-10 h-10 rounded-xl border-[3px] flex items-center justify-center shrink-0
+                            ${task.completed ? 'bg-black border-black text-white' : 'border-black text-transparent'}`}
                         >
-                          {equippedActiveSkill === 'ignite' ? '🚀' : '⏳'}
+                          ✓
                         </button>
-                      )}
 
-                      {/* Share */}
-                      <button
-                        onClick={() => onShare?.(task)}
-                        className="text-gray-300 hover:text-purple-400 px-1 active:scale-95 transition-transform"
-                        aria-label="Share task to chat"
-                      >
-                        <Share2 size={15} />
-                      </button>
+                        {/* Task info (tap to edit) */}
+                        <button onClick={() => onEdit(task)} className="flex-1 min-w-0 text-left">
+                          <p className={`pixel-font text-[11px] line-clamp-2 ${task.completed ? 'line-through text-gray-400' : 'text-black'}`}>
+                            {task.isAIGenerated && !task.completed && <span className="mr-1">✨</span>}
+                            {task.assignedSkill === 'ignite' && !task.completed && <span className="mr-1">🚀</span>}
+                            {task.assignedSkill === 'capsule' && !task.completed && <span className="mr-1">⏳</span>}
+                            #{index + 1} | {task.title}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {task.type} - {task.timeMinutes} min - {task.rewardCoins} coins
+                          </p>
+                        </button>
 
-                      {/* Edit */}
-                      <button
-                        onClick={() => onEdit(task)}
-                        className="text-2xl leading-none text-black px-2"
-                        aria-label="Edit task"
-                      >
-                        ≡
-                      </button>
+                        {/* Drag handle */}
+                        <span
+                          {...provided.dragHandleProps}
+                          className="shrink-0 text-gray-300 cursor-grab active:cursor-grabbing touch-none"
+                          aria-label="Drag to reorder"
+                        >
+                          <GripVertical size={18} />
+                        </span>
+                      </div>
 
-                      {/* Delete */}
-                      <button
-                        onClick={() => onRemove(task.id)}
-                        className="text-gray-300 hover:text-red-400 px-1"
-                        aria-label="Delete task"
-                      >
-                        x
-                      </button>
+                      {/* ── Bottom row: secondary actions ── */}
+                      <div className="flex items-center justify-end gap-3">
+                        {/* Share */}
+                        <button
+                          onClick={() => onShare?.(task)}
+                          className="text-gray-300 hover:text-purple-400 active:scale-95 transition-transform"
+                          aria-label="Share task to chat"
+                        >
+                          <Share2 size={15} />
+                        </button>
+
+                        {/* Delete */}
+                        <button
+                          onClick={() => onRemove(task)}
+                          className="text-gray-300 hover:text-red-400 active:scale-95 transition-transform"
+                          aria-label="Delete task"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </div>
                   )}
                 </Draggable>
@@ -553,12 +596,12 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onShare, on
         </Droppable>
       </DragDropContext>
 
-      <div className="border-t border-gray-200 px-5 py-4 space-y-2">
-        <div className="flex items-center justify-between">
+      <div className="border-t border-gray-200 px-5 py-3 space-y-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={onAutoGenerate}
             disabled={isAutoGenerating}
-            className="flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-2xl px-4 py-2.5 active:scale-95 transition-transform disabled:opacity-60"
+            className="flex-1 flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-2xl px-4 py-2.5 active:scale-95 transition-transform disabled:opacity-60"
           >
             {isAutoGenerating ? (
               <Loader2 size={13} className="animate-spin text-purple-500" />
@@ -571,7 +614,7 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onShare, on
           </button>
           <button
             onClick={onCreate}
-            className="w-14 h-14 rounded-full border-[3px] border-black text-4xl leading-none bg-white shadow-sm"
+            className="w-10 h-10 rounded-full border-2 border-black text-2xl leading-none bg-white shadow-sm shrink-0 flex items-center justify-center"
             aria-label="Create task"
           >
             +
@@ -585,4 +628,54 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onShare, on
   )
 }
 
+function TrashView({ trash, onRestore, onPurge, onEmpty }) {
+  return (
+    <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 overflow-y-auto min-h-0">
+        {trash.length === 0 ? (
+          <div className="px-6 pt-20 text-center text-gray-400">
+            <p className="text-3xl mb-3">🗑️</p>
+            <p className="pixel-font text-[10px]">Trash is empty</p>
+          </div>
+        ) : (
+          trash.map((task) => (
+            <div key={task.id} className="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
+              <div className="flex-1 min-w-0">
+                <p className="pixel-font text-[11px] text-gray-400 line-through truncate">
+                  {task.title}
+                </p>
+                <p className="text-xs text-gray-300 mt-0.5">
+                  {task.type} - {task.timeMinutes} min
+                </p>
+              </div>
+              <button
+                onClick={() => onRestore(task.id)}
+                className="pixel-font text-[9px] text-purple-500 shrink-0 px-2 py-1 rounded-lg hover:bg-purple-50 active:scale-95 transition-all"
+              >
+                Restore
+              </button>
+              <button
+                onClick={() => onPurge(task.id)}
+                className="text-gray-300 hover:text-red-400 shrink-0 active:scale-95 transition-transform"
+                aria-label="Delete permanently"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))
+        )}
+      </div>
 
+      {trash.length > 0 && (
+        <div className="shrink-0 px-5 py-3 border-t border-gray-100 bg-white">
+          <button
+            onClick={onEmpty}
+            className="w-full rounded-xl border border-red-200 py-2.5 pixel-font text-[9px] text-red-400 hover:bg-red-50 active:scale-95 transition-all"
+          >
+            Empty Trash ({trash.length})
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}

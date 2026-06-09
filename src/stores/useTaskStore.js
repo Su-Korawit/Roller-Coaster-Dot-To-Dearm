@@ -38,6 +38,7 @@ export const useTaskStore = create(
   persist(
     (set) => ({
       tasks: [],
+      trash: [],
       addTask: (taskInput) =>
         set((state) => ({
           tasks: [
@@ -74,6 +75,23 @@ export const useTaskStore = create(
         set((state) => ({
           tasks: state.tasks.filter((task) => task.id !== taskId),
         })),
+      trashTask: (task) =>
+        set((state) => ({
+          tasks: state.tasks.filter((t) => t.id !== task.id),
+          trash: [task, ...state.trash],
+        })),
+      restoreTask: (taskId) =>
+        set((state) => {
+          const task = state.trash.find((t) => t.id === taskId)
+          if (!task) return state
+          return {
+            trash: state.trash.filter((t) => t.id !== taskId),
+            tasks: [task, ...state.tasks],
+          }
+        }),
+      purgeTask: (taskId) =>
+        set((state) => ({ trash: state.trash.filter((t) => t.id !== taskId) })),
+      emptyTrash: () => set({ trash: [] }),
       reorderTasks: (newOrder) => set({ tasks: newOrder }),
       clearTasks: () => set({ tasks: [] }),
       // Assign an active skill to a specific task (one skill per task)
@@ -97,15 +115,12 @@ export const useTaskStore = create(
     }),
     {
       name: 'rc-task-store',
-      merge: (persistedState, currentState) => {
-        const incomingTasks = persistedState?.tasks || []
-
-        return {
-          ...currentState,
-          ...persistedState,
-          tasks: incomingTasks.map(normalizeTask),
-        }
-      },
+      merge: (persistedState, currentState) => ({
+        ...currentState,
+        ...persistedState,
+        tasks: (persistedState?.tasks || []).map(normalizeTask),
+        trash: (persistedState?.trash || []).map(normalizeTask),
+      }),
     },
   ),
 )

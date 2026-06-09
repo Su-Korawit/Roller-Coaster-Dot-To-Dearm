@@ -19,11 +19,11 @@ let suppress = false    // skip auto-sync while hydrating from Firestore
  */
 export async function syncTasksToFirestore(uid) {
   if (!uid) return
-  const { tasks } = useTaskStore.getState()
+  const { tasks, trash } = useTaskStore.getState()
   try {
     await setDoc(
       doc(db, 'users', uid),
-      { tasks, tasksUpdatedAt: serverTimestamp() },
+      { tasks, trash, tasksUpdatedAt: serverTimestamp() },
       { merge: true },
     )
   } catch (error) {
@@ -44,7 +44,7 @@ export async function hydrateTasksFromFirestore(uid) {
 
     if (data.tasks) {
       suppress = true
-      useTaskStore.setState({ tasks: data.tasks })
+      useTaskStore.setState({ tasks: data.tasks, trash: data.trash ?? [] })
       suppress = false
     }
 
@@ -70,7 +70,7 @@ export function setTaskSyncUser(uid) {
   subscribed = true
   useTaskStore.subscribe((state, prev) => {
     if (suppress || !currentUid) return
-    if (state.tasks === prev.tasks) return
+    if (state.tasks === prev.tasks && state.trash === prev.trash) return
     clearTimeout(timer)
     timer = setTimeout(() => syncTasksToFirestore(currentUid), 1000)
   })

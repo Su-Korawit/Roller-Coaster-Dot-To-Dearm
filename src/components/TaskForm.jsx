@@ -68,7 +68,8 @@ export default function TaskForm({ initialValues = {}, defaultDate = null, onSav
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-5 py-5">
+    <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 overflow-y-auto min-h-0 px-5 py-5">
       {/* ── Scheduled-date banner (Calendar context only) ── */}
       {defaultDate && (
         <div className="mb-4 flex items-center gap-2 bg-purple-50 border border-purple-100 rounded-xl px-4 py-2.5">
@@ -165,23 +166,27 @@ export default function TaskForm({ initialValues = {}, defaultDate = null, onSav
           />
         </label>
       </div>
+      </div>
 
-      <button
-        onClick={handleSubmit}
-        disabled={!form.title.trim()}
-        className="mt-6 w-full rounded-xl border border-gray-300 shadow-sm bg-white py-3 pixel-font text-[10px] text-gray-800 disabled:opacity-40 active:scale-95 transition-transform"
-      >
-        Save Task
-      </button>
-
-      {onCancel && (
+      {/* ── Pinned footer — always visible ── */}
+      <div className="shrink-0 px-5 py-3 border-t border-gray-100 bg-white">
         <button
-          onClick={onCancel}
-          className="mt-2 w-full py-2 pixel-font text-[9px] text-gray-400"
+          onClick={handleSubmit}
+          disabled={!form.title.trim()}
+          className="w-full rounded-xl border border-gray-300 shadow-sm bg-white py-3 pixel-font text-[10px] text-gray-800 disabled:opacity-40 active:scale-95 transition-transform"
         >
-          Cancel
+          Save Task
         </button>
-      )}
+
+        {onCancel && (
+          <button
+            onClick={onCancel}
+            className="mt-2 w-full py-2 pixel-font text-[9px] text-gray-400"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
     </div>
   )
 }
