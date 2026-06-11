@@ -772,7 +772,7 @@ export default function ChatPanel({ onClose, initialView = 'list', onAdminContac
 
   return (
     <div
-      className="absolute inset-x-0 z-50 flex flex-col bg-white/96 backdrop-blur-sm rounded-t-4xl overflow-hidden"
+      className="absolute inset-x-0 z-50 flex flex-col bg-white/96 backdrop-blur-sm rounded-t-4xl overflow-hidden md:max-w-2xl md:mx-auto lg:max-w-3xl"
       style={{ top: '10%', bottom: '72px' }}
     >
       {/* Drag handle */}

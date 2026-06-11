@@ -357,7 +357,7 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
 
   return (
     <div
-      className="absolute inset-0 z-50 flex flex-col bg-white/96 backdrop-blur-sm rounded-t-4xl overflow-hidden"
+      className="absolute inset-0 z-50 flex flex-col bg-white/96 backdrop-blur-sm rounded-t-4xl overflow-hidden md:max-w-2xl md:mx-auto lg:max-w-3xl"
       style={{ top: '10%' }}
     >
       <div className="flex justify-center pt-3 pb-1">
