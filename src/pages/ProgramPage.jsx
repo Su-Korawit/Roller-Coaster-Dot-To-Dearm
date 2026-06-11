@@ -47,7 +47,7 @@ function ProgramPage() {
     <section className="flex h-dvh flex-col bg-linear-to-b from-pink-200 via-pink-100 to-[#efe5ef]">
       <TopBar />
 
-      <div className="shrink-0 px-6 pt-4">
+      <div className="mx-auto w-full max-w-3xl shrink-0 px-6 pt-4">
         <h1 className="title-gradient pixel-font text-xl leading-tight">Program</h1>
         <WizardStepper step={3} />
         {selectedFaculty ? (
@@ -80,7 +80,7 @@ function ProgramPage() {
           ) : facError ? (
             <p className="pixel-font py-10 text-center text-xs text-red-500">โหลดข้อมูลไม่สำเร็จ</p>
           ) : (
-            <div className="mt-3 space-y-3">
+            <div className="mx-auto max-w-3xl mt-3 space-y-3">
               {filteredFaculties.map((faculty) => (
                 <button
                   key={faculty.faculty_id}
@@ -100,7 +100,7 @@ function ProgramPage() {
           ) : progError ? (
             <p className="pixel-font py-10 text-center text-xs text-red-500">โหลดข้อมูลไม่สำเร็จ</p>
           ) : (
-            <div className="mt-3 space-y-4">
+            <div className="mx-auto max-w-3xl mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredPrograms.map((program) => (
                 <button
                   key={program._id}
@@ -125,24 +125,26 @@ function ProgramPage() {
         )}
       </div>
 
-      <div className="shrink-0 border-t border-white/50 bg-white/40 px-6 py-4 backdrop-blur-md">
-        <p className="pixel-font mb-2 text-center text-[10px] text-black/60">↓ Scroll down or Search</p>
-        <div className="flex items-center rounded-2xl bg-white px-4 py-3">
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search..."
-            className="pixel-font w-full bg-transparent text-sm outline-none"
-          />
-          <span className="text-lg">⌕</span>
+      <div className="shrink-0 border-t border-white/50 bg-white/40 backdrop-blur-md">
+        <div className="mx-auto w-full max-w-3xl px-6 py-4">
+          <p className="pixel-font mb-2 text-center text-[10px] text-black/60">↓ Scroll down or Search</p>
+          <div className="flex items-center rounded-2xl bg-white px-4 py-3">
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search..."
+              className="pixel-font w-full bg-transparent text-sm outline-none"
+            />
+            <span className="text-lg">⌕</span>
+          </div>
+          <button
+            onClick={() => navigate('/home')}
+            disabled={!selected}
+            className="pixel-font mt-3 h-11 w-full rounded-2xl bg-sky-300 text-sm text-black disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
-        <button
-          onClick={() => navigate('/home')}
-          disabled={!selected}
-          className="pixel-font mt-3 h-11 w-full rounded-2xl bg-sky-300 text-sm text-black disabled:opacity-50"
-        >
-          Next
-        </button>
       </div>
     </section>
   )

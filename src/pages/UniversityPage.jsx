@@ -32,15 +32,15 @@ function UniversityLogo({ uni }) {
       <img
         src={src}
         alt={uni.university_name_th}
-        className="mx-auto h-14 w-14 object-contain"
+        className="mx-auto h-14 w-14 md:h-16 md:w-16 lg:h-20 lg:w-20 object-contain"
         onError={() => setStage(stage === 'cdn' && localImage ? 'local' : 'badge')}
       />
     )
   }
 
   return (
-    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br from-indigo-400 to-purple-500">
-      <span className="pixel-font text-[9px] font-bold text-white">{badgeText(uni)}</span>
+    <div className="mx-auto flex h-14 w-14 md:h-16 md:w-16 lg:h-20 lg:w-20 items-center justify-center rounded-full bg-linear-to-br from-indigo-400 to-purple-500">
+      <span className="pixel-font text-[9px] md:text-[11px] font-bold text-white">{badgeText(uni)}</span>
     </div>
   )
 }
@@ -67,19 +67,19 @@ function UniversityPage() {
     <section className="flex h-dvh flex-col bg-linear-to-b from-pink-200 via-pink-100 to-emerald-300">
       <TopBar />
 
-      <div className="shrink-0 px-6 pt-4">
+      <div className="mx-auto w-full max-w-5xl shrink-0 px-6 pt-4">
         <h1 className="title-gradient pixel-font text-xl leading-tight">University</h1>
         <WizardStepper step={2} />
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 pb-2">
-        <div className="rounded-[20px] bg-white/55 p-4">
+        <div className="mx-auto max-w-5xl rounded-[20px] bg-white/55 p-4 md:p-6">
           {loading ? (
             <p className="pixel-font py-10 text-center text-xs text-black/60">กำลังโหลดข้อมูล...</p>
           ) : error ? (
             <p className="pixel-font py-10 text-center text-xs text-red-500">โหลดข้อมูลไม่สำเร็จ ลองใหม่อีกครั้ง</p>
           ) : (
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-4">
               {filtered.map((university) => (
                 <button
                   key={university.university_id}
@@ -98,24 +98,26 @@ function UniversityPage() {
         </div>
       </div>
 
-      <div className="shrink-0 border-t border-white/50 bg-white/40 px-6 py-4 backdrop-blur-md">
-        <p className="pixel-font mb-2 text-center text-[10px] text-black/60">↓ Scroll down or Search</p>
-        <div className="flex items-center rounded-2xl bg-white px-4 py-3">
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search..."
-            className="pixel-font w-full bg-transparent text-sm outline-none"
-          />
-          <span className="text-lg">⌕</span>
+      <div className="shrink-0 border-t border-white/50 bg-white/40 backdrop-blur-md">
+        <div className="mx-auto w-full max-w-5xl px-6 py-4">
+          <p className="pixel-font mb-2 text-center text-[10px] text-black/60">↓ Scroll down or Search</p>
+          <div className="flex items-center rounded-2xl bg-white px-4 py-3">
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search..."
+              className="pixel-font w-full bg-transparent text-sm outline-none"
+            />
+            <span className="text-lg">⌕</span>
+          </div>
+          <button
+            onClick={() => navigate('/select/program')}
+            disabled={!selected}
+            className="pixel-font mt-3 h-11 w-full rounded-2xl bg-sky-300 text-sm text-black disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
-        <button
-          onClick={() => navigate('/select/program')}
-          disabled={!selected}
-          className="pixel-font mt-3 h-11 w-full rounded-2xl bg-sky-300 text-sm text-black disabled:opacity-50"
-        >
-          Next
-        </button>
       </div>
     </section>
   )
