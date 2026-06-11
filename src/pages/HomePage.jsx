@@ -1,11 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Calendar, MessageCircle } from 'lucide-react'
-import { mbtiCharacters } from '../data/onboardingData'
-import { useSelectStore } from '../stores/useSelectStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useAuthStore } from '../stores/useAuthStore'
-import { useTaskStore } from '../stores/useTaskStore'
-import { useSkillStore } from '../stores/useSkillStore'
 import { APP_VIEWS } from '../constants/appViews'
 import BottomNavBar from '../components/BottomNavBar'
 import TaskPanel from '../components/TaskPanel'
@@ -20,28 +16,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 import { useChatStore, buildChatId } from '../stores/useChatStore'
 import { ADMIN_UID, ADMIN_DISPLAY_NAME } from '../constants/admin'
-
-// ── MBTI background asset maps (eager glob, resolved at build time) ──────────
-const bgImages = import.meta.glob(
-  '../../assets/eachPageAssets/home/Background/*.png',
-  { eager: true, query: '?url', import: 'default' },
-)
-const bgVideos = import.meta.glob(
-  '../../assets/eachPageAssets/home/Background/*.mp4',
-  { eager: true, query: '?url', import: 'default' },
-)
-
-function getMbtiAssets(mbtiCode) {
-  if (!mbtiCode) return { image: null, video: null }
-  const imgKey = `../../assets/eachPageAssets/home/Background/${mbtiCode}.png`
-  const vidKey = `../../assets/eachPageAssets/home/Background/${mbtiCode}.mp4`
-  return {
-    image: bgImages[imgKey] ?? null,
-    video: bgVideos[vidKey] ?? null,
-  }
-}
-
-const fallbackBg = new URL('../../assets/eachPageAssets/home/04_Main_Home_Background_Referent.png', import.meta.url).href
+import GameCanvas from '../components/GameCanvas'
 
 const musicSrc = new URL('../../assets/eachPageAssets/home/Background_Music_1.mp3', import.meta.url).href
 
@@ -53,39 +28,23 @@ const TRACKS = [
 ]
 // { title: "Yoshi's On The Beach - Yoshi's Story", start: 370 },
 
-function fmtTime(s) {
-  return `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`
-}
-
-// Skill badge placeholder image (butterfly icon from overview)
-const skillIcon = '🦋'
-
 function HomePage() {
   const [activeTab, setActiveTab] = useState('home')
   const [newsRead, setNewsRead] = useState(false)
   const [taskInitialView, setTaskInitialView] = useState('list')
   const [chatInitialView, setChatInitialView] = useState('list')
   const [contactedAdmin, setContactedAdmin] = useState(() => localStorage.getItem('rc-contacted-admin') === 'true')
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false)
   const [showTrackList, setShowTrackList] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTrackIdx, setCurrentTrackIdx] = useState(0)
-  const [isShowingProfile, setIsShowingProfile] = useState(true)
   const [showCalendar, setShowCalendar] = useState(false)
   const [showDailyModal, setShowDailyModal] = useState(false)
-  const videoRef = useRef(null)
   const audioRef = useRef(null)
 
-  const user = useUserStore((state) => state.user)
   const profilePhotoURL = useUserStore((s) => s.profilePhotoURL)
   const authUser = useAuthStore((s) => s.user)
   const coins = useUserStore((state) => state.coins)
-  const streak = useUserStore((state) => state.streak)
-  const { mbti } = useSelectStore()
-  const { tasks } = useTaskStore()
-  const isPlannerActive = useSkillStore((state) => state.isPlannerActive)
   const totalStacks = useUserStore((s) => s.totalStacks)
-  const lastLoginDate = useUserStore((s) => s.lastLoginDate)
 
   // Show daily check-in modal on first mount if not yet checked in today
   // useEffect(() => {
@@ -93,16 +52,6 @@ function HomePage() {
   //   if (lastLoginDate !== today) setShowDailyModal(true)
   // // eslint-disable-next-line react-hooks/exhaustive-deps
   // }, [])
-
-  // Resolve MBTI background assets and reset video state on mbti change
-  const mbtiAssets = getMbtiAssets(mbti)
-  useEffect(() => {
-    setIsVideoLoaded(false)
-    // If the video element already exists, reset its src to force reload
-    if (videoRef.current) {
-      videoRef.current.load()
-    }
-  }, [mbti])
 
   // Keep currentTrackIdx in sync as audio plays through the file
   useEffect(() => {
@@ -120,19 +69,6 @@ function HomePage() {
     audio.addEventListener('timeupdate', onTimeUpdate)
     return () => audio.removeEventListener('timeupdate', onTimeUpdate)
   }, [])
-
-  // Alternate profile / music view every 5 seconds — kept for backward compat
-  // (no longer drives header UI, state retained to avoid removing setIsShowingProfile refs)
-  useEffect(() => {
-    const id = setInterval(() => setIsShowingProfile((v) => !v), 7000)
-    return () => clearInterval(id)
-  }, [])
-
-  // Find MBTI character image
-  const mbtiChar = mbtiCharacters.find((c) => c.code === mbti)
-
-  // First pending task for the bubble
-  const firstPending = tasks.find((t) => !t.completed)
 
   function handleTabChange(tab) {
     if (tab === APP_VIEWS.MUSIC) {
@@ -232,34 +168,18 @@ function HomePage() {
         }}
       />
 
-      {/* ── MBTI BACKGROUND ── */}
-      {/* Layer 1: static image (shown immediately as placeholder) */}
-      <img
-        key={`bg-img-${mbti}`}
-        src={mbtiAssets.image || fallbackBg}
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none select-none"
-      />
-      {/* Layer 2: video (fades in once ready, sits on top of image) */}
-      {mbtiAssets.video && (
-        <video
-          ref={videoRef}
-          key={`bg-vid-${mbti}`}
-          src={mbtiAssets.video}
-          autoPlay
-          muted
-          loop
-          playsInline
-          onCanPlayThrough={() => setIsVideoLoaded(true)}
-          className={`absolute inset-0 w-full h-full object-cover z-0 pointer-events-none select-none transition-opacity duration-1000 ${
-            isVideoLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
-        />
-      )}
+      {/* ── GAME BACKGROUND ── */}
+      <div className="absolute inset-0 z-0">
+        <GameCanvas active={activeTab === APP_VIEWS.HOME && !showCalendar} />
+      </div>
+
+      {/* Gradient scrim — top: keeps header pills readable over pixel art */}
+      <div className="absolute top-0 inset-x-0 h-24 bg-linear-to-b from-black/30 to-transparent z-10 pointer-events-none" />
+      {/* Gradient scrim — bottom: keeps bottom nav readable */}
+      <div className="absolute bottom-0 inset-x-0 h-24 bg-linear-to-t from-black/30 to-transparent z-10 pointer-events-none" />
 
       {/* ── TOP HEADER ── */}
-      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-3 pb-2 gap-2">
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-3 pb-2 gap-2 pointer-events-none">
 
         {/* Left side: Avatar pill + Music pill */}
         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -267,7 +187,7 @@ function HomePage() {
           {/* Avatar button */}
           <button
             onClick={() => handleTabChange(APP_VIEWS.PROFILE)}
-            className="w-10 h-10 rounded-full bg-white/90 shadow flex items-center justify-center shrink-0 border border-white/60 active:scale-95 transition-transform"
+            className="pointer-events-auto w-10 h-10 rounded-full bg-white/90 shadow flex items-center justify-center shrink-0 border border-white/60 active:scale-95 transition-transform"
           >
             {(profilePhotoURL || authUser?.photoURL)
               ? <img src={profilePhotoURL || authUser.photoURL} alt="avatar" className="w-full h-full object-cover rounded-full" />
@@ -278,7 +198,7 @@ function HomePage() {
           {/* Music status pill */}
           <button
             onClick={() => handleTabChange(APP_VIEWS.MUSIC)}
-            className="flex items-center gap-1.5 h-10 bg-white/90 rounded-full shadow px-3 overflow-hidden min-w-0 flex-1 active:scale-95 transition-transform"
+            className="pointer-events-auto flex items-center gap-1.5 h-10 bg-white/90 rounded-full shadow px-3 overflow-hidden min-w-0 flex-1 active:scale-95 transition-transform"
           >
             <span className="text-sm shrink-0">{isPlaying ? '🎵' : '🎶'}</span>
             <span className="overflow-hidden flex-1">
@@ -294,7 +214,7 @@ function HomePage() {
         </div>
 
         {/* Streak + Coins */}
-        <div className="flex items-center gap-3 bg-white/90 rounded-full px-4 py-1.5 shadow">
+        <div className="pointer-events-auto flex items-center gap-3 bg-white/90 rounded-full px-4 py-1.5 shadow">
           <span className="pixel-font text-[11px] text-orange-500">🔥 {totalStacks}</span>
           <span className="pixel-font text-[11px] text-yellow-700">
             {coins}
