@@ -41,28 +41,28 @@ function RegisterPage() {
     >
       <TopBar icon="♫" />
 
-      <div className="mt-4 px-6 text-center">
-        <h1 className="title-gradient pixel-font text-2xl leading-snug">Roller Coaster</h1>
-        <p className="title-gradient pixel-font mt-2 text-xs leading-tight">The best solution</p>
-        <p className="title-gradient pixel-font text-xs leading-tight">For self-discovery.</p>
+      <div className="mx-auto max-w-2xl mt-4 px-6 text-center">
+        <h1 className="title-gradient pixel-font text-2xl md:text-3xl leading-snug">Roller Coaster</h1>
+        <p className="title-gradient pixel-font mt-2 text-xs md:text-sm leading-tight">The best solution</p>
+        <p className="title-gradient pixel-font text-xs md:text-sm leading-tight">For self-discovery.</p>
       </div>
 
-      <div className="mt-5 px-6 text-center">
+      <div className="mx-auto max-w-2xl mt-5 px-6 text-center">
         <div className="mx-auto mb-4 h-px w-full bg-black/80" />
         <p
-          className="title-soft-gradient pixel-font text-xl py-4 transition-opacity duration-500"
+          className="title-soft-gradient pixel-font text-xl md:text-2xl py-4 transition-opacity duration-500"
           style={{ opacity: visible ? 1 : 0 }}
         >
           {LOOP_WORDS[wordIndex]}
         </p>
       </div>
 
-      <div className="mt-8 px-6 flex flex-col items-center w-full">
-        <h2 className="text-center text-xl font-bold text-gray-900">ลงทะเบียนเพื่อเริ่มใช้งาน</h2>
+      <div className="mx-auto max-w-2xl mt-8 px-6 flex flex-col items-center w-full">
+        <h2 className="text-center text-xl md:text-2xl font-bold text-gray-900">ลงทะเบียนเพื่อเริ่มใช้งาน</h2>
 
         <button
           onClick={() => handleStart('google')}
-          className="pixel-font mt-5 flex h-14 w-full items-center justify-center gap-3 rounded-3xl bg-white px-5 text-sm text-gray-900 shadow-sm"
+          className="pixel-font mt-5 flex h-14 w-full md:max-w-sm items-center justify-center gap-3 rounded-3xl bg-white px-5 text-sm text-gray-900 shadow-sm"
         >
           {/* Google logo SVG */}
           <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
@@ -77,7 +77,7 @@ function RegisterPage() {
 
         <button
           onClick={() => handleStart('microsoft')}
-          className="pixel-font mt-3 flex h-14 w-full items-center justify-center gap-3 rounded-3xl bg-white px-5 text-sm text-gray-900 shadow-sm"
+          className="pixel-font mt-3 flex h-14 w-full md:max-w-sm items-center justify-center gap-3 rounded-3xl bg-white px-5 text-sm text-gray-900 shadow-sm"
         >
           {/* Microsoft logo SVG */}
           <svg width="20" height="20" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg" className="shrink-0">

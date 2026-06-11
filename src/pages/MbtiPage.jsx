@@ -27,16 +27,16 @@ function MbtiPage() {
     >
       <TopBar icon="◎" />
 
-      <div className="px-6 pb-5">
-        <h1 className="title-gradient pixel-font text-xl leading-tight">Select your MBTI</h1>
-        <p className="pixel-font mt-2 text-base font-bold text-black">{current.code} - {current.name}</p>
+      <div className="mx-auto max-w-md md:max-w-lg px-6 pb-5">
+        <h1 className="title-gradient pixel-font text-xl md:text-2xl leading-tight">Select your MBTI</h1>
+        <p className="pixel-font mt-2 text-base md:text-lg font-bold text-black">{current.code} - {current.name}</p>
 
         <p className="pixel-font mt-1 text-[10px] text-[#5D3FD3] text-center">
           {mbtiDescriptions[current.code]}
         </p>
 
         <div className="mt-7 flex justify-center">
-          <img src={current.image} alt={current.code} className="h-52 w-auto object-contain" />
+          <img src={current.image} alt={current.code} className="h-52 md:h-64 lg:h-72 w-auto object-contain" />
         </div>
 
         <p className="pixel-font mt-2 text-[10px] leading-relaxed text-black/70">

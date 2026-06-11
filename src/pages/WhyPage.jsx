@@ -18,8 +18,8 @@ function WhyPage() {
       <TopBar />
 
       {/* Hero — floating questions around title */}
-      <div className="px-5 pt-1 text-center">
-        <h1 className="title-soft-gradient pixel-font text-3xl leading-snug">We Start With Why?</h1>
+      <div className="mx-auto max-w-3xl px-5 pt-1 text-center">
+        <h1 className="title-soft-gradient pixel-font text-3xl md:text-4xl leading-snug">We Start With Why?</h1>
         <div className="mt-3 space-y-0.5 text-black/80">
           <p className="text-left text-[9px] font-bold">ทำไมเด็กไทยดรอปเรียนในระดับอุดมศึกษา?</p>
           <p className="text-right text-[9px] font-bold">ทำไมถึงไม่สนใจเรียน?</p>
@@ -30,7 +30,7 @@ function WhyPage() {
       </div>
 
       {/* Main content */}
-      <div className="px-5 pb-28 pt-5 text-center text-black">
+      <div className="mx-auto max-w-3xl px-5 pb-28 pt-5 text-center text-black">
         <p className="text-lg font-bold leading-tight">
           เด็กไทยขาด <span className="font-black">เป้าหมาย</span>
         </p>
@@ -39,21 +39,21 @@ function WhyPage() {
         <p className="mt-6 text-sm font-bold">เกิดความเสียหายโดยรวมต่อปี</p>
 
         {/* Stats row */}
-        <div className="mt-2 grid grid-cols-3 gap-1 text-center">
+        <div className="mt-2 grid grid-cols-3 gap-1 md:gap-4 text-center">
           <div>
-            <p className="title-soft-gradient pixel-font text-2xl">12B</p>
-            <p className="text-[9px] font-bold">บาทต่อปี</p>
-            <p className="text-[8px] leading-tight text-black/65">มูลค่าความเสียหายต่อปี</p>
+            <p className="title-soft-gradient pixel-font text-2xl md:text-3xl">12B</p>
+            <p className="text-[9px] md:text-[11px] font-bold">บาทต่อปี</p>
+            <p className="text-[8px] md:text-[10px] leading-tight text-black/65">มูลค่าความเสียหายต่อปี</p>
           </div>
           <div>
-            <p className="title-soft-gradient pixel-font text-2xl">100k+</p>
-            <p className="text-[9px] font-bold">คนต่อปี</p>
-            <p className="text-[8px] leading-tight text-black/65">จำนวนเด็กซิ่วโดยประมาณ</p>
+            <p className="title-soft-gradient pixel-font text-2xl md:text-3xl">100k+</p>
+            <p className="text-[9px] md:text-[11px] font-bold">คนต่อปี</p>
+            <p className="text-[8px] md:text-[10px] leading-tight text-black/65">จำนวนเด็กซิ่วโดยประมาณ</p>
           </div>
           <div>
-            <p className="title-soft-gradient pixel-font text-2xl">120k</p>
-            <p className="text-[9px] font-bold">บาทต่อปี</p>
-            <p className="text-[8px] leading-tight text-black/65">ค่าใช้จ่ายการครองชีพ</p>
+            <p className="title-soft-gradient pixel-font text-2xl md:text-3xl">120k</p>
+            <p className="text-[9px] md:text-[11px] font-bold">บาทต่อปี</p>
+            <p className="text-[8px] md:text-[10px] leading-tight text-black/65">ค่าใช้จ่ายการครองชีพ</p>
           </div>
         </div>
 

@@ -95,20 +95,20 @@ export default function AuthPage() {
 
       {/* Logo block */}
       <div className="relative z-10 flex flex-col items-center mb-7">
-        <span className="text-6xl mb-4" style={{ filter: 'drop-shadow(0 0 12px rgba(167,139,218,0.6))' }}>
+        <span className="text-6xl md:text-7xl mb-4" style={{ filter: 'drop-shadow(0 0 12px rgba(167,139,218,0.6))' }}>
           🎢
         </span>
-        <h1 className="pixel-font text-[13px] text-center title-gradient leading-relaxed tracking-wide">
+        <h1 className="pixel-font text-[13px] md:text-[16px] text-center title-gradient leading-relaxed tracking-wide">
           RollerCoaster
         </h1>
-        <p className="mt-2 text-[11px] text-purple-300/70" style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
+        <p className="mt-2 text-[11px] md:text-[13px] text-purple-300/70" style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
           เส้นทางสู่ความสำเร็จของคุณ
         </p>
       </div>
 
       {/* Auth card */}
       <div
-        className="relative z-10 w-full rounded-3xl p-5 border shadow-2xl"
+        className="relative z-10 w-full max-w-md md:max-w-lg rounded-3xl p-5 md:p-6 border shadow-2xl"
         style={{
           background: 'rgba(255,255,255,0.07)',
           backdropFilter: 'blur(16px)',
