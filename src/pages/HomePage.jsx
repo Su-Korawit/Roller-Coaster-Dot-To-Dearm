@@ -187,7 +187,7 @@ function HomePage() {
           {/* Avatar button */}
           <button
             onClick={() => handleTabChange(APP_VIEWS.PROFILE)}
-            className="pointer-events-auto w-10 h-10 rounded-full bg-white/90 shadow flex items-center justify-center shrink-0 border border-white/60 active:scale-95 transition-transform"
+            className="pointer-events-auto w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/90 shadow flex items-center justify-center shrink-0 border border-white/60 active:scale-95 transition-transform"
           >
             {(profilePhotoURL || authUser?.photoURL)
               ? <img src={profilePhotoURL || authUser.photoURL} alt="avatar" className="w-full h-full object-cover rounded-full" />
@@ -227,7 +227,7 @@ function HomePage() {
       <div className="absolute top-20 left-4 z-20">
         <button
           onClick={handlePlannerTransition}
-          className="w-12 h-12 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-gray-100 active:scale-95 transition-transform"
+          className="w-12 h-12 md:w-14 md:h-14 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-gray-100 active:scale-95 transition-transform"
           title="Calendar"
         >
           <Calendar size={22} strokeWidth={1.5} className="text-purple-500" />
@@ -290,7 +290,7 @@ function HomePage() {
 
       {/* ── TRACKLIST PANEL ── */}
       {showTrackList && (
-        <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-30 w-[90%] max-w-sm bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl flex flex-col overflow-hidden max-h-[55vh]">
+        <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-30 w-[90%] max-w-sm md:max-w-md bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl flex flex-col overflow-hidden max-h-[55vh]">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between shrink-0">
             <div className="min-w-0 flex-1">

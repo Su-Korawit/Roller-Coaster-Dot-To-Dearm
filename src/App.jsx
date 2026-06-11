@@ -38,15 +38,13 @@ function RootRedirect() {
 
 function MobileLayout() {
   return (
-    // Outer: centers the phone frame on desktop, fills full screen on mobile
-    <div className="min-h-dvh bg-gray-300 flex justify-center">
-      {/* Phone frame — the actual mobile container */}
-      <div className="w-full max-w-md min-h-dvh bg-[#F4F7FC] relative overflow-x-hidden flex flex-col shadow-2xl">
-        {/* flex-1 so h-full pages get a definite height; overflow-hidden clips panels */}
-        <main className="flex-1 relative overflow-hidden">
-          <Outlet />
-        </main>
-      </div>
+    // Full-viewport flex column — fills the screen on every device (phone → desktop).
+    // Pages own their own max-width/centering; the game can now go truly fullscreen.
+    <div className="min-h-dvh w-full bg-[#F4F7FC] relative overflow-x-hidden flex flex-col">
+      {/* flex-1 so h-full pages get a definite height; overflow-hidden clips panels */}
+      <main className="flex-1 relative overflow-hidden">
+        <Outlet />
+      </main>
     </div>
   )
 }

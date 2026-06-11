@@ -50,15 +50,18 @@ export default function BottomNavBar({ active, onChange }) {
   ]
 
   return (
-    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[92%] z-10">
-      <div className="bg-white rounded-[28px] shadow-lg px-2 py-2 flex items-center justify-around">
+    <div
+      className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-md z-10"
+      style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
+    >
+      <div className="bg-white rounded-[28px] shadow-lg px-2 py-2 md:px-3 md:py-2.5 flex items-center justify-around">
         {tabs.map((tab) => {
           const isActive = active === tab.id
           return (
             <button
               key={tab.id}
               onClick={() => onChange(tab.id)}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl transition-all
+              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 md:px-4 md:py-2 rounded-2xl transition-all
                 ${isActive
                   ? 'text-[#a78bda]'
                   : 'text-gray-400 hover:text-gray-600'
@@ -66,7 +69,7 @@ export default function BottomNavBar({ active, onChange }) {
             >
               {tab.icon}
               <span
-                className={`pixel-font text-[7px] leading-tight ${isActive ? 'text-[#a78bda]' : 'text-gray-400'}`}
+                className={`pixel-font text-[7px] md:text-[9px] leading-tight ${isActive ? 'text-[#a78bda]' : 'text-gray-400'}`}
               >
                 {tab.label}
               </span>
