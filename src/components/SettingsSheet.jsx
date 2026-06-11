@@ -148,7 +148,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
       <div
-        className="relative bg-white rounded-t-[32px] shadow-2xl flex flex-col transition-transform duration-300 ease-out"
+        className="relative bg-white rounded-t-[32px] shadow-2xl flex flex-col transition-transform duration-300 ease-out md:max-w-lg md:mx-auto md:w-full"
         style={{
           maxHeight: '92%',
           transform: visible ? 'translateY(0)' : 'translateY(100%)',

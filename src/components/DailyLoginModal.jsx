@@ -57,7 +57,7 @@ export default function DailyLoginModal({ onClose }) {
       />
 
       {/* Sheet */}
-      <div className="relative w-full bg-white rounded-t-3xl shadow-2xl px-5 pt-5 pb-8 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full bg-white rounded-t-3xl shadow-2xl px-5 pt-5 pb-8 flex flex-col gap-4 max-h-[90vh] overflow-y-auto md:max-w-lg md:mx-auto">
         {/* Drag handle */}
         <div className="flex justify-center -mt-1 mb-1">
           <div className="w-10 h-1 bg-gray-200 rounded-full" />

@@ -503,7 +503,7 @@ function SkillInfoSheet({ skill, onClose }) {
       />
 
       {/* Sheet */}
-      <div className="absolute bottom-0 left-0 right-0 z-50 rounded-t-4xl bg-[#fce4ef] px-6 pt-6 pb-8 shadow-2xl">
+      <div className="absolute bottom-0 left-0 right-0 z-50 rounded-t-4xl bg-[#fce4ef] px-6 pt-6 pb-8 shadow-2xl md:max-w-lg md:mx-auto">
         {/* Drag handle */}
         <div className="flex justify-center mb-4">
           <div className="w-10 h-1 bg-pink-200 rounded-full" />

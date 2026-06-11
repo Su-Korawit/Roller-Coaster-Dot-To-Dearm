@@ -374,19 +374,21 @@ function DiscoverTab({ nearbyUsers, following, sentRequests, sendFollowRequest, 
             </p>
           </div>
         ) : (
-          filtered.map((u) => (
-            <UserCard
-              key={u.uid}
-              user={u}
-              following={following}
-              sentRequests={sentRequests}
-              onFollow={sendFollowRequest}
-              onTap={onUserTap}
-              score={u._score}
-              onMatchCheck={onMatchCheck}
-              checkedMatches={checkedMatches}
-            />
-          ))
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {filtered.map((u) => (
+              <UserCard
+                key={u.uid}
+                user={u}
+                following={following}
+                sentRequests={sentRequests}
+                onFollow={sendFollowRequest}
+                onTap={onUserTap}
+                score={u._score}
+                onMatchCheck={onMatchCheck}
+                checkedMatches={checkedMatches}
+              />
+            ))}
+          </div>
         )}
       </div>
     </div>
@@ -482,14 +484,16 @@ function RequestsTab({ pendingRequests, acceptFollowRequest, rejectFollowRequest
           <p className="pixel-font text-[8px] text-gray-400">ไม่มีคำขอติดตาม</p>
         </div>
       )}
-      {requestUsers.map((u) => (
-        <RequestCard
-          key={u.uid}
-          user={u}
-          onAccept={acceptFollowRequest}
-          onDecline={rejectFollowRequest}
-        />
-      ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        {requestUsers.map((u) => (
+          <RequestCard
+            key={u.uid}
+            user={u}
+            onAccept={acceptFollowRequest}
+            onDecline={rejectFollowRequest}
+          />
+        ))}
+      </div>
     </div>
   )
 }
@@ -528,6 +532,7 @@ function MatchedTab({ onUserTap, onOpenChat, following }) {
           </p>
         </div>
       )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
       {matches.map((m) => {
         const isMutual = following.includes(m.uid)
         const isOld = !m.checkedAt || (Date.now() - new Date(m.checkedAt).getTime()) > sevenDaysMs
@@ -578,6 +583,7 @@ function MatchedTab({ onUserTap, onOpenChat, following }) {
           </div>
         )
       })}
+      </div>
     </div>
   )
 }

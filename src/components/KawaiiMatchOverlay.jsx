@@ -274,7 +274,7 @@ function FullMatchOverlay({ score, targetUser, myUser, onClose, onOpenChat, onVi
 
       {/* Main content — stopPropagation prevents backdrop close */}
       <div
-        className="relative z-[9999] flex flex-col items-center gap-5 px-6 w-full max-w-sm"
+        className="relative z-[9999] flex flex-col items-center gap-5 px-6 w-full max-w-sm md:max-w-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Avatars row */}

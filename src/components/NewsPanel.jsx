@@ -70,7 +70,7 @@ function ShareSheet({ item, onClose }) {
   return (
     <div className="absolute inset-0 z-70 flex items-end" onClick={onClose}>
       <div
-        className="w-full bg-white rounded-t-3xl shadow-2xl"
+        className="w-full bg-white rounded-t-3xl shadow-2xl md:max-w-lg md:mx-auto"
         style={{ paddingBottom: '80px' }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -165,7 +165,7 @@ function AddUpdateSheet({ onClose }) {
   return (
     <div className="absolute inset-0 z-70 flex items-end" onClick={onClose}>
       <div
-        className="w-full bg-white rounded-t-3xl shadow-2xl"
+        className="w-full bg-white rounded-t-3xl shadow-2xl md:max-w-lg md:mx-auto"
         style={{ paddingBottom: '80px' }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -231,7 +231,7 @@ function UpdateDetailSheet({ update, onClose }) {
   return (
     <div className="absolute inset-0 z-70 flex items-end" onClick={onClose}>
       <div
-        className="w-full bg-white rounded-t-3xl shadow-2xl overflow-y-auto"
+        className="w-full bg-white rounded-t-3xl shadow-2xl overflow-y-auto md:max-w-lg md:mx-auto"
         style={{ maxHeight: '80vh', paddingBottom: '80px' }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -394,7 +394,8 @@ export default function NewsPanel({ onClose }) {
             <p className="text-sm text-gray-500">ไม่พบข้อมูลค่าย</p>
           </div>
         ) : (
-          camps.map((camp, idx) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {camps.map((camp, idx) => (
             <div
               key={idx}
               className="rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-white"
@@ -437,7 +438,8 @@ export default function NewsPanel({ onClose }) {
                 </button>
               </div>
             </div>
-          ))
+          ))}
+          </div>
         )}
       </div>
       )}
@@ -462,7 +464,8 @@ export default function NewsPanel({ onClose }) {
             <p className="text-sm text-gray-500">ยังไม่มีอัปเดต</p>
           </div>
         ) : (
-          allUpdates.map((u) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {allUpdates.map((u) => {
             const badge = UPDATE_TYPES[u.type] ?? UPDATE_TYPES.update
             return (
               <div
@@ -517,7 +520,8 @@ export default function NewsPanel({ onClose }) {
                 </div>
               </div>
             )
-          })
+          })}
+          </div>
         )}
       </div>
       )}

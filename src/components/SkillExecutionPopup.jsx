@@ -152,7 +152,7 @@ export default function SkillExecutionPopup({ task, onClose }) {
       <div className="absolute inset-0 bg-black/70" onClick={handleCancel} />
 
       {/* Sheet */}
-      <div className="relative mt-auto bg-white rounded-t-3xl shadow-2xl overflow-hidden">
+      <div className="relative mt-auto bg-white rounded-t-3xl shadow-2xl overflow-hidden md:max-w-lg md:mx-auto md:w-full">
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1">
           <div className="w-10 h-1 bg-gray-200 rounded-full" />

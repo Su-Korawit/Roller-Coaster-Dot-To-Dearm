@@ -102,7 +102,7 @@ function TaskShareSheet({ task, onClose }) {
   return (
     <div className="absolute inset-0 z-60 flex flex-col justify-end" onClick={onClose}>
       <div
-        className="relative bg-white rounded-t-3xl shadow-2xl"
+        className="relative bg-white rounded-t-3xl shadow-2xl md:max-w-lg md:mx-auto"
         style={{ paddingBottom: '80px' }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -165,7 +165,7 @@ function ReflectionSheet({ task, onSubmit, onClose, isEvaluating }) {
   return (
     <div className="absolute inset-0 z-60 flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/50" onClick={!isEvaluating ? onClose : undefined} />
-      <div className="relative bg-white rounded-t-4xl px-6 pt-4 pb-10 shadow-2xl max-h-[75vh] flex flex-col">
+      <div className="relative bg-white rounded-t-4xl px-6 pt-4 pb-10 shadow-2xl max-h-[75vh] flex flex-col md:max-w-lg md:mx-auto md:w-full">
         <div className="flex justify-center mb-3 shrink-0">
           <div className="w-10 h-1 bg-gray-200 rounded-full" />
         </div>

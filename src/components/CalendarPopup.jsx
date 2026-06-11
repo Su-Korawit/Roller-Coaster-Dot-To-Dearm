@@ -68,7 +68,7 @@ export default function CalendarPopup({ onClose }) {
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
       {/* Bottom sheet */}
-      <div className="relative mt-auto bg-white rounded-t-3xl shadow-2xl flex flex-col overflow-hidden"
+      <div className="relative mt-auto bg-white rounded-t-3xl shadow-2xl flex flex-col overflow-hidden md:max-w-lg md:mx-auto md:w-full"
         style={{ maxHeight: '92vh' }}
       >
         {/* Drag handle */}
