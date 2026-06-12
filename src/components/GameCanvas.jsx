@@ -633,44 +633,48 @@ export default function GameCanvas({ active = true }) {
   const hideTimerRef = useRef(null)
 
   useEffect(() => {
-    const config = {
-      type: Phaser.AUTO,
-      parent: containerRef.current,
-      pixelArt: true,
-      antialias: false,
-      physics: {
-        default: 'arcade',
-        arcade: { gravity: { y: 0 }, debug: false },
-      },
-      scene: [GameScene, IndoorScene],
-      scale: {
-        mode: Phaser.Scale.RESIZE,
-        width: window.innerWidth,
-        height: window.innerHeight,
-      },
-    }
+    let game = null
 
-    const game = new Phaser.Game(config)
-    gameRef.current = game
-    game.events.on('zoomChanged', (v) => {
-      setZoom(+v.toFixed(1))
-      setShowZoom(true)
-      clearTimeout(hideTimerRef.current)
-      hideTimerRef.current = setTimeout(() => setShowZoom(false), 1500)
-    })
+    const ro = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect
+      if (width === 0 || height === 0) return
 
-    const ro = new ResizeObserver(() => {
-      const el = containerRef.current
-      if (el && el.clientWidth > 0 && el.clientHeight > 0) {
-        game.scale.resize(el.clientWidth, el.clientHeight)
+      if (!game) {
+        const config = {
+          type: Phaser.AUTO,
+          parent: containerRef.current,
+          pixelArt: true,
+          antialias: false,
+          physics: {
+            default: 'arcade',
+            arcade: { gravity: { y: 0 }, debug: false },
+          },
+          scene: [GameScene, IndoorScene],
+          scale: {
+            mode: Phaser.Scale.RESIZE,
+            width,
+            height,
+          },
+        }
+        game = new Phaser.Game(config)
+        gameRef.current = game
+        game.events.on('zoomChanged', (v) => {
+          setZoom(+v.toFixed(1))
+          setShowZoom(true)
+          clearTimeout(hideTimerRef.current)
+          hideTimerRef.current = setTimeout(() => setShowZoom(false), 1500)
+        })
+      } else {
+        game.scale.resize(width, height)
       }
     })
+
     ro.observe(containerRef.current)
 
     return () => {
       ro.disconnect()
       clearTimeout(hideTimerRef.current)
-      game.destroy(true)
+      if (game) game.destroy(true)
     }
   }, [])
 
