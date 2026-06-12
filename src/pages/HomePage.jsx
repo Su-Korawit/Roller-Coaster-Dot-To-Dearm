@@ -198,7 +198,7 @@ function HomePage() {
           {/* Music status pill */}
           <button
             onClick={() => handleTabChange(APP_VIEWS.MUSIC)}
-            className="pointer-events-auto flex items-center gap-1.5 h-10 bg-white/90 rounded-full shadow px-3 overflow-hidden min-w-0 flex-1 active:scale-95 transition-transform"
+            className="pointer-events-auto flex items-center gap-1.5 h-10 bg-white/90 rounded-full shadow px-3 overflow-hidden min-w-0 flex-1 max-w-40 active:scale-95 transition-transform"
           >
             <span className="text-sm shrink-0">{isPlaying ? '🎵' : '🎶'}</span>
             <span className="overflow-hidden flex-1">
