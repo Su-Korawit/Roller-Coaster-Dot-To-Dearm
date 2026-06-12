@@ -645,6 +645,8 @@ export default function GameCanvas({ active = true }) {
       scene: [GameScene, IndoorScene],
       scale: {
         mode: Phaser.Scale.RESIZE,
+        width: window.innerWidth,
+        height: window.innerHeight,
       },
     }
 
@@ -657,7 +659,16 @@ export default function GameCanvas({ active = true }) {
       hideTimerRef.current = setTimeout(() => setShowZoom(false), 1500)
     })
 
+    const ro = new ResizeObserver(() => {
+      const el = containerRef.current
+      if (el && el.clientWidth > 0 && el.clientHeight > 0) {
+        game.scale.resize(el.clientWidth, el.clientHeight)
+      }
+    })
+    ro.observe(containerRef.current)
+
     return () => {
+      ro.disconnect()
       clearTimeout(hideTimerRef.current)
       game.destroy(true)
     }
@@ -702,7 +713,7 @@ export default function GameCanvas({ active = true }) {
           lineHeight: 1,
           userSelect: 'none',
         }}>
-          {zoom}Ã—
+          {zoom}×
         </span>
       </div>
     </>

@@ -51,7 +51,7 @@ export default function BottomNavBar({ active, onChange }) {
 
   return (
     <div
-      className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-md z-10"
+      className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-md z-30"
       style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="bg-white rounded-[28px] shadow-lg px-2 py-2 md:px-3 md:py-2.5 flex items-center justify-around">
