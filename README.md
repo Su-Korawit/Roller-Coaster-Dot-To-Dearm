@@ -57,7 +57,7 @@ Status key:
 ### Home Screen
 | Feature | Status | Notes |
 |---|---|---|
-| MBTI-specific animated background (image + video) | ✅ | Falls back to generic if no MBTI asset |
+| Phaser 3 pixel-art game (live interactive background) | ✅ | Fullscreen Phaser 3.88.0 game in RESIZE mode; tracks viewport on all devices via ResizeObserver |
 | Background music player (4 spliced tracks) | ✅ | Marquee track name, play/pause, track list |
 | Streak (🔥 totalStacks) + coin display | ✅ | |
 | Calendar FAB (left-side shortcut) | ✅ | Single button; always shows Planner / Calendar |
@@ -292,7 +292,13 @@ A layered composition — background renders first, then panels slide up from th
 
 ### Background
 
-MBTI-specific `.png` + `.mp4` pair loaded from `assets/.../home/Background/{MBTI}.{ext}`. The static image renders immediately; the video fades in once `canPlayThrough` fires. Falls back to a generic background if no MBTI-specific asset exists.
+A live Phaser 3.88.0 pixel-art game (`GameCanvas`) fills the entire viewport as the home screen background. Implemented in `src/components/GameCanvas.jsx`:
+
+- **Renderer:** `Phaser.AUTO` (WebGL → Canvas fallback), `pixelArt: true`
+- **Scaling:** `Phaser.Scale.RESIZE` mode — canvas tracks container size via `ResizeObserver`; `game.scale.resize(w, h)` called on every size change
+- **Init guard:** `new Phaser.Game()` is called from inside the ResizeObserver callback only when `width > 0 && height > 0`, preventing the WebGL framebuffer crash that occurs when Phaser boots with a 0×0 canvas
+- **Input isolation:** `game.input.enabled` and `game.input.keyboard.enabled` are toggled via the `active` prop so WASD/arrow keys don't fire while any panel is open
+- **Zoom HUD:** floating `×` indicator fades after 1.5 s of inactivity
 
 ### Top header
 
@@ -599,7 +605,7 @@ Skills are purchased with coins. `useSkillStore` is persisted in `rc-skill-store
 4. `openChat` never resets `fireStacks` or `lastMessage`; only `members` is in the merge payload.
 5. Onboarding sync is two-way: local → Firestore on every selection, Firestore → local on login only when local field is empty.
 6. Match scores are computed client-side and persisted to `users/{uid}/matches/{targetUid}` for the Matched tab history.
-7. The UI frame is capped at `max-w-md` (448px) so it acts as a phone shell on desktop while filling the screen on mobile.
+7. The app wrapper uses `h-dvh` (not `min-h-dvh`) so `flex-1 main` has a *definite* viewport height — required for `absolute inset-0` children (game, panels) to fill the screen on iPad and Desktop.
 
 ---
 
@@ -694,10 +700,20 @@ npm run preview
 
 ---
 
-## Recent Updates (Latest 17 Commits)
+## Recent Updates (Latest 23 Commits)
 
 | Date | Feature | Details |
 |---|---|---|
+| 2026-06-12 | **Fix: White Screen on iPad/Desktop** ✅ | `min-h-dvh` → `h-dvh` on app wrapper so `flex-1 main` has a definite height; all `absolute inset-0` children now render correctly |
+| 2026-06-12 | **Fix: Phaser WebGL Crash, Zoom HUD, Nav z-index** ✅ | ResizeObserver-first init prevents framebuffer error; zoom `×` encoding fixed; nav `z-30` |
+| 2026-06-12 | **Responsive — Panels & Bottom Sheets** ✅ | NewsPanel, SocialPanel, TaskPanel, CalendarPopup — `md:grid-cols-2` grids, `md:max-w-lg` sheets |
+| 2026-06-12 | **Responsive — Fullscreen Viewport** ✅ | Removed `max-w-md` phone frame; all pages fill viewport; breakpoint-aware padding |
+| 2026-06-12 | **Phaser 3 Game as Home Background** ✅ | Interactive pixel-art game replaces static MBTI background; `GameCanvas` with ResizeObserver scaling |
+| 2026-06-09 | **Task List UX Redesign** ✅ | Trash bin with undo-delete, 2-row layout, sticky footer |
+| 2026-06-08 | **Fix: MBTI Background Sync** ✅ | Firestore-wins cross-device strategy; prevents local data clobbering Cloud |
+| 2026-06-08 | **Tasks Sync to Firestore** ✅ | Cross-device task persistence via Firestore; auto-migration from localStorage |
+| 2026-06-07 | **Career Expanded to 946 entries** ✅ | O*NET integration, Thai search, image boxes removed |
+| 2026-06-05 | **TCAS API, Sticky UI & News** ✅ | Official university data from mytcas.com, bottom bar fix, update detail cards |
 | 2026-06-04 | **App Updates Feed** ✅ | RollerCoaster tab in NewsPanel — admin-managed announcements with badge types (ใหม่/อัปเดต/แก้บั๊ก) |
 | 2026-06-04 | **Portfolio & Journeys Sync** ✅ | Firestore integration for portfolio circles and journey blocks |
 | 2026-06-04 | **Portfolio Image Upload** ✅ | Mastery & Career circles now support image uploads |
