@@ -4,15 +4,7 @@ import { Flame, Lock, Loader2, MessageCircle, UserCheck, UserPlus } from 'lucide
 import { db } from '../firebase'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSocialStore, calculateMatchScore } from '../stores/useSocialStore'
-
-// ─── MBTI colours ────────────────────────────────────────────────────────────
-const MBTI_COLORS = {
-  INTJ: '#7c3aed', INTP: '#7c3aed', ENTJ: '#7c3aed', ENTP: '#7c3aed',
-  INFJ: '#059669', INFP: '#059669', ENFJ: '#059669', ENFP: '#059669',
-  ISTJ: '#2563eb', ISFJ: '#2563eb', ESTJ: '#2563eb', ESFJ: '#2563eb',
-  ISTP: '#d97706', ISFP: '#d97706', ESTP: '#d97706', ESFP: '#d97706',
-}
-function mbtiColor(mbti) { return MBTI_COLORS[mbti] ?? '#a78bda' }
+import { mbtiColor } from '../constants/mbtiColors'
 
 // ─── Match score bar — pixel-art segmented style ─────────────────────────────
 function MatchBar({ score }) {
@@ -266,7 +258,7 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
                       ? 'bg-gray-100 text-gray-500'
                       : isPending
                         ? 'bg-amber-50 text-amber-600 border border-amber-200'
-                        : 'bg-[#a78bda] text-white shadow-md'
+                        : 'bg-brand text-white shadow-md'
                   }`}
                 >
                   {followBusy
@@ -284,7 +276,7 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
                   disabled={!isMutual}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl pixel-font text-[8px] transition-all active:scale-95 ${
                     isMutual
-                      ? 'bg-white border-2 border-[#a78bda] text-[#a78bda] shadow-sm'
+                      ? 'bg-white border-2 border-brand text-brand shadow-sm'
                       : 'bg-gray-50 border border-gray-200 text-gray-300 cursor-not-allowed'
                   }`}
                 >
