@@ -21,8 +21,19 @@ function RequireAuth() {
         className="h-full flex flex-col items-center justify-center"
         style={{ background: 'linear-gradient(160deg, #0f0824 0%, #1a1035 50%, #0d1f3c 100%)' }}
       >
-        <span className="text-4xl mb-4">🎢</span>
-        <span className="pixel-font text-[8px] text-purple-300 animate-pulse">Loading...</span>
+        <span className="text-5xl mb-5" aria-hidden="true">🎢</span>
+        <span className="pixel-font text-[10px] text-purple-300 mb-4">Loading...</span>
+        <div
+          className="w-48 h-1.5 rounded-full overflow-hidden bg-white/10"
+          role="progressbar"
+          aria-label="กำลังโหลด"
+          aria-busy="true"
+        >
+          <div
+            className="h-full w-1/3 rounded-full animate-loading-slide"
+            style={{ background: 'linear-gradient(90deg, transparent, var(--color-brand), var(--color-accent-pink), transparent)' }}
+          />
+        </div>
       </div>
     )
   }

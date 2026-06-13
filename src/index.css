@@ -39,6 +39,22 @@
   animation: stackPop 0.35s ease-out;
 }
 
+@keyframes loadingSlide {
+  0%   { transform: translateX(-110%); }
+  100% { transform: translateX(310%); }
+}
+.animate-loading-slide {
+  animation: loadingSlide 1.15s ease-in-out infinite;
+}
+
+/* Respect reduced-motion: hold a centered segment instead of sliding */
+@media (prefers-reduced-motion: reduce) {
+  .animate-loading-slide {
+    animation: none;
+    transform: translateX(110%);
+  }
+}
+
 :root {
   font-synthesis: none;
   text-rendering: optimizeLegibility;
