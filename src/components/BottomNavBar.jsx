@@ -61,15 +61,19 @@ export default function BottomNavBar({ active, onChange }) {
             <button
               key={tab.id}
               onClick={() => onChange(tab.id)}
+              aria-label={tab.label}
+              aria-current={isActive ? 'page' : undefined}
               className={`flex flex-col items-center gap-0.5 px-3 py-1.5 md:px-4 md:py-2 rounded-2xl transition-all
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1
                 ${isActive
-                  ? 'text-[#a78bda]'
+                  ? 'text-brand'
                   : 'text-gray-400 hover:text-gray-600'
                 }`}
             >
               {tab.icon}
               <span
-                className={`pixel-font text-[7px] md:text-[9px] leading-tight ${isActive ? 'text-[#a78bda]' : 'text-gray-400'}`}
+                className={`pixel-font text-[9px] leading-tight ${isActive ? 'text-brand' : 'text-gray-400'}`}
+                aria-hidden="true"
               >
                 {tab.label}
               </span>
