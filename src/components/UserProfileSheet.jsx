@@ -16,8 +16,8 @@ function MatchBar({ score }) {
   }, [])
 
   const label = score >= 80 ? '⚡ High Match' : score >= 60 ? '✦ Match' : 'Match Score'
-  const labelColor = score >= 80 ? '#d97706' : score >= 60 ? '#a78bda' : '#9ca3af'
-  const segmentColor = score >= 80 ? '#f59e0b' : score >= 60 ? '#a78bda' : '#c084fc'
+  const labelColor = score >= 80 ? '#d97706' : score >= 60 ? 'var(--color-brand)' : '#9ca3af'
+  const segmentColor = score >= 80 ? '#f59e0b' : score >= 60 ? 'var(--color-brand)' : '#c084fc'
 
   return (
     <div className="w-full">

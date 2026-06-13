@@ -80,7 +80,7 @@ function ShareSheet({ item, onClose }) {
         </div>
 
         {/* Header */}
-        <p className="pixel-font text-[9px] text-center text-gray-700 mb-1 px-5">ส่งไปยัง...</p>
+        <p className="thai-font text-xs text-center text-gray-700 mb-1 px-5">ส่งไปยัง...</p>
         <p
           className="text-center text-gray-500 mb-4 px-6 truncate"
           style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 11 }}
@@ -126,7 +126,7 @@ function ShareSheet({ item, onClose }) {
                   </div>
                   {sending === chat.id
                     ? <Loader2 size={14} className="text-purple-400 animate-spin shrink-0" />
-                    : <span className="pixel-font text-[7px] text-[#a78bda] shrink-0">ส่ง</span>}
+                    : <span className="thai-font text-xs text-brand shrink-0">ส่ง</span>}
                 </button>
               )
             })}
@@ -174,7 +174,7 @@ function AddUpdateSheet({ onClose }) {
           <div className="w-10 h-1 bg-gray-300 rounded-full" />
         </div>
 
-        <p className="pixel-font text-[9px] text-center text-gray-700 mb-4 px-5">เพิ่มอัปเดต</p>
+        <p className="thai-font text-xs text-center text-gray-700 mb-4 px-5">เพิ่มอัปเดต</p>
 
         <div className="px-5 space-y-3" style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
           {/* Type badges */}
@@ -215,7 +215,7 @@ function AddUpdateSheet({ onClose }) {
           <button
             onClick={handleSubmit}
             disabled={!title.trim() || !description.trim() || saving}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#a78bda] text-white font-semibold text-sm active:scale-95 transition-transform disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-brand text-white font-semibold text-sm active:scale-95 transition-transform disabled:opacity-50"
           >
             {saving ? <Loader2 size={16} className="animate-spin" /> : 'เพิ่มอัปเดต'}
           </button>
@@ -335,11 +335,17 @@ export default function NewsPanel({ onClose }) {
           <img src={camphubLogo} alt="CAMPHUB" className="w-7 h-7 rounded-lg object-contain" />
           <h2 className="pixel-font text-[12px] text-gray-800">News</h2>
         </div>
-        <button onClick={onClose} className="text-gray-400 text-xl leading-none">✕</button>
+        <button
+          onClick={onClose}
+          aria-label="ปิด"
+          className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 active:scale-90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        >
+          <span aria-hidden="true" className="text-base leading-none">✕</span>
+        </button>
       </div>
 
       {/* Tab bar */}
-      <div className="flex border-b border-gray-100">
+      <div className="flex border-b border-gray-200">
         {[
           { key: 'camphub', label: 'Camphub' },
           { key: 'rollercoaster', label: 'RollerCoaster' },
@@ -347,13 +353,14 @@ export default function NewsPanel({ onClose }) {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 py-2.5 pixel-font text-[9px] transition-colors ${
+            className={`flex-1 py-2.5 pixel-font text-[10px] transition-colors relative ${
               activeTab === tab.key
-                ? 'text-[#a78bda] border-b-2 border-[#a78bda]'
+                ? 'text-brand-strong'
                 : 'text-gray-400'
             }`}
           >
             {tab.label}
+            {activeTab === tab.key && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-strong rounded-t-full" />}
           </button>
         ))}
       </div>
@@ -431,7 +438,7 @@ export default function NewsPanel({ onClose }) {
               <div className="px-4 pb-3 pt-1 border-t border-gray-50 flex justify-end">
                 <button
                   onClick={() => setSharingItem(camp)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 text-[#a78bda] border border-purple-100 active:scale-95 transition-transform"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 text-brand border border-purple-100 active:scale-95 transition-transform"
                 >
                   <MessageCircle size={13} strokeWidth={2} />
                   <span className="pixel-font text-[7px]">Share to chat</span>
@@ -451,7 +458,7 @@ export default function NewsPanel({ onClose }) {
         {isAdmin && (
           <button
             onClick={() => setShowAddForm(true)}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-purple-200 text-[#a78bda] active:scale-95 transition-transform"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-purple-200 text-brand active:scale-95 transition-transform"
           >
             <Plus size={16} strokeWidth={2.5} />
             <span className="pixel-font text-[8px]">เพิ่มอัปเดต</span>
@@ -512,7 +519,7 @@ export default function NewsPanel({ onClose }) {
                   )}
                   <button
                     onClick={() => setSharingItem({ title: u.title, link: '', poster_image: u.image })}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 text-[#a78bda] border border-purple-100 active:scale-95 transition-transform"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 text-brand border border-purple-100 active:scale-95 transition-transform"
                   >
                     <MessageCircle size={13} strokeWidth={2} />
                     <span className="pixel-font text-[7px]">Share to chat</span>

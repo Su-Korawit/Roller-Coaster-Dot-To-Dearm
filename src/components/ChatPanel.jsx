@@ -84,7 +84,7 @@ function GiftModal({ chatId, myUid, onClose }) {
                 disabled={!canAfford || !!busy}
                 className={`flex flex-col items-center gap-1.5 p-4 rounded-2xl border-2 transition-all active:scale-95 ${
                   canAfford
-                    ? 'border-[#a78bda]/30 bg-purple-50 hover:border-[#a78bda]'
+                    ? 'border-brand/30 bg-purple-50 hover:border-brand'
                     : 'border-gray-100 bg-gray-50 opacity-40'
                 }`}
               >
@@ -173,7 +173,7 @@ function CreditModal({ msg, friendUser, onDone, onClose }) {
         <div className="flex justify-center mb-4">
           <div className="w-10 h-1 bg-gray-300 rounded-full" />
         </div>
-        <p className="pixel-font text-[10px] text-gray-800 text-center mb-1">🏅 ให้ Credit เพื่อน</p>
+        <p className="thai-font text-sm text-gray-800 text-center mb-1 font-semibold">🏅 ให้ Credit เพื่อน</p>
         <p className="text-center text-gray-500 mb-4 text-[11px]" style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
           ให้ Credit แก่ <strong>{friendUser?.displayName ?? 'เพื่อน'}</strong> สำหรับ "{snap.title}"?
         </p>
@@ -182,7 +182,7 @@ function CreditModal({ msg, friendUser, onDone, onClose }) {
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="เขียนข้อความขอบคุณ (optional)..."
-          className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-[#a78bda] resize-none mb-3"
+          className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-brand resize-none mb-3"
           style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 13 }}
           disabled={busy}
         />
@@ -367,9 +367,9 @@ function ChatWindowView({ user, onBack, onAdminContacted }) {
               <div
                 className={`max-w-[76%] rounded-2xl shadow-sm overflow-hidden ${isCard ? '' : 'px-3.5 py-2.5'} ${
                   msg.type === 'shared_task'
-                    ? 'bg-gray-900 border border-[#a78bda]/40'
+                    ? 'bg-gray-900 border border-brand/40'
                     : isMe
-                      ? 'bg-[#a78bda] text-white rounded-br-sm'
+                      ? 'bg-brand text-white rounded-br-sm'
                       : 'bg-gray-100 text-gray-800 rounded-bl-sm'
                 }`}
                 style={msg.type === 'shared_task' ? { borderLeft: '3px solid #a78bda' } : {}}
@@ -399,7 +399,7 @@ function ChatWindowView({ user, onBack, onAdminContacted }) {
                       <button
                         onClick={() => window.open(msg.newsItem?.url, '_blank', 'noopener,noreferrer')}
                         className={`pixel-font text-[6px] px-2 py-1 rounded-lg active:scale-95 transition-transform ${
-                          isMe ? 'bg-white/20 text-white' : 'bg-white text-[#a78bda] border border-purple-100'
+                          isMe ? 'bg-white/20 text-white' : 'bg-white text-brand border border-purple-100'
                         }`}
                       >อ่านต่อ →</button>
                     </div>
@@ -417,10 +417,10 @@ function ChatWindowView({ user, onBack, onAdminContacted }) {
                   return (
                     <div className="flex flex-col w-52">
                       {/* Header row */}
-                      <div className="flex items-start gap-2 px-3 pt-3 pb-2 border-b border-[#a78bda]/20">
+                      <div className="flex items-start gap-2 px-3 pt-3 pb-2 border-b border-brand/20">
                         <span className="text-lg leading-none shrink-0">📋</span>
                         <div className="flex-1 min-w-0">
-                          <p className="pixel-font text-[6px] text-[#a78bda] mb-0.5">Task ของ {snap.ownerName}</p>
+                          <p className="thai-font text-[10px] text-brand mb-0.5">Task ของ {snap.ownerName}</p>
                           <p className="text-[12px] font-semibold text-white leading-snug"
                             style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
                             {snap.title}
@@ -433,7 +433,7 @@ function ChatWindowView({ user, onBack, onAdminContacted }) {
                           {isCompleted ? '✅ เสร็จแล้ว' : '⏳ กำลังทำอยู่'}
                         </span>
                         {snap.linkedJourneyKey && (
-                          <span className="pixel-font text-[6px] px-1.5 py-0.5 rounded bg-[#a78bda]/20 text-[#c4a4f0] self-start">
+                          <span className="pixel-font text-[6px] px-1.5 py-0.5 rounded bg-brand/20 text-[#c4a4f0] self-start">
                             {snap.linkedJourneyKey}
                           </span>
                         )}
@@ -491,13 +491,13 @@ function ChatWindowView({ user, onBack, onAdminContacted }) {
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="พิมพ์ข้อความ..."
-          className="flex-1 bg-gray-50 rounded-xl px-3 py-2 outline-none border border-gray-200 focus:border-[#a78bda] transition-colors"
+          className="flex-1 bg-gray-50 rounded-xl px-3 py-2 outline-none border border-gray-200 focus:border-brand transition-colors"
           style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 13 }}
         />
         <button
           onClick={handleSend}
           disabled={!text.trim() || sending}
-          className="w-9 h-9 rounded-xl bg-[#a78bda] flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50 shrink-0 shadow-sm"
+          className="w-9 h-9 rounded-xl bg-brand flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50 shrink-0 shadow-sm"
         >
           {sending
             ? <Loader2 size={14} className="text-white animate-spin" />
@@ -555,7 +555,7 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, a
             onClick={() => setChatTab(id)}
             className={`flex-1 py-2.5 pixel-font text-[7px] transition-colors border-b-2 ${
               chatTab === id
-                ? 'text-[#a78bda] border-[#a78bda]'
+                ? 'text-brand border-brand'
                 : 'text-gray-400 border-transparent'
             }`}
           >
@@ -576,7 +576,7 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, a
           {chats.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 gap-3 opacity-60">
               <span className="text-4xl">📩</span>
-              <p className="pixel-font text-[8px] text-gray-400 text-center">ยังไม่มีข้อความจากผู้ใช้</p>
+              <p className="thai-font text-xs text-gray-400 text-center">ยังไม่มีข้อความจากผู้ใช้</p>
             </div>
           )}
           {chats.map((chat) => {
@@ -778,7 +778,13 @@ export default function ChatPanel({ onClose, initialView = 'list', onAdminContac
           {/* Close button — only shown in list view; window has back arrow */}
           {view === 'list' && (
             <div className="flex justify-end px-4 pt-3 shrink-0">
-              <button onClick={onClose} className="text-gray-400 text-xl leading-none">x</button>
+              <button
+                onClick={onClose}
+                aria-label="ปิด"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 active:scale-90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              >
+                <span aria-hidden="true" className="text-base leading-none">✕</span>
+              </button>
             </div>
           )}
 

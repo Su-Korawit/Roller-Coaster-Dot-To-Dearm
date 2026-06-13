@@ -148,7 +148,7 @@ function TaskShareSheet({ task, onClose }) {
                   </div>
                   {sending === chat.id
                     ? <Loader2 size={14} className="text-purple-400 animate-spin shrink-0" />
-                    : <span className="pixel-font text-[7px] text-[#a78bda] shrink-0">ส่ง</span>}
+                    : <span className="thai-font text-xs text-brand shrink-0">ส่ง</span>}
                 </button>
               )
             })}
@@ -396,7 +396,13 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
                   Back
                 </button>
               )}
-              <button onClick={onClose} className="text-gray-400 text-xl leading-none">x</button>
+              <button
+                onClick={onClose}
+                aria-label="ปิด"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 active:scale-90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              >
+                <span aria-hidden="true" className="text-base leading-none">✕</span>
+              </button>
             </div>
           </div>
 

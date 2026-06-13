@@ -167,7 +167,7 @@ function NoMatchToast({ score, onClose }) {
         style={{ animation: 'rc-toast-in 2s ease-in-out forwards' }}
       >
         <p className="pixel-font text-[9px] text-gray-300">Match Score: {score}%</p>
-        <p className="pixel-font text-[8px] text-gray-400">ยังไม่ Match — ลองใหม่ในอีก 24 ชม.</p>
+        <p className="thai-font text-xs text-gray-400">ยังไม่ Match — ลองใหม่ในอีก 24 ชม.</p>
         {/* 3 sad gray stars drifting down */}
         {SAD_STARS.map((s, i) => (
           <span
@@ -398,7 +398,7 @@ function FullMatchOverlay({ score, targetUser, myUser, onClose, onOpenChat, onVi
             <div className="flex gap-2">
               <button
                 onClick={() => { onOpenChat?.(targetUser?.uid); onClose() }}
-                className="flex-1 bg-[#a78bda] text-white pixel-font text-[8px] py-2.5 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                className="flex-1 bg-brand text-white pixel-font text-[8px] py-2.5 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
               >
                 💬 ส่งข้อความ
               </button>

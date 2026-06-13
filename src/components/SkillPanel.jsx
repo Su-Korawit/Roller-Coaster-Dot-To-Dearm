@@ -98,7 +98,13 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
             <TabBtn active={tab === 'active'} onClick={() => setTab('active')}>
               Active Skill
             </TabBtn>
-            <button onClick={onClose} className="ml-auto pr-4 text-gray-400 text-lg">✕</button>
+            <button
+              onClick={onClose}
+              aria-label="ปิด"
+              className="ml-auto w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 active:scale-90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            >
+              <span aria-hidden="true" className="text-base leading-none">✕</span>
+            </button>
           </div>
 
           {/* DnD context wraps both tab bodies */}
@@ -152,10 +158,10 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                                       {/* Tap-to-clear button */}
                                       <button
                                         onClick={() => clearPassiveSlot(slotIdx)}
-                                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-gray-200 text-gray-500 text-[10px] leading-none flex items-center justify-center active:scale-95"
-                                        title="Remove skill"
+                                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-gray-200 text-gray-500 text-[10px] leading-none flex items-center justify-center active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                                        aria-label="ถอด skill ออก"
                                       >
-                                        ✕
+                                        <span aria-hidden="true">✕</span>
                                       </button>
                                     </>
                                   ) : (

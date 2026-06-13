@@ -255,7 +255,7 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
                       ? 'bg-white border-2 border-gray-200 text-gray-500'
                       : isPending
                         ? 'bg-amber-50 text-amber-600 border border-amber-200'
-                        : 'bg-[#a78bda] text-white shadow-md'
+                        : 'bg-brand text-white shadow-md'
                   }`}
                 >
                   {followBusy
@@ -274,7 +274,7 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
                 >
                   <button
                     onClick={handleChat}
-                    className="flex items-center justify-center gap-1.5 py-3 px-4 rounded-2xl bg-[#a78bda] text-white pixel-font text-[8px] shadow-md whitespace-nowrap"
+                    className="flex items-center justify-center gap-1.5 py-3 px-4 rounded-2xl bg-brand text-white pixel-font text-[8px] shadow-md whitespace-nowrap"
                   >
                     <MessageCircle size={12} />
                     Chat
@@ -340,11 +340,11 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
               {!canSeeItem('journey') ? (
                 <div className="bg-gray-50 rounded-2xl py-6 flex flex-col items-center gap-2 border border-gray-100">
                   <Lock size={20} className="text-gray-300" />
-                  <p className="pixel-font text-[8px] text-gray-400">🔒 Journey เป็น private</p>
+                  <p className="thai-font text-xs text-gray-400">🔒 Journey เป็น private</p>
                 </div>
               ) : journeys.length === 0 ? (
                 <div className="bg-gray-50 rounded-2xl py-5 flex items-center justify-center border border-gray-100">
-                  <p className="pixel-font text-[8px] text-gray-400">ยังไม่มีข้อมูล Journey</p>
+                  <p className="thai-font text-xs text-gray-400">ยังไม่มีข้อมูล Journey</p>
                 </div>
               ) : (
                 <div className="flex gap-3 overflow-x-auto pb-2">

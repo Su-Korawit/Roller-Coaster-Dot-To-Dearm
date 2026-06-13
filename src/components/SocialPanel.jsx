@@ -109,8 +109,8 @@ function SchoolPicker({ uid, onSaved }) {
     <div className="flex-1 flex flex-col items-center justify-center px-6 gap-4 py-8">
       <span className="text-5xl">🏫</span>
       <div className="text-center">
-        <p className="pixel-font text-[10px] text-gray-700 leading-relaxed">เลือกโรงเรียน / มหาวิทยาลัย</p>
-        <p className="pixel-font text-[7px] text-gray-400 mt-1.5 leading-relaxed">เพื่อดูผู้ใช้ในสถานที่เดียวกัน</p>
+        <p className="thai-font text-sm text-gray-700 leading-relaxed font-semibold">เลือกโรงเรียน / มหาวิทยาลัย</p>
+        <p className="thai-font text-xs text-gray-400 mt-1.5 leading-relaxed">เพื่อดูผู้ใช้ในสถานที่เดียวกัน</p>
       </div>
       {error && (
         <p className="pixel-font text-[7px] text-red-400 text-center leading-relaxed">{error}</p>
@@ -121,7 +121,7 @@ function SchoolPicker({ uid, onSaved }) {
           type="text"
           placeholder="พิมพ์ชื่อโรงเรียน / มหาวิทยาลัย..."
           disabled={!ready || saving}
-          className="w-full rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-3 text-[12px] outline-none focus:border-[#a78bda] transition-colors disabled:opacity-50"
+          className="w-full rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-3 text-[12px] outline-none focus:border-brand transition-colors disabled:opacity-50"
           style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
         />
         {(!ready || saving) && (
@@ -129,7 +129,7 @@ function SchoolPicker({ uid, onSaved }) {
         )}
       </div>
       {!ready && !error && (
-        <p className="pixel-font text-[7px] text-gray-400">กำลังโหลด Google Maps...</p>
+        <p className="thai-font text-xs text-gray-400">กำลังโหลด Google Maps...</p>
       )}
     </div>
   )
@@ -272,7 +272,7 @@ function UserCard({ user, following, sentRequests, onFollow, onTap, score = 0, o
           isMatched           ? 'bg-amber-400 text-white shadow-sm'
           : isChecking        ? 'bg-purple-100 text-purple-500 animate-pulse'
           : (isNoMatch && !canRetry) ? 'bg-gray-100 text-gray-400'
-          : 'border border-[#a78bda] text-[#a78bda]'
+          : 'border border-brand text-brand'
         }`}
       >
         {isMatched    ? '⚡ Matched!'
@@ -288,7 +288,7 @@ function UserCard({ user, following, sentRequests, onFollow, onTap, score = 0, o
         className={`shrink-0 flex items-center gap-1 px-2 py-1.5 rounded-xl pixel-font text-[7px] transition-all active:scale-95 disabled:opacity-60 ${
           isFollowing ? 'bg-gray-100 text-gray-500'
           : isPending ? 'bg-amber-50 text-amber-600 border border-amber-200'
-          : 'bg-[#a78bda] text-white shadow-sm'
+          : 'bg-brand text-white shadow-sm'
         }`}
       >
         {busy ? <Loader2 size={10} className="animate-spin" />
@@ -326,7 +326,7 @@ function DiscoverTab({ nearbyUsers, following, sentRequests, sendFollowRequest, 
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Search bar */}
       <div className="px-4 py-3 bg-white border-b border-gray-100 shrink-0">
-        <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 border border-gray-200 focus-within:border-[#a78bda] transition-colors">
+        <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 border border-gray-200 focus-within:border-brand transition-colors">
           <Search size={13} className="text-gray-400 shrink-0" />
           <input
             type="text"
@@ -420,7 +420,7 @@ function RequestCard({ user, onAccept, onDecline }) {
         <button
           onClick={() => handle('accept')}
           disabled={!!busy}
-          className="px-2.5 py-1.5 rounded-xl bg-[#a78bda] text-white pixel-font text-[7px] active:scale-95 transition-all disabled:opacity-50 flex items-center gap-1"
+          className="px-2.5 py-1.5 rounded-xl bg-brand text-white pixel-font text-[7px] active:scale-95 transition-all disabled:opacity-50 flex items-center gap-1"
         >
           {busy === 'accept' ? <Loader2 size={10} className="animate-spin" /> : 'รับ'}
         </button>
@@ -467,7 +467,7 @@ function RequestsTab({ pendingRequests, acceptFollowRequest, rejectFollowRequest
       {!resolving && requestUsers.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12 gap-3">
           <span className="text-3xl">🔔</span>
-          <p className="pixel-font text-[8px] text-gray-400">ไม่มีคำขอติดตาม</p>
+          <p className="thai-font text-xs text-gray-400">ไม่มีคำขอติดตาม</p>
         </div>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -561,7 +561,7 @@ function MatchedTab({ onUserTap, onOpenChat, following }) {
             {isMutual && (
               <button
                 onClick={(e) => { e.stopPropagation(); onOpenChat?.(m.uid) }}
-                className="shrink-0 p-1.5 rounded-xl bg-[#a78bda]/10 text-[#a78bda] hover:bg-[#a78bda]/20 transition-colors"
+                className="shrink-0 p-1.5 rounded-xl bg-brand/10 text-brand hover:bg-brand/20 transition-colors"
               >
                 <MessageCircle size={14} />
               </button>
@@ -654,14 +654,20 @@ export default function SocialPanel({ onClose, onOpenChat }) {
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200 shrink-0">
         <div className="flex items-center gap-2">
-          <Users size={15} strokeWidth={2} className="text-[#a78bda]" />
+          <Users size={15} strokeWidth={2} className="text-brand" />
           <h2 className="pixel-font text-[11px] text-gray-800">Social</h2>
         </div>
-        <button onClick={onClose} className="text-gray-400 text-xl leading-none">x</button>
+        <button
+          onClick={onClose}
+          aria-label="ปิด"
+          className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 active:scale-90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        >
+          <span aria-hidden="true" className="text-base leading-none">✕</span>
+        </button>
       </div>
 
       {/* Tab bar */}
-      <div className="flex border-b border-gray-100 bg-white shrink-0">
+      <div className="flex border-b border-gray-200 bg-white shrink-0">
         {TABS.map(({ id, label, Icon }) => {
           const isActive = tab === id
           const badge = id === 'requests' ? pendingRequests.length : 0
@@ -669,14 +675,16 @@ export default function SocialPanel({ onClose, onOpenChat }) {
             <button
               key={id}
               onClick={() => setTab(id)}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 transition-colors border-b-2 ${
-                isActive ? 'text-[#a78bda] border-[#a78bda]' : 'text-gray-400 border-transparent'
+              role="tab"
+              aria-selected={isActive}
+              className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 transition-colors relative border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-inset ${
+                isActive ? 'text-brand-strong border-brand-strong' : 'text-gray-400 border-transparent'
               }`}
             >
               <div className="relative">
                 <Icon size={16} strokeWidth={isActive ? 2 : 1.5} />
                 {badge > 0 && (
-                  <span className="absolute -top-1.5 -right-2 w-4 h-4 rounded-full bg-red-500 text-white pixel-font text-[6px] flex items-center justify-center">
+                  <span className="absolute -top-1.5 -right-2 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
                     {badge > 9 ? '9+' : badge}
                   </span>
                 )}

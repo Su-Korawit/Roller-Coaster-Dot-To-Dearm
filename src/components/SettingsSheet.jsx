@@ -8,6 +8,7 @@ import { useAuthStore } from '../stores/useAuthStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useSelectStore } from '../stores/useSelectStore'
 import { useNavigate } from 'react-router-dom'
+import Toggle from './ui/Toggle'
 
 const DEFAULT_PRIVACY = {
   mastery:    { public: false, followers: true },
@@ -24,23 +25,6 @@ const PRIVACY_ITEMS = [
 ]
 
 
-function Toggle({ value, onChange }) {
-  return (
-    <button
-      type="button"
-      onClick={() => onChange(!value)}
-      className={`relative inline-flex w-10 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${
-        value ? 'bg-[#a78bda]' : 'bg-gray-200'
-      }`}
-    >
-      <span
-        className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ${
-          value ? 'translate-x-[18px]' : 'translate-x-0.5'
-        }`}
-      />
-    </button>
-  )
-}
 
 export default function SettingsSheet({ onClose, onProfileUpdated }) {
   const navigate = useNavigate()
@@ -184,7 +168,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
                 </div>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#a78bda] rounded-full flex items-center justify-center shadow"
+                  className="absolute -bottom-1 -right-1 w-6 h-6 bg-brand rounded-full flex items-center justify-center shadow"
                 >
                   <Camera size={11} className="text-white" />
                 </button>
@@ -193,7 +177,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
               <div className="flex flex-col gap-1.5">
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="text-xs text-[#a78bda] font-semibold hover:underline text-left"
+                  className="text-xs text-brand font-semibold hover:underline text-left"
                 >
                   อัปโหลดรูปใหม่
                 </button>
@@ -218,7 +202,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
 
             {/* Display name */}
             <div>
-              <label className="pixel-font text-[8px] text-gray-400 block mb-1">ชื่อที่แสดง</label>
+              <label className="thai-font text-xs text-gray-400 block mb-1">ชื่อที่แสดง</label>
               <input
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
@@ -244,7 +228,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
             <button
               onClick={handleSaveProfile}
               disabled={saving}
-              className="w-full bg-[#a78bda] text-white rounded-xl py-2.5 text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2"
+              className="w-full bg-brand text-white rounded-xl py-2.5 text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {saving ? <><Loader2 size={14} className="animate-spin" /> บันทึก...</> : 'บันทึก'}
             </button>
@@ -254,7 +238,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
 
           {/* ── [2] Privacy Settings ── */}
           <section className="space-y-4">
-            <p className="pixel-font text-[9px] text-purple-500 uppercase tracking-wide">ใครมองเห็นอะไรได้บ้าง</p>
+            <p className="thai-font text-xs text-brand font-semibold uppercase tracking-wide">ใครมองเห็นอะไรได้บ้าง</p>
 
             {PRIVACY_ITEMS.map(({ key, label }) => (
               <div key={key}>
@@ -263,15 +247,17 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-gray-500">คนที่ไม่ได้ follow เห็นได้</span>
                     <Toggle
-                      value={privacy[key]?.public ?? false}
+                      checked={privacy[key]?.public ?? false}
                       onChange={(v) => updatePrivacy(key, 'public', v)}
+                      label="คนที่ไม่ได้ follow เห็นได้"
                     />
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-gray-500">คนที่ follow เห็นได้</span>
                     <Toggle
-                      value={privacy[key]?.followers ?? true}
+                      checked={privacy[key]?.followers ?? true}
                       onChange={(v) => updatePrivacy(key, 'followers', v)}
+                      label="คนที่ follow เห็นได้"
                     />
                   </div>
                 </div>
@@ -294,7 +280,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
                     onClick={() => setAiLanguage(lang)}
                     className={`flex-1 rounded-xl py-2 text-sm border transition-colors ${
                       aiLanguage === lang
-                        ? 'bg-[#a78bda] border-[#a78bda] text-white font-semibold'
+                        ? 'bg-brand border-brand text-white font-semibold'
                         : 'bg-white border-purple-200 text-purple-500'
                     }`}
                   >

@@ -346,8 +346,12 @@ export default function ProfilePanel({ onClose }) {
         >
           <Share2 size={19} />
         </button>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 ml-1 text-xl leading-none">
-          ✕
+        <button
+          onClick={onClose}
+          aria-label="ปิด"
+          className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 active:scale-90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ml-1"
+        >
+          <span aria-hidden="true" className="text-base leading-none">✕</span>
         </button>
       </div>
 
@@ -568,7 +572,7 @@ export default function ProfilePanel({ onClose }) {
                 openEditJourney(viewingJourney)
                 setViewingJourney(null)
               }}
-              className="w-full bg-[#a78bda] text-white rounded-xl py-2 text-sm"
+              className="w-full bg-brand text-white rounded-xl py-2 text-sm"
             >
               Edit
             </button>
@@ -605,7 +609,7 @@ export default function ProfilePanel({ onClose }) {
               <button
                 type="button"
                 onClick={() => portfolioFileInputRef.current?.click()}
-                className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#a78bda] rounded-full flex items-center justify-center shadow"
+                className="absolute -bottom-1 -right-1 w-6 h-6 bg-brand rounded-full flex items-center justify-center shadow"
               >
                 <Camera size={11} className="text-white" />
               </button>
@@ -613,7 +617,7 @@ export default function ProfilePanel({ onClose }) {
             <button
               type="button"
               onClick={() => portfolioFileInputRef.current?.click()}
-              className="text-xs text-[#a78bda] font-semibold hover:underline text-left"
+              className="text-xs text-brand font-semibold hover:underline text-left"
             >
               Upload image
             </button>
@@ -627,7 +631,7 @@ export default function ProfilePanel({ onClose }) {
           />
           <button
             onClick={handleSavePortfolio}
-            className="w-full bg-[#a78bda] text-white rounded-xl py-2 text-sm"
+            className="w-full bg-brand text-white rounded-xl py-2 text-sm"
           >
             Save
           </button>
