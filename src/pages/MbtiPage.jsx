@@ -15,6 +15,7 @@ function MbtiPage() {
   const setMbti = useSelectStore((state) => state.setMbti)
 
   const current = useMemo(() => mbtiCharacters[index], [index])
+  const isSelected = selectedMbti === current.code
 
   return (
     <section
@@ -29,9 +30,15 @@ function MbtiPage() {
 
       <div className="mx-auto max-w-md md:max-w-lg px-6 pb-5">
         <h1 className="title-gradient pixel-font text-xl md:text-2xl leading-tight">Select your MBTI</h1>
-        <p className="pixel-font mt-2 text-base md:text-lg font-bold text-black">{current.code} - {current.name}</p>
 
-        <p className="pixel-font mt-1 text-[10px] text-[#5D3FD3] text-center">
+        <p className="pixel-font mt-2 text-base md:text-lg font-bold text-black">
+          {current.code} - {current.name}
+        </p>
+
+        <p
+          className="mt-1 text-sm text-center"
+          style={{ color: '#5D3FD3', fontFamily: "'Noto Sans Thai', sans-serif" }}
+        >
           {mbtiDescriptions[current.code]}
         </p>
 
@@ -39,23 +46,29 @@ function MbtiPage() {
           <img src={current.image} alt={current.code} className="h-52 md:h-64 lg:h-72 w-auto object-contain" />
         </div>
 
-        <p className="pixel-font mt-2 text-[10px] leading-relaxed text-black/70">
+        <p
+          className="mt-2 text-xs leading-relaxed text-black/70"
+          style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
+        >
           เลือกบุคลิกที่ใกล้กับตัวคุณมากที่สุด เพื่อใช้ในการแนะนำเส้นทางเรียนต่อและอาชีพ{' '}
           หากคุณต้องการค้นหาตัวเองให้ชัดเจนขึ้น{' '}
           <a
             href="https://personality.co/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-500 underline hover:text-blue-700"
+            className="text-blue-600 underline hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
           >
             คลิกที่นี่ (personality.co)
           </a>
         </p>
 
-        <div className="mt-8 grid grid-cols-3 overflow-hidden rounded-[28px] border border-black/20 bg-white/95 text-center">
+        <div className="mt-8 grid grid-cols-3 overflow-hidden rounded-[28px] border border-black/20 bg-white/95 text-center shadow-sm">
           <button
             onClick={() => setIndex((prev) => (prev === 0 ? mbtiCharacters.length - 1 : prev - 1))}
-            className="pixel-font border-r border-black/20 px-3 py-4 text-xs"
+            aria-label="Previous MBTI type"
+            className="pixel-font border-r border-black/20 px-3 py-4 text-xs text-gray-600
+              hover:bg-gray-50 active:bg-gray-100 transition-colors
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand"
           >
             ◀ Prev
           </button>
@@ -65,13 +78,22 @@ function MbtiPage() {
               syncSelectToFirestore(useAuthStore.getState().user?.uid)
               navigate('/select/career')
             }}
-            className={`pixel-font px-3 py-4 text-sm transition-colors ${selectedMbti === current.code ? 'bg-pink-100 text-pink-500' : 'text-[#beb6d9] hover:bg-[#f0eeff] hover:text-[#5D3FD3]'}`}
+            aria-label={`Select ${current.code}`}
+            aria-pressed={isSelected}
+            className={`pixel-font px-3 py-4 text-sm transition-colors
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand
+              ${isSelected
+                ? 'bg-pink-100 text-pink-500 font-bold'
+                : 'text-brand/60 hover:bg-brand-soft hover:text-brand-strong'}`}
           >
             Select
           </button>
           <button
             onClick={() => setIndex((prev) => (prev + 1) % mbtiCharacters.length)}
-            className="pixel-font border-l border-black/20 px-3 py-4 text-xs"
+            aria-label="Next MBTI type"
+            className="pixel-font border-l border-black/20 px-3 py-4 text-xs text-gray-600
+              hover:bg-gray-50 active:bg-gray-100 transition-colors
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand"
           >
             Next ▶
           </button>

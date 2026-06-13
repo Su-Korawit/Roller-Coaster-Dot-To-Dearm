@@ -1,27 +1,28 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import TopBar from '../components/TopBar'
-import WizardStepper from '../components/WizardStepper'
+import StepScreen from '../components/ui/StepScreen'
 import { useTcasFaculties, useTcasPrograms, useTcasRounds } from '../hooks/useMytcas'
 import { useSelectStore } from '../stores/useSelectStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { syncSelectToFirestore } from '../utils/syncSelectToFirestore'
 
-// Real admission rounds for a program — fills in lazily, renders nothing until ready.
 function ProgramRoundBadge({ programId }) {
   const { rounds } = useTcasRounds(programId)
   if (!rounds.length) return null
   return (
-    <p className="pixel-font mt-1.5 inline-block rounded-full bg-yellow-300 px-2.5 py-0.5 text-[10px] text-black">
+    <span
+      className="mt-1.5 inline-block rounded-full bg-yellow-300 px-2.5 py-0.5 text-xs text-black font-medium"
+      style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
+    >
       {rounds.map((r) => `รอบ ${r.round}`).join(' · ')}
-    </p>
+    </span>
   )
 }
 
 function ProgramPage() {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
-  const [selectedFaculty, setSelectedFaculty] = useState(null) // intermediate UI only
+  const [selectedFaculty, setSelectedFaculty] = useState(null)
   const university = useSelectStore((state) => state.university)
   const selected = useSelectStore((state) => state.program)
   const setProgram = useSelectStore((state) => state.setProgram)
@@ -43,110 +44,143 @@ function ProgramPage() {
     )
   }, [programs, query])
 
+  const subtitle = selectedFaculty ? (
+    <button
+      onClick={() => { setSelectedFaculty(null); setQuery('') }}
+      className="text-sm font-semibold text-gray-600 focus-visible:outline-none focus-visible:underline"
+      style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
+    >
+      ← เลือกคณะใหม่
+    </button>
+  ) : (
+    <h2
+      className="text-sm font-bold text-gray-700"
+      style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
+    >
+      เลือกคณะ
+    </h2>
+  )
+
   return (
-    <section className="flex h-dvh flex-col bg-linear-to-b from-pink-200 via-pink-100 to-[#efe5ef]">
-      <TopBar />
-
-      <div className="mx-auto w-full max-w-3xl shrink-0 px-6 pt-4">
-        <h1 className="title-gradient pixel-font text-xl leading-tight">Program</h1>
-        <WizardStepper step={3} />
-        {selectedFaculty ? (
-          <button
-            onClick={() => { setSelectedFaculty(null); setQuery('') }}
-            className="pixel-font text-sm font-bold text-black/70"
+    <StepScreen
+      step={3}
+      title="Program"
+      subtitle={subtitle}
+      maxWidth="max-w-3xl"
+      searchValue={query}
+      onSearchChange={(e) => setQuery(e.target.value)}
+      searchLabel="ค้นหาคณะหรือหลักสูตร"
+      onNext={() => navigate('/home')}
+      nextDisabled={!selected}
+    >
+      {!university ? (
+        <div className="mt-10 text-center">
+          <p
+            className="text-sm text-gray-500"
+            style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
           >
-            ← เลือกคณะใหม่
-          </button>
-        ) : (
-          <h2 className="pixel-font text-sm font-bold">เลือกคณะ</h2>
-        )}
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-6 pb-2">
-        {!university ? (
-          <div className="mt-10 text-center">
-            <p className="pixel-font text-xs text-black/60">กรุณาเลือกมหาวิทยาลัยก่อน</p>
-            <button
-              onClick={() => navigate('/select/university')}
-              className="pixel-font mt-3 rounded-2xl bg-sky-300 px-4 py-2 text-xs text-black"
-            >
-              ไปเลือกมหาวิทยาลัย
-            </button>
-          </div>
-        ) : !selectedFaculty ? (
-          // ── Step A: faculties ──────────────────────────────────────────────
-          facLoading ? (
-            <p className="pixel-font py-10 text-center text-xs text-black/60">กำลังโหลดคณะ...</p>
-          ) : facError ? (
-            <p className="pixel-font py-10 text-center text-xs text-red-500">โหลดข้อมูลไม่สำเร็จ</p>
-          ) : (
-            <div className="mx-auto max-w-3xl mt-3 space-y-3">
-              {filteredFaculties.map((faculty) => (
-                <button
-                  key={faculty.faculty_id}
-                  onClick={() => { setSelectedFaculty(faculty.faculty_id); setQuery('') }}
-                  className="flex w-full items-center justify-between rounded-2xl bg-white px-4 py-3 text-left"
-                >
-                  <span className="pixel-font text-sm font-bold text-black">{faculty.faculty_name_th}</span>
-                  <span className="pixel-font shrink-0 text-[10px] text-black/50">{faculty.program_count} หลักสูตร</span>
-                </button>
-              ))}
-            </div>
-          )
-        ) : (
-          // ── Step B: programs ───────────────────────────────────────────────
-          progLoading ? (
-            <p className="pixel-font py-10 text-center text-xs text-black/60">กำลังโหลดหลักสูตร...</p>
-          ) : progError ? (
-            <p className="pixel-font py-10 text-center text-xs text-red-500">โหลดข้อมูลไม่สำเร็จ</p>
-          ) : (
-            <div className="mx-auto max-w-3xl mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredPrograms.map((program) => (
-                <button
-                  key={program._id}
-                  onClick={() => {
-                    setProgram(program.program_id)
-                    syncSelectToFirestore(useAuthStore.getState().user?.uid)
-                  }}
-                  className={`w-full rounded-2xl bg-white px-4 py-3 text-left ${
-                    selected === program.program_id ? 'ring-4 ring-pink-400' : ''
-                  }`}
-                >
-                  <p className="pixel-font text-sm font-bold text-black">{program.program_name_th}</p>
-                  {program.field_name_th && (
-                    <p className="pixel-font mt-0.5 text-[10px] leading-tight text-black/70">{program.field_name_th}</p>
-                  )}
-                  <p className="pixel-font mt-0.5 text-[10px] text-black/50">{program.program_type_name_th}</p>
-                  <ProgramRoundBadge programId={program.program_id} />
-                </button>
-              ))}
-            </div>
-          )
-        )}
-      </div>
-
-      <div className="shrink-0 border-t border-white/50 bg-white/40 backdrop-blur-md">
-        <div className="mx-auto w-full max-w-3xl px-6 py-4">
-          <p className="pixel-font mb-2 text-center text-[10px] text-black/60">↓ Scroll down or Search</p>
-          <div className="flex items-center rounded-2xl bg-white px-4 py-3">
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search..."
-              className="pixel-font w-full bg-transparent text-sm outline-none"
-            />
-            <span className="text-lg">⌕</span>
-          </div>
+            กรุณาเลือกมหาวิทยาลัยก่อน
+          </p>
           <button
-            onClick={() => navigate('/home')}
-            disabled={!selected}
-            className="pixel-font mt-3 h-11 w-full rounded-2xl bg-sky-300 text-sm text-black disabled:opacity-50"
+            onClick={() => navigate('/select/university')}
+            className="mt-3 rounded-2xl bg-brand px-4 py-2 text-sm text-white"
+            style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
           >
-            Next
+            ไปเลือกมหาวิทยาลัย
           </button>
         </div>
-      </div>
-    </section>
+      ) : !selectedFaculty ? (
+        facLoading ? (
+          <p
+            className="py-10 text-center text-sm text-gray-500"
+            style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
+          >
+            กำลังโหลดคณะ...
+          </p>
+        ) : facError ? (
+          <p className="py-10 text-center text-sm text-red-500" style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
+            โหลดข้อมูลไม่สำเร็จ
+          </p>
+        ) : (
+          <div className="mx-auto max-w-3xl mt-3 space-y-3">
+            {filteredFaculties.map((faculty) => (
+              <button
+                key={faculty.faculty_id}
+                onClick={() => { setSelectedFaculty(faculty.faculty_id); setQuery('') }}
+                className="flex w-full items-center justify-between rounded-2xl bg-white px-4 py-3 text-left shadow-sm
+                  hover:shadow-md active:scale-[0.98] transition-all
+                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1"
+              >
+                <span
+                  className="text-sm font-bold text-gray-900"
+                  style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
+                >
+                  {faculty.faculty_name_th}
+                </span>
+                <span
+                  className="shrink-0 text-xs text-gray-400 ml-3"
+                  style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
+                >
+                  {faculty.program_count} หลักสูตร
+                </span>
+              </button>
+            ))}
+          </div>
+        )
+      ) : (
+        progLoading ? (
+          <p
+            className="py-10 text-center text-sm text-gray-500"
+            style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
+          >
+            กำลังโหลดหลักสูตร...
+          </p>
+        ) : progError ? (
+          <p className="py-10 text-center text-sm text-red-500" style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
+            โหลดข้อมูลไม่สำเร็จ
+          </p>
+        ) : (
+          <div className="mx-auto max-w-3xl mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredPrograms.map((program) => (
+              <button
+                key={program._id}
+                onClick={() => {
+                  setProgram(program.program_id)
+                  syncSelectToFirestore(useAuthStore.getState().user?.uid)
+                }}
+                aria-pressed={selected === program.program_id}
+                className={`w-full rounded-2xl bg-white px-4 py-3 text-left shadow-sm transition-all
+                  hover:shadow-md active:scale-[0.98]
+                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1
+                  ${selected === program.program_id ? 'ring-4 ring-pink-400 shadow-md' : ''}`}
+              >
+                <p
+                  className="text-sm font-bold text-gray-900"
+                  style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
+                >
+                  {program.program_name_th}
+                </p>
+                {program.field_name_th && (
+                  <p
+                    className="mt-0.5 text-xs leading-tight text-gray-500"
+                    style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
+                  >
+                    {program.field_name_th}
+                  </p>
+                )}
+                <p
+                  className="mt-0.5 text-xs text-gray-400"
+                  style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
+                >
+                  {program.program_type_name_th}
+                </p>
+                <ProgramRoundBadge programId={program.program_id} />
+              </button>
+            ))}
+          </div>
+        )
+      )}
+    </StepScreen>
   )
 }
 

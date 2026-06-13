@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import TopBar from '../components/TopBar'
-import WizardStepper from '../components/WizardStepper'
+import StepScreen from '../components/ui/StepScreen'
+import SelectCard from '../components/ui/SelectCard'
 import { masteries } from '../data/onboardingData'
 import { useSelectStore } from '../stores/useSelectStore'
 import { useAuthStore } from '../stores/useAuthStore'
@@ -14,69 +14,40 @@ function MasteryPage() {
   const selected = useSelectStore((state) => state.mastery)
   const setMastery = useSelectStore((state) => state.setMastery)
 
-  const filtered = useMemo(
-    () => {
-      const q = query.toLowerCase()
-      const base = q ? masteries : masteries.filter((item) => !career || item.careers.includes(career))
-      return base.filter((item) => item.name.toLowerCase().includes(q))
-    },
-    [career, query],
-  )
+  const filtered = useMemo(() => {
+    const q = query.toLowerCase()
+    const base = q ? masteries : masteries.filter((item) => !career || item.careers.includes(career))
+    return base.filter((item) => item.name.toLowerCase().includes(q))
+  }, [career, query])
 
   return (
-    <section className="flex h-dvh flex-col bg-linear-to-b from-pink-200 via-pink-100 to-cyan-300">
-      <TopBar />
-
-      <div className="mx-auto w-full max-w-4xl shrink-0 px-6 pt-4">
-        <h1 className="title-gradient pixel-font text-xl leading-tight">Mastery</h1>
-        <WizardStepper step={1} />
-        <h2 className="pixel-font text-sm font-bold">Recommend</h2>
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-6 pb-2">
-        <div className="mx-auto max-w-4xl mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((mastery) => (
-            <button
-              key={mastery.id}
-              onClick={() => {
+    <StepScreen
+      step={1}
+      title="Mastery"
+      subtitle={
+        <h2 className="pixel-font text-sm font-bold text-gray-700">Recommend</h2>
+      }
+      searchValue={query}
+      onSearchChange={(e) => setQuery(e.target.value)}
+      searchLabel="ค้นหาทักษะ"
+      onNext={() => navigate('/select/university')}
+      nextDisabled={!selected}
+    >
+      <div className="mx-auto max-w-4xl mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filtered.map((mastery) => (
+          <SelectCard
+            key={mastery.id}
+            name={mastery.name}
+            detail={mastery.detail}
+            selected={selected === mastery.id}
+            onClick={() => {
               setMastery(mastery.id)
               syncSelectToFirestore(useAuthStore.getState().user?.uid)
             }}
-              className={`flex w-full items-center overflow-hidden rounded-2xl bg-white text-left ${
-                selected === mastery.id ? 'ring-4 ring-pink-400' : ''
-              }`}
-            >
-              <div className="px-3 py-2">
-                <p className="pixel-font text-sm font-bold text-black">{mastery.name}</p>
-                <p className="pixel-font mt-1 text-[10px] leading-tight text-black/70">{mastery.detail}</p>
-              </div>
-            </button>
-          ))}
-        </div>
+          />
+        ))}
       </div>
-
-      <div className="shrink-0 border-t border-white/50 bg-white/40 backdrop-blur-md">
-        <div className="mx-auto w-full max-w-4xl px-6 py-4">
-          <p className="pixel-font mb-2 text-center text-[10px] text-black/60">↓ Scroll down or Search</p>
-          <div className="flex items-center rounded-2xl bg-white px-4 py-3">
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search..."
-              className="pixel-font w-full bg-transparent text-sm outline-none"
-            />
-            <span className="text-lg">⌕</span>
-          </div>
-          <button
-            onClick={() => navigate('/select/university')}
-            disabled={!selected}
-            className="pixel-font mt-3 h-11 w-full rounded-2xl bg-sky-300 text-sm text-black disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
-      </div>
-    </section>
+    </StepScreen>
   )
 }
 
