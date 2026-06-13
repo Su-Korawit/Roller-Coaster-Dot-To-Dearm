@@ -152,9 +152,9 @@ class GameScene extends Phaser.Scene {
     const spawnX = 35 * 16 * mapScale
     const spawnY = 35 * 16 * mapScale
     this.player = this.physics.add.sprite(spawnX, spawnY, this.currentMbti)
-    this.player.setScale(2)
-    this.player.body.setSize(48, 48)
-    this.player.body.setOffset(0, 0)
+    this.player.setScale(mapScale)
+    this.player.body.setSize(16, 20)
+    this.player.body.setOffset(16, 12)
     this.player.setDepth(5)
     this.player.setCollideWorldBounds(true)
     this.player.play(`${this.currentMbti}-idle`)
@@ -449,9 +449,9 @@ class IndoorScene extends Phaser.Scene {
     }
 
     this.player = this.physics.add.sprite(spawnX, spawnY, this.currentMbti)
-    this.player.setScale(3.5)
-    this.player.body.setSize(48, 48)
-    this.player.body.setOffset(0, 0)
+    this.player.setScale(mapScale)
+    this.player.body.setSize(16, 20)
+    this.player.body.setOffset(16, 12)
     this.player.setDepth(5)
     this.player.setCollideWorldBounds(true)
     this.player.play(`${this.currentMbti}-idle`)
