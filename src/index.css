@@ -1,6 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+Thai:wght@400;600;700;800&display=swap');
 @import "tailwindcss";
 
+/* ── Design tokens ─────────────────────────────────────────────────────────── */
+@theme {
+  --color-brand:        #a78bda;
+  --color-brand-strong: #7c3aed;
+  --color-brand-soft:   #f0eeff;
+  --color-accent-pink:  #d93d8c;
+  --color-ink:          #1a1035;
+  --color-surface:      #ffffff;
+}
+
+/* ── Unified onboarding page background ────────────────────────────────────── */
+.onboarding-bg {
+  background: linear-gradient(180deg, #fde4f0 0%, #f3edff 50%, #e3f0ff 100%);
+}
+
 @keyframes marquee {
   0%   { transform: translateX(100%); }
   100% { transform: translateX(-100%); }
@@ -50,6 +65,12 @@ html {
 
 .pixel-font {
   font-family: 'Press Start 2P', system-ui;
+}
+
+/* Body/Thai text — pairs with .pixel-font (chrome only). Replaces the
+   ~30 inline style={{ fontFamily: "'Noto Sans Thai'..." }} repetitions. */
+.thai-font {
+  font-family: 'Noto Sans Thai', sans-serif;
 }
 
 .title-gradient {
