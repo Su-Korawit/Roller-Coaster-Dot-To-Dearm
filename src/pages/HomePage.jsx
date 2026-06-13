@@ -187,7 +187,8 @@ function HomePage() {
           {/* Avatar button */}
           <button
             onClick={() => handleTabChange(APP_VIEWS.PROFILE)}
-            className="pointer-events-auto w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/90 shadow flex items-center justify-center shrink-0 border border-white/60 active:scale-95 transition-transform"
+            aria-label="โปรไฟล์"
+            className="pointer-events-auto w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/90 shadow flex items-center justify-center shrink-0 border border-white/60 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             {(profilePhotoURL || authUser?.photoURL)
               ? <img src={profilePhotoURL || authUser.photoURL} alt="avatar" className="w-full h-full object-cover rounded-full" />
@@ -198,7 +199,8 @@ function HomePage() {
           {/* Music status pill */}
           <button
             onClick={() => handleTabChange(APP_VIEWS.MUSIC)}
-            className="pointer-events-auto flex items-center gap-1.5 h-10 bg-white/90 rounded-full shadow px-3 overflow-hidden min-w-0 flex-1 max-w-40 active:scale-95 transition-transform"
+            aria-label={isPlaying ? `กำลังเล่น: ${TRACKS[currentTrackIdx].title}` : 'เปิดรายการเพลง'}
+            className="pointer-events-auto flex items-center gap-1.5 h-10 bg-white/90 rounded-full shadow px-3 overflow-hidden min-w-0 flex-1 max-w-40 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             <span className="text-sm shrink-0">{isPlaying ? '🎵' : '🎶'}</span>
             <span className="overflow-hidden flex-1">
@@ -227,10 +229,10 @@ function HomePage() {
       <div className="absolute top-20 left-4 z-20">
         <button
           onClick={handlePlannerTransition}
-          className="w-12 h-12 md:w-14 md:h-14 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-gray-100 active:scale-95 transition-transform"
-          title="Calendar"
+          aria-label="เปิดปฏิทิน"
+          className="w-12 h-12 md:w-14 md:h-14 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-gray-100 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
-          <Calendar size={22} strokeWidth={1.5} className="text-purple-500" />
+          <Calendar size={22} strokeWidth={1.5} className="text-brand" />
         </button>
       </div>
 
@@ -238,12 +240,13 @@ function HomePage() {
       <div className="absolute top-20 right-4 z-20">
         <button
           onClick={() => handleTabChange(APP_VIEWS.NEWS)}
-          className="relative flex items-center gap-2 bg-white/90 rounded-2xl shadow-lg px-4 py-2 active:scale-95 transition-transform"
+          aria-label="ข่าวสาร"
+          className="relative flex items-center gap-2 bg-white/90 rounded-2xl shadow-lg px-4 py-2 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
-          <span className="text-base">📰</span>
+          <span className="text-base" aria-hidden="true">📰</span>
           <span className="pixel-font text-[10px] text-gray-700">News</span>
           {!newsRead && (
-            <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white pixel-font text-[8px] flex items-center justify-center">
+            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center" aria-hidden="true">
               1
             </span>
           )}
@@ -303,9 +306,10 @@ function HomePage() {
             </div>
             <button
               onClick={handleTogglePlay}
-              className="ml-3 shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm active:scale-95 transition-transform"
+              aria-label={isPlaying ? 'หยุดเพลง' : 'เล่นเพลง'}
+              className="ml-3 shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
             >
-              {isPlaying ? '⏸' : '▶'}
+              <span aria-hidden="true">{isPlaying ? '⏸' : '▶'}</span>
             </button>
           </div>
           {/* Track list */}
@@ -337,18 +341,16 @@ function HomePage() {
         <div className="absolute bottom-18 right-4 z-55 group">
           {/* Tooltip — left of button */}
           <div className="absolute right-14 top-1/2 -translate-y-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-            <div
-              className="bg-gray-900/90 text-white rounded-full px-3 py-1 shadow-lg"
-              style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 11 }}
-            >
+            <div className="thai-font text-[11px] bg-gray-900/90 text-white rounded-full px-3 py-1 shadow-lg">
               ติดต่อผู้พัฒนา
             </div>
           </div>
           <button
             onClick={openAdminChat}
-            className="relative w-12 h-12 rounded-full flex items-center justify-center active:scale-95 transition-transform"
+            aria-label="ติดต่อผู้พัฒนา"
+            className="relative w-12 h-12 rounded-full flex items-center justify-center active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1"
             style={{
-              background: 'linear-gradient(135deg, #a78bda, #7c3aed)',
+              background: 'linear-gradient(135deg, var(--color-brand), var(--color-brand-strong))',
               boxShadow: '0 4px 12px rgba(0,0,0,0.3), 0 0 12px rgba(167,139,218,0.4)',
             }}
           >
