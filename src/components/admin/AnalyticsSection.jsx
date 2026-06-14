@@ -1,14 +1,16 @@
 import { useState, useCallback, useMemo } from 'react'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, limit, query } from 'firebase/firestore'
 import { db } from '../../firebase'
 import { MBTI_TYPES } from '../../game/assetManifest'
 import { useTcasUniversities } from '../../hooks/useMytcas'
 
-// Reads the entire `users` collection client-side (admin-only Firestore rule guards
-// this). If user count grows past ~5k, swap getAggregate() to a Cloud-Function
-// maintained stats doc — the function signature stays the same.
+// Reads the `users` collection client-side (admin-only Firestore rule guards
+// this). Capped at AGG_LIMIT as a safety valve so a huge collection can't blow up
+// the admin page. Real fix once user count grows past ~5k: swap getAggregate() to
+// a Cloud-Function maintained stats doc — the function signature stays the same.
+const AGG_LIMIT = 2000
 async function getAggregate() {
-  const snap = await getDocs(collection(db, 'users'))
+  const snap = await getDocs(query(collection(db, 'users'), limit(AGG_LIMIT)))
   const users = snap.docs.map((d) => d.data())
 
   const total = users.length
