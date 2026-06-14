@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import StepScreen from '../components/ui/StepScreen'
 import { universities as legacyUniversities } from '../data/onboardingData'
@@ -6,6 +6,7 @@ import { useTcasUniversities } from '../hooks/useMytcas'
 import { useSelectStore } from '../stores/useSelectStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { syncSelectToFirestore } from '../utils/syncSelectToFirestore'
+import { cloudAsset } from '../utils/cloudAsset'
 
 const legacyByName = new Map(legacyUniversities.map((u) => [u.name, u]))
 
@@ -17,11 +18,32 @@ function badgeText(uni) {
   return uni.university_name_th.slice(0, 3)
 }
 
+// Logo fallback chain: MyTCAS CDN → Firebase Storage → bundled local → badge
+// Stages: 'cdn' → 'cloud' → 'local' → 'badge'
 function UniversityLogo({ uni }) {
-  const localImage = legacyByName.get(uni.university_name_th)?.image
+  const legacy = legacyByName.get(uni.university_name_th)
+  const localImage = legacy?.image ?? null
+
+  // Derive the Storage path from the bundled image URL's filename segment.
+  const [cloudUrl, setCloudUrl] = useState(null)
+  useEffect(() => {
+    if (!localImage) return
+    const filename = localImage.split('/').pop()
+    cloudAsset(`media/university/${filename}`, { fallback: null }).then(setCloudUrl)
+  }, [localImage])
+
   const [stage, setStage] = useState('cdn')
 
-  const src = stage === 'cdn' ? uni.logo_url : stage === 'local' ? localImage : null
+  const src =
+    stage === 'cdn'   ? uni.logo_url :
+    stage === 'cloud' ? cloudUrl     :
+    stage === 'local' ? localImage   : null
+
+  function nextStage() {
+    if (stage === 'cdn')   return setStage(cloudUrl ? 'cloud' : localImage ? 'local' : 'badge')
+    if (stage === 'cloud') return setStage(localImage ? 'local' : 'badge')
+    if (stage === 'local') return setStage('badge')
+  }
 
   if (src) {
     return (
@@ -29,7 +51,7 @@ function UniversityLogo({ uni }) {
         src={src}
         alt={uni.university_name_th}
         className="mx-auto h-14 w-14 md:h-16 md:w-16 lg:h-20 lg:w-20 object-contain"
-        onError={() => setStage(stage === 'cdn' && localImage ? 'local' : 'badge')}
+        onError={nextStage}
       />
     )
   }

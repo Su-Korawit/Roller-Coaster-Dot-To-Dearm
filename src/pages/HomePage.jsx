@@ -17,8 +17,12 @@ import { auth, db } from '../firebase'
 import { useChatStore, buildChatId } from '../stores/useChatStore'
 import { ADMIN_UID, ADMIN_DISPLAY_NAME } from '../constants/admin'
 import GameCanvas from '../components/GameCanvas'
+import { useCloudAsset } from '../hooks/useCloudAsset'
 
-const musicSrc = new URL('../../assets/eachPageAssets/home/Background_Music_1.mp3', import.meta.url).href
+// Streams from Firebase Storage once uploaded; falls back to the bundled file
+// until then (and if Storage is unreachable). Drop the bundled fallback to
+// reclaim ~6MB from the build once cloud loading is confirmed.
+const musicFallback = new URL('../../assets/eachPageAssets/home/Background_Music_1.mp3', import.meta.url).href
 
 const TRACKS = [
   { title: 'Miitopia - Catalog', start: 0 },
@@ -40,6 +44,7 @@ function HomePage() {
   const [showCalendar, setShowCalendar] = useState(false)
   const [showDailyModal, setShowDailyModal] = useState(false)
   const audioRef = useRef(null)
+  const musicSrc = useCloudAsset('media/audio/Background_Music_1.mp3', musicFallback)
 
   const profilePhotoURL = useUserStore((s) => s.profilePhotoURL)
   const authUser = useAuthStore((s) => s.user)
