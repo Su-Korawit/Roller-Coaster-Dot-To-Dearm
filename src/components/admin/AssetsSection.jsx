@@ -6,6 +6,7 @@ import { cloudAsset, bustCache } from '../../utils/cloudAsset'
 import { MBTI_TYPES, GAME_ASSET_BY_KEY } from '../../game/assetManifest'
 import MapConfigEditor from './MapConfigEditor'
 import StorageBrowser from './StorageBrowser'
+import { useToast } from './Toast'
 
 // Copy an existing Storage object onto a fixed game path (download + re-upload),
 // used when "Browse" picks an existing file to stand in for a fixed asset slot.
@@ -47,13 +48,14 @@ function SpritePreview({ code, cloudUrl }) {
         backgroundSize: `${FRAME * COLS * scale}px ${FRAME * COLS * scale}px`,
         backgroundPosition: `-${frame * size}px -${row * size}px`,
         imageRendering: 'pixelated',
+        flexShrink: 0,
       }}
     />
   )
 }
 
 // Reusable file upload row with progress bar.
-function UploadRow({ storagePath, accept, onSuccess, label }) {
+function UploadRow({ storagePath, accept, onSuccess, label, disabled }) {
   const [progress, setProgress]   = useState(null) // 0-100 | null
   const [error, setError]         = useState(null)
   const inputRef = useRef(null)
@@ -76,16 +78,16 @@ function UploadRow({ storagePath, accept, onSuccess, label }) {
   }, [storagePath, onSuccess])
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 w-full">
       <div className="flex items-center gap-2">
         <button
           onClick={() => inputRef.current?.click()}
-          disabled={progress !== null}
-          className="px-3 py-1 rounded-lg bg-brand text-white text-xs font-semibold hover:bg-brand-strong transition-colors disabled:opacity-50"
+          disabled={progress !== null || disabled}
+          className="flex-1 px-2 py-1 rounded-lg bg-brand text-white text-xs font-semibold hover:bg-brand-strong transition-colors disabled:opacity-50 text-center"
         >
-          {progress !== null ? `${progress}%` : label ?? 'Replace'}
+          {progress !== null ? `${progress}%` : label ?? '⬆ อัปโหลด'}
         </button>
-        {error && <span className="text-red-500 text-xs truncate">{error}</span>}
+        {error && <span className="text-red-500 text-[10px] truncate">{error}</span>}
       </div>
       {progress !== null && (
         <div className="h-1 w-full rounded-full bg-gray-200 overflow-hidden">
@@ -105,12 +107,13 @@ function UploadRow({ storagePath, accept, onSuccess, label }) {
 
 // ── Character grid ────────────────────────────────────────────────────────────
 
-function CharactersGrid() {
+function CharactersGrid({ onStatus }) {
   const [cloudUrls, setCloudUrls]     = useState({})
   const [uploaded, setUploaded]       = useState(new Set())
   const [loadingList, setLoadingList] = useState(true)
   const [browseCode, setBrowseCode]   = useState(null) // MBTI code being browsed
   const [busyCode, setBusyCode]       = useState(null) // code mid-copy
+  const toast = useToast()
 
   // Check which characters are already uploaded to Storage.
   const refreshList = useCallback(async () => {
@@ -119,12 +122,13 @@ function CharactersGrid() {
       const result = await listAll(ref(storage, 'sprites/characters'))
       const names  = new Set(result.items.map((i) => i.name))
       setUploaded(names)
+      onStatus?.({ cloudCount: names.size, total: MBTI_TYPES.length })
     } catch {
-      // Storage empty or rules not yet deployed — ignore
+      onStatus?.({ cloudCount: 0, total: MBTI_TYPES.length })
     } finally {
       setLoadingList(false)
     }
-  }, [])
+  }, [onStatus])
 
   useEffect(() => { refreshList() }, [refreshList])
 
@@ -141,12 +145,16 @@ function CharactersGrid() {
   const handleReplaced = useCallback((code) => {
     const path = `sprites/characters/${code}.png`
     bustCache(path)
-    // Re-resolve and update preview
     cloudAsset(path, { fallback: null }).then((url) => {
       if (url) setCloudUrls((prev) => ({ ...prev, [code]: url }))
     })
-    setUploaded((prev) => new Set([...prev, `${code}.png`]))
-  }, [])
+    setUploaded((prev) => {
+      const next = new Set([...prev, `${code}.png`])
+      onStatus?.({ cloudCount: next.size, total: MBTI_TYPES.length })
+      return next
+    })
+    toast?.success(`${code} อัปโหลดแล้ว`)
+  }, [onStatus, toast])
 
   const handleBrowsePick = useCallback(async (srcPath) => {
     const code = browseCode
@@ -156,48 +164,60 @@ function CharactersGrid() {
     try {
       await copyStorageObject(srcPath, `sprites/characters/${code}.png`)
       handleReplaced(code)
-    } catch { /* surfaced as no-op; admin can retry */ }
+    } catch {
+      toast?.error(`คัดลอกไฟล์ไม่สำเร็จ`)
+    }
     finally { setBusyCode(null) }
-  }, [browseCode, handleReplaced])
+  }, [browseCode, handleReplaced, toast])
+
+  const cloudCount = [...uploaded].filter(n => MBTI_TYPES.includes(n.replace('.png',''))).length
+  const missing = MBTI_TYPES.length - cloudCount
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-gray-800">Characters ({MBTI_TYPES.length})</h3>
-        <button
-          onClick={refreshList}
-          className="text-xs text-brand hover:underline"
-        >
-          Refresh list
+        <div className="flex items-center gap-3">
+          <h3 className="font-semibold text-gray-800">Characters</h3>
+          {!loadingList && (
+            missing === 0
+              ? <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">✓ {cloudCount}/{MBTI_TYPES.length} in cloud</span>
+              : <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">⚠ {missing} ยังไม่ได้ upload</span>
+          )}
+        </div>
+        <button onClick={refreshList} className="text-xs text-brand hover:underline">
+          Refresh
         </button>
       </div>
 
       {loadingList ? (
         <p className="text-gray-400 text-sm animate-pulse">ตรวจสอบ Storage...</p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
           {MBTI_TYPES.map((code) => {
             const inCloud = uploaded.has(`${code}.png`)
+            const busy = busyCode === code
             return (
               <div key={code} className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white shadow-sm border border-gray-100">
                 <SpritePreview code={code} cloudUrl={cloudUrls[code]} />
-                <span className="pixel-font text-[9px] text-gray-700">{code}</span>
-                {!inCloud && (
-                  <span className="text-[10px] text-amber-500 font-semibold">local only</span>
-                )}
                 <div className="flex items-center gap-1.5">
-                  <UploadRow
-                    storagePath={`sprites/characters/${code}.png`}
-                    accept=".png"
-                    onSuccess={() => handleReplaced(code)}
-                    label={busyCode === code ? '...' : 'Upload'}
-                  />
-                  <button
-                    onClick={() => setBrowseCode(code)}
-                    disabled={busyCode === code}
-                    className="px-2 py-1 rounded-lg border border-brand text-brand text-xs font-semibold hover:bg-brand/5 disabled:opacity-50"
-                  >Browse</button>
+                  <span className="pixel-font text-[9px] text-gray-700">{code}</span>
+                  {inCloud
+                    ? <span className="text-[9px] text-emerald-600 font-semibold">✓ cloud</span>
+                    : <span className="text-[9px] text-amber-500 font-semibold">local</span>
+                  }
                 </div>
+                <UploadRow
+                  storagePath={`sprites/characters/${code}.png`}
+                  accept=".png"
+                  onSuccess={() => handleReplaced(code)}
+                  label={busy ? '...' : '⬆ อัปโหลด'}
+                  disabled={busy}
+                />
+                <button
+                  onClick={() => setBrowseCode(code)}
+                  disabled={busy}
+                  className="w-full px-2 py-1 rounded-lg border border-brand text-brand text-xs font-semibold hover:bg-brand/5 disabled:opacity-50 text-center"
+                >📁 เลือก</button>
               </div>
             )
           })}
@@ -221,10 +241,12 @@ function CharactersGrid() {
 const MAP_KEYS = ['test3', 'indoor']
 
 function MapsPanel() {
-  const [meta, setMeta]   = useState({})
+  const [meta, setMeta]       = useState({})
+  const [cfgStatus, setCfgStatus] = useState({}) // key -> { hasFirestore, tilesetCount }
   const [refresh, setRefresh] = useState(0)
   const [editKey, setEditKey] = useState(null)
   const adminUid = useAuthStore((s) => s.user?.uid)
+  const toast = useToast()
 
   useEffect(() => {
     MAP_KEYS.forEach(async (key) => {
@@ -239,11 +261,33 @@ function MapsPanel() {
     })
   }, [refresh])
 
+  // Load tileset status from Firestore so we can show a health pill per map.
+  useEffect(() => {
+    MAP_KEYS.forEach(async (key) => {
+      try {
+        const { doc, getDoc } = await import('firebase/firestore')
+        const { db } = await import('../../firebase')
+        const snap = await getDoc(doc(db, 'mapConfigs', key))
+        if (snap.exists()) {
+          const d = snap.data()
+          const count = Object.keys(d.tilesets || {}).length
+          const filled = Object.values(d.tilesets || {}).filter(Boolean).length
+          setCfgStatus((prev) => ({ ...prev, [key]: { hasFirestore: true, tilesetCount: count, filled } }))
+        } else {
+          setCfgStatus((prev) => ({ ...prev, [key]: { hasFirestore: false } }))
+        }
+      } catch {
+        setCfgStatus((prev) => ({ ...prev, [key]: { hasFirestore: false } }))
+      }
+    })
+  }, [refresh])
+
   const handleSaved = useCallback((key) => {
     const path = GAME_ASSET_BY_KEY[key]?.storagePath
     if (path) bustCache(path)
     setRefresh((n) => n + 1)
-  }, [])
+    toast?.success('บันทึก config แล้ว')
+  }, [toast])
 
   return (
     <div>
@@ -251,14 +295,22 @@ function MapsPanel() {
       <div className="space-y-3">
         {MAP_KEYS.map((key) => {
           const m = meta[key]
+          const cs = cfgStatus[key]
           return (
             <div key={key} className="flex items-center gap-4 p-4 rounded-2xl bg-white shadow-sm border border-gray-100">
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-800 text-sm">{key}.json</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-semibold text-gray-800 text-sm">{key}.json</p>
+                  {cs && (
+                    cs.hasFirestore
+                      ? <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-semibold">✓ {cs.filled} tilesets</span>
+                      : <span className="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-semibold">⚠ ใช้ค่า default</span>
+                  )}
+                </div>
                 <p className="text-xs text-gray-500 mt-0.5">
                   {m === undefined ? 'ตรวจสอบ...' :
                    m === null     ? '⚠ ยังไม่ได้ upload ขึ้น Storage' :
-                   `${(m.size / 1024).toFixed(1)} KB · updated ${new Date(m.updated).toLocaleDateString('th-TH')}`}
+                   `${(m.size / 1024).toFixed(1)} KB · อัปเดต ${new Date(m.updated).toLocaleDateString('th-TH')}`}
                 </p>
               </div>
               <button
@@ -284,10 +336,10 @@ function MapsPanel() {
 
 // ── Main export ───────────────────────────────────────────────────────────────
 
-export default function AssetsSection() {
+export default function AssetsSection({ onStatus }) {
   return (
     <div className="space-y-12">
-      <CharactersGrid />
+      <CharactersGrid onStatus={onStatus} />
       <MapsPanel />
     </div>
   )

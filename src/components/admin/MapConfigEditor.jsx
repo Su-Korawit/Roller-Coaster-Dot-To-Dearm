@@ -4,6 +4,7 @@ import { storage } from '../../firebase'
 import { cloudAsset, bustCache } from '../../utils/cloudAsset'
 import { getMapConfig, saveMapConfig } from '../../utils/mapConfig'
 import StorageBrowser from './StorageBrowser'
+import { useToast } from './Toast'
 
 const TILESET_FOLDERS = ['sprites/tilesets', 'sprites/objects']
 const sanitize = (name) => name.trim().replace(/\s+/g, '_')
@@ -29,19 +30,20 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
   const [parsed, setParsed]   = useState(null)
   const [jsonText, setJsonText] = useState(null)
   const [jsonDirty, setJsonDirty] = useState(false)
+  const [jsonPickedMsg, setJsonPickedMsg] = useState(false) // brief inline feedback
   const [tilesets, setTilesets]   = useState({})
   const [collision, setCollision] = useState({})
   const [hidden, setHidden]       = useState({})
   const [browser, setBrowser]     = useState(null) // 'mapjson' | { name } | null
   const [saving, setSaving]       = useState(false)
-  const [error, setError]         = useState(null)
   const [uploadingName, setUploadingName] = useState(null) // tileset name mid-upload
   const jsonInputRef = useRef(null)
+  const toast = useToast()
 
   // Apply a parsed map + the stored config to local state.
   function applyMap(text, cfg) {
     let map
-    try { map = JSON.parse(text) } catch { setError('ไฟล์ไม่ใช่ JSON ที่ถูกต้อง'); return false }
+    try { map = JSON.parse(text) } catch { toast?.error('ไฟล์ไม่ใช่ JSON ที่ถูกต้อง'); return false }
     setParsed(map)
     setJsonText(text)
     const ts = {}
@@ -49,7 +51,6 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
     setTilesets(ts)
     setCollision({ ...(cfg.collision || {}) })
     setHidden({ ...(cfg.hidden || {}) })
-    setError(null)
     return true
   }
 
@@ -61,6 +62,7 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
       setLoading(false)
     })
     return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapKey])
 
   const tileLayers = (parsed?.layers || []).filter((l) => l.type === 'tilelayer')
@@ -82,12 +84,16 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
     setBrowser(null)
     if (target === 'mapjson') {
       const url = await cloudAsset(path, { fallback: null })
-      if (!url) { setError('โหลดไฟล์ที่เลือกไม่สำเร็จ'); return }
+      if (!url) { toast?.error('โหลดไฟล์ที่เลือกไม่สำเร็จ'); return }
       try {
         const res = await fetch(url)
         const text = await res.text()
-        if (applyMap(text, { tilesets, collision, hidden })) setJsonDirty(true)
-      } catch { setError('โหลดไฟล์ที่เลือกไม่สำเร็จ') }
+        if (applyMap(text, { tilesets, collision, hidden })) {
+          setJsonDirty(true)
+          setJsonPickedMsg(true)
+          setTimeout(() => setJsonPickedMsg(false), 2000)
+        }
+      } catch { toast?.error('โหลดไฟล์ที่เลือกไม่สำเร็จ') }
     } else if (target?.name) {
       setTilesets((p) => ({ ...p, [target.name]: path }))
     }
@@ -101,7 +107,7 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
     task.on(
       'state_changed',
       null,
-      (err) => { setError(err.message); setUploadingName(null) },
+      (err) => { toast?.error(err.message); setUploadingName(null) },
       () => {
         bustCache(dest)
         setTilesets((p) => ({ ...p, [name]: dest }))
@@ -112,11 +118,10 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
 
   async function handleSave() {
     if (missingTilesets.length) {
-      setError(`ยังไม่ได้กำหนด asset ของ tileset: ${missingTilesets.join(', ')}`)
+      toast?.error(`ยังไม่ได้กำหนด asset: ${missingTilesets.join(', ')}`)
       return
     }
     setSaving(true)
-    setError(null)
     try {
       if (jsonDirty && jsonText != null) {
         await uploadBytes(ref(storage, `maps/${mapKey}.json`), new Blob([jsonText], { type: 'application/json' }), {
@@ -128,7 +133,7 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
       onSaved?.()
       onClose?.()
     } catch (err) {
-      setError(err.message || 'บันทึกไม่สำเร็จ')
+      toast?.error(err.message || 'บันทึกไม่สำเร็จ')
     } finally {
       setSaving(false)
     }
@@ -152,16 +157,21 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
             {/* JSON source: 2 options */}
             <section>
               <p className="text-xs font-semibold text-gray-500 uppercase mb-2">ไฟล์แมพ (.json)</p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={() => jsonInputRef.current?.click()}
                   className="px-3 py-1.5 rounded-lg bg-brand text-white text-xs font-semibold hover:bg-brand-strong"
-                >Upload ใหม่</button>
+                >⬆ Upload ใหม่</button>
                 <button
                   onClick={() => setBrowser('mapjson')}
                   className="px-3 py-1.5 rounded-lg border border-brand text-brand text-xs font-semibold hover:bg-brand/5"
-                >Browse Storage</button>
-                {jsonDirty && <span className="text-[11px] text-amber-600">• จะอัปโหลดทับตอนกด Save</span>}
+                >📁 Browse Storage</button>
+                {jsonPickedMsg && (
+                  <span className="text-[11px] text-emerald-600 font-semibold">✓ โหลดแล้ว</span>
+                )}
+                {jsonDirty && !jsonPickedMsg && (
+                  <span className="text-[11px] text-amber-600">• จะอัปโหลดทับตอนกด Save</span>
+                )}
                 <input ref={jsonInputRef} type="file" accept=".json" className="hidden"
                   onChange={(e) => handleJsonFile(e.target.files?.[0])} />
               </div>
@@ -206,9 +216,9 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
                     <button
                       onClick={() => setBrowser({ name })}
                       className="px-2.5 py-1 rounded-lg border border-brand text-brand text-xs font-semibold hover:bg-brand/5"
-                    >Browse</button>
+                    >📁 Browse</button>
                     <label className="px-2.5 py-1 rounded-lg bg-brand text-white text-xs font-semibold hover:bg-brand-strong cursor-pointer">
-                      {uploadingName === name ? '...' : 'Upload'}
+                      {uploadingName === name ? '...' : '⬆ Upload'}
                       <input type="file" accept=".png,.jpg,.jpeg,.gif,.webp" className="hidden"
                         onChange={(e) => handleTilesetUpload(name, e.target.files?.[0])} />
                     </label>
@@ -219,16 +229,13 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
           </div>
         )}
 
-        <div className="flex items-center justify-between gap-3 px-5 py-4 border-t border-gray-100">
-          {error ? <span className="text-red-500 text-xs">{error}</span> : <span />}
-          <div className="flex items-center gap-2">
-            <button onClick={onClose} className="px-4 py-1.5 rounded-xl text-gray-600 text-sm hover:bg-gray-100">ยกเลิก</button>
-            <button
-              onClick={handleSave}
-              disabled={saving || loading}
-              className="px-5 py-1.5 rounded-xl bg-brand text-white text-sm font-semibold hover:bg-brand-strong disabled:opacity-50"
-            >{saving ? 'กำลังบันทึก...' : 'Save'}</button>
-          </div>
+        <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100">
+          <button onClick={onClose} className="px-4 py-1.5 rounded-xl text-gray-600 text-sm hover:bg-gray-100">ยกเลิก</button>
+          <button
+            onClick={handleSave}
+            disabled={saving || loading}
+            className="px-5 py-1.5 rounded-xl bg-brand text-white text-sm font-semibold hover:bg-brand-strong disabled:opacity-50"
+          >{saving ? 'กำลังบันทึก...' : 'Save'}</button>
         </div>
       </div>
 
