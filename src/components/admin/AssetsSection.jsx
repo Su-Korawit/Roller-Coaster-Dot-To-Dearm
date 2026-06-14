@@ -1,8 +1,21 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { ref, uploadBytesResumable, getMetadata, listAll } from 'firebase/storage'
+import { ref, uploadBytes, uploadBytesResumable, getMetadata, listAll } from 'firebase/storage'
 import { storage } from '../../firebase'
+import { useAuthStore } from '../../stores/useAuthStore'
 import { cloudAsset, bustCache } from '../../utils/cloudAsset'
 import { MBTI_TYPES, GAME_ASSET_BY_KEY } from '../../game/assetManifest'
+import MapConfigEditor from './MapConfigEditor'
+import StorageBrowser from './StorageBrowser'
+
+// Copy an existing Storage object onto a fixed game path (download + re-upload),
+// used when "Browse" picks an existing file to stand in for a fixed asset slot.
+async function copyStorageObject(srcPath, destPath) {
+  const url = await cloudAsset(srcPath, { fallback: null })
+  if (!url) throw new Error('โหลดไฟล์ต้นทางไม่สำเร็จ')
+  const blob = await (await fetch(url)).blob()
+  await uploadBytes(ref(storage, destPath), blob, { contentType: blob.type || 'image/png' })
+  bustCache(destPath)
+}
 
 const FRAME = 48
 const COLS  = 4
@@ -96,6 +109,8 @@ function CharactersGrid() {
   const [cloudUrls, setCloudUrls]     = useState({})
   const [uploaded, setUploaded]       = useState(new Set())
   const [loadingList, setLoadingList] = useState(true)
+  const [browseCode, setBrowseCode]   = useState(null) // MBTI code being browsed
+  const [busyCode, setBusyCode]       = useState(null) // code mid-copy
 
   // Check which characters are already uploaded to Storage.
   const refreshList = useCallback(async () => {
@@ -133,6 +148,18 @@ function CharactersGrid() {
     setUploaded((prev) => new Set([...prev, `${code}.png`]))
   }, [])
 
+  const handleBrowsePick = useCallback(async (srcPath) => {
+    const code = browseCode
+    setBrowseCode(null)
+    if (!code) return
+    setBusyCode(code)
+    try {
+      await copyStorageObject(srcPath, `sprites/characters/${code}.png`)
+      handleReplaced(code)
+    } catch { /* surfaced as no-op; admin can retry */ }
+    finally { setBusyCode(null) }
+  }, [browseCode, handleReplaced])
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
@@ -158,16 +185,32 @@ function CharactersGrid() {
                 {!inCloud && (
                   <span className="text-[10px] text-amber-500 font-semibold">local only</span>
                 )}
-                <UploadRow
-                  storagePath={`sprites/characters/${code}.png`}
-                  accept=".png"
-                  onSuccess={() => handleReplaced(code)}
-                  label="Replace"
-                />
+                <div className="flex items-center gap-1.5">
+                  <UploadRow
+                    storagePath={`sprites/characters/${code}.png`}
+                    accept=".png"
+                    onSuccess={() => handleReplaced(code)}
+                    label={busyCode === code ? '...' : 'Upload'}
+                  />
+                  <button
+                    onClick={() => setBrowseCode(code)}
+                    disabled={busyCode === code}
+                    className="px-2 py-1 rounded-lg border border-brand text-brand text-xs font-semibold hover:bg-brand/5 disabled:opacity-50"
+                  >Browse</button>
+                </div>
               </div>
             )
           })}
         </div>
+      )}
+
+      {browseCode && (
+        <StorageBrowser
+          folders={['sprites/characters']}
+          title={`เลือก sprite สำหรับ ${browseCode}`}
+          onPick={handleBrowsePick}
+          onClose={() => setBrowseCode(null)}
+        />
       )}
     </div>
   )
@@ -180,6 +223,8 @@ const MAP_KEYS = ['test3', 'indoor']
 function MapsPanel() {
   const [meta, setMeta]   = useState({})
   const [refresh, setRefresh] = useState(0)
+  const [editKey, setEditKey] = useState(null)
+  const adminUid = useAuthStore((s) => s.user?.uid)
 
   useEffect(() => {
     MAP_KEYS.forEach(async (key) => {
@@ -194,22 +239,11 @@ function MapsPanel() {
     })
   }, [refresh])
 
-  const handleReplaced = useCallback((key) => {
+  const handleSaved = useCallback((key) => {
     const path = GAME_ASSET_BY_KEY[key]?.storagePath
     if (path) bustCache(path)
     setRefresh((n) => n + 1)
   }, [])
-
-  const validateJson = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        try { JSON.parse(e.target.result); resolve() }
-        catch { reject(new Error('ไฟล์ไม่ใช่ JSON ที่ถูกต้อง')) }
-      }
-      reader.readAsText(file)
-    })
-  }
 
   return (
     <div>
@@ -217,7 +251,6 @@ function MapsPanel() {
       <div className="space-y-3">
         {MAP_KEYS.map((key) => {
           const m = meta[key]
-          const path = GAME_ASSET_BY_KEY[key]?.storagePath ?? ''
           return (
             <div key={key} className="flex items-center gap-4 p-4 rounded-2xl bg-white shadow-sm border border-gray-100">
               <div className="flex-1 min-w-0">
@@ -228,63 +261,23 @@ function MapsPanel() {
                    `${(m.size / 1024).toFixed(1)} KB · updated ${new Date(m.updated).toLocaleDateString('th-TH')}`}
                 </p>
               </div>
-              <ValidatedJsonUploadRow
-                storagePath={path}
-                validate={validateJson}
-                onSuccess={() => handleReplaced(key)}
-              />
+              <button
+                onClick={() => setEditKey(key)}
+                className="px-4 py-1.5 rounded-xl bg-brand text-white text-xs font-semibold hover:bg-brand-strong transition-colors"
+              >ตั้งค่า / Replace</button>
             </div>
           )
         })}
       </div>
-    </div>
-  )
-}
 
-// JSON upload with client-side parse validation before upload.
-function ValidatedJsonUploadRow({ storagePath, validate, onSuccess }) {
-  const [progress, setProgress] = useState(null)
-  const [error, setError]       = useState(null)
-  const inputRef = useRef(null)
-
-  const handleFile = useCallback(async (file) => {
-    if (!file) return
-    setError(null)
-    try {
-      await validate(file)
-    } catch (err) {
-      setError(err.message)
-      return
-    }
-    setProgress(0)
-    const task = uploadBytesResumable(ref(storage, storagePath), file, {
-      contentType: 'application/json',
-    })
-    task.on(
-      'state_changed',
-      (snap) => setProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
-      (err) => { setError(err.message); setProgress(null) },
-      () => { setProgress(null); onSuccess?.() },
-    )
-  }, [storagePath, validate, onSuccess])
-
-  return (
-    <div className="flex flex-col items-end gap-1">
-      <button
-        onClick={() => inputRef.current?.click()}
-        disabled={progress !== null}
-        className="px-4 py-1.5 rounded-xl bg-brand text-white text-xs font-semibold hover:bg-brand-strong transition-colors disabled:opacity-50"
-      >
-        {progress !== null ? `${progress}%` : 'Replace'}
-      </button>
-      {error && <span className="text-red-500 text-xs">{error}</span>}
-      {progress !== null && (
-        <div className="h-1 w-32 rounded-full bg-gray-200 overflow-hidden">
-          <div className="h-full bg-brand transition-all" style={{ width: `${progress}%` }} />
-        </div>
+      {editKey && (
+        <MapConfigEditor
+          mapKey={editKey}
+          adminUid={adminUid}
+          onClose={() => setEditKey(null)}
+          onSaved={() => handleSaved(editKey)}
+        />
       )}
-      <input ref={inputRef} type="file" accept=".json" className="hidden"
-        onChange={(e) => handleFile(e.target.files?.[0])} />
     </div>
   )
 }
