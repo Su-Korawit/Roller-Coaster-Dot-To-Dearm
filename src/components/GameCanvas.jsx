@@ -1,6 +1,8 @@
 ﻿import { useEffect, useRef, useState } from 'react'
 import Phaser from 'phaser'
 import { useSelectStore } from '../stores/useSelectStore'
+import { MBTI_TYPES, GAME_ASSETS, GAME_ASSET_BY_KEY } from '../game/assetManifest'
+import { cloudAsset } from '../utils/cloudAsset'
 
 // â”€â”€ CHARACTER MODE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 0 = Basic_Charakter (1 à¸•à¸±à¸§)
@@ -13,14 +15,26 @@ const SPRINT_MULTIPLIER = 2
 const ARRIVE_THRESHOLD = 4
 const DOUBLE_CLICK_MS = 300
 
-const PLAYER_KEY  = 'Basic_Charakter'
+const PLAYER_KEY = 'Basic_Charakter'
 const getZoom = (w) => w < 768 ? 1.5 : w < 1024 ? 3 : 2.5
-const MBTI_TYPES  = [
-  'ENFJ', 'ENFP', 'ENTJ', 'ENTP',
-  'ESFJ', 'ESFP', 'ESTJ', 'ESTP',
-  'INFJ', 'INFP', 'INTJ', 'INTP',
-  'ISFJ', 'ISFP', 'ISTJ', 'ISTP',
-]
+
+// Resolve all game asset cloud URLs before Phaser boots.
+// Returns { [key]: url } — Storage URL if uploaded, local public/ path as fallback.
+async function resolveAssetUrls() {
+  const entries = await Promise.all(
+    GAME_ASSETS.map(async (a) => {
+      const url = await cloudAsset(a.storagePath, { fallback: a.localPath })
+      return [a.key, url ?? a.localPath]
+    })
+  )
+  return Object.fromEntries(entries)
+}
+
+// Read a URL from the registry, falling back to the local public/ path.
+function urlFor(registry, key) {
+  const urls = registry.get('assetUrls') || {}
+  return urls[key] ?? GAME_ASSET_BY_KEY[key]?.localPath ?? null
+}
 
 class GameScene extends Phaser.Scene {
   constructor() {
@@ -32,20 +46,21 @@ class GameScene extends Phaser.Scene {
       console.error('Failed to load:', file.src)
     })
 
-    this.load.tilemapTiledJSON('test3', '/maps/test3.json')
-    this.load.image('Grass',                     '/assets/sprites/Tilesets/Grass.png')
-    this.load.image('Water',                     '/assets/sprites/Tilesets/Water.png')
-    this.load.image('Wooden_House',              '/assets/sprites/Tilesets/Wooden_House.png')
-    this.load.image('Wooden_House_Walls_Tilset', '/assets/sprites/Tilesets/Wooden_House_Walls_Tilset.png')
-    this.load.image('Wooden_House_Roof_Tilset',  '/assets/sprites/Tilesets/Wooden_House_Roof_Tilset.png')
-    this.load.image('Hills',                     '/assets/sprites/Tilesets/Hills.png')
-    this.load.image('Tilled_Dirt',               '/assets/sprites/Tilesets/Tilled_Dirt.png')
-    this.load.image('Tilled_Dirt_v2',            '/assets/sprites/Tilesets/Tilled_Dirt_v2.png')
-    this.load.image('Tilled_Dirt_Wide',          '/assets/sprites/Tilesets/Tilled_Dirt_Wide.png')
-    this.load.image('Tilled_Dirt_Wide_v2',       '/assets/sprites/Tilesets/Tilled_Dirt_Wide_v2.png')
-    this.load.image('Wood_Bridge',               '/assets/sprites/Objects/Wood_Bridge.png')
-    this.load.image('Basic_Grass_Biom_things_1', '/assets/sprites/Objects/Basic_Grass_Biom_things_1.png')
-    this.load.image('Fences',                    '/assets/sprites/Tilesets/Fences.png')
+    const r = this.registry
+    this.load.tilemapTiledJSON('test3',                  urlFor(r, 'test3'))
+    this.load.image('Grass',                             urlFor(r, 'Grass'))
+    this.load.image('Water',                             urlFor(r, 'Water'))
+    this.load.image('Wooden_House',                      urlFor(r, 'Wooden_House'))
+    this.load.image('Wooden_House_Walls_Tilset',         urlFor(r, 'Wooden_House_Walls_Tilset'))
+    this.load.image('Wooden_House_Roof_Tilset',          urlFor(r, 'Wooden_House_Roof_Tilset'))
+    this.load.image('Hills',                             urlFor(r, 'Hills'))
+    this.load.image('Tilled_Dirt',                       urlFor(r, 'Tilled_Dirt'))
+    this.load.image('Tilled_Dirt_v2',                    urlFor(r, 'Tilled_Dirt_v2'))
+    this.load.image('Tilled_Dirt_Wide',                  urlFor(r, 'Tilled_Dirt_Wide'))
+    this.load.image('Tilled_Dirt_Wide_v2',               urlFor(r, 'Tilled_Dirt_Wide_v2'))
+    this.load.image('Wood_Bridge',                       urlFor(r, 'Wood_Bridge'))
+    this.load.image('Basic_Grass_Biom_things_1',         urlFor(r, 'Basic_Grass_Biom_things_1'))
+    this.load.image('Fences',                            urlFor(r, 'Fences'))
 
     if (CHARACTER_MODE === 0) {
       this.load.spritesheet(PLAYER_KEY, '/assets/sprites/Characters/Play2_Charakter_Spritesheet.png', {
@@ -53,9 +68,7 @@ class GameScene extends Phaser.Scene {
       })
     } else {
       MBTI_TYPES.forEach(mbti => {
-        this.load.spritesheet(mbti, `/assets/sprites/Characters/${mbti}_Charakter_Spritesheet.png`, {
-          frameWidth: 48, frameHeight: 48,
-        })
+        this.load.spritesheet(mbti, urlFor(r, mbti), { frameWidth: 48, frameHeight: 48 })
       })
     }
   }
@@ -337,10 +350,11 @@ class IndoorScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.tilemapTiledJSON('indoor', '/maps/indoor.json')
-    this.load.image('Wooden_House',   '/assets/sprites/Tilesets/Wooden_House.png')
-    this.load.image('Basic_Furniture', '/assets/sprites/Objects/Basic_Furniture.png')
-    this.load.image('Chest',          '/assets/sprites/Objects/Chest.png')
+    const r = this.registry
+    this.load.tilemapTiledJSON('indoor',    urlFor(r, 'indoor'))
+    this.load.image('Wooden_House',         urlFor(r, 'Wooden_House'))
+    this.load.image('Basic_Furniture',      urlFor(r, 'Basic_Furniture'))
+    this.load.image('Chest',               urlFor(r, 'Chest'))
   }
 
   create() {
@@ -622,46 +636,60 @@ export default function GameCanvas({ active = true }) {
   const [showZoom, setShowZoom] = useState(false)
   const gameRef = useRef(null)
   const hideTimerRef = useRef(null)
+  const assetUrlsRef = useRef(null) // populated before Phaser boots
 
   // Player locks to the MBTI chosen during onboarding. Held in a ref so the
   // one-time game-creation effect below reads the latest value, not a stale one.
   const selectedMbti = useSelectStore((s) => s.mbti)
   const selectedMbtiRef = useRef(selectedMbti)
-  selectedMbtiRef.current = selectedMbti
+  useEffect(() => { selectedMbtiRef.current = selectedMbti }, [selectedMbti])
 
   useEffect(() => {
     let game = null
+    let cancelled = false
+
+    function bootGame(width, height) {
+      if (game || !assetUrlsRef.current) return
+      const config = {
+        type: Phaser.AUTO,
+        parent: containerRef.current,
+        pixelArt: true,
+        antialias: false,
+        physics: {
+          default: 'arcade',
+          arcade: { gravity: { y: 0 }, debug: false },
+        },
+        scene: [GameScene, IndoorScene],
+        scale: { mode: Phaser.Scale.RESIZE, width, height },
+      }
+      game = new Phaser.Game(config)
+      game.registry.set('selectedMbti', selectedMbtiRef.current)
+      game.registry.set('assetUrls', assetUrlsRef.current)
+      gameRef.current = game
+      game.events.on('zoomChanged', (v) => {
+        setZoom(+v.toFixed(1))
+        setShowZoom(true)
+        clearTimeout(hideTimerRef.current)
+        hideTimerRef.current = setTimeout(() => setShowZoom(false), 1500)
+      })
+    }
+
+    // Resolve cloud URLs first, then let the ResizeObserver boot the game.
+    resolveAssetUrls().then((urls) => {
+      if (cancelled) return
+      assetUrlsRef.current = urls
+      // If the ResizeObserver already fired with a valid size, boot now.
+      if (containerRef.current) {
+        const { width, height } = containerRef.current.getBoundingClientRect()
+        if (width > 0 && height > 0) bootGame(width, height)
+      }
+    })
 
     const ro = new ResizeObserver((entries) => {
       const { width, height } = entries[0].contentRect
       if (width === 0 || height === 0) return
-
       if (!game) {
-        const config = {
-          type: Phaser.AUTO,
-          parent: containerRef.current,
-          pixelArt: true,
-          antialias: false,
-          physics: {
-            default: 'arcade',
-            arcade: { gravity: { y: 0 }, debug: false },
-          },
-          scene: [GameScene, IndoorScene],
-          scale: {
-            mode: Phaser.Scale.RESIZE,
-            width,
-            height,
-          },
-        }
-        game = new Phaser.Game(config)
-        game.registry.set('selectedMbti', selectedMbtiRef.current)
-        gameRef.current = game
-        game.events.on('zoomChanged', (v) => {
-          setZoom(+v.toFixed(1))
-          setShowZoom(true)
-          clearTimeout(hideTimerRef.current)
-          hideTimerRef.current = setTimeout(() => setShowZoom(false), 1500)
-        })
+        bootGame(width, height)
       } else {
         game.scale.resize(width, height)
       }
@@ -670,6 +698,7 @@ export default function GameCanvas({ active = true }) {
     ro.observe(containerRef.current)
 
     return () => {
+      cancelled = true
       ro.disconnect()
       clearTimeout(hideTimerRef.current)
       if (game) game.destroy(true)
