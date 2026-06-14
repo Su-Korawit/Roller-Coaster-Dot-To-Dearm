@@ -47,5 +47,13 @@ service cloud.firestore {
         allow create: if isSignedIn() && request.auth.uid in chatMembers();
       }
     }
+
+    // Per-map runtime config (tileset→Storage mapping, per-layer collision).
+    // World-readable so the game can boot for anyone; only the admin edits it
+    // via the Admin Dashboard.
+    match /mapConfigs/{key} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
   }
 }

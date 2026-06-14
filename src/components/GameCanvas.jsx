@@ -3,6 +3,7 @@ import Phaser from 'phaser'
 import { useSelectStore } from '../stores/useSelectStore'
 import { MBTI_TYPES, GAME_ASSETS, GAME_ASSET_BY_KEY } from '../game/assetManifest'
 import { cloudAsset } from '../utils/cloudAsset'
+import { getMapConfig, DEFAULT_MAP_CONFIGS } from '../utils/mapConfig'
 
 // â”€â”€ CHARACTER MODE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 0 = Basic_Charakter (1 à¸•à¸±à¸§)
@@ -36,6 +37,96 @@ function urlFor(registry, key) {
   return urls[key] ?? GAME_ASSET_BY_KEY[key]?.localPath ?? null
 }
 
+// storagePath → local public/ path, for resolving fallbacks of config tilesets.
+const LOCAL_BY_STORAGE = Object.fromEntries(GAME_ASSETS.map((a) => [a.storagePath, a.localPath]))
+
+// Resolve a map's config (tileset name → Storage path, per-layer collision/hidden)
+// plus a resolved URL for each tileset image, with local public/ fallback.
+async function resolveMapTilesets(cfg) {
+  const out = {}
+  await Promise.all(
+    Object.entries(cfg.tilesets || {}).map(async ([name, storagePath]) => {
+      const local = LOCAL_BY_STORAGE[storagePath] ?? null
+      const url = await cloudAsset(storagePath, { fallback: local })
+      out[name] = { url: url ?? local, local }
+    }),
+  )
+  return out
+}
+
+// Re-queue a single asset from its local public/ path after a cloud load failed.
+function reloadLocal(scene, key, spec) {
+  if (!spec?.local) return
+  if (spec.kind === 'spritesheet')    scene.load.spritesheet(key, spec.local, spec.frameConfig)
+  else if (spec.kind === 'tilemap')   scene.load.tilemapTiledJSON(key, spec.local)
+  else                                scene.load.image(key, spec.local)
+}
+
+// When a cloud asset 500s/404s mid-load, fall back to its local public/ copy so
+// the map still renders. `localByKey` maps Phaser key → { local, kind }. Each key
+// is retried at most once to avoid loops when the local copy is missing too.
+function attachLocalFallback(scene, localByKey) {
+  const retried = new Set()
+  scene.load.on('loaderror', (file) => {
+    const spec = localByKey[file.key]
+    if (!spec || retried.has(file.key)) return
+    retried.add(file.key)
+    reloadLocal(scene, file.key, spec)
+    scene.load.start()
+  })
+}
+
+// Apply per-cell collision: a cell blocks only if no VISIBLE, non-collision layer
+// sits ABOVE the topmost collision tile there. This lets the player walk on
+// overpasses (the Bridge over Water, a grass shoreline over Water) while invisible
+// masks (the Roof overlay, the indoor Collision layer) keep their intended behavior.
+function applyCollision(scene, map, layerInfos, cfg, player) {
+  const isColl = (n) => !!cfg.collision?.[n]
+  layerInfos.forEach(({ name, layer }) => {
+    if (layer && isColl(name)) layer.setCollisionByExclusion([-1])
+  })
+  for (let y = 0; y < map.height; y++) {
+    for (let x = 0; x < map.width; x++) {
+      let cover = -1
+      for (let i = layerInfos.length - 1; i >= 0; i--) {
+        const { name, layer } = layerInfos[i]
+        if (!layer || isColl(name) || layer.visible === false) continue
+        if (layer.getTileAt(x, y)) { cover = i; break }
+      }
+      if (cover < 0) continue
+      for (let i = 0; i < cover; i++) {
+        const { name, layer } = layerInfos[i]
+        if (layer && isColl(name)) {
+          const t = layer.getTileAt(x, y)
+          if (t) t.setCollision(false)
+        }
+      }
+    }
+  }
+  layerInfos.forEach(({ name, layer }) => {
+    if (layer && isColl(name)) scene.physics.add.collider(player, layer)
+  })
+}
+
+// Everything Phaser needs before booting: character/map URLs (assetUrls), the two
+// maps' configs, and a resolved tileset image URL per Tiled tileset name.
+async function loadSceneData() {
+  const [assetUrls, test3Cfg, indoorCfg] = await Promise.all([
+    resolveAssetUrls(),
+    getMapConfig('test3'),
+    getMapConfig('indoor'),
+  ])
+  const [test3Tiles, indoorTiles] = await Promise.all([
+    resolveMapTilesets(test3Cfg),
+    resolveMapTilesets(indoorCfg),
+  ])
+  return {
+    assetUrls,
+    mapConfigs: { test3: test3Cfg, indoor: indoorCfg },
+    tilesetUrls: { test3: test3Tiles, indoor: indoorTiles },
+  }
+}
+
 class GameScene extends Phaser.Scene {
   constructor() {
     super({ key: 'GameScene' })
@@ -47,20 +138,16 @@ class GameScene extends Phaser.Scene {
     })
 
     const r = this.registry
-    this.load.tilemapTiledJSON('test3',                  urlFor(r, 'test3'))
-    this.load.image('Grass',                             urlFor(r, 'Grass'))
-    this.load.image('Water',                             urlFor(r, 'Water'))
-    this.load.image('Wooden_House',                      urlFor(r, 'Wooden_House'))
-    this.load.image('Wooden_House_Walls_Tilset',         urlFor(r, 'Wooden_House_Walls_Tilset'))
-    this.load.image('Wooden_House_Roof_Tilset',          urlFor(r, 'Wooden_House_Roof_Tilset'))
-    this.load.image('Hills',                             urlFor(r, 'Hills'))
-    this.load.image('Tilled_Dirt',                       urlFor(r, 'Tilled_Dirt'))
-    this.load.image('Tilled_Dirt_v2',                    urlFor(r, 'Tilled_Dirt_v2'))
-    this.load.image('Tilled_Dirt_Wide',                  urlFor(r, 'Tilled_Dirt_Wide'))
-    this.load.image('Tilled_Dirt_Wide_v2',               urlFor(r, 'Tilled_Dirt_Wide_v2'))
-    this.load.image('Wood_Bridge',                       urlFor(r, 'Wood_Bridge'))
-    this.load.image('Basic_Grass_Biom_things_1',         urlFor(r, 'Basic_Grass_Biom_things_1'))
-    this.load.image('Fences',                            urlFor(r, 'Fences'))
+    const localByKey = {}
+
+    localByKey['test3'] = { local: GAME_ASSET_BY_KEY['test3']?.localPath, kind: 'tilemap' }
+    this.load.tilemapTiledJSON('test3', urlFor(r, 'test3'))
+
+    const tiles = r.get('tilesetUrls')?.test3 ?? {}
+    Object.entries(tiles).forEach(([name, { url, local }]) => {
+      localByKey[name] = { local, kind: 'image' }
+      this.load.image(name, url)
+    })
 
     if (CHARACTER_MODE === 0) {
       this.load.spritesheet(PLAYER_KEY, '/assets/sprites/Characters/Play2_Charakter_Spritesheet.png', {
@@ -68,41 +155,37 @@ class GameScene extends Phaser.Scene {
       })
     } else {
       MBTI_TYPES.forEach(mbti => {
+        localByKey[mbti] = {
+          local: GAME_ASSET_BY_KEY[mbti]?.localPath,
+          kind: 'spritesheet',
+          frameConfig: { frameWidth: 48, frameHeight: 48 },
+        }
         this.load.spritesheet(mbti, urlFor(r, mbti), { frameWidth: 48, frameHeight: 48 })
       })
     }
+
+    attachLocalFallback(this, localByKey)
   }
 
   create() {
     const map = this.make.tilemap({ key: 'test3' })
+    const cfg = this.registry.get('mapConfigs')?.test3 ?? DEFAULT_MAP_CONFIGS.test3
 
-    const tilesets = [
-      map.addTilesetImage('Grass',                     'Grass'),
-      map.addTilesetImage('Water',                     'Water'),
-      map.addTilesetImage('Wooden House',              'Wooden_House'),
-      map.addTilesetImage('Wooden_House_Walls_Tilset', 'Wooden_House_Walls_Tilset'),
-      map.addTilesetImage('Wooden_House_Roof_Tilset',  'Wooden_House_Roof_Tilset'),
-      map.addTilesetImage('Hills',                     'Hills'),
-      map.addTilesetImage('Tilled Dirt',               'Tilled_Dirt'),
-      map.addTilesetImage('Tilled_Dirt_v2',            'Tilled_Dirt_v2'),
-      map.addTilesetImage('Tilled_Dirt_Wide',          'Tilled_Dirt_Wide'),
-      map.addTilesetImage('Tilled_Dirt_Wide_v2',       'Tilled_Dirt_Wide_v2'),
-      map.addTilesetImage('Wood_Bridge',               'Wood_Bridge'),
-      map.addTilesetImage('Basic Grass Biom things 1', 'Basic_Grass_Biom_things_1'),
-      map.addTilesetImage('Fences',                    'Fences'),
-    ]
+    // Build tilesets/layers straight from the parsed map. Each tileset image was
+    // preloaded under its Tiled name (see preload), so name === Phaser key.
+    const tilesets = map.tilesets
+      .map(ts => map.addTilesetImage(ts.name, ts.name))
+      .filter(Boolean)
 
-    const layers = [
-      map.createLayer('Water',     tilesets, 0, 0),
-      map.createLayer('Grass',     tilesets, 0, 0),
-      map.createLayer('Path',      tilesets, 0, 0),
-      map.createLayer('Bridge',    tilesets, 0, 0),
-      map.createLayer('Hill/Wall', tilesets, 0, 0),
-      map.createLayer('Object',    tilesets, 0, 0),
-      map.createLayer('Roof',      tilesets, 0, 0),
-    ]
-    const [waterLayer, , , , wallLayer, objectLayer] = layers
-    layers.forEach((layer, i) => layer && layer.setDepth(i))
+    const layerInfos = map.layers.map((ld, i) => {
+      const layer = map.createLayer(ld.name, tilesets, 0, 0)
+      if (layer) {
+        layer.setDepth(i)
+        if (cfg.hidden?.[ld.name]) layer.setVisible(false)
+      }
+      return { name: ld.name, layer }
+    })
+    const layers = layerInfos.map(l => l.layer).filter(Boolean)
 
     const scaleX   = this.scale.width / map.widthInPixels
     const scaleY   = this.scale.height / map.heightInPixels
@@ -169,15 +252,14 @@ class GameScene extends Phaser.Scene {
     this.player.setCollideWorldBounds(true)
     this.player.play(`${this.currentMbti}-idle`)
 
-    ;[waterLayer, wallLayer].forEach(layer => layer && layer.setCollisionByExclusion([-1]))
-    if (objectLayer) objectLayer.setCollisionBetween(78, 9999) // excludes Grass tileset (IDs 1–77) so decorative grass tufts stay walkable
-    if (waterLayer)  this.physics.add.collider(this.player, waterLayer)
-    if (wallLayer)   this.physics.add.collider(this.player, wallLayer)
-    if (objectLayer) this.physics.add.collider(this.player, objectLayer)
+    // Collision: layers the admin marked in mapConfigs block the player, except
+    // where a walkable layer (e.g. the Bridge) sits on top.
+    applyCollision(this, map, layerInfos, cfg, this.player)
 
     // Door trigger â€“ enter indoor
     this.transitioning = false
-    const doorToIndoor = map.findObject('Doors', o => o.name === 'door_to_indoor')
+    const doorToIndoor = map.getObjectLayer('Doors') &&
+      map.findObject('Doors', o => o.name === 'door_to_indoor')
     if (doorToIndoor) {
       const dz = this.add.zone(
         doorToIndoor.x * mapScale + doorToIndoor.width  * mapScale / 2,
@@ -350,49 +432,56 @@ class IndoorScene extends Phaser.Scene {
   }
 
   preload() {
+    this.load.on('loaderror', (file) => {
+      console.error('Failed to load:', file.src)
+    })
+
     const r = this.registry
-    this.load.tilemapTiledJSON('indoor',    urlFor(r, 'indoor'))
-    this.load.image('Wooden_House',         urlFor(r, 'Wooden_House'))
-    this.load.image('Basic_Furniture',      urlFor(r, 'Basic_Furniture'))
-    this.load.image('Chest',               urlFor(r, 'Chest'))
+    const localByKey = {}
+
+    localByKey['indoor'] = { local: GAME_ASSET_BY_KEY['indoor']?.localPath, kind: 'tilemap' }
+    this.load.tilemapTiledJSON('indoor', urlFor(r, 'indoor'))
+
+    const tiles = r.get('tilesetUrls')?.indoor ?? {}
+    Object.entries(tiles).forEach(([name, { url, local }]) => {
+      localByKey[name] = { local, kind: 'image' }
+      this.load.image(name, url)
+    })
+
+    attachLocalFallback(this, localByKey)
   }
 
   create() {
     const map = this.make.tilemap({ key: 'indoor' })
+    const cfg = this.registry.get('mapConfigs')?.indoor ?? DEFAULT_MAP_CONFIGS.indoor
 
-    const furnitureTiles = map.addTilesetImage('Basic_Furniture', 'Basic_Furniture')
-    const houseTiles     = map.addTilesetImage('Wooden_House',    'Wooden_House')
-    const chestTiles     = map.addTilesetImage('Chest',           'Chest')
-    const tilesets = [furnitureTiles, houseTiles, chestTiles]
+    const tilesets = map.tilesets
+      .map(ts => map.addTilesetImage(ts.name, ts.name))
+      .filter(Boolean)
 
-    const groundLayer    = map.createLayer('Ground',    tilesets, 0, 0)
-    const objectsLayer   = map.createLayer('Objects',   tilesets, 0, 0)
-    const collisionLayer = map.createLayer('Collision', tilesets, 0, 0)
-    if (!collisionLayer) {
-      console.error('Indoor Collision layer not found!')
-    } else {
-      collisionLayer.setVisible(false)
-      collisionLayer.setCollisionByExclusion([-1])
-    }
-
-    groundLayer.setDepth(0)
-    objectsLayer.setDepth(1)
-    if (collisionLayer) collisionLayer.setDepth(2)
+    const layerInfos = map.layers.map((ld, i) => {
+      const layer = map.createLayer(ld.name, tilesets, 0, 0)
+      if (layer) {
+        layer.setDepth(i)
+        if (cfg.hidden?.[ld.name]) layer.setVisible(false)
+      }
+      return { name: ld.name, layer }
+    })
+    const layers = layerInfos.map(l => l.layer).filter(Boolean)
 
     const scaleX   = this.scale.width  / map.widthInPixels
     const scaleY   = this.scale.height / map.heightInPixels
     const mapScale = Math.ceil(Math.max(scaleX, scaleY))
 
-    groundLayer.setScale(mapScale)
-    objectsLayer.setScale(mapScale)
-    if (collisionLayer) collisionLayer.setScale(mapScale)
+    layers.forEach(layer => layer && layer.setScale(mapScale))
 
     const worldW = map.widthInPixels  * mapScale
     const worldH = map.heightInPixels * mapScale
 
     this.physics.world.setBounds(0, 0, worldW, worldH)
 
-    const spawnDoor = map.findObject('Door', o => o.name === 'door_to_world')
+    const spawnDoor = map.getObjectLayer('Door') &&
+      map.findObject('Door', o => o.name === 'door_to_world')
     const spawnX = 6 * 16 * mapScale
     const spawnY = 12 * 16 * mapScale
 
@@ -461,7 +550,9 @@ class IndoorScene extends Phaser.Scene {
     this.player.setCollideWorldBounds(true)
     this.player.play(`${this.currentMbti}-idle`)
 
-    if (collisionLayer) this.physics.add.collider(this.player, collisionLayer)
+    // Collision: layers the admin marked in mapConfigs block the player, except
+    // where a walkable layer sits on top.
+    applyCollision(this, map, layerInfos, cfg, this.player)
 
     // Door trigger â€“ exit to world; block for 500ms so spawn doesn't immediately re-fire
     this.transitioning = true
@@ -664,7 +755,9 @@ export default function GameCanvas({ active = true }) {
       }
       game = new Phaser.Game(config)
       game.registry.set('selectedMbti', selectedMbtiRef.current)
-      game.registry.set('assetUrls', assetUrlsRef.current)
+      game.registry.set('assetUrls', assetUrlsRef.current.assetUrls)
+      game.registry.set('mapConfigs', assetUrlsRef.current.mapConfigs)
+      game.registry.set('tilesetUrls', assetUrlsRef.current.tilesetUrls)
       gameRef.current = game
       game.events.on('zoomChanged', (v) => {
         setZoom(+v.toFixed(1))
@@ -674,10 +767,10 @@ export default function GameCanvas({ active = true }) {
       })
     }
 
-    // Resolve cloud URLs first, then let the ResizeObserver boot the game.
-    resolveAssetUrls().then((urls) => {
+    // Resolve map configs + cloud URLs first, then let the ResizeObserver boot.
+    loadSceneData().then((data) => {
       if (cancelled) return
-      assetUrlsRef.current = urls
+      assetUrlsRef.current = data
       // If the ResizeObserver already fired with a valid size, boot now.
       if (containerRef.current) {
         const { width, height } = containerRef.current.getBoundingClientRect()
