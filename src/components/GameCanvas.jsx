@@ -88,7 +88,7 @@ class GameScene extends Phaser.Scene {
       map.createLayer('Object',    tilesets, 0, 0),
       map.createLayer('Roof',      tilesets, 0, 0),
     ]
-    const [waterLayer, , , , wallLayer] = layers
+    const [waterLayer, , , , wallLayer, objectLayer] = layers
     layers.forEach((layer, i) => layer && layer.setDepth(i))
 
     const scaleX   = this.scale.width / map.widthInPixels
@@ -157,8 +157,10 @@ class GameScene extends Phaser.Scene {
     this.player.play(`${this.currentMbti}-idle`)
 
     ;[waterLayer, wallLayer].forEach(layer => layer && layer.setCollisionByExclusion([-1]))
-    if (waterLayer) this.physics.add.collider(this.player, waterLayer)
-    if (wallLayer)  this.physics.add.collider(this.player, wallLayer)
+    if (objectLayer) objectLayer.setCollisionBetween(78, 9999) // excludes Grass tileset (IDs 1–77) so decorative grass tufts stay walkable
+    if (waterLayer)  this.physics.add.collider(this.player, waterLayer)
+    if (wallLayer)   this.physics.add.collider(this.player, wallLayer)
+    if (objectLayer) this.physics.add.collider(this.player, objectLayer)
 
     // Door trigger â€“ enter indoor
     this.transitioning = false
