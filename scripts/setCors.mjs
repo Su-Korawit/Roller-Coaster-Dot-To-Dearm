@@ -9,11 +9,7 @@ admin.initializeApp({
 
 const corsConfig = [
   {
-    origin: [
-      'http://localhost:5173',
-      'https://rollercoasterdottodream.web.app',
-      'https://rollercoasterdottodream.firebaseapp.com',
-    ],
+    origin: ['*'],
     method: ['GET'],
     maxAgeSeconds: 3600,
     responseHeader: ['Content-Type', 'Access-Control-Allow-Origin'],
