@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../../firebase'
 import { MBTI_TYPES } from '../../game/assetManifest'
+import { useTcasUniversities } from '../../hooks/useMytcas'
 
 // Reads the entire `users` collection client-side (admin-only Firestore rule guards
 // this). If user count grows past ~5k, swap getAggregate() to a Cloud-Function
@@ -70,6 +71,15 @@ export default function AnalyticsSection() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+
+  // university_id → Thai name. Counts are keyed by id (stored in Firestore);
+  // Object.entries() in getAggregate() stringifies them, so key the map with
+  // String() too or lookups silently miss.
+  const { universities } = useTcasUniversities()
+  const uniNames = useMemo(
+    () => new Map(universities.map((u) => [String(u.university_id), u.university_name_th])),
+    [universities],
+  )
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -164,7 +174,7 @@ export default function AnalyticsSection() {
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Top Universities</h3>
           <div className="space-y-1.5">
             {topUniversities.map(([uni, count]) => (
-              <Bar key={uni} label={uni} value={count} max={maxUni} color="bg-brand-strong" />
+              <Bar key={uni} label={uniNames.get(uni) ?? uni} value={count} max={maxUni} color="bg-brand-strong" />
             ))}
           </div>
         </section>
@@ -176,7 +186,7 @@ export default function AnalyticsSection() {
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Top Programs</h3>
           <div className="space-y-1.5">
             {topPrograms.map(([prog, count]) => (
-              <Bar key={prog} label={prog} value={count} max={maxProg} color="bg-emerald-500" />
+              <Bar key={prog} label={`หลักสูตร #${prog}`} value={count} max={maxProg} color="bg-emerald-500" />
             ))}
           </div>
         </section>
