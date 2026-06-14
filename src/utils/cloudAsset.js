@@ -22,6 +22,11 @@ export function cloudAsset(path, { fallback = null } = {}) {
 
 // Drop a cached URL so the next cloudAsset() re-fetches — used after an admin
 // replaces an asset in Storage.
+//
+// TECH DEBT (M-6): the cache holds the Promise, not the resolved string, so a
+// caller that already awaited the pre-bust Promise keeps the old (fallback) URL
+// until its next cloudAsset() call. Acceptable at current traffic; the complete
+// fix is to cache resolved strings and force re-resolution here.
 export function bustCache(path) {
   urlCache.delete(path)
 }

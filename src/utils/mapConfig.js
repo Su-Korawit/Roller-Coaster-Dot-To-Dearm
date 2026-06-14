@@ -64,6 +64,7 @@ export async function getMapConfig(key) {
 }
 
 export async function saveMapConfig(key, { tilesets, collision, hidden }, uid) {
+  if (!uid) console.warn('[saveMapConfig] no uid passed — updatedBy will be null (audit trail lost)')
   await setDoc(
     cfgRef(key),
     { tilesets, collision, hidden, updatedAt: serverTimestamp(), updatedBy: uid ?? null },
