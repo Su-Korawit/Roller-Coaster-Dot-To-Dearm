@@ -67,13 +67,18 @@ function reloadLocal(scene, key, spec) {
 // is retried at most once to avoid loops when the local copy is missing too.
 function attachLocalFallback(scene, localByKey) {
   const retried = new Set()
-  scene.load.on('loaderror', (file) => {
+  const handler = (file) => {
     const spec = localByKey[file.key]
     if (!spec || retried.has(file.key)) return
     retried.add(file.key)
     reloadLocal(scene, file.key, spec)
     scene.load.start()
-  })
+  }
+  // preload() re-runs on every scene.start, and the scene's LoaderPlugin persists,
+  // so remove this listener on shutdown to stop handlers accumulating across
+  // indoor↔outdoor transitions (.once auto-removes itself after each shutdown).
+  scene.load.on('loaderror', handler)
+  scene.events.once('shutdown', () => scene.load.off('loaderror', handler))
 }
 
 // Apply per-cell collision: a cell blocks only if no VISIBLE, non-collision layer
@@ -133,9 +138,9 @@ class GameScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.on('loaderror', (file) => {
-      console.error('Failed to load:', file.src)
-    })
+    const onLoadError = (file) => console.error('Failed to load:', file.src)
+    this.load.on('loaderror', onLoadError)
+    this.events.once('shutdown', () => this.load.off('loaderror', onLoadError))
 
     const r = this.registry
     const localByKey = {}
@@ -204,38 +209,55 @@ class GameScene extends Phaser.Scene {
       { key: 'walk-left',  start: 8,  end: 11 },
       { key: 'walk-right', start: 12, end: 15 },
     ]
+    // Phaser's AnimationManager is global and scene.start() re-runs create(), so
+    // guard every anims.create() with exists() (IndoorScene does the same). The
+    // textures.exists() check guards the loaderror→retry race where create() can
+    // run before a re-queued spritesheet finished loading.
     if (CHARACTER_MODE === 0) {
       DIRS.forEach(({ key, start, end }) => {
-        this.anims.create({
-          key: `${PLAYER_KEY}-${key}`,
-          frames: this.anims.generateFrameNumbers(PLAYER_KEY, { start, end }),
-          frameRate: 8,
-          repeat: -1,
-        })
-      })
-      this.anims.create({
-        key: `${PLAYER_KEY}-idle`,
-        frames: this.anims.generateFrameNumbers(PLAYER_KEY, { frames: [0] }),
-        frameRate: 1,
-        repeat: 0,
-      })
-      this.currentMbti = PLAYER_KEY
-    } else {
-      MBTI_TYPES.forEach(mbti => {
-        DIRS.forEach(({ key, start, end }) => {
+        const animKey = `${PLAYER_KEY}-${key}`
+        if (!this.anims.exists(animKey) && this.textures.exists(PLAYER_KEY)) {
           this.anims.create({
-            key: `${mbti}-${key}`,
-            frames: this.anims.generateFrameNumbers(mbti, { start, end }),
+            key: animKey,
+            frames: this.anims.generateFrameNumbers(PLAYER_KEY, { start, end }),
             frameRate: 8,
             repeat: -1,
           })
-        })
+        }
+      })
+      const idleKey = `${PLAYER_KEY}-idle`
+      if (!this.anims.exists(idleKey) && this.textures.exists(PLAYER_KEY)) {
         this.anims.create({
-          key: `${mbti}-idle`,
-          frames: this.anims.generateFrameNumbers(mbti, { frames: [0] }),
+          key: idleKey,
+          frames: this.anims.generateFrameNumbers(PLAYER_KEY, { frames: [0] }),
           frameRate: 1,
           repeat: 0,
         })
+      }
+      this.currentMbti = PLAYER_KEY
+    } else {
+      MBTI_TYPES.forEach(mbti => {
+        if (!this.textures.exists(mbti)) return
+        DIRS.forEach(({ key, start, end }) => {
+          const animKey = `${mbti}-${key}`
+          if (!this.anims.exists(animKey)) {
+            this.anims.create({
+              key: animKey,
+              frames: this.anims.generateFrameNumbers(mbti, { start, end }),
+              frameRate: 8,
+              repeat: -1,
+            })
+          }
+        })
+        const idleKey = `${mbti}-idle`
+        if (!this.anims.exists(idleKey)) {
+          this.anims.create({
+            key: idleKey,
+            frames: this.anims.generateFrameNumbers(mbti, { frames: [0] }),
+            frameRate: 1,
+            repeat: 0,
+          })
+        }
       })
       const chosen = this.registry.get('selectedMbti')
       this.mbtiIndex   = Math.max(0, MBTI_TYPES.indexOf(chosen))
@@ -332,12 +354,16 @@ class GameScene extends Phaser.Scene {
     })
     this.usingWasd = false
 
-    this.scale.on('resize', (gameSize) => {
+    // See GameScene: this.scale is the game-level ScaleManager; remove our resize
+    // listener on shutdown so it doesn't accumulate across transitions.
+    const onResize = (gameSize) => {
       const newZoom = getZoom(gameSize.width)
       this.cameras.main.setSize(gameSize.width, gameSize.height)
       this.cameras.main.setZoom(newZoom)
       this.game.events.emit('zoomChanged', newZoom)
-    })
+    }
+    this.scale.on('resize', onResize)
+    this.events.once('shutdown', () => this.scale.off('resize', onResize))
   }
 
   update() {
@@ -432,9 +458,9 @@ class IndoorScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.on('loaderror', (file) => {
-      console.error('Failed to load:', file.src)
-    })
+    const onLoadError = (file) => console.error('Failed to load:', file.src)
+    this.load.on('loaderror', onLoadError)
+    this.events.once('shutdown', () => this.load.off('loaderror', onLoadError))
 
     const r = this.registry
     const localByKey = {}
@@ -516,6 +542,7 @@ class IndoorScene extends Phaser.Scene {
       this.currentMbti = PLAYER_KEY
     } else {
       MBTI_TYPES.forEach(mbti => {
+        if (!this.textures.exists(mbti)) return
         DIRS.forEach(({ key, start, end }) => {
           const animKey = `${mbti}-${key}`
           if (!this.anims.exists(animKey)) {
@@ -627,12 +654,17 @@ class IndoorScene extends Phaser.Scene {
     })
     this.usingWasd = false
 
-    this.scale.on('resize', (gameSize) => {
+    // this.scale is the game-level ScaleManager (not a per-scene plugin), so its
+    // listeners aren't cleared on scene shutdown — remove ours explicitly or they
+    // accumulate across every indoor↔outdoor transition.
+    const onResize = (gameSize) => {
       const newZoom = getZoom(gameSize.width)
       this.cameras.main.setSize(gameSize.width, gameSize.height)
       this.cameras.main.setZoom(newZoom)
       this.game.events.emit('zoomChanged', newZoom)
-    })
+    }
+    this.scale.on('resize', onResize)
+    this.events.once('shutdown', () => this.scale.off('resize', onResize))
   }
 
   update() {
@@ -795,6 +827,7 @@ export default function GameCanvas({ active = true }) {
       ro.disconnect()
       clearTimeout(hideTimerRef.current)
       if (game) game.destroy(true)
+      gameRef.current = null
     }
   }, [])
 
