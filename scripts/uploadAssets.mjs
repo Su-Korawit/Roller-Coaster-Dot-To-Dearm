@@ -12,7 +12,7 @@
 // Bucket defaults to the project's Storage bucket; override with
 // FIREBASE_STORAGE_BUCKET if needed.
 
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { readFile, readdir } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
@@ -112,6 +112,11 @@ async function main() {
       metadata: {
         contentType: contentTypeFor(job.local),
         cacheControl: 'public, max-age=3600',
+        metadata: {
+          // Required for Firebase getDownloadURL() to work in production.
+          // Without this token the signed URL returns HTTP 500 on ?alt=media.
+          firebaseStorageDownloadTokens: randomUUID(),
+        },
       },
     })
     console.log('  uploaded:', job.dest)
