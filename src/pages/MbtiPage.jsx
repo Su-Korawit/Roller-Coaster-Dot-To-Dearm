@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import TopBar from '../components/TopBar'
+import CharacterSprite from '../components/ui/CharacterSprite'
 import { mbtiCharacters, mbtiDescriptions } from '../data/onboardingData'
 import { useSelectStore } from '../stores/useSelectStore'
 import { useAuthStore } from '../stores/useAuthStore'
@@ -35,16 +36,16 @@ function MbtiPage() {
           {current.code} - {current.name}
         </p>
 
+        <div className="mt-7 flex justify-center">
+          <CharacterSprite code={current.code} />
+        </div>
+
         <p
-          className="mt-1 text-sm text-center"
+          className="mt-4 text-sm leading-relaxed text-center"
           style={{ color: '#5D3FD3', fontFamily: "'Noto Sans Thai', sans-serif" }}
         >
           {mbtiDescriptions[current.code]}
         </p>
-
-        <div className="mt-7 flex justify-center">
-          <img src={current.image} alt={current.code} className="h-52 md:h-64 lg:h-72 w-auto object-contain" />
-        </div>
 
         <p
           className="mt-2 text-xs leading-relaxed text-black/70"

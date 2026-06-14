@@ -1,5 +1,6 @@
 ﻿import { useEffect, useRef, useState } from 'react'
 import Phaser from 'phaser'
+import { useSelectStore } from '../stores/useSelectStore'
 
 // â”€â”€ CHARACTER MODE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 0 = Basic_Charakter (1 à¸•à¸±à¸§)
@@ -140,19 +141,9 @@ class GameScene extends Phaser.Scene {
           repeat: 0,
         })
       })
-      this.mbtiIndex   = 0
-      this.currentMbti = MBTI_TYPES[0]
-      this.time.addEvent({
-        delay: 1000,
-        loop: true,
-        callback: () => {
-          this.mbtiIndex   = (this.mbtiIndex + 1) % MBTI_TYPES.length
-          this.currentMbti = MBTI_TYPES[this.mbtiIndex]
-          const curKey = this.player.anims.currentAnim?.key ?? ''
-          const suffix = curKey.includes('-') ? curKey.split('-').slice(1).join('-') : 'idle'
-          this.player.play(`${this.currentMbti}-${suffix}`)
-        },
-      })
+      const chosen = this.registry.get('selectedMbti')
+      this.mbtiIndex   = Math.max(0, MBTI_TYPES.indexOf(chosen))
+      this.currentMbti = MBTI_TYPES[this.mbtiIndex]
     }
 
     const spawnX = 35 * 16 * mapScale
@@ -441,19 +432,9 @@ class IndoorScene extends Phaser.Scene {
           })
         }
       })
-      this.mbtiIndex   = 0
-      this.currentMbti = MBTI_TYPES[0]
-      this.time.addEvent({
-        delay: 1000,
-        loop: true,
-        callback: () => {
-          this.mbtiIndex   = (this.mbtiIndex + 1) % MBTI_TYPES.length
-          this.currentMbti = MBTI_TYPES[this.mbtiIndex]
-          const curKey = this.player.anims.currentAnim?.key ?? ''
-          const suffix = curKey.includes('-') ? curKey.split('-').slice(1).join('-') : 'idle'
-          this.player.play(`${this.currentMbti}-${suffix}`)
-        },
-      })
+      const chosen = this.registry.get('selectedMbti')
+      this.mbtiIndex   = Math.max(0, MBTI_TYPES.indexOf(chosen))
+      this.currentMbti = MBTI_TYPES[this.mbtiIndex]
     }
 
     this.player = this.physics.add.sprite(spawnX, spawnY, this.currentMbti)
@@ -640,6 +621,12 @@ export default function GameCanvas({ active = true }) {
   const gameRef = useRef(null)
   const hideTimerRef = useRef(null)
 
+  // Player locks to the MBTI chosen during onboarding. Held in a ref so the
+  // one-time game-creation effect below reads the latest value, not a stale one.
+  const selectedMbti = useSelectStore((s) => s.mbti)
+  const selectedMbtiRef = useRef(selectedMbti)
+  selectedMbtiRef.current = selectedMbti
+
   useEffect(() => {
     let game = null
 
@@ -665,6 +652,7 @@ export default function GameCanvas({ active = true }) {
           },
         }
         game = new Phaser.Game(config)
+        game.registry.set('selectedMbti', selectedMbtiRef.current)
         gameRef.current = game
         game.events.on('zoomChanged', (v) => {
           setZoom(+v.toFixed(1))
