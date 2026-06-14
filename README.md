@@ -48,7 +48,7 @@ Status key:
 | Google OAuth sign-in | ✅ | Firebase popup flow |
 | Email / password sign-in & registration | ✅ | Firebase Auth |
 | Two-way Firestore ↔ localStorage sync | ✅ | On every selection + on login |
-| MBTI selection (16 types, pixel-art characters) | ✅ | Step 1 of 5 |
+| MBTI selection (16 types, pixel-art characters) | ✅ | Step 1 of 5; live animated sprite preview per type; rich Thai descriptions (strengths, weaknesses, learning style) |
 | Career selection (946 careers — 23 curated MBTI-filtered + 923 O*NET via search) | ✅ | Step 2 of 5 |
 | Mastery track selection (18 tracks, career-filtered) | ✅ | Step 3 of 5 |
 | University selection (30+ Thai institutions) | ✅ | Step 4 of 5 |
@@ -57,7 +57,7 @@ Status key:
 ### Home Screen
 | Feature | Status | Notes |
 |---|---|---|
-| Phaser 3 pixel-art game (live interactive background) | ✅ | Fullscreen Phaser 3.88.0 game in RESIZE mode; tracks viewport on all devices via ResizeObserver |
+| Phaser 3 pixel-art game (live interactive background) | ✅ | Fullscreen Phaser 3.88.0 game in RESIZE mode; tracks viewport on all devices via ResizeObserver; player sprite locked to selected MBTI type; collision with trees, fences, and walls on outdoor map |
 | Background music player (4 spliced tracks) | ✅ | Marquee track name, play/pause, track list |
 | Streak (🔥 totalStacks) + coin display | ✅ | |
 | Calendar FAB (left-side shortcut) | ✅ | Single button; always shows Planner / Calendar |
@@ -704,6 +704,12 @@ npm run preview
 
 | Date | Feature | Details |
 |---|---|---|
+| 2026-06-14 | **Fix: Google Login Error Visibility** ✅ | Real Firebase error codes now surface to UI with Thai messages; generic "unknown error" now appends raw code for debugging; `firebase.js` logs missing env keys on startup |
+| 2026-06-14 | **Game: Collision Detection** ✅ | Player blocked by trees, fences, and walls on outdoor map; no more walking through obstacles |
+| 2026-06-14 | **Game: New Outdoor Map + MBTI Characters** ✅ | Switched to `test3.json` map; all 12 MBTI character spritesheets updated; player sprite locked to selected MBTI type |
+| 2026-06-14 | **MbtiPage Overhaul** ✅ | Live animated sprite preview per type; rich Thai descriptions (strengths, weaknesses, learning style); player in Phaser game now matches chosen MBTI |
+| 2026-06-13 | **Design System Refresh — Phase 1** ✅ | Centralized `mbtiColors` + `zIndex` constants; shared UI primitives + design tokens; all 8 onboarding pages redesigned; panels and HUD tokenized; a11y + nav token fixes |
+| 2026-06-13 | **Animated Loader on App Entry** ✅ | Running-line animation on loading screen; animated progress bar during Firebase auth check |
 | 2026-06-12 | **Fix: White Screen on iPad/Desktop** ✅ | `min-h-dvh` → `h-dvh` on app wrapper so `flex-1 main` has a definite height; all `absolute inset-0` children now render correctly |
 | 2026-06-12 | **Fix: Phaser WebGL Crash, Zoom HUD, Nav z-index** ✅ | ResizeObserver-first init prevents framebuffer error; zoom `×` encoding fixed; nav `z-30` |
 | 2026-06-12 | **Responsive — Panels & Bottom Sheets** ✅ | NewsPanel, SocialPanel, TaskPanel, CalendarPopup — `md:grid-cols-2` grids, `md:max-w-lg` sheets |
