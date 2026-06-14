@@ -1,0 +1,27 @@
+rules_version = '2';
+
+// Cloud-backed game/media assets: world-readable (download URLs are public
+// tokens anyway), writable only by the admin (uploads via the Admin Dashboard
+// or scripts/uploadAssets.mjs). Profile photos are not here — they stay as
+// base64 in Firestore, so no user-writable Storage path is needed.
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.uid == 'IaltEhO0mPVfK3ng8npr4CdqnEE3';
+    }
+
+    match /sprites/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /maps/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /media/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,51 @@
+rules_version = '2';
+
+// NOTE: These rules mirror the app's CURRENT access patterns (read
+// src/stores/useSocialStore.js + chat store before changing them). They were
+// authored to bring rules under version control — REVIEW and diff against the
+// live console rules before `firebase deploy --only firestore:rules`.
+//
+// Why `list` is signed-in (not admin-only): social search (searchUsers),
+// nearby (loadNearbyUsers) and matched (loadMatchedUsers) all query the
+// `users` collection as a regular user, so restricting list to admin would
+// break those features. The admin analytics dashboard reads the same
+// collection — no extra rule needed.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isSignedIn() && request.auth.uid == 'IaltEhO0mPVfK3ng8npr4CdqnEE3';
+    }
+
+    match /users/{uid} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      // Follow/unfollow batches write array fields (followRequests, followers,
+      // following, sentRequests) on the OTHER user's doc, so cross-user updates
+      // by any signed-in user are required.
+      allow update: if isSignedIn();
+      allow delete: if isAdmin();
+
+      // Match results are private to the owning user.
+      match /matches/{targetUid} {
+        allow read, write: if isSignedIn() && request.auth.uid == uid;
+      }
+    }
+
+    match /chats/{chatId} {
+      allow read:   if isSignedIn() && request.auth.uid in resource.data.members;
+      allow create: if isSignedIn() && request.auth.uid in request.resource.data.members;
+      allow update: if isSignedIn() && request.auth.uid in resource.data.members;
+
+      match /messages/{messageId} {
+        function chatMembers() {
+          return get(/databases/$(database)/documents/chats/$(chatId)).data.members;
+        }
+        allow read:   if isSignedIn() && request.auth.uid in chatMembers();
+        allow create: if isSignedIn() && request.auth.uid in chatMembers();
+      }
+    }
+  }
+}

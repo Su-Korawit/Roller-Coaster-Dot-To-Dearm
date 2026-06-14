@@ -26,3 +26,7 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Firebase service-account key (used by scripts/uploadAssets.mjs) — never commit
+serviceAccountKey.json
+*serviceAccount*.json

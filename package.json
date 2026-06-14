@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "upload-assets": "node scripts/uploadAssets.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -32,6 +33,7 @@
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
+    "firebase-admin": "^13.10.0",
     "globals": "^17.4.0",
     "playwright": "^1.60.0",
     "tailwindcss": "^4.2.2",
