@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 
 const ToastCtx = createContext(null)
 
@@ -16,6 +16,13 @@ export function ToastProvider({ children }) {
     setToasts((prev) => [...prev.slice(-4), { id, type, msg }])
     timerRefs.current[id] = setTimeout(() => dismiss(id), 3000)
   }, [dismiss])
+
+  // Clear any pending dismiss timers on unmount so they don't fire setToasts on
+  // a dead component (e.g. navigating away from AdminPage with toasts visible).
+  useEffect(() => {
+    const timers = timerRefs.current
+    return () => Object.values(timers).forEach(clearTimeout)
+  }, [])
 
   const toast = {
     success: (msg) => add('success', msg),

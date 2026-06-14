@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { ref, uploadBytes, uploadBytesResumable, getMetadata, listAll } from 'firebase/storage'
-import { storage } from '../../firebase'
+import { doc, getDoc } from 'firebase/firestore'
+import { storage, db } from '../../firebase'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { cloudAsset, bustCache } from '../../utils/cloudAsset'
 import { MBTI_TYPES, GAME_ASSET_BY_KEY } from '../../game/assetManifest'
@@ -114,6 +115,8 @@ function CharactersGrid({ onStatus }) {
   const [browseCode, setBrowseCode]   = useState(null) // MBTI code being browsed
   const [busyCode, setBusyCode]       = useState(null) // code mid-copy
   const toast = useToast()
+  const mountedRef = useRef(true)
+  useEffect(() => () => { mountedRef.current = false }, [])
 
   // Check which characters are already uploaded to Storage.
   const refreshList = useCallback(async () => {
@@ -124,7 +127,8 @@ function CharactersGrid({ onStatus }) {
       setUploaded(names)
       onStatus?.({ cloudCount: names.size, total: MBTI_TYPES.length })
     } catch {
-      onStatus?.({ cloudCount: 0, total: MBTI_TYPES.length })
+      // Storage unreachable (offline / rules / transient): leave the previous
+      // badge value untouched rather than falsely reporting "all missing".
     } finally {
       setLoadingList(false)
     }
@@ -137,7 +141,7 @@ function CharactersGrid({ onStatus }) {
     MBTI_TYPES.forEach((code) => {
       const path = `sprites/characters/${code}.png`
       cloudAsset(path, { fallback: null }).then((url) => {
-        if (url) setCloudUrls((prev) => ({ ...prev, [code]: url }))
+        if (url && mountedRef.current) setCloudUrls((prev) => ({ ...prev, [code]: url }))
       })
     })
   }, [])
@@ -146,7 +150,7 @@ function CharactersGrid({ onStatus }) {
     const path = `sprites/characters/${code}.png`
     bustCache(path)
     cloudAsset(path, { fallback: null }).then((url) => {
-      if (url) setCloudUrls((prev) => ({ ...prev, [code]: url }))
+      if (url && mountedRef.current) setCloudUrls((prev) => ({ ...prev, [code]: url }))
     })
     setUploaded((prev) => {
       const next = new Set([...prev, `${code}.png`])
@@ -265,8 +269,6 @@ function MapsPanel() {
   useEffect(() => {
     MAP_KEYS.forEach(async (key) => {
       try {
-        const { doc, getDoc } = await import('firebase/firestore')
-        const { db } = await import('../../firebase')
         const snap = await getDoc(doc(db, 'mapConfigs', key))
         if (snap.exists()) {
           const d = snap.data()
