@@ -22,10 +22,15 @@ service cloud.firestore {
     match /users/{uid} {
       allow get, list: if isSignedIn();
       allow create: if isSignedIn() && (request.auth.uid == uid || isAdmin());
-      // Follow/unfollow batches write array fields (followRequests, followers,
-      // following, sentRequests) on the OTHER user's doc, so cross-user updates
-      // by any signed-in user are required.
-      allow update: if isSignedIn();
+      // Owners may update their own doc freely. Cross-user updates are needed
+      // for follow/unfollow batches, but are restricted to ONLY the four social
+      // array fields so a malicious user can't overwrite someone else's mbti,
+      // photoURL, journeys, etc.
+      allow update: if isSignedIn() && (
+        request.auth.uid == uid ||
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['followRequests', 'followers', 'following', 'sentRequests'])
+      );
       allow delete: if isAdmin();
 
       // Match results are private to the owning user.
