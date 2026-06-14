@@ -4,7 +4,7 @@ import Phaser from 'phaser'
 // â”€â”€ CHARACTER MODE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 0 = Basic_Charakter (1 à¸•à¸±à¸§)
 // 1 = MBTI rotation (16 à¸•à¸±à¸§ à¸ªà¸¥à¸±à¸šà¸—à¸¸à¸ 1 à¸§à¸´)
-const CHARACTER_MODE = 0
+const CHARACTER_MODE = 1
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const SPEED = 80
@@ -31,15 +31,20 @@ class GameScene extends Phaser.Scene {
       console.error('Failed to load:', file.src)
     })
 
-    this.load.tilemapTiledJSON('world', '/maps/world.json')
-    this.load.image('Grass',                   '/assets/sprites/Tilesets/Grass.png')
-    this.load.image('Hills',                   '/assets/sprites/Tilesets/Hills.png')
-    this.load.image('Tilled_Dirt',             '/assets/sprites/Tilesets/Tilled_Dirt.png')
-    this.load.image('Water',                   '/assets/sprites/Tilesets/Water.png')
-    this.load.image('Basic_Grass_Biom_things', '/assets/sprites/Objects/Basic_Grass_Biom_things.png')
-    this.load.image('Fences',                  '/assets/sprites/Tilesets/Fences.png')
-    this.load.image('Wood_Bridge',             '/assets/sprites/Objects/Wood_Bridge.png')
-    this.load.image('Wooden_House',            '/assets/sprites/Tilesets/Wooden_House.png')
+    this.load.tilemapTiledJSON('test3', '/maps/test3.json')
+    this.load.image('Grass',                     '/assets/sprites/Tilesets/Grass.png')
+    this.load.image('Water',                     '/assets/sprites/Tilesets/Water.png')
+    this.load.image('Wooden_House',              '/assets/sprites/Tilesets/Wooden_House.png')
+    this.load.image('Wooden_House_Walls_Tilset', '/assets/sprites/Tilesets/Wooden_House_Walls_Tilset.png')
+    this.load.image('Wooden_House_Roof_Tilset',  '/assets/sprites/Tilesets/Wooden_House_Roof_Tilset.png')
+    this.load.image('Hills',                     '/assets/sprites/Tilesets/Hills.png')
+    this.load.image('Tilled_Dirt',               '/assets/sprites/Tilesets/Tilled_Dirt.png')
+    this.load.image('Tilled_Dirt_v2',            '/assets/sprites/Tilesets/Tilled_Dirt_v2.png')
+    this.load.image('Tilled_Dirt_Wide',          '/assets/sprites/Tilesets/Tilled_Dirt_Wide.png')
+    this.load.image('Tilled_Dirt_Wide_v2',       '/assets/sprites/Tilesets/Tilled_Dirt_Wide_v2.png')
+    this.load.image('Wood_Bridge',               '/assets/sprites/Objects/Wood_Bridge.png')
+    this.load.image('Basic_Grass_Biom_things_1', '/assets/sprites/Objects/Basic_Grass_Biom_things_1.png')
+    this.load.image('Fences',                    '/assets/sprites/Tilesets/Fences.png')
 
     if (CHARACTER_MODE === 0) {
       this.load.spritesheet(PLAYER_KEY, '/assets/sprites/Characters/Play2_Charakter_Spritesheet.png', {
@@ -55,40 +60,41 @@ class GameScene extends Phaser.Scene {
   }
 
   create() {
-    const map = this.make.tilemap({ key: 'world' })
+    const map = this.make.tilemap({ key: 'test3' })
 
-    const grassTiles  = map.addTilesetImage('Grass',                   'Grass')
-    const hillsTiles  = map.addTilesetImage('Hills',                   'Hills')
-    const dirtTiles   = map.addTilesetImage('Tilled_Dirt',             'Tilled_Dirt')
-    const waterTiles  = map.addTilesetImage('Water',                   'Water')
-    const biomTiles   = map.addTilesetImage('Basic_Grass_Biom_things', 'Basic_Grass_Biom_things')
-    const fenceTiles  = map.addTilesetImage('Fences',                  'Fences')
-    const bridgeTiles = map.addTilesetImage('Wood_Bridge',             'Wood_Bridge')
-    const houseTiles  = map.addTilesetImage('Wooden_House',            'Wooden_House')
+    const tilesets = [
+      map.addTilesetImage('Grass',                     'Grass'),
+      map.addTilesetImage('Water',                     'Water'),
+      map.addTilesetImage('Wooden House',              'Wooden_House'),
+      map.addTilesetImage('Wooden_House_Walls_Tilset', 'Wooden_House_Walls_Tilset'),
+      map.addTilesetImage('Wooden_House_Roof_Tilset',  'Wooden_House_Roof_Tilset'),
+      map.addTilesetImage('Hills',                     'Hills'),
+      map.addTilesetImage('Tilled Dirt',               'Tilled_Dirt'),
+      map.addTilesetImage('Tilled_Dirt_v2',            'Tilled_Dirt_v2'),
+      map.addTilesetImage('Tilled_Dirt_Wide',          'Tilled_Dirt_Wide'),
+      map.addTilesetImage('Tilled_Dirt_Wide_v2',       'Tilled_Dirt_Wide_v2'),
+      map.addTilesetImage('Wood_Bridge',               'Wood_Bridge'),
+      map.addTilesetImage('Basic Grass Biom things 1', 'Basic_Grass_Biom_things_1'),
+      map.addTilesetImage('Fences',                    'Fences'),
+    ]
 
-    const tilesets = [grassTiles, hillsTiles, dirtTiles, waterTiles, biomTiles, fenceTiles, bridgeTiles, houseTiles]
-
-    const groundLayer    = map.createLayer('Ground', tilesets, 0, 0)
-    const objectsLayer   = map.createLayer('Objects', tilesets, 0, 0)
-    const collisionLayer = map.createLayer('Collision', tilesets, 0, 0)
-    if (!collisionLayer) {
-      console.error('Collision layer not found!')
-    } else {
-      // collisionLayer.setVisible(false)
-      collisionLayer.setCollisionByExclusion([-1])
-    }
-
-    groundLayer.setDepth(0)
-    objectsLayer.setDepth(1)
-    if (collisionLayer) collisionLayer.setDepth(2)
+    const layers = [
+      map.createLayer('Water',     tilesets, 0, 0),
+      map.createLayer('Grass',     tilesets, 0, 0),
+      map.createLayer('Path',      tilesets, 0, 0),
+      map.createLayer('Bridge',    tilesets, 0, 0),
+      map.createLayer('Hill/Wall', tilesets, 0, 0),
+      map.createLayer('Object',    tilesets, 0, 0),
+      map.createLayer('Roof',      tilesets, 0, 0),
+    ]
+    const [waterLayer, , , , wallLayer] = layers
+    layers.forEach((layer, i) => layer && layer.setDepth(i))
 
     const scaleX   = this.scale.width / map.widthInPixels
     const scaleY   = this.scale.height / map.heightInPixels
     const mapScale = Math.ceil(Math.max(scaleX, scaleY))
 
-    groundLayer.setScale(mapScale)
-    objectsLayer.setScale(mapScale)
-    if (collisionLayer) collisionLayer.setScale(mapScale)
+    layers.forEach(layer => layer && layer.setScale(mapScale))
 
     const worldW = map.widthInPixels * mapScale
     const worldH = map.heightInPixels * mapScale
@@ -150,16 +156,18 @@ class GameScene extends Phaser.Scene {
     }
 
     const spawnX = 35 * 16 * mapScale
-    const spawnY = 35 * 16 * mapScale
+    const spawnY = 32 * 16 * mapScale
     this.player = this.physics.add.sprite(spawnX, spawnY, this.currentMbti)
     this.player.setScale(mapScale)
     this.player.body.setSize(16, 20)
     this.player.body.setOffset(16, 12)
-    this.player.setDepth(5)
+    this.player.setDepth(10)
     this.player.setCollideWorldBounds(true)
     this.player.play(`${this.currentMbti}-idle`)
 
-    if (collisionLayer) this.physics.add.collider(this.player, collisionLayer)
+    ;[waterLayer, wallLayer].forEach(layer => layer && layer.setCollisionByExclusion([-1]))
+    if (waterLayer) this.physics.add.collider(this.player, waterLayer)
+    if (wallLayer)  this.physics.add.collider(this.player, wallLayer)
 
     // Door trigger â€“ enter indoor
     this.transitioning = false
@@ -186,7 +194,7 @@ class GameScene extends Phaser.Scene {
     this.marker = this.add.graphics()
     this.marker.fillStyle(0xffff00, 1)
     this.marker.fillCircle(0, 0, 4)
-    this.marker.setDepth(10)
+    this.marker.setDepth(11)
     this.marker.setVisible(false)
 
     // move state
