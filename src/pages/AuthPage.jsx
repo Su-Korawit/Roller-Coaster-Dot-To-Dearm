@@ -22,10 +22,16 @@ const ERROR_MESSAGES = {
   'auth/popup-closed-by-user': '',
   'auth/cancelled-popup-request': '',
   'auth/network-request-failed': 'ไม่มีการเชื่อมต่ออินเทอร์เน็ต',
+  'auth/unauthorized-domain': 'โดเมนนี้ยังไม่ได้รับอนุญาตใน Firebase Console',
+  'auth/operation-not-allowed': 'ยังไม่ได้เปิดใช้งานการเข้าสู่ระบบด้วย Google',
+  'auth/popup-blocked': 'เบราว์เซอร์บล็อกป๊อปอัป กรุณาอนุญาตแล้วลองใหม่',
+  'auth/internal-error': 'เกิดข้อผิดพลาดภายใน กรุณาลองใหม่อีกครั้ง',
+  'auth/configuration-not-found': 'การตั้งค่าการเข้าสู่ระบบยังไม่สมบูรณ์',
+  'auth/invalid-api-key': 'การตั้งค่า Firebase ไม่ถูกต้อง',
 }
 
 function friendlyError(code) {
-  return ERROR_MESSAGES[code] ?? 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'
+  return ERROR_MESSAGES[code] ?? `เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง (${code ?? 'unknown'})`
 }
 
 const bodyFont = { fontFamily: "'Noto Sans Thai', sans-serif" }
@@ -49,6 +55,7 @@ export default function AuthPage() {
     try {
       await signIn('google')
     } catch (e) {
+      console.error('[auth] google sign-in failed:', e.code, e.message)
       const msg = friendlyError(e.code)
       if (msg) setError(msg)
     } finally {
@@ -63,6 +70,7 @@ export default function AuthPage() {
     try {
       await signIn(mode === 'register' ? 'register' : 'login', { email, password })
     } catch (e) {
+      console.error('[auth] email sign-in failed:', e.code, e.message)
       setError(friendlyError(e.code))
     } finally {
       setBusy(false)

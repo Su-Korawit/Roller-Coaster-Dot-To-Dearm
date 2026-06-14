@@ -14,6 +14,13 @@ const firebaseConfig = {
   databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
 }
 
+// กันเคส env หายเงียบ (เช่น แก้ .env แล้วลืม restart dev server) ซึ่งทำให้
+// auth ล้มทันทีแบบหา code ไม่เจอ — log ชื่อคีย์ที่ขาดให้เห็นชัดตั้งแต่ตอนโหลด
+const missingEnv = ['apiKey', 'authDomain', 'projectId'].filter((k) => !firebaseConfig[k])
+if (missingEnv.length) {
+  console.error('[firebase] missing config keys:', missingEnv.join(', '), '— ตรวจ .env แล้ว restart dev server')
+}
+
 export const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 export const db = getFirestore(app)
