@@ -6,6 +6,7 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https')
 const { defineSecret, defineString } = require('firebase-functions/params')
 const admin = require('firebase-admin')
+const crypto = require('crypto')
 
 admin.initializeApp()
 const db = admin.firestore()
@@ -27,12 +28,15 @@ function mapSlipOkError(code) {
 // fabricates a per-purchase ref (so each purchase stays distinct).
 async function verifySlip(uid, purchaseId, expectedAmount) {
   const demo = (DEMO_MODE.value() || 'true').toLowerCase() !== 'false'
-  if (demo) {
-    return { ok: true, transRef: `DEMO-${purchaseId}` }
-  }
-
   const filePath = `slips/${uid}/${purchaseId}`
   const [buf] = await admin.storage().bucket().file(filePath).download()
+
+  if (demo) {
+    // Derive transRef from the slip image content so the SAME image yields the
+    // SAME transRef → usedSlips dedup fires. Demo now mirrors real-mode dedup.
+    const hash = crypto.createHash('sha256').update(buf).digest('hex')
+    return { ok: true, transRef: `DEMO-${hash}` }
+  }
 
   const form = new FormData()
   form.append('files', new Blob([buf]), 'slip.jpg')
@@ -53,7 +57,10 @@ async function verifySlip(uid, purchaseId, expectedAmount) {
   if (Number(data.data?.amount) !== expectedAmount) {
     return { ok: false, reason: 'WRONG_AMOUNT' }
   }
-  return { ok: true, transRef: data.data?.transRef }
+  // Fail closed: no transRef means we can't dedup → reject rather than credit.
+  const transRef = data.data?.transRef
+  if (!transRef) return { ok: false, reason: 'INVALID_SLIP' }
+  return { ok: true, transRef }
 }
 
 // Creates a purchase intent. amount + coins are read from the catalogue, never
