@@ -8,6 +8,7 @@ import { ADMIN_UID, ADMIN_DISPLAY_NAME, ADMIN_EMAIL } from '../constants/admin'
 import { useSocialStore } from '../stores/useSocialStore'
 import { useUserStore } from '../stores/useUserStore'
 import { mbtiColor } from '../constants/mbtiColors'
+import ShopChatView from './shop/ShopChatView'
 
 const GIFTS = [
   { emoji: '🌟', name: 'Star',   coins: 10 },
@@ -526,7 +527,7 @@ function ChatWindowView({ user, onBack, onAdminContacted }) {
 // ─── ChatListView ─────────────────────────────────────────────────────────────
 // Receives mutualUids (all friends) + chats (existing docs) separately so it
 // can show every mutual follow even before the first message is sent.
-function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, adminChat, onOpenAdminChat, isCurrentUserAdmin }) {
+function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, adminChat, onOpenAdminChat, onOpenShop, isCurrentUserAdmin }) {
   const [chatTab, setChatTab] = useState('friends')
   const totalStacks = chats.reduce((sum, c) => sum + (c.fireStacks ?? 0), 0)
 
@@ -570,9 +571,34 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, a
           <span className="text-3xl">{chatTab === 'school' ? '🏫' : '🌏'}</span>
           <p className="pixel-font text-[8px] text-gray-400">Coming Soon</p>
         </div>
-      ) : isCurrentUserAdmin ? (
-        /* ── Admin view: show all user conversations ── */
+      ) : (
+        /* ── Friends tab: Shop row (everyone) above the admin/regular split ── */
         <div className="flex-1 overflow-y-auto">
+          {/* Shop AI row — visible to all users including the admin */}
+          <button
+            onClick={onOpenShop}
+            className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-amber-50 hover:bg-amber-50 active:bg-amber-100 transition-colors text-left"
+          >
+            <div
+              className="w-11 h-11 rounded-full shrink-0 flex items-center justify-center text-2xl"
+              style={{ background: 'linear-gradient(135deg, #fde68a, #f59e0b)' }}
+            >
+              🛒
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <p className="pixel-font text-[9px] text-gray-800 truncate">ร้านค้า AI</p>
+                <span className="pixel-font text-[5px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-600 shrink-0">Shop</span>
+              </div>
+              <p className="text-gray-400 truncate mt-0.5" style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 11 }}>
+                ซื้อเหรียญผ่าน PromptPay
+              </p>
+            </div>
+          </button>
+
+          {isCurrentUserAdmin ? (
+        /* ── Admin view: show all user conversations ── */
+        <>
           {chats.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 gap-3 opacity-60">
               <span className="text-4xl">📩</span>
@@ -611,10 +637,10 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, a
               </button>
             )
           })}
-        </div>
+        </>
       ) : (
         /* ── Regular user view: admin row at top + mutual friends ── */
-        <div className="flex-1 overflow-y-auto">
+        <>
           {/* Admin contact row — always visible */}
           <button
             onClick={onOpenAdminChat}
@@ -691,6 +717,8 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, a
               </button>
             )
           })}
+        </>
+          )}
         </div>
       )}
     </div>
@@ -775,7 +803,7 @@ export default function ChatPanel({ onClose, initialView = 'list', onAdminContac
       {/* Inner card */}
       <div className="px-4 pb-4 flex-1 flex flex-col overflow-hidden">
         <div className="rounded-xl bg-white border border-gray-200 shadow-sm overflow-hidden flex-1 flex flex-col">
-          {/* Close button — only shown in list view; window has back arrow */}
+          {/* Close button — only shown in list view; window/shop have back arrow */}
           {view === 'list' && (
             <div className="flex justify-end px-4 pt-3 shrink-0">
               <button
@@ -797,8 +825,11 @@ export default function ChatPanel({ onClose, initialView = 'list', onAdminContac
               onSelectFriend={handleSelectFriend}
               adminChat={chats.find((c) => c.isAdminChat === true)}
               onOpenAdminChat={handleOpenAdminChat}
+              onOpenShop={() => setView('shop')}
               isCurrentUserAdmin={isCurrentUserAdmin}
             />
+          ) : view === 'shop' ? (
+            <ShopChatView onBack={() => setView('list')} />
           ) : (
             <ChatWindowView
               user={user}

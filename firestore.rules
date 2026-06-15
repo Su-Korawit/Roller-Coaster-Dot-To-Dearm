@@ -31,16 +31,20 @@ service cloud.firestore {
     function canEditMusic() {
       return isSuperAdmin() || userEmail() == 'itcity9476@gmail.com';
     }
+    // Shop catalog + Finance are super-admin only.
+    function canEditShop() {
+      return isSuperAdmin();
+    }
 
     match /users/{uid} {
       allow get, list: if isSignedIn();
       allow create: if isSignedIn() && (request.auth.uid == uid || isSuperAdmin());
-      // Owners may update their own doc freely. Cross-user updates are needed
-      // for follow/unfollow batches, but are restricted to ONLY the four social
-      // array fields so a malicious user can't overwrite someone else's mbti,
-      // photoURL, journeys, etc.
+      // Owners may update their own doc freely EXCEPT the `coins` field — that
+      // is written only by Cloud Functions (Admin SDK bypasses rules). Cross-user
+      // updates are restricted to ONLY the four social array fields.
       allow update: if isSignedIn() && (
-        request.auth.uid == uid ||
+        (request.auth.uid == uid &&
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['coins'])) ||
         request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['followRequests', 'followers', 'following', 'sentRequests'])
       );
@@ -79,6 +83,26 @@ service cloud.firestore {
     match /musicConfig/{doc} {
       allow read:  if true;
       allow write: if canEditMusic();
+    }
+
+    // Shop catalog: signed-in users read active products; super-admin manages.
+    match /shopProducts/{productId} {
+      allow read:  if isSignedIn();
+      allow write: if canEditShop();
+    }
+
+    // Purchases are written exclusively by Cloud Functions (Admin SDK).
+    // Clients may read only their own purchase or super-admin reads any.
+    // No client create/update/delete — Functions own this collection.
+    match /purchases/{purchaseId} {
+      allow read: if isSignedIn() && (
+        resource.data.uid == request.auth.uid || isSuperAdmin()
+      );
+    }
+
+    // Slip dedup ledger: server-only (no client access at all).
+    match /usedSlips/{transRef} {
+      allow read, write: if false;
     }
   }
 }

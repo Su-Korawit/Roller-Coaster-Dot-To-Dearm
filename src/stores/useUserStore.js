@@ -51,6 +51,7 @@ export const useUserStore = create(
       setActiveMasteryBlockId: (id) => set({ activeMasteryBlockId: id }),
       setAiLanguage: (lang) => set({ aiLanguage: lang }),
       addCoins: (amount) => set((state) => ({ coins: state.coins + amount })),
+      setCoins: (amount) => set({ coins: amount }),
       setStreak: (streak) => set({ streak }),
       incrementStacks: () => set((state) => ({ totalStacks: state.totalStacks + 1 })),
 

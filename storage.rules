@@ -51,5 +51,12 @@ service firebase.storage {
       allow read: if true;
       allow write: if isSuperAdmin() || userEmail() == 'itcity9476@gmail.com';
     }
+
+    // Payment slips uploaded by users before Cloud Function verification.
+    // Owner writes their own slip; super-admin may read for dispute review.
+    match /slips/{uid}/{purchaseId} {
+      allow write: if request.auth != null && request.auth.uid == uid;
+      allow read:  if request.auth != null && (request.auth.uid == uid || isSuperAdmin());
+    }
   }
 }

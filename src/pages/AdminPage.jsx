@@ -3,6 +3,8 @@ import AnalyticsSection from '../components/admin/AnalyticsSection'
 import { CharactersGrid, MapsPanel } from '../components/admin/AssetsSection'
 import UserManagementSection from '../components/admin/UserManagementSection'
 import MusicSection from '../components/admin/MusicSection'
+import ShopSection from '../components/admin/ShopSection'
+import FinanceSection from '../components/admin/FinanceSection'
 import { ToastProvider } from '../components/admin/Toast'
 import { useAuthStore } from '../stores/useAuthStore'
 import { ADMIN_DISPLAY_NAME, getAdminSections } from '../constants/admin'
@@ -16,6 +18,8 @@ const ALL_TABS = [
   { id: 'characters', label: 'Characters' },
   { id: 'maps',       label: 'Maps' },
   { id: 'music',      label: 'Music' },
+  { id: 'shop',       label: 'Shop' },
+  { id: 'finance',    label: 'Finance' },
 ]
 
 export default function AdminPage() {
@@ -62,6 +66,8 @@ export default function AdminPage() {
           {tab === 'characters' && <CharactersGrid />}
           {tab === 'maps'       && <MapsPanel />}
           {tab === 'music'      && <MusicSection />}
+          {tab === 'shop'       && <ShopSection />}
+          {tab === 'finance'    && <FinanceSection />}
         </main>
       </div>
     </ToastProvider>

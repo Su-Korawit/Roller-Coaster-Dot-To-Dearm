@@ -12,6 +12,7 @@ import { auth, db } from '../firebase'
 import { hydrateSelectStoreFromFirestore } from '../utils/syncSelectToFirestore'
 import { hydratePortfolioFromFirestore, setPortfolioSyncUser } from '../utils/syncPortfolioToFirestore'
 import { hydrateTasksFromFirestore, setTaskSyncUser } from '../utils/syncTasksToFirestore'
+import { useUserStore } from './useUserStore'
 
 function readSelectStore() {
   try {
@@ -55,6 +56,10 @@ export const useAuthStore = create((set) => {
     if (firebaseUser) {
       try {
         await ensureUserDoc(firebaseUser)
+        // Hydrate coins from Firestore — authoritative value set by Cloud Functions.
+        const snap = await getDoc(doc(db, 'users', firebaseUser.uid))
+        const serverCoins = snap.data()?.coins ?? 0
+        if (serverCoins > 0) useUserStore.getState().setCoins(serverCoins)
         await hydrateSelectStoreFromFirestore(firebaseUser.uid)
         await hydratePortfolioFromFirestore(firebaseUser.uid)
         setPortfolioSyncUser(firebaseUser.uid)

@@ -13,6 +13,8 @@ dist-ssr
 .env
 .env.*
 *.local
+# Allow functions/.env (non-secret config defaults for deploy params)
+!functions/.env
 
 # Editor directories and files
 .vscode/*
