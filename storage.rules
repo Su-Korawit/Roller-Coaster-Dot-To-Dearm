@@ -6,22 +6,50 @@ rules_version = '2';
 // base64 in Firestore, so no user-writable Storage path is needed.
 service firebase.storage {
   match /b/{bucket}/o {
-    function isAdmin() {
+    // Super-admin (developer) gated by UID; section admins by token email
+    // (verified for Google sign-in). Mirror of ADMIN_ROLES in
+    // src/constants/admin.js — keep both in sync. Storage grants on ANY matching
+    // rule, so the broad sprites/** catch-all only adds super-admin and never
+    // widens a section admin's reach into another section's folder.
+    function isSuperAdmin() {
       return request.auth != null
         && request.auth.uid == 'IaltEhO0mPVfK3ng8npr4CdqnEE3';
     }
+    function userEmail() {
+      return request.auth != null ? request.auth.token.email : '';
+    }
+    function canEditMaps() {
+      return isSuperAdmin() || userEmail() == 'takadaoni07@gmail.com';
+    }
 
+    // Characters section — MBTI sprites only.
+    match /sprites/characters/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSuperAdmin() || userEmail() == 'play198725@gmail.com';
+    }
+    // Maps section — tilesets + objects used by map configs.
+    match /sprites/tilesets/{allPaths=**} {
+      allow read: if true;
+      allow write: if canEditMaps();
+    }
+    match /sprites/objects/{allPaths=**} {
+      allow read: if true;
+      allow write: if canEditMaps();
+    }
+    // Any other sprite path stays super-admin only.
     match /sprites/{allPaths=**} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isSuperAdmin();
     }
+    // Maps section — Tiled JSON files.
     match /maps/{allPaths=**} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if canEditMaps();
     }
+    // Music section — background audio.
     match /media/{allPaths=**} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isSuperAdmin() || userEmail() == 'itcity9476@gmail.com';
     }
   }
 }

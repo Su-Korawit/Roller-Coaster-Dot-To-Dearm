@@ -4,7 +4,11 @@
 import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing'
-import { doc, setDoc, updateDoc } from 'firebase/firestore'
+import { doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore'
+
+// Section admins are gated by token email — authenticate with an email claim.
+const SUPER_UID = 'IaltEhO0mPVfK3ng8npr4CdqnEE3'
+const emailCtx = (uid, email) => testEnv.authenticatedContext(uid, { email }).firestore()
 
 let testEnv
 
@@ -45,5 +49,40 @@ describe('users update rule (C-2)', () => {
   it('BLOCKS mixing a social field with a forbidden field', async () => {
     const alice = testEnv.authenticatedContext('alice').firestore()
     await assertFails(updateDoc(doc(alice, 'users/bob'), { followers: ['alice'], photoURL: 'x' }))
+  })
+})
+
+describe('section-scoped admin writes', () => {
+  const mapCfg = { tilesets: {}, collision: {}, hidden: {} }
+
+  it('lets the Maps admin write mapConfigs but NOT musicConfig', async () => {
+    const maps = emailCtx('takada', 'takadaoni07@gmail.com')
+    await assertSucceeds(setDoc(doc(maps, 'mapConfigs/test3'), mapCfg))
+    await assertFails(setDoc(doc(maps, 'musicConfig/background'), { tracks: [] }))
+  })
+
+  it('lets the Music admin write musicConfig but NOT mapConfigs', async () => {
+    const music = emailCtx('itcity', 'itcity9476@gmail.com')
+    await assertSucceeds(setDoc(doc(music, 'musicConfig/background'), { tracks: [] }))
+    await assertFails(setDoc(doc(music, 'mapConfigs/test3'), mapCfg))
+  })
+
+  it('BLOCKS a non-admin from writing either config', async () => {
+    const nobody = emailCtx('nobody', 'stranger@gmail.com')
+    await assertFails(setDoc(doc(nobody, 'mapConfigs/test3'), mapCfg))
+    await assertFails(setDoc(doc(nobody, 'musicConfig/background'), { tracks: [] }))
+  })
+
+  it('lets the super-admin write both configs', async () => {
+    const sa = emailCtx(SUPER_UID, 'o.korawitt@gmail.com')
+    await assertSucceeds(setDoc(doc(sa, 'mapConfigs/test3'), mapCfg))
+    await assertSucceeds(setDoc(doc(sa, 'musicConfig/background'), { tracks: [] }))
+  })
+
+  it('lets ONLY the super-admin delete a user', async () => {
+    const sa = emailCtx(SUPER_UID, 'o.korawitt@gmail.com')
+    const maps = emailCtx('takada', 'takadaoni07@gmail.com')
+    await assertFails(deleteDoc(doc(maps, 'users/bob')))
+    await assertSucceeds(deleteDoc(doc(sa, 'users/alice')))
   })
 })
