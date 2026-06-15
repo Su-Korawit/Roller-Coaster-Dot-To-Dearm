@@ -11,7 +11,7 @@ import AuthPage from './pages/AuthPage'
 import AdminPage from './pages/AdminPage'
 import { useSelectStore } from './stores/useSelectStore'
 import { useAuthStore } from './stores/useAuthStore'
-import { ADMIN_UID } from './constants/admin'
+import { getAdminSections } from './constants/admin'
 
 function RequireAuth() {
   const user = useAuthStore((s) => s.user)
@@ -66,7 +66,7 @@ function RequireAdmin() {
   const user = useAuthStore((s) => s.user)
   const loading = useAuthStore((s) => s.loading)
   if (loading) return null
-  if (!user || user.uid !== ADMIN_UID) return <Navigate to="/" replace />
+  if (!user || getAdminSections(user.email).length === 0) return <Navigate to="/" replace />
   return <Outlet />
 }
 
