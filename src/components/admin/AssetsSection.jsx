@@ -108,7 +108,7 @@ function UploadRow({ storagePath, accept, onSuccess, label, disabled }) {
 
 // ── Character grid ────────────────────────────────────────────────────────────
 
-function CharactersGrid({ onStatus }) {
+export function CharactersGrid({ onStatus }) {
   const [cloudUrls, setCloudUrls]     = useState({})
   const [uploaded, setUploaded]       = useState(new Set())
   const [loadingList, setLoadingList] = useState(true)
@@ -244,7 +244,7 @@ function CharactersGrid({ onStatus }) {
 
 const MAP_KEYS = ['test3', 'indoor']
 
-function MapsPanel() {
+export function MapsPanel() {
   const [meta, setMeta]       = useState({})
   const [cfgStatus, setCfgStatus] = useState({}) // key -> { hasFirestore, tilesetCount }
   const [refresh, setRefresh] = useState(0)
@@ -336,13 +336,5 @@ function MapsPanel() {
   )
 }
 
-// ── Main export ───────────────────────────────────────────────────────────────
-
-export default function AssetsSection({ onStatus }) {
-  return (
-    <div className="space-y-12">
-      <CharactersGrid onStatus={onStatus} />
-      <MapsPanel />
-    </div>
-  )
-}
+// CharactersGrid and MapsPanel are rendered as independent, permission-scoped
+// tabs by AdminPage — see src/pages/AdminPage.jsx.

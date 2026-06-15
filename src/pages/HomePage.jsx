@@ -18,19 +18,12 @@ import { useChatStore, buildChatId } from '../stores/useChatStore'
 import { ADMIN_UID, ADMIN_DISPLAY_NAME } from '../constants/admin'
 import GameCanvas from '../components/GameCanvas'
 import { useCloudAsset } from '../hooks/useCloudAsset'
+import { getMusicConfig, DEFAULT_TRACKS } from '../utils/musicConfig'
 
 // Streams from Firebase Storage once uploaded; falls back to the bundled file
 // until then (and if Storage is unreachable). Drop the bundled fallback to
 // reclaim ~6MB from the build once cloud loading is confirmed.
 const musicFallback = new URL('../../assets/eachPageAssets/home/Background_Music_1.mp3', import.meta.url).href
-
-const TRACKS = [
-  { title: 'Miitopia - Catalog', start: 0 },
-  { title: 'Miitopia - Present', start: 67 },
-  { title: 'January 2014 - Nintendo eShop', start: 112 },
-  { title: 'Miitomo Summer Shop Music', start: 282 },
-]
-// { title: "Yoshi's On The Beach - Yoshi's Story", start: 370 },
 
 function HomePage() {
   const [activeTab, setActiveTab] = useState('home')
@@ -41,6 +34,9 @@ function HomePage() {
   const [showTrackList, setShowTrackList] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTrackIdx, setCurrentTrackIdx] = useState(0)
+  // Track chapter list, admin-editable via Firestore (musicConfig/background).
+  // Starts from the built-in default and hydrates from Firestore on mount.
+  const [tracks, setTracks] = useState(DEFAULT_TRACKS)
   const [showCalendar, setShowCalendar] = useState(false)
   const [showDailyModal, setShowDailyModal] = useState(false)
   const audioRef = useRef(null)
@@ -58,6 +54,13 @@ function HomePage() {
   // // eslint-disable-next-line react-hooks/exhaustive-deps
   // }, [])
 
+  // Load the admin-editable track list (falls back to DEFAULT_TRACKS on error)
+  useEffect(() => {
+    let alive = true
+    getMusicConfig().then(({ tracks }) => { if (alive) setTracks(tracks) })
+    return () => { alive = false }
+  }, [])
+
   // Keep currentTrackIdx in sync as audio plays through the file
   useEffect(() => {
     const audio = audioRef.current
@@ -65,15 +68,15 @@ function HomePage() {
     function onTimeUpdate() {
       const t = audio.currentTime
       let idx = 0
-      for (let i = 0; i < TRACKS.length; i++) {
-        if (TRACKS[i].start <= t) idx = i
+      for (let i = 0; i < tracks.length; i++) {
+        if (tracks[i].start <= t) idx = i
         else break
       }
       setCurrentTrackIdx(idx)
     }
     audio.addEventListener('timeupdate', onTimeUpdate)
     return () => audio.removeEventListener('timeupdate', onTimeUpdate)
-  }, [])
+  }, [tracks])
 
   function handleTabChange(tab) {
     if (tab === APP_VIEWS.MUSIC) {
@@ -138,7 +141,7 @@ function HomePage() {
   function handleSelectTrack(idx) {
     const audio = audioRef.current
     if (!audio) return
-    audio.currentTime = TRACKS[idx].start
+    audio.currentTime = tracks[idx].start
     setCurrentTrackIdx(idx)
     audio.play()
     setIsPlaying(true)
@@ -166,7 +169,7 @@ function HomePage() {
           // Loop back to first track seamlessly
           const audio = audioRef.current
           if (!audio) return
-          audio.currentTime = TRACKS[0].start
+          audio.currentTime = tracks[0].start
           setCurrentTrackIdx(0)
           audio.play()
           setIsPlaying(true)
@@ -204,17 +207,17 @@ function HomePage() {
           {/* Music status pill */}
           <button
             onClick={() => handleTabChange(APP_VIEWS.MUSIC)}
-            aria-label={isPlaying ? `กำลังเล่น: ${TRACKS[currentTrackIdx].title}` : 'เปิดรายการเพลง'}
+            aria-label={isPlaying ? `กำลังเล่น: ${tracks[currentTrackIdx].title}` : 'เปิดรายการเพลง'}
             className="pointer-events-auto flex items-center gap-1.5 h-10 bg-white/90 rounded-full shadow px-3 overflow-hidden min-w-0 flex-1 max-w-40 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             <span className="text-sm shrink-0">{isPlaying ? '🎵' : '🎶'}</span>
             <span className="overflow-hidden flex-1">
               <span
                 className={`block whitespace-nowrap pixel-font text-[8px] text-blue-700 ${
-                  isPlaying && TRACKS[currentTrackIdx].title.length > 14 ? 'animate-marquee' : ''
+                  isPlaying && tracks[currentTrackIdx].title.length > 14 ? 'animate-marquee' : ''
                 }`}
               >
-                {isPlaying ? TRACKS[currentTrackIdx].title : 'Music'}
+                {isPlaying ? tracks[currentTrackIdx].title : 'Music'}
               </span>
             </span>
           </button>
@@ -305,7 +308,7 @@ function HomePage() {
               <p className="pixel-font text-[10px] font-bold text-gray-800">🎵 Background Music</p>
               {isPlaying && (
                 <p className="pixel-font text-[9px] text-blue-600 mt-0.5 truncate">
-                  ▶ {TRACKS[currentTrackIdx].title}
+                  ▶ {tracks[currentTrackIdx].title}
                 </p>
               )}
             </div>
@@ -319,7 +322,7 @@ function HomePage() {
           </div>
           {/* Track list */}
           <div className="overflow-y-auto">
-            {TRACKS.map((t, i) => (
+            {tracks.map((t, i) => (
               <button
                 key={i}
                 onClick={() => handleSelectTrack(i)}

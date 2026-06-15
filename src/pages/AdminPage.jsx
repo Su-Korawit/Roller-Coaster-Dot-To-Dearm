@@ -1,21 +1,28 @@
 import { useState } from 'react'
 import AnalyticsSection from '../components/admin/AnalyticsSection'
-import AssetsSection from '../components/admin/AssetsSection'
+import { CharactersGrid, MapsPanel } from '../components/admin/AssetsSection'
+import UserManagementSection from '../components/admin/UserManagementSection'
+import MusicSection from '../components/admin/MusicSection'
 import { ToastProvider } from '../components/admin/Toast'
 import { useAuthStore } from '../stores/useAuthStore'
-import { ADMIN_DISPLAY_NAME } from '../constants/admin'
+import { ADMIN_DISPLAY_NAME, getAdminSections } from '../constants/admin'
 
-const TABS = [
-  { id: 'analytics', label: 'Analytics' },
-  { id: 'assets',    label: 'Assets' },
+// Every admin tab + its section key. AdminPage shows only the tabs the signed-in
+// admin's email is allowed to edit (getAdminSections), so a scoped admin sees just
+// their one section. Section keys must match those in src/constants/admin.js.
+const ALL_TABS = [
+  { id: 'analytics',  label: 'Analytics' },
+  { id: 'users',      label: 'Users' },
+  { id: 'characters', label: 'Characters' },
+  { id: 'maps',       label: 'Maps' },
+  { id: 'music',      label: 'Music' },
 ]
 
 export default function AdminPage() {
-  const [tab, setTab] = useState('analytics')
-  const [assetsStatus, setAssetsStatus] = useState(null) // { cloudCount, total }
   const user = useAuthStore((s) => s.user)
-
-  const missing = assetsStatus ? assetsStatus.total - assetsStatus.cloudCount : 0
+  const sections = getAdminSections(user?.email)
+  const tabs = ALL_TABS.filter((t) => sections.includes(t.id))
+  const [tab, setTab] = useState(() => tabs[0]?.id ?? null)
 
   return (
     <ToastProvider>
@@ -32,7 +39,7 @@ export default function AdminPage() {
         {/* Tab switcher */}
         <div className="border-b border-gray-200 bg-white px-6">
           <div className="flex gap-1 -mb-px">
-            {TABS.map((t) => (
+            {tabs.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
@@ -43,16 +50,6 @@ export default function AdminPage() {
                 }`}
               >
                 {t.label}
-                {t.id === 'assets' && assetsStatus && missing > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold">
-                    {missing} missing
-                  </span>
-                )}
-                {t.id === 'assets' && assetsStatus && missing === 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">
-                    ✓ all cloud
-                  </span>
-                )}
               </button>
             ))}
           </div>
@@ -60,8 +57,11 @@ export default function AdminPage() {
 
         {/* Content */}
         <main className="max-w-5xl mx-auto px-6 py-8">
-          {tab === 'analytics' && <AnalyticsSection />}
-          {tab === 'assets'    && <AssetsSection onStatus={setAssetsStatus} />}
+          {tab === 'analytics'  && <AnalyticsSection />}
+          {tab === 'users'      && <UserManagementSection />}
+          {tab === 'characters' && <CharactersGrid />}
+          {tab === 'maps'       && <MapsPanel />}
+          {tab === 'music'      && <MusicSection />}
         </main>
       </div>
     </ToastProvider>
