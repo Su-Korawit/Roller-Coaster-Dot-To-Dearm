@@ -1,25 +1,17 @@
 import { create } from 'zustand'
 import {
   addDoc,
-  collection,
-  doc,
   increment,
   onSnapshot,
-  orderBy,
-  query,
   serverTimestamp,
   setDoc,
   updateDoc,
-  where,
 } from 'firebase/firestore'
-import { auth, db } from '../firebase'
+import { auth } from '../firebase'
+import { refs, cols, queries, buildChatId } from '../lib/db'
 import { useUserStore } from './useUserStore'
 
-// Canonical 1-to-1 chat id — sorted so both parties derive the same key
-// regardless of who initiates. Export so callers can compute it before openChat.
-export function buildChatId(uid1, uid2) {
-  return [uid1, uid2].sort().join('_')
-}
+export { buildChatId }
 
 // Module-level unsub refs — same pattern as useSocialStore.
 // Kept outside Zustand state so replacing them doesn't trigger re-renders.
@@ -36,11 +28,7 @@ export const useChatStore = create((set) => ({
   // Returns the unsubscribe function for cleanup.
   loadChats: (uid) => {
     if (_chatsUnsub) { _chatsUnsub(); _chatsUnsub = null }
-    const q = query(
-      collection(db, 'chats'),
-      where('members', 'array-contains', uid),
-    )
-    _chatsUnsub = onSnapshot(q, (snap) => {
+    _chatsUnsub = onSnapshot(queries.chatsByMember(uid), (snap) => {
       const chats = snap.docs
         .map((d) => ({ id: d.id, ...d.data() }))
         .sort((a, b) => {
@@ -61,7 +49,7 @@ export const useChatStore = create((set) => ({
     if (!uid) return
     set({ activeChat: { chatId, otherUser }, messages: [] })
     await setDoc(
-      doc(db, 'chats', chatId),
+      refs.chat(chatId),
       { members: [uid, otherUser.uid].sort() },
       { merge: true },
     )
@@ -76,7 +64,7 @@ export const useChatStore = create((set) => ({
     if (!uid || !text.trim()) return
     const trimmed = text.trim()
 
-    await addDoc(collection(db, 'chats', chatId, 'messages'), {
+    await addDoc(cols.chatMessages(chatId), {
       senderId: uid,
       text: trimmed,
       type: 'text',
@@ -88,7 +76,7 @@ export const useChatStore = create((set) => ({
     const chat = useChatStore.getState().chats.find((c) => c.id === chatId)
     const grantStack = chat?.lastStackDate !== today && !chat?.isAdminChat
 
-    await updateDoc(doc(db, 'chats', chatId), {
+    await updateDoc(refs.chat(chatId), {
       lastMessage: trimmed,
       lastMessageAt: serverTimestamp(),
       ...(grantStack && { fireStacks: increment(1), lastStackDate: today }),
@@ -103,11 +91,7 @@ export const useChatStore = create((set) => ({
   // Replaces any existing messages listener. Returns the unsubscribe function.
   subscribeMessages: (chatId) => {
     if (_messagesUnsub) { _messagesUnsub(); _messagesUnsub = null }
-    const q = query(
-      collection(db, 'chats', chatId, 'messages'),
-      orderBy('createdAt', 'asc'),
-    )
-    _messagesUnsub = onSnapshot(q, (snap) => {
+    _messagesUnsub = onSnapshot(queries.messagesByChat(chatId), (snap) => {
       set({ messages: snap.docs.map((d) => ({ id: d.id, ...d.data() })) })
     })
     return _messagesUnsub
@@ -120,7 +104,7 @@ export const useChatStore = create((set) => ({
     const chat = useChatStore.getState().chats.find((c) => c.id === chatId)
     const grantStack = chat?.lastStackDate !== today
     if (!grantStack) return
-    await updateDoc(doc(db, 'chats', chatId), {
+    await updateDoc(refs.chat(chatId), {
       fireStacks: increment(1),
       lastStackDate: today,
     })

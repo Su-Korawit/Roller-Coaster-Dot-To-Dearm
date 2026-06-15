@@ -1,5 +1,5 @@
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '../firebase'
+import { setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
+import { refs } from '../lib/db'
 import { useUserStore } from '../stores/useUserStore'
 
 /**
@@ -22,7 +22,7 @@ export async function syncPortfolioToFirestore(uid) {
   const { portfolioData, journeys } = useUserStore.getState()
   try {
     await setDoc(
-      doc(db, 'users', uid),
+      refs.user(uid),
       { portfolioData, journeys, portfolioUpdatedAt: serverTimestamp() },
       { merge: true },
     )
@@ -39,7 +39,7 @@ export async function syncPortfolioToFirestore(uid) {
 export async function hydratePortfolioFromFirestore(uid) {
   if (!uid) return
   try {
-    const snap = await getDoc(doc(db, 'users', uid))
+    const snap = await getDoc(refs.user(uid))
     const data = snap.exists() ? snap.data() : {}
 
     const updates = {}

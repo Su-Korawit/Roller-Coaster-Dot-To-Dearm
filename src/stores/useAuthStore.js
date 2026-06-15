@@ -7,8 +7,9 @@ import {
   signInWithEmailAndPassword,
   signOut as fbSignOut,
 } from 'firebase/auth'
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
-import { auth, db } from '../firebase'
+import { getDoc, setDoc } from 'firebase/firestore'
+import { auth } from '../firebase'
+import { refs, shapes } from '../lib/db'
 import { hydrateSelectStoreFromFirestore } from '../utils/syncSelectToFirestore'
 import { hydratePortfolioFromFirestore, setPortfolioSyncUser } from '../utils/syncPortfolioToFirestore'
 import { hydrateTasksFromFirestore, setTaskSyncUser } from '../utils/syncTasksToFirestore'
@@ -25,30 +26,11 @@ function readSelectStore() {
 }
 
 async function ensureUserDoc(firebaseUser) {
-  const ref = doc(db, 'users', firebaseUser.uid)
+  const ref = refs.user(firebaseUser.uid)
   const snap = await getDoc(ref)
   if (snap.exists()) return
   const { mbti, program, university, mastery } = readSelectStore()
-  await setDoc(ref, {
-    uid: firebaseUser.uid,
-    displayName: firebaseUser.displayName ?? '',
-    email: firebaseUser.email ?? '',
-    photoURL: firebaseUser.photoURL ?? null,
-    mbti: mbti ?? null,
-    program: program ?? null,
-    university: university ?? null,
-    mastery: mastery ?? null,
-    schoolId: null,
-    schoolName: null,
-    schoolLat: null,
-    schoolLng: null,
-    followRequests: [],
-    followers: [],
-    following: [],
-    matchScore: 0,
-    fireStacks: 0,
-    createdAt: serverTimestamp(),
-  })
+  await setDoc(ref, shapes.initialUser(firebaseUser, { mbti, program, university, mastery }))
 }
 
 export const useAuthStore = create((set) => {
@@ -57,7 +39,7 @@ export const useAuthStore = create((set) => {
       try {
         await ensureUserDoc(firebaseUser)
         // Hydrate coins from Firestore — authoritative value set by Cloud Functions.
-        const snap = await getDoc(doc(db, 'users', firebaseUser.uid))
+        const snap = await getDoc(refs.user(firebaseUser.uid))
         const serverCoins = snap.data()?.coins ?? 0
         if (serverCoins > 0) useUserStore.getState().setCoins(serverCoins)
         await hydrateSelectStoreFromFirestore(firebaseUser.uid)

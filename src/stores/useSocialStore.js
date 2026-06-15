@@ -1,21 +1,16 @@
-import { create } from 'zustand'
+﻿import { create } from 'zustand'
 import {
-  collection,
-  doc,
   getDoc,
   getDocs,
-  limit,
   onSnapshot,
-  query,
   serverTimestamp,
   setDoc,
-  updateDoc,
-  where,
   writeBatch,
   arrayRemove,
   arrayUnion,
 } from 'firebase/firestore'
-import { auth, db } from '../firebase'
+import { auth } from '../firebase'
+import { refs, cols, queries } from '../lib/db'
 
 // ─── Career family mapping ────────────────────────────────────────────────────
 // Groups career ids into families so "similar program" scoring works.
@@ -114,11 +109,11 @@ export const useSocialStore = create((set) => ({
   sendFollowRequest: async (targetUid) => {
     const uid = myUid()
     const batch = writeBatch(db)
-    batch.update(doc(db, 'users', targetUid), {
+    batch.update(refs.user(targetUid), {
       followRequests: arrayUnion(uid),
     })
     // sentRequests field is created by arrayUnion if it doesn't exist yet.
-    batch.update(doc(db, 'users', uid), {
+    batch.update(refs.user(uid), {
       sentRequests: arrayUnion(targetUid),
     })
     await batch.commit()
@@ -132,11 +127,11 @@ export const useSocialStore = create((set) => ({
   acceptFollowRequest: async (fromUid) => {
     const uid = myUid()
     const batch = writeBatch(db)
-    batch.update(doc(db, 'users', uid), {
+    batch.update(refs.user(uid), {
       followRequests: arrayRemove(fromUid),
       followers: arrayUnion(fromUid),
     })
-    batch.update(doc(db, 'users', fromUid), {
+    batch.update(refs.user(fromUid), {
       following: arrayUnion(uid),
       sentRequests: arrayRemove(uid),
     })
@@ -151,8 +146,8 @@ export const useSocialStore = create((set) => ({
   unfollowUser: async (targetUid) => {
     const uid = myUid()
     const batch = writeBatch(db)
-    batch.update(doc(db, 'users', uid), { following: arrayRemove(targetUid) })
-    batch.update(doc(db, 'users', targetUid), { followers: arrayRemove(uid) })
+    batch.update(refs.user(uid), { following: arrayRemove(targetUid) })
+    batch.update(refs.user(targetUid), { followers: arrayRemove(uid) })
     await batch.commit()
     set((s) => ({ following: s.following.filter((id) => id !== targetUid) }))
   },
@@ -161,10 +156,10 @@ export const useSocialStore = create((set) => ({
   rejectFollowRequest: async (fromUid) => {
     const uid = myUid()
     const batch = writeBatch(db)
-    batch.update(doc(db, 'users', uid), {
+    batch.update(refs.user(uid), {
       followRequests: arrayRemove(fromUid),
     })
-    batch.update(doc(db, 'users', fromUid), {
+    batch.update(refs.user(fromUid), {
       sentRequests: arrayRemove(uid),
     })
     await batch.commit()
@@ -177,12 +172,7 @@ export const useSocialStore = create((set) => ({
   loadNearbyUsers: async (schoolId) => {
     if (!schoolId) return
     const uid = myUid()
-    const q = query(
-      collection(db, 'users'),
-      where('schoolId', '==', schoolId),
-      limit(50),
-    )
-    const snap = await getDocs(q)
+    const snap = await getDocs(queries.nearbyUsers(schoolId))
     const users = snap.docs.map((d) => d.data()).filter((u) => u.uid !== uid)
     set({ nearbyUsers: users })
   },
@@ -190,7 +180,7 @@ export const useSocialStore = create((set) => ({
   // Fetches the current user's Firestore doc and syncs all social arrays into the store.
   loadMyProfile: async () => {
     const uid = myUid()
-    const snap = await getDoc(doc(db, 'users', uid))
+    const snap = await getDoc(refs.user(uid))
     if (!snap.exists()) return
     const data = snap.data()
     set({
@@ -208,7 +198,7 @@ export const useSocialStore = create((set) => ({
       _unsub()
       _unsub = null
     }
-    _unsub = onSnapshot(doc(db, 'users', uid), (snap) => {
+    _unsub = onSnapshot(refs.user(uid), (snap) => {
       if (!snap.exists()) return
       const data = snap.data()
       set({
@@ -230,13 +220,7 @@ export const useSocialStore = create((set) => ({
       set({ searchResults: [] })
       return
     }
-    const q = query(
-      collection(db, 'users'),
-      where('displayName', '>=', term),
-      where('displayName', '<=', term + ''),
-      limit(20),
-    )
-    const snap = await getDocs(q)
+    const snap = await getDocs(queries.searchUsersByName(term))
     const results = snap.docs.map((d) => d.data()).filter((u) => u.uid !== uid)
     set({ searchResults: results })
   },
@@ -244,12 +228,7 @@ export const useSocialStore = create((set) => ({
   // Fetches users whose matchScore is above 0, excluding the current user.
   loadMatchedUsers: async () => {
     const uid = myUid()
-    const q = query(
-      collection(db, 'users'),
-      where('matchScore', '>', 0),
-      limit(20),
-    )
-    const snap = await getDocs(q)
+    const snap = await getDocs(queries.matchedUsers())
     const users = snap.docs.map((d) => d.data()).filter((u) => u.uid !== uid)
     set({ matchedUsers: users })
   },
@@ -268,8 +247,8 @@ export const useSocialStore = create((set) => ({
 
     try {
       const [mySnap, theirSnap] = await Promise.all([
-        getDoc(doc(db, 'users', uid)),
-        getDoc(doc(db, 'users', targetUid)),
+        getDoc(refs.user(uid)),
+        getDoc(refs.user(targetUid)),
       ])
 
       if (!mySnap.exists() || !theirSnap.exists()) {
@@ -284,7 +263,7 @@ export const useSocialStore = create((set) => ({
       const checkedAt = new Date()
 
       await setDoc(
-        doc(db, 'users', uid, 'matches', targetUid),
+        refs.userMatch(uid, targetUid),
         { score, checkedAt: serverTimestamp() },
         { merge: true },
       )
@@ -305,7 +284,7 @@ export const useSocialStore = create((set) => ({
     try { uid = myUid() } catch { return }
 
     try {
-      const snap = await getDocs(collection(db, 'users', uid, 'matches'))
+      const snap = await getDocs(cols.userMatches(uid))
       if (snap.empty) return
 
       const allChecked = {}
@@ -322,7 +301,7 @@ export const useSocialStore = create((set) => ({
       const matchesWithUsers = (
         await Promise.all(
           highScore.map(async (m) => {
-            const userSnap = await getDoc(doc(db, 'users', m.uid))
+            const userSnap = await getDoc(refs.user(m.uid))
             return userSnap.exists() ? { ...m, user: userSnap.data() } : null
           }),
         )
@@ -347,7 +326,7 @@ export const useSocialStore = create((set) => ({
         const score = calculateMatchScore(myProfile, other)
         if (score >= 60) {
           await setDoc(
-            doc(db, 'users', uid, 'matches', other.uid),
+            refs.userMatch(uid, other.uid),
             { score, matchedAt: serverTimestamp() },
           )
           matched.push({ ...other, matchScore: score })

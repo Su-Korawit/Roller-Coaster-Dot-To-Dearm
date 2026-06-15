@@ -1,8 +1,9 @@
 import { create } from 'zustand'
-import { collection, onSnapshot, query, where } from 'firebase/firestore'
+import { onSnapshot } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
 import { ref as storageRef, uploadBytes } from 'firebase/storage'
-import { auth, db, functions, storage } from '../firebase'
+import { auth, functions, storage } from '../firebase'
+import { cols, queries } from '../lib/db'
 
 // Module-level unsub refs — same pattern as useChatStore. Kept outside Zustand
 // state so replacing them doesn't trigger re-renders.
@@ -16,8 +17,7 @@ export const useShopStore = create((set, get) => ({
   // Live active catalogue. Sorted client-side so we don't need a composite index.
   loadProducts: () => {
     if (_productsUnsub) { _productsUnsub(); _productsUnsub = null }
-    const q = query(collection(db, 'shopProducts'), where('active', '==', true))
-    _productsUnsub = onSnapshot(q, (snap) => {
+    _productsUnsub = onSnapshot(queries.activeProducts(), (snap) => {
       const products = snap.docs
         .map((d) => ({ id: d.id, ...d.data() }))
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
@@ -30,8 +30,7 @@ export const useShopStore = create((set, get) => ({
   // server-written status (WAITING_PAYMENT → VERIFYING → SUCCESS/FAILED/EXPIRED).
   loadPurchases: (uid) => {
     if (_purchasesUnsub) { _purchasesUnsub(); _purchasesUnsub = null }
-    const q = query(collection(db, 'purchases'), where('uid', '==', uid))
-    _purchasesUnsub = onSnapshot(q, (snap) => {
+    _purchasesUnsub = onSnapshot(queries.purchasesByUser(uid), (snap) => {
       set({ purchases: snap.docs.map((d) => ({ id: d.id, ...d.data() })) })
     })
     return _purchasesUnsub

@@ -1,5 +1,5 @@
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '../firebase'
+import { setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
+import { refs } from '../lib/db'
 import { useSelectStore } from '../stores/useSelectStore'
 
 /**
@@ -25,7 +25,7 @@ export async function syncSelectToFirestore(uid) {
 
   try {
     await setDoc(
-      doc(db, 'users', uid),
+      refs.user(uid),
       { profile: profileData },
       { merge: true },
     )
@@ -44,7 +44,7 @@ export async function hydrateSelectStoreFromFirestore(uid) {
   if (!uid) return
 
   try {
-    const snap = await getDoc(doc(db, 'users', uid))
+    const snap = await getDoc(refs.user(uid))
     if (!snap.exists()) return
 
     const profile = snap.data()?.profile
