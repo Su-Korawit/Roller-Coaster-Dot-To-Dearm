@@ -8,6 +8,7 @@ import { useChatStore } from '../stores/useChatStore'
 import { useTaskStore } from '../stores/useTaskStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useSkillStore } from '../stores/useSkillStore'
+import { generateAIDailyTask, evaluateAndCompleteTask } from '../services/aiTasks'
 import TaskForm from './TaskForm'
 import SkillExecutionPopup from './SkillExecutionPopup'
 
@@ -205,7 +206,7 @@ function ReflectionSheet({ task, onSubmit, onClose, isEvaluating }) {
 export default function TaskPanel({ onClose, initialView = 'list' }) {
   const { tasks, addTask, updateTask, toggleTask, trashTask, restoreTask, purgeTask, emptyTrash, reorderTasks, applySkillToTask } = useTaskStore()
   const trash = useTaskStore((s) => s.trash)
-  const { addCoins, evaluateAndCompleteTask, generateAIDailyTask, activeMasteryBlockId } = useUserStore()
+  const { addCoins, activeMasteryBlockId, journeys, aiLanguage, updateJourneyProgress } = useUserStore()
   const [view, setView] = useState(initialView)
   const [editingTaskId, setEditingTaskId] = useState(null)
   const [editInitialValues, setEditInitialValues] = useState({})
@@ -297,7 +298,10 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
     if (!reflectionTask) return
     setIsEvaluating(true)
     try {
-      const result = await evaluateAndCompleteTask(reflectionTask, reflection)
+      const result = await evaluateAndCompleteTask(reflectionTask, reflection, { aiLanguage })
+      if (reflectionTask.linkedJourneyKey && reflectionTask.linkedJourneyId) {
+        updateJourneyProgress(reflectionTask.linkedJourneyKey, reflectionTask.linkedJourneyId, result.note, result.gainedPercent)
+      }
       setEvalResult(result)
       // Award coins
       const { equippedPassiveSkill } = useSkillStore.getState()
@@ -326,7 +330,7 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
     setIsAutoGenerating(true)
     setAutoGenError('')
     try {
-      const newTask = await generateAIDailyTask()
+      const newTask = await generateAIDailyTask({ activeMasteryBlockId, journeys, aiLanguage })
       addTask(newTask)
     } catch (err) {
       console.error('Auto-generate failed:', err)
