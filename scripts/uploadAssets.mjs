@@ -95,14 +95,19 @@ async function main() {
     const remote = bucket.file(job.dest)
 
     let remoteMd5 = null
+    let remoteHasToken = false
     try {
       const [meta] = await remote.getMetadata()
       remoteMd5 = meta.md5Hash
+      remoteHasToken = !!meta.metadata?.firebaseStorageDownloadTokens
     } catch {
       // not uploaded yet
     }
 
-    if (remoteMd5 === localMd5) {
+    // Skip only when bytes match AND the remote object already has a download
+    // token. Files uploaded before the token fix have matching md5 but no token,
+    // so getDownloadURL() 500s on them forever — force a re-upload to heal them.
+    if (remoteMd5 === localMd5 && remoteHasToken) {
       skipped++
       continue
     }

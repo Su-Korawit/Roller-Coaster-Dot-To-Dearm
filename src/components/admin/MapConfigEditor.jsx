@@ -7,6 +7,7 @@ import StorageBrowser from './StorageBrowser'
 import { useToast } from './Toast'
 
 const TILESET_FOLDERS = ['sprites/tilesets', 'sprites/objects']
+const MAP_FOLDERS = ['maps'] // module-level so the prop keeps a stable identity
 const sanitize = (name) => name.trim().replace(/\s+/g, '_')
 
 // Fetch a map JSON's text, preferring its Storage copy and falling back to the
@@ -38,7 +39,11 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
   const [saving, setSaving]       = useState(false)
   const [uploadingName, setUploadingName] = useState(null) // tileset name mid-upload
   const jsonInputRef = useRef(null)
+  const pickedMsgTimer = useRef(null)
   const toast = useToast()
+
+  // Clear the "picked" inline-message timer on unmount so it can't setState late.
+  useEffect(() => () => clearTimeout(pickedMsgTimer.current), [])
 
   // Apply a parsed map + the stored config to local state.
   function applyMap(text, cfg) {
@@ -91,7 +96,8 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
         if (applyMap(text, { tilesets, collision, hidden })) {
           setJsonDirty(true)
           setJsonPickedMsg(true)
-          setTimeout(() => setJsonPickedMsg(false), 2000)
+          clearTimeout(pickedMsgTimer.current)
+          pickedMsgTimer.current = setTimeout(() => setJsonPickedMsg(false), 2000)
         }
       } catch { toast?.error('โหลดไฟล์ที่เลือกไม่สำเร็จ') }
     } else if (target?.name) {
@@ -128,6 +134,9 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
           contentType: 'application/json',
         })
         bustCache(`maps/${mapKey}.json`)
+        // JSON is now in Storage; clear the dirty flag so a saveMapConfig failure
+        // below doesn't force a redundant re-upload on retry.
+        setJsonDirty(false)
       }
       await saveMapConfig(mapKey, { tilesets, collision, hidden }, adminUid)
       onSaved?.()
@@ -181,8 +190,8 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
             <section>
               <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Layers ({tileLayers.length})</p>
               <div className="space-y-1">
-                {tileLayers.map((l, i) => (
-                  <div key={`${l.name}_${i}`} className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50">
+                {tileLayers.map((l) => (
+                  <div key={l.name} className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50">
                     <span className="text-sm text-gray-800">{l.name}</span>
                     <div className="flex items-center gap-4">
                       <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
@@ -205,8 +214,8 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
             <section>
               <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Assets / Tilesets ({tilesetNames.length})</p>
               <div className="space-y-2">
-                {tilesetNames.map((name, i) => (
-                  <div key={`${name}_${i}`} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-50">
+                {tilesetNames.map((name) => (
+                  <div key={name} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-50">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-800">{name}</p>
                       <p className={`text-[11px] truncate ${tilesets[name] ? 'text-gray-500' : 'text-red-500'}`}>
@@ -241,7 +250,7 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
 
       {browser && (
         <StorageBrowser
-          folders={browser === 'mapjson' ? ['maps'] : TILESET_FOLDERS}
+          folders={browser === 'mapjson' ? MAP_FOLDERS : TILESET_FOLDERS}
           title={browser === 'mapjson' ? 'เลือกไฟล์แมพ (.json)' : 'เลือก asset / tileset'}
           onPick={handleBrowsePick}
           onClose={() => setBrowser(null)}
