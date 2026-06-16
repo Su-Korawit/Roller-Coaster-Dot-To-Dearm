@@ -34,11 +34,11 @@ export default function ConditionNode({ id, data, selected }) {
         position={Position.Left}
         className="!w-2.5 !h-2.5 !bg-accent-pink !border-white !border-2 !-rotate-45"
       />
-      {/* Source handle 1 — right point (primary outgoing) */}
+      {/* Source handle 1 — top point (outgoing branch) */}
       <Handle
-        id="right"
+        id="top"
         type="source"
-        position={Position.Right}
+        position={Position.Top}
         className="!w-2.5 !h-2.5 !bg-accent-pink !border-white !border-2 !-rotate-45"
       />
       {/* Source handle 2 — bottom point (fork outgoing) */}
