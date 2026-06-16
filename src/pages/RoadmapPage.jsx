@@ -18,6 +18,12 @@ import ImageNode from '../components/roadmap/ImageNode'
 
 const nodeTypes = { process: ProcessNode, condition: ConditionNode, stageLabel: StageLabelNode, image: ImageNode }
 
+// Blocks snap edge-to-edge, so connection lines are never drawn.
+function InvisibleEdge() {
+  return null
+}
+const edgeTypes = { default: InvisibleEdge }
+
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 export default function RoadmapPage() {
@@ -30,6 +36,7 @@ export default function RoadmapPage() {
   const removeNode = useRoadmapStore((s) => s.removeNode)
   const connect = useRoadmapStore((s) => s.connect)
   const removeEdge = useRoadmapStore((s) => s.removeEdge)
+  const detachNode = useRoadmapStore((s) => s.detachNode)
 
   const onNodesChange = useCallback(
     (changes) => setNodes(applyNodeChanges(changes, nodes)),
@@ -50,6 +57,11 @@ export default function RoadmapPage() {
   const onEdgesDelete = useCallback(
     (deleted) => deleted.forEach((e) => removeEdge(e.id)),
     [removeEdge],
+  )
+  // Dragging a block detaches it from all connections so it can be re-snapped elsewhere.
+  const onNodeDragStart = useCallback(
+    (_event, node) => detachNode(node.id),
+    [detachNode],
   )
 
   const addProcessNode = useCallback(() => {
@@ -73,6 +85,7 @@ export default function RoadmapPage() {
   }, [addNode, nodes.length])
 
   const stableNodeTypes = useMemo(() => nodeTypes, [])
+  const stableEdgeTypes = useMemo(() => edgeTypes, [])
 
   return (
     <div className="h-full w-full flex flex-col bg-[#F4F7FC]">
@@ -94,11 +107,13 @@ export default function RoadmapPage() {
           nodes={nodes}
           edges={edges}
           nodeTypes={stableNodeTypes}
+          edgeTypes={stableEdgeTypes}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onNodesDelete={onNodesDelete}
           onEdgesDelete={onEdgesDelete}
           onConnect={onConnect}
+          onNodeDragStart={onNodeDragStart}
           deleteKeyCode={['Backspace', 'Delete']}
           fitView
         >
