@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ReactFlow,
@@ -8,8 +8,11 @@ import {
   applyEdgeChanges,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { useRoadmapStore } from '../stores/useRoadmapStore'
 import { ArrowLeft } from 'lucide-react'
+import { useRoadmapStore } from '../stores/useRoadmapStore'
+import ProcessNode from '../components/roadmap/ProcessNode'
+
+const nodeTypes = { process: ProcessNode }
 
 export default function RoadmapPage() {
   const navigate = useNavigate()
@@ -17,6 +20,8 @@ export default function RoadmapPage() {
   const edges = useRoadmapStore((s) => s.edges)
   const setNodes = useRoadmapStore((s) => s.setNodes)
   const setEdges = useRoadmapStore((s) => s.setEdges)
+  const addNode = useRoadmapStore((s) => s.addNode)
+  const removeNode = useRoadmapStore((s) => s.removeNode)
 
   const onNodesChange = useCallback(
     (changes) => setNodes(applyNodeChanges(changes, nodes)),
@@ -26,6 +31,18 @@ export default function RoadmapPage() {
     (changes) => setEdges(applyEdgeChanges(changes, edges)),
     [edges, setEdges],
   )
+  const onNodesDelete = useCallback(
+    (deleted) => deleted.forEach((n) => removeNode(n.id)),
+    [removeNode],
+  )
+
+  // Offset each new node slightly so stacked blocks stay separable
+  const addProcessNode = useCallback(() => {
+    const offset = nodes.length * 20
+    addNode('process', { x: 100 + offset, y: 100 + offset })
+  }, [addNode, nodes.length])
+
+  const stableNodeTypes = useMemo(() => nodeTypes, [])
 
   return (
     <div className="h-full w-full flex flex-col bg-[#F4F7FC]">
@@ -46,12 +63,28 @@ export default function RoadmapPage() {
         <ReactFlow
           nodes={nodes}
           edges={edges}
+          nodeTypes={stableNodeTypes}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
+          onNodesDelete={onNodesDelete}
+          deleteKeyCode={['Backspace', 'Delete']}
           fitView
         >
           <Background gap={20} color="#e2e8f0" />
           <Controls />
+
+          {/* Tool palette */}
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 bg-white rounded-2xl shadow-md px-3 py-2 border border-gray-100">
+            <span className="pixel-font text-[9px] text-gray-400 mr-1">Add</span>
+            <button
+              onClick={addProcessNode}
+              className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              aria-label="Add Process block"
+            >
+              <div className="w-8 h-8 rounded-xl bg-brand/20 border-2 border-brand/50" />
+              <span className="pixel-font text-[8px] text-ink">Process</span>
+            </button>
+          </div>
         </ReactFlow>
       </div>
     </div>

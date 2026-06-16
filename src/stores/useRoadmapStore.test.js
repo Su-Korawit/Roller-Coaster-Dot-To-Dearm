@@ -31,4 +31,34 @@ describe('useRoadmapStore', () => {
     useRoadmapStore.getState().setEdges(newEdges)
     expect(useRoadmapStore.getState().edges).toEqual(newEdges)
   })
+
+  it('addNode creates a node of the given type', () => {
+    useRoadmapStore.getState().addNode('process')
+    const { nodes } = useRoadmapStore.getState()
+    expect(nodes).toHaveLength(1)
+    expect(nodes[0].type).toBe('process')
+  })
+
+  it('addNode assigns a unique id to each node', () => {
+    useRoadmapStore.getState().addNode('process')
+    useRoadmapStore.getState().addNode('process')
+    const { nodes } = useRoadmapStore.getState()
+    expect(nodes).toHaveLength(2)
+    expect(nodes[0].id).not.toBe(nodes[1].id)
+  })
+
+  it('updateNodeData patches data on the correct node', () => {
+    useRoadmapStore.getState().addNode('process')
+    const id = useRoadmapStore.getState().nodes[0].id
+    useRoadmapStore.getState().updateNodeData(id, { label: 'My Step' })
+    const node = useRoadmapStore.getState().nodes.find((n) => n.id === id)
+    expect(node.data.label).toBe('My Step')
+  })
+
+  it('removeNode removes the node from the board', () => {
+    useRoadmapStore.getState().addNode('process')
+    const id = useRoadmapStore.getState().nodes[0].id
+    useRoadmapStore.getState().removeNode(id)
+    expect(useRoadmapStore.getState().nodes).toHaveLength(0)
+  })
 })

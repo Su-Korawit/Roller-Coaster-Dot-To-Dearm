@@ -1,0 +1,42 @@
+import { useCallback } from 'react'
+import { Handle, Position } from '@xyflow/react'
+import { useRoadmapStore } from '../../stores/useRoadmapStore'
+
+export default function ProcessNode({ id, data, selected }) {
+  const updateNodeData = useRoadmapStore((s) => s.updateNodeData)
+
+  const onLabelChange = useCallback(
+    (e) => updateNodeData(id, { label: e.target.value }),
+    [id, updateNodeData],
+  )
+  const onNoteChange = useCallback(
+    (e) => updateNodeData(id, { note: e.target.value }),
+    [id, updateNodeData],
+  )
+
+  return (
+    <div
+      className={`min-w-[120px] max-w-[200px] rounded-2xl border-2 bg-white shadow-md px-3 py-2.5 flex flex-col gap-1.5 transition-all ${
+        selected ? 'border-brand shadow-brand/30 shadow-lg' : 'border-brand/40'
+      }`}
+    >
+      <Handle type="target" position={Position.Left} className="!w-2.5 !h-2.5 !bg-brand !border-white !border-2" />
+
+      <input
+        className="w-full text-[12px] font-semibold text-ink bg-transparent outline-none placeholder:text-gray-300 focus:placeholder:text-gray-200"
+        placeholder="Title"
+        value={data.label}
+        onChange={onLabelChange}
+      />
+      <textarea
+        className="w-full text-[10px] text-gray-500 bg-transparent outline-none resize-none placeholder:text-gray-300 focus:placeholder:text-gray-200 leading-tight"
+        placeholder="Note (optional)"
+        value={data.note}
+        onChange={onNoteChange}
+        rows={2}
+      />
+
+      <Handle type="source" position={Position.Right} className="!w-2.5 !h-2.5 !bg-brand !border-white !border-2" />
+    </div>
+  )
+}
