@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Calendar, MessageCircle, Map } from 'lucide-react'
 import { useUserStore } from '../stores/useUserStore'
 import { useAuthStore } from '../stores/useAuthStore'
@@ -19,6 +18,7 @@ import { useChatStore } from '../stores/useChatStore'
 import { buildChatId } from '../lib/db'
 import { ADMIN_UID, ADMIN_DISPLAY_NAME } from '../constants/admin'
 import GameCanvas from '../components/GameCanvas'
+import RoadmapPage from './RoadmapPage'
 import { useCloudAsset } from '../hooks/useCloudAsset'
 import { getMusicConfig, DEFAULT_TRACKS } from '../utils/musicConfig'
 
@@ -28,7 +28,6 @@ import { getMusicConfig, DEFAULT_TRACKS } from '../utils/musicConfig'
 const musicFallback = new URL('../../assets/eachPageAssets/home/Background_Music_1.mp3', import.meta.url).href
 
 function HomePage() {
-  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('home')
   const [newsRead, setNewsRead] = useState(false)
   const [taskInitialView, setTaskInitialView] = useState('list')
@@ -41,6 +40,7 @@ function HomePage() {
   // Starts from the built-in default and hydrates from Firestore on mount.
   const [tracks, setTracks] = useState(DEFAULT_TRACKS)
   const [showCalendar, setShowCalendar] = useState(false)
+  const [showRoadmap, setShowRoadmap] = useState(false)
   const [showDailyModal, setShowDailyModal] = useState(false)
   const audioRef = useRef(null)
   const musicSrc = useCloudAsset('media/audio/Background_Music_1.mp3', musicFallback)
@@ -246,7 +246,7 @@ function HomePage() {
           <Calendar size={22} strokeWidth={1.5} className="text-brand" />
         </button>
         <button
-          onClick={() => navigate('/roadmap')}
+          onClick={() => setShowRoadmap(true)}
           aria-label="เปิด Roadmap"
           className="w-12 h-12 md:w-14 md:h-14 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-gray-100 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
@@ -307,6 +307,13 @@ function HomePage() {
       {/* ── DAILY MOOD CHECK-IN ── */}
       {showDailyModal && (
         <DailyLoginModal onClose={() => setShowDailyModal(false)} />
+      )}
+
+      {/* ── ROADMAP OVERLAY (semi-transparent, game keeps running behind) ── */}
+      {showRoadmap && (
+        <div className="absolute inset-0 z-40 bg-white/60 backdrop-blur-sm">
+          <RoadmapPage onClose={() => setShowRoadmap(false)} />
+        </div>
       )}
 
       {/* ── TRACKLIST PANEL ── */}

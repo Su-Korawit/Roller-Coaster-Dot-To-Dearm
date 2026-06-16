@@ -9,7 +9,7 @@ import {
   applyEdgeChanges,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, X } from 'lucide-react'
 import { useRoadmapStore } from '../stores/useRoadmapStore'
 import ProcessNode from '../components/roadmap/ProcessNode'
 import ConditionNode from '../components/roadmap/ConditionNode'
@@ -26,8 +26,12 @@ const edgeTypes = { default: InvisibleEdge }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-export default function RoadmapPage() {
+export default function RoadmapPage({ onClose }) {
   const navigate = useNavigate()
+  // Overlay mode (onClose provided) sits over the live game: transparent backdrop
+  // and a close button. Route mode keeps the solid background and a back arrow.
+  const overlay = Boolean(onClose)
+  const handleBack = onClose ?? (() => navigate('/home'))
   const nodes = useRoadmapStore((s) => s.nodes)
   const edges = useRoadmapStore((s) => s.edges)
   const setNodes = useRoadmapStore((s) => s.setNodes)
@@ -88,15 +92,15 @@ export default function RoadmapPage() {
   const stableEdgeTypes = useMemo(() => edgeTypes, [])
 
   return (
-    <div className="h-full w-full flex flex-col bg-[#F4F7FC]">
+    <div className={`h-full w-full flex flex-col ${overlay ? 'bg-transparent' : 'bg-[#F4F7FC]'}`}>
       {/* Header */}
       <div className="shrink-0 flex items-center gap-3 px-4 py-3 bg-white shadow-sm z-10">
         <button
-          onClick={() => navigate('/home')}
-          aria-label="กลับหน้าหลัก"
+          onClick={handleBack}
+          aria-label={overlay ? 'ปิด Roadmap' : 'กลับหน้าหลัก'}
           className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-100 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
-          <ArrowLeft size={20} strokeWidth={2} />
+          {overlay ? <X size={20} strokeWidth={2} /> : <ArrowLeft size={20} strokeWidth={2} />}
         </button>
         <h1 className="pixel-font text-[13px] text-ink font-bold">Roadmap</h1>
       </div>
