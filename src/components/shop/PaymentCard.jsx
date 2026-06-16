@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useShopStore } from '../../stores/useShopStore'
 import { useUserStore } from '../../stores/useUserStore'
 import { useShopChatStore } from '../../stores/useShopChatStore'
-import { SLIP_FAIL_MESSAGES } from '../../constants/shopMessages'
+import { slipErrorMessage } from '../../constants/shopMessages'
+import { creditForResult } from '../../services/shopCredit'
 import PaymentStatusBadge from './PaymentStatusBadge'
 import QRPaymentCard from './QRPaymentCard'
 import SlipUploadButton from './SlipUploadButton'
@@ -18,23 +19,29 @@ export default function PaymentCard({ purchaseId }) {
   const { status, amount, coins, expiresAt, failReason } = purchase
 
   const handleUpload = async (file) => {
+    // Block a resent slip: ignore uploads once one is in flight or the purchase
+    // has left WAITING_PAYMENT. creditForResult is the second line of defence.
+    if (status !== 'WAITING_PAYMENT' || uploading) return
     setUploading(true)
     setLocalError(null)
     try {
       const result = await useShopStore.getState().verifyPayment(purchaseId, file)
       if (result.ok) {
-        useUserStore.getState().addCoins(result.coins)
-        useShopChatStore.getState().addSystemMessage(
-          'success',
-          `✅ ชำระเงินสำเร็จ! ได้รับ +${result.coins} 🪙`,
-        )
+        const credited = creditForResult(purchaseId, result)
+        if (credited > 0) {
+          useUserStore.getState().addCoins(credited)
+          useShopChatStore.getState().addSystemMessage(
+            'success',
+            `✅ ชำระเงินสำเร็จ! ได้รับ +${credited} 🪙`,
+          )
+        }
       } else {
-        const msg = SLIP_FAIL_MESSAGES[result.reason] ?? 'ไม่สามารถยืนยันสลิปได้'
+        const msg = slipErrorMessage(result.reason)
         setLocalError(msg)
         useShopChatStore.getState().addSystemMessage('error', `❌ ${msg}`)
       }
-    } catch (err) {
-      const msg = err.message ?? 'เกิดข้อผิดพลาด'
+    } catch {
+      const msg = slipErrorMessage()
       setLocalError(msg)
     } finally {
       setUploading(false)
@@ -63,8 +70,8 @@ export default function PaymentCard({ purchaseId }) {
           <span className="pixel-font text-[14px] font-bold text-accent-pink">{amount} ฿</span>
         </div>
 
-        {/* WAITING_PAYMENT: show QR */}
-        {status === 'WAITING_PAYMENT' && (
+        {/* WAITING_PAYMENT: show QR (hidden once a slip is in flight) */}
+        {status === 'WAITING_PAYMENT' && !uploading && (
           <>
             <QRPaymentCard amount={amount} expiresAt={expiresAt} />
             <div className="border-t border-gray-100 pt-3">
@@ -88,7 +95,7 @@ export default function PaymentCard({ purchaseId }) {
         {status === 'FAILED' && (
           <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2">
             <p className="thai-font text-xs text-rose-700">
-              ❌ {SLIP_FAIL_MESSAGES[failReason] ?? 'ยืนยันสลิปไม่สำเร็จ'}
+              ❌ {slipErrorMessage(failReason)}
             </p>
           </div>
         )}
