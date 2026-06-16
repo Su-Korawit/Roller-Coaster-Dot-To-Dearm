@@ -14,8 +14,9 @@ import { useRoadmapStore } from '../stores/useRoadmapStore'
 import ProcessNode from '../components/roadmap/ProcessNode'
 import ConditionNode from '../components/roadmap/ConditionNode'
 import StageLabelNode from '../components/roadmap/StageLabelNode'
+import ImageNode from '../components/roadmap/ImageNode'
 
-const nodeTypes = { process: ProcessNode, condition: ConditionNode, stageLabel: StageLabelNode }
+const nodeTypes = { process: ProcessNode, condition: ConditionNode, stageLabel: StageLabelNode, image: ImageNode }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -64,6 +65,11 @@ export default function RoadmapPage() {
   const addStageLabelNode = useCallback(() => {
     const offset = nodes.length * 20
     addNode('stageLabel', { x: 80 + offset, y: 40 + offset })
+  }, [addNode, nodes.length])
+
+  const addImageNode = useCallback(() => {
+    const offset = nodes.length * 20
+    addNode('image', { x: 140 + offset, y: 100 + offset })
   }, [addNode, nodes.length])
 
   const stableNodeTypes = useMemo(() => nodeTypes, [])
@@ -128,6 +134,16 @@ export default function RoadmapPage() {
                   <span className="pixel-font text-[6px] text-brand">Aa</span>
                 </div>
                 <span className="pixel-font text-[8px] text-ink">Stage</span>
+              </button>
+              <button
+                onClick={addImageNode}
+                className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                aria-label="Add Image block"
+              >
+                <div className="w-8 h-8 rounded-xl bg-brand/10 border-2 border-brand/30 flex items-center justify-center">
+                  <span className="text-[14px]">🖼️</span>
+                </div>
+                <span className="pixel-font text-[8px] text-ink">Image</span>
               </button>
             </div>
           </Panel>

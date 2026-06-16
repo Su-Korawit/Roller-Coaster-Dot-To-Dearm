@@ -95,4 +95,10 @@ describe('useRoadmapStore', () => {
     const { nodes } = useRoadmapStore.getState()
     expect(nodes[0].type).toBe('stageLabel')
   })
+
+  it('addNode creates an image-typed node', () => {
+    useRoadmapStore.getState().addNode('image')
+    const { nodes } = useRoadmapStore.getState()
+    expect(nodes[0].type).toBe('image')
+  })
 })
