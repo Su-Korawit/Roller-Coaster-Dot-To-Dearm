@@ -11,8 +11,9 @@ import '@xyflow/react/dist/style.css'
 import { ArrowLeft } from 'lucide-react'
 import { useRoadmapStore } from '../stores/useRoadmapStore'
 import ProcessNode from '../components/roadmap/ProcessNode'
+import ConditionNode from '../components/roadmap/ConditionNode'
 
-const nodeTypes = { process: ProcessNode }
+const nodeTypes = { process: ProcessNode, condition: ConditionNode }
 
 export default function RoadmapPage() {
   const navigate = useNavigate()
@@ -50,6 +51,11 @@ export default function RoadmapPage() {
   const addProcessNode = useCallback(() => {
     const offset = nodes.length * 20
     addNode('process', { x: 100 + offset, y: 100 + offset })
+  }, [addNode, nodes.length])
+
+  const addConditionNode = useCallback(() => {
+    const offset = nodes.length * 20
+    addNode('condition', { x: 120 + offset, y: 120 + offset })
   }, [addNode, nodes.length])
 
   const stableNodeTypes = useMemo(() => nodeTypes, [])
@@ -95,6 +101,14 @@ export default function RoadmapPage() {
             >
               <div className="w-8 h-8 rounded-xl bg-brand/20 border-2 border-brand/50" />
               <span className="pixel-font text-[8px] text-ink">Process</span>
+            </button>
+            <button
+              onClick={addConditionNode}
+              className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-accent-pink/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-pink"
+              aria-label="Add Condition block"
+            >
+              <div className="w-8 h-8 rotate-45 bg-accent-pink/20 border-2 border-accent-pink/50" style={{ borderRadius: '6px' }} />
+              <span className="pixel-font text-[8px] text-ink">Condition</span>
             </button>
           </div>
         </ReactFlow>

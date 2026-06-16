@@ -76,4 +76,17 @@ describe('useRoadmapStore', () => {
     useRoadmapStore.getState().removeEdge(id)
     expect(useRoadmapStore.getState().edges).toHaveLength(0)
   })
+
+  it('addNode creates a condition-typed node', () => {
+    useRoadmapStore.getState().addNode('condition')
+    const { nodes } = useRoadmapStore.getState()
+    expect(nodes[0].type).toBe('condition')
+  })
+
+  it('a Condition block can fork — hold two or more outgoing edges from the same source', () => {
+    useRoadmapStore.getState().connect({ source: 'cond-1', target: 'a' })
+    useRoadmapStore.getState().connect({ source: 'cond-1', target: 'b' })
+    const outgoing = useRoadmapStore.getState().edges.filter((e) => e.source === 'cond-1')
+    expect(outgoing).toHaveLength(2)
+  })
 })
