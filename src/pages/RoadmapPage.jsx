@@ -128,6 +128,7 @@ export default function RoadmapPage({ onClose }) {
           onNodeDragStart={onNodeDragStart}
           onInit={(instance) => { rfRef.current = instance }}
           onMove={onMove}
+          connectionMode="loose"
           deleteKeyCode={['Backspace', 'Delete']}
           fitView
         >
