@@ -11,15 +11,19 @@ export default function ConditionNode({ id, data, selected }) {
   )
 
   return (
-    // Outer rotated wrapper produces the diamond shape
-    <div
-      className={`w-28 h-28 rotate-45 border-2 bg-white shadow-md flex items-center justify-center transition-all ${
-        selected ? 'border-accent-pink shadow-accent-pink/30 shadow-lg' : 'border-accent-pink/50'
-      }`}
-      style={{ borderRadius: '12px' }}
-    >
-      {/* Inner counter-rotated so text stays upright */}
-      <div className="-rotate-45 flex items-center justify-center w-full px-1">
+    // Root stays un-rotated — React Flow computes handle offsets from this
+    // element's bounding box, so a transform here would misplace the handles.
+    <div className="relative w-28 h-28">
+      {/* Visual diamond — rotation lives here, not on the root */}
+      <div
+        className={`absolute inset-0 rotate-45 border-2 bg-white shadow-md transition-all ${
+          selected ? 'border-accent-pink shadow-accent-pink/30 shadow-lg' : 'border-accent-pink/50'
+        }`}
+        style={{ borderRadius: '12px' }}
+      />
+
+      {/* Centered text (root is upright, so no counter-rotation needed) */}
+      <div className="absolute inset-0 flex items-center justify-center px-1">
         <input
           className="w-20 text-center text-[11px] font-semibold text-ink bg-transparent outline-none placeholder:text-gray-300"
           placeholder="Decision"
@@ -28,25 +32,23 @@ export default function ConditionNode({ id, data, selected }) {
         />
       </div>
 
-      {/* Target handle — left point of diamond */}
+      {/* Handles map to the true diamond corners now that the root is upright */}
       <Handle
         type="target"
         position={Position.Left}
-        className="!w-5 !h-5 !bg-white !border-black !border-[3px] !-rotate-45"
+        className="!w-3 !h-3 !bg-green-400 !border-white !border-2"
       />
-      {/* Source handle 1 — top point (outgoing branch) */}
       <Handle
         id="top"
         type="source"
         position={Position.Top}
-        className="!w-5 !h-5 !bg-white !border-black !border-[3px] !-rotate-45"
+        className="!w-3 !h-3 !bg-green-400 !border-white !border-2"
       />
-      {/* Source handle 2 — bottom point (fork outgoing) */}
       <Handle
         id="bottom"
         type="source"
         position={Position.Bottom}
-        className="!w-5 !h-5 !bg-white !border-black !border-[3px] !-rotate-45"
+        className="!w-3 !h-3 !bg-green-400 !border-white !border-2"
       />
     </div>
   )
