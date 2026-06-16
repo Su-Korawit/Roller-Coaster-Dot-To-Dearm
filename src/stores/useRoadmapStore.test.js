@@ -61,4 +61,19 @@ describe('useRoadmapStore', () => {
     useRoadmapStore.getState().removeNode(id)
     expect(useRoadmapStore.getState().nodes).toHaveLength(0)
   })
+
+  it('connect adds an edge between two blocks', () => {
+    useRoadmapStore.getState().connect({ source: 'a', target: 'b' })
+    const { edges } = useRoadmapStore.getState()
+    expect(edges).toHaveLength(1)
+    expect(edges[0].source).toBe('a')
+    expect(edges[0].target).toBe('b')
+  })
+
+  it('removeEdge removes the connection from the board', () => {
+    useRoadmapStore.getState().connect({ source: 'a', target: 'b' })
+    const id = useRoadmapStore.getState().edges[0].id
+    useRoadmapStore.getState().removeEdge(id)
+    expect(useRoadmapStore.getState().edges).toHaveLength(0)
+  })
 })

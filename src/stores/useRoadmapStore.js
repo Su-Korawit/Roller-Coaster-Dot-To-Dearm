@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { addEdge } from '@xyflow/react'
 
 let _counter = 0
 function nextId() {
@@ -31,6 +32,10 @@ export const useRoadmapStore = create(
           nodes: state.nodes.filter((n) => n.id !== id),
           edges: state.edges.filter((e) => e.source !== id && e.target !== id),
         })),
+      connect: (connection) =>
+        set((state) => ({ edges: addEdge(connection, state.edges) })),
+      removeEdge: (id) =>
+        set((state) => ({ edges: state.edges.filter((e) => e.id !== id) })),
     }),
     { name: 'rc-roadmap-store' },
   ),

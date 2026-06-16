@@ -22,6 +22,8 @@ export default function RoadmapPage() {
   const setEdges = useRoadmapStore((s) => s.setEdges)
   const addNode = useRoadmapStore((s) => s.addNode)
   const removeNode = useRoadmapStore((s) => s.removeNode)
+  const connect = useRoadmapStore((s) => s.connect)
+  const removeEdge = useRoadmapStore((s) => s.removeEdge)
 
   const onNodesChange = useCallback(
     (changes) => setNodes(applyNodeChanges(changes, nodes)),
@@ -34,6 +36,14 @@ export default function RoadmapPage() {
   const onNodesDelete = useCallback(
     (deleted) => deleted.forEach((n) => removeNode(n.id)),
     [removeNode],
+  )
+  const onConnect = useCallback(
+    (params) => connect(params),
+    [connect],
+  )
+  const onEdgesDelete = useCallback(
+    (deleted) => deleted.forEach((e) => removeEdge(e.id)),
+    [removeEdge],
   )
 
   // Offset each new node slightly so stacked blocks stay separable
@@ -67,6 +77,8 @@ export default function RoadmapPage() {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onNodesDelete={onNodesDelete}
+          onEdgesDelete={onEdgesDelete}
+          onConnect={onConnect}
           deleteKeyCode={['Backspace', 'Delete']}
           fitView
         >
