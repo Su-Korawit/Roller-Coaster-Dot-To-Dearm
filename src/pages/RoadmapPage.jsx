@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ReactFlow,
@@ -15,6 +15,7 @@ import ProcessNode from '../components/roadmap/ProcessNode'
 import ConditionNode from '../components/roadmap/ConditionNode'
 import StageLabelNode from '../components/roadmap/StageLabelNode'
 import ImageNode from '../components/roadmap/ImageNode'
+import TimelineRuler from '../components/roadmap/TimelineRuler'
 
 const nodeTypes = { process: ProcessNode, condition: ConditionNode, stageLabel: StageLabelNode, image: ImageNode }
 
@@ -23,8 +24,6 @@ function InvisibleEdge() {
   return null
 }
 const edgeTypes = { default: InvisibleEdge }
-
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 export default function RoadmapPage({ onClose }) {
   const navigate = useNavigate()
@@ -91,6 +90,15 @@ export default function RoadmapPage({ onClose }) {
   const stableNodeTypes = useMemo(() => nodeTypes, [])
   const stableEdgeTypes = useMemo(() => edgeTypes, [])
 
+  // Timeline ruler stays in lockstep with the canvas viewport (pan + zoom).
+  const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 1 })
+  const rfRef = useRef(null)
+  const onMove = useCallback((_event, vp) => setViewport(vp), [])
+  // Ruler scrubbed -> pan the canvas horizontally to match.
+  const onScrub = useCallback((x) => {
+    rfRef.current?.setViewport({ ...rfRef.current.getViewport(), x })
+  }, [])
+
   return (
     <div className={`h-full w-full flex flex-col ${overlay ? 'bg-transparent' : 'bg-[#F4F7FC]'}`}>
       {/* Header */}
@@ -118,6 +126,8 @@ export default function RoadmapPage({ onClose }) {
           onEdgesDelete={onEdgesDelete}
           onConnect={onConnect}
           onNodeDragStart={onNodeDragStart}
+          onInit={(instance) => { rfRef.current = instance }}
+          onMove={onMove}
           deleteKeyCode={['Backspace', 'Delete']}
           fitView
         >
@@ -167,20 +177,10 @@ export default function RoadmapPage({ onClose }) {
             </div>
           </Panel>
 
-          {/* Month-timeline backdrop — presentational only */}
-          <Panel position="bottom-center">
-            <div className="mb-3 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-100 flex items-center gap-0">
-              {MONTHS.map((m, i) => (
-                <div key={m} className="flex flex-col items-center" style={{ width: 40 }}>
-                  <div className="w-px h-2 bg-gray-300 mb-0.5" />
-                  <span className={`pixel-font text-[7px] ${i % 3 === 0 ? 'text-brand font-bold' : 'text-gray-300'}`}>
-                    {m}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </Panel>
         </ReactFlow>
+
+        {/* Full-width time ruler, synced both ways with the viewport */}
+        <TimelineRuler viewport={viewport} onScrub={onScrub} />
       </div>
     </div>
   )
