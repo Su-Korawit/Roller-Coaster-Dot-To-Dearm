@@ -101,4 +101,22 @@ describe('useRoadmapStore', () => {
     const { nodes } = useRoadmapStore.getState()
     expect(nodes[0].type).toBe('image')
   })
+
+  it('connect snaps the target block adjacent to the source block', () => {
+    useRoadmapStore.getState().setNodes([
+      { id: 'a', type: 'process', position: { x: 100, y: 100 }, data: { label: '' } },
+      { id: 'b', type: 'process', position: { x: 500, y: 500 }, data: { label: '' } },
+    ])
+    useRoadmapStore.getState().connect({ source: 'a', target: 'b', sourceHandle: null })
+    const b = useRoadmapStore.getState().nodes.find((n) => n.id === 'b')
+    // right exit of a 160x80 process at (100,100): x = 260, y = 100
+    expect(b.position).toEqual({ x: 260, y: 100 })
+  })
+
+  it('detachNode removes every edge touching the node (dragging detaches)', () => {
+    useRoadmapStore.getState().connect({ source: 'a', target: 'b' })
+    useRoadmapStore.getState().connect({ source: 'c', target: 'b' })
+    useRoadmapStore.getState().detachNode('b')
+    expect(useRoadmapStore.getState().edges).toHaveLength(0)
+  })
 })
