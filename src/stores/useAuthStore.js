@@ -13,6 +13,7 @@ import { refs, shapes } from '../lib/db'
 import { hydrateSelectStoreFromFirestore } from '../utils/syncSelectToFirestore'
 import { hydratePortfolioFromFirestore, setPortfolioSyncUser } from '../utils/syncPortfolioToFirestore'
 import { hydrateTasksFromFirestore, setTaskSyncUser } from '../utils/syncTasksToFirestore'
+import { hydrateRoadmapFromFirestore, setRoadmapSyncUser } from '../utils/syncRoadmapToFirestore'
 import { useUserStore } from './useUserStore'
 
 function readSelectStore() {
@@ -47,12 +48,15 @@ export const useAuthStore = create((set) => {
         setPortfolioSyncUser(firebaseUser.uid)
         await hydrateTasksFromFirestore(firebaseUser.uid)
         setTaskSyncUser(firebaseUser.uid)
+        await hydrateRoadmapFromFirestore(firebaseUser.uid)
+        setRoadmapSyncUser(firebaseUser.uid)
       } catch (e) {
         console.warn('[useAuthStore] post-auth sync failed:', e.message)
       }
     } else {
       setPortfolioSyncUser(null)
       setTaskSyncUser(null)
+      setRoadmapSyncUser(null)
     }
     set({ user: firebaseUser ?? null, loading: false })
   })
