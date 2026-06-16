@@ -89,4 +89,10 @@ describe('useRoadmapStore', () => {
     const outgoing = useRoadmapStore.getState().edges.filter((e) => e.source === 'cond-1')
     expect(outgoing).toHaveLength(2)
   })
+
+  it('addNode creates a stageLabel-typed node', () => {
+    useRoadmapStore.getState().addNode('stageLabel')
+    const { nodes } = useRoadmapStore.getState()
+    expect(nodes[0].type).toBe('stageLabel')
+  })
 })

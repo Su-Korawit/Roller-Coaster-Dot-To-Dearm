@@ -4,6 +4,7 @@ import {
   ReactFlow,
   Background,
   Controls,
+  Panel,
   applyNodeChanges,
   applyEdgeChanges,
 } from '@xyflow/react'
@@ -12,8 +13,11 @@ import { ArrowLeft } from 'lucide-react'
 import { useRoadmapStore } from '../stores/useRoadmapStore'
 import ProcessNode from '../components/roadmap/ProcessNode'
 import ConditionNode from '../components/roadmap/ConditionNode'
+import StageLabelNode from '../components/roadmap/StageLabelNode'
 
-const nodeTypes = { process: ProcessNode, condition: ConditionNode }
+const nodeTypes = { process: ProcessNode, condition: ConditionNode, stageLabel: StageLabelNode }
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 export default function RoadmapPage() {
   const navigate = useNavigate()
@@ -47,7 +51,6 @@ export default function RoadmapPage() {
     [removeEdge],
   )
 
-  // Offset each new node slightly so stacked blocks stay separable
   const addProcessNode = useCallback(() => {
     const offset = nodes.length * 20
     addNode('process', { x: 100 + offset, y: 100 + offset })
@@ -56,6 +59,11 @@ export default function RoadmapPage() {
   const addConditionNode = useCallback(() => {
     const offset = nodes.length * 20
     addNode('condition', { x: 120 + offset, y: 120 + offset })
+  }, [addNode, nodes.length])
+
+  const addStageLabelNode = useCallback(() => {
+    const offset = nodes.length * 20
+    addNode('stageLabel', { x: 80 + offset, y: 40 + offset })
   }, [addNode, nodes.length])
 
   const stableNodeTypes = useMemo(() => nodeTypes, [])
@@ -92,25 +100,51 @@ export default function RoadmapPage() {
           <Controls />
 
           {/* Tool palette */}
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 bg-white rounded-2xl shadow-md px-3 py-2 border border-gray-100">
-            <span className="pixel-font text-[9px] text-gray-400 mr-1">Add</span>
-            <button
-              onClick={addProcessNode}
-              className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-              aria-label="Add Process block"
-            >
-              <div className="w-8 h-8 rounded-xl bg-brand/20 border-2 border-brand/50" />
-              <span className="pixel-font text-[8px] text-ink">Process</span>
-            </button>
-            <button
-              onClick={addConditionNode}
-              className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-accent-pink/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-pink"
-              aria-label="Add Condition block"
-            >
-              <div className="w-8 h-8 rotate-45 bg-accent-pink/20 border-2 border-accent-pink/50" style={{ borderRadius: '6px' }} />
-              <span className="pixel-font text-[8px] text-ink">Condition</span>
-            </button>
-          </div>
+          <Panel position="top-center">
+            <div className="flex items-center gap-2 bg-white rounded-2xl shadow-md px-3 py-2 border border-gray-100 mt-2">
+              <span className="pixel-font text-[9px] text-gray-400 mr-1">Add</span>
+              <button
+                onClick={addProcessNode}
+                className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                aria-label="Add Process block"
+              >
+                <div className="w-8 h-8 rounded-xl bg-brand/20 border-2 border-brand/50" />
+                <span className="pixel-font text-[8px] text-ink">Process</span>
+              </button>
+              <button
+                onClick={addConditionNode}
+                className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-accent-pink/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-pink"
+                aria-label="Add Condition block"
+              >
+                <div className="w-8 h-8 rotate-45 bg-accent-pink/20 border-2 border-accent-pink/50" style={{ borderRadius: '6px' }} />
+                <span className="pixel-font text-[8px] text-ink">Condition</span>
+              </button>
+              <button
+                onClick={addStageLabelNode}
+                className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                aria-label="Add Stage Label"
+              >
+                <div className="w-8 h-5 rounded-full bg-brand/20 border-2 border-brand/50 flex items-center justify-center">
+                  <span className="pixel-font text-[6px] text-brand">Aa</span>
+                </div>
+                <span className="pixel-font text-[8px] text-ink">Stage</span>
+              </button>
+            </div>
+          </Panel>
+
+          {/* Month-timeline backdrop — presentational only */}
+          <Panel position="bottom-center">
+            <div className="mb-3 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-100 flex items-center gap-0">
+              {MONTHS.map((m, i) => (
+                <div key={m} className="flex flex-col items-center" style={{ width: 40 }}>
+                  <div className="w-px h-2 bg-gray-300 mb-0.5" />
+                  <span className={`pixel-font text-[7px] ${i % 3 === 0 ? 'text-brand font-bold' : 'text-gray-300'}`}>
+                    {m}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Panel>
         </ReactFlow>
       </div>
     </div>
