@@ -32,21 +32,21 @@ export default function ConditionNode({ id, data, selected }) {
       <Handle
         type="target"
         position={Position.Left}
-        className="!w-2.5 !h-2.5 !bg-accent-pink !border-white !border-2 !-rotate-45"
+        className="!w-5 !h-5 !bg-white !border-black !border-[3px] !-rotate-45"
       />
       {/* Source handle 1 — top point (outgoing branch) */}
       <Handle
         id="top"
         type="source"
         position={Position.Top}
-        className="!w-2.5 !h-2.5 !bg-accent-pink !border-white !border-2 !-rotate-45"
+        className="!w-5 !h-5 !bg-white !border-black !border-[3px] !-rotate-45"
       />
       {/* Source handle 2 — bottom point (fork outgoing) */}
       <Handle
         id="bottom"
         type="source"
         position={Position.Bottom}
-        className="!w-2.5 !h-2.5 !bg-accent-pink !border-white !border-2 !-rotate-45"
+        className="!w-5 !h-5 !bg-white !border-black !border-[3px] !-rotate-45"
       />
     </div>
   )
