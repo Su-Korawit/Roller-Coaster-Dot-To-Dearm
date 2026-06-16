@@ -311,7 +311,7 @@ function HomePage() {
 
       {/* ── ROADMAP OVERLAY (semi-transparent, game keeps running behind) ── */}
       {showRoadmap && (
-        <div className="absolute inset-0 z-40 bg-white/60 backdrop-blur-sm">
+        <div className="absolute inset-0 z-40 bg-white/20 backdrop-blur-[2px]">
           <RoadmapPage onClose={() => setShowRoadmap(false)} />
         </div>
       )}
