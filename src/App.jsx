@@ -9,6 +9,7 @@ import UniversityPage from './pages/UniversityPage'
 import WhyPage from './pages/WhyPage'
 import AuthPage from './pages/AuthPage'
 import AdminPage from './pages/AdminPage'
+import RoadmapPage from './pages/RoadmapPage'
 import { useSelectStore } from './stores/useSelectStore'
 import { useAuthStore } from './stores/useAuthStore'
 import { getAdminSections } from './constants/admin'
@@ -88,6 +89,7 @@ function App() {
           <Route path="/select/university" element={<UniversityPage />} />
           <Route path="/select/program" element={<ProgramPage />} />
           <Route path="/home" element={<HomePage />} />
+          <Route path="/roadmap" element={<RoadmapPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
