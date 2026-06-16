@@ -7,6 +7,7 @@ import {
   Panel,
   applyNodeChanges,
   applyEdgeChanges,
+  addEdge,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { ArrowLeft, X } from 'lucide-react'
@@ -16,6 +17,9 @@ import ConditionNode from '../components/roadmap/ConditionNode'
 import StageLabelNode from '../components/roadmap/StageLabelNode'
 import ImageNode from '../components/roadmap/ImageNode'
 import TimelineRuler from '../components/roadmap/TimelineRuler'
+import { findProximityConnection } from '../utils/findProximityConnection'
+
+const SNAP_THRESHOLD = 40
 
 const nodeTypes = { process: ProcessNode, condition: ConditionNode, stageLabel: StageLabelNode, image: ImageNode }
 
@@ -65,6 +69,18 @@ export default function RoadmapPage({ onClose }) {
   const onNodeDragStart = useCallback(
     (_event, node) => detachNode(node.id),
     [detachNode],
+  )
+  // On drop, if a dot landed near a compatible dot, snap the dragged block onto it
+  // and connect — no line to draw.
+  const onNodeDragStop = useCallback(
+    (_event, node) => {
+      const others = nodes.filter((n) => n.id !== node.id)
+      const match = findProximityConnection(node, others, SNAP_THRESHOLD)
+      if (!match) return
+      setNodes(nodes.map((n) => (n.id === node.id ? { ...n, position: match.position } : n)))
+      setEdges(addEdge(match.connection, edges))
+    },
+    [nodes, edges, setNodes, setEdges],
   )
 
   const addProcessNode = useCallback(() => {
@@ -126,6 +142,7 @@ export default function RoadmapPage({ onClose }) {
           onEdgesDelete={onEdgesDelete}
           onConnect={onConnect}
           onNodeDragStart={onNodeDragStart}
+          onNodeDragStop={onNodeDragStop}
           onInit={(instance) => { rfRef.current = instance }}
           onMove={onMove}
           connectionMode="loose"
