@@ -17,9 +17,6 @@ export const useSkillStore = create(
       equippedPassive: [null, null, null],
       // active equipped skill ids (up to 4)
       equippedActive: [],
-      // ── DnD single-slot equipped skills ──────────────────
-      equippedPassiveSkill: null, // skill id or null
-      equippedActiveSkill: null,  // skill id or null
       // 3-slot passive system: each slot has { equippedSkillId: string|null }
       // Slot unlock thresholds are defined in PASSIVE_UNLOCK_THRESHOLDS
       passiveSlots: [
@@ -29,8 +26,6 @@ export const useSkillStore = create(
       ],
       // Derived flag — true when the Planner passive skill is the equipped passive
       isPlannerActive: false,
-      setEquippedPassiveSkill: (id) => set({ equippedPassiveSkill: id, isPlannerActive: id === 'planner' }),
-      setEquippedActiveSkill: (id) => set({ equippedActiveSkill: id }),
 
       // Equip a skill into a specific slot (0/1/2). Skill must be unlocked.
       // A skill can only live in one slot at a time.

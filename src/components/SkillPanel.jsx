@@ -24,13 +24,10 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
   const [activeSkillTask, setActiveSkillTask] = useState(null)
 
   const {
-    equippedPassiveSkill,
-    equippedActiveSkill,
-    setEquippedPassiveSkill,
-    setEquippedActiveSkill,
     passiveSlots,
     equipPassiveSkill,
     clearPassiveSlot,
+    equipActive,
   } = useSkillStore()
 
   const totalStacks = useUserStore((s) => s.totalStacks)
@@ -53,8 +50,6 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
         const isUnlocked = totalStacks >= PASSIVE_UNLOCK_THRESHOLDS[slotIdx]
         if (!isUnlocked) return
         equipPassiveSkill(draggableId, slotIdx)
-        // Keep the legacy single-skill field in sync for backward compat
-        setEquippedPassiveSkill(draggableId)
         return
       }
     }
@@ -67,7 +62,7 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
       const skillId = draggableId
       const timerEnd = skillId === 'capsule' ? Date.now() + 30 * 60 * 1000 : null
       applySkillToTask(task.id, skillId, timerEnd)
-      setEquippedActiveSkill(skillId)
+      equipActive(skillId)
       setActiveSkillTask({ ...task, assignedSkill: skillId, timerEnd })
     }
   }
@@ -76,9 +71,6 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
   const passiveLocked   = PASSIVE_SKILLS.filter((s) => !UNLOCKED_PASSIVE_IDS.includes(s.id))
   const activeUnlocked  = ACTIVE_SKILLS.filter((s) => UNLOCKED_ACTIVE_IDS.includes(s.id))
   const activeLocked    = ACTIVE_SKILLS.filter((s) => !UNLOCKED_ACTIVE_IDS.includes(s.id))
-
-  const equippedPassive = PASSIVE_SKILLS.find((s) => s.id === equippedPassiveSkill) || null
-  const equippedActive  = ACTIVE_SKILLS.find((s) => s.id === equippedActiveSkill) || null
 
   return (
     <div className="absolute inset-0 z-50 flex flex-col overflow-hidden md:max-w-2xl md:mx-auto lg:max-w-3xl" style={{ top: '8%' }}>
