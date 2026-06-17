@@ -14,9 +14,14 @@ import { getDoc, setDoc } from 'firebase/firestore'
 import { refs, shapes } from '../lib/db'
 import { useUserStore } from '../stores/useUserStore'
 import { hydrateSelectStoreFromFirestore } from '../utils/syncSelectToFirestore'
-import { hydratePortfolioFromFirestore, setPortfolioSyncUser } from '../utils/syncPortfolioToFirestore'
-import { hydrateTasksFromFirestore, setTaskSyncUser } from '../utils/syncTasksToFirestore'
-import { hydrateRoadmapFromFirestore, setRoadmapSyncUser } from '../utils/syncRoadmapToFirestore'
+import {
+  hydratePortfolioFromFirestore,
+  setPortfolioSyncUser,
+  hydrateTasksFromFirestore,
+  setTaskSyncUser,
+  hydrateRoadmapFromFirestore,
+  setRoadmapSyncUser,
+} from '../lib/syncManager'
 
 function readSelectStore() {
   try {

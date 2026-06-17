@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//d/Ikkyusan/Desktop/ChatbotPaymentAPI/src/pages/**)",
+      "Read(//d/Ikkyusan/Desktop/ChatbotPaymentAPI/src/stores/**)",
+      "Read(//d/Ikkyusan/Desktop/ChatbotPaymentAPI/src/components/**)",
+      "Read(//d/Ikkyusan/Desktop/ChatbotPaymentAPI/src/lib/**)",
+      "Bash(gh pr create --base main --head feat/chat-shop --title 'feat\\(shop\\): harden PaymentCard + add creditForResult seam' --body ' *)",
+      "Bash(git pull *)"
+    ]
+  }
+}
