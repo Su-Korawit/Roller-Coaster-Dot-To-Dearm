@@ -2,7 +2,6 @@
 import {
   getDoc,
   getDocs,
-  onSnapshot,
   serverTimestamp,
   setDoc,
   writeBatch,
@@ -11,6 +10,7 @@ import {
 } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 import { refs, cols, queries, shapes } from '../lib/db'
+import { createFirestoreListener } from '../lib/firestoreListener'
 
 // ─── Career family mapping ────────────────────────────────────────────────────
 // Groups career ids into families so "similar program" scoring works.
@@ -90,8 +90,8 @@ function myUid() {
   return uid
 }
 
-// Module-level ref so unsubscribing doesn't cause a Zustand state update.
-let _unsub = null
+// Shared listener slot — owns the detach-before-reattach lifecycle.
+const requestsListener = createFirestoreListener()
 
 export const useSocialStore = create((set) => ({
   nearbyUsers: [],
@@ -195,12 +195,8 @@ export const useSocialStore = create((set) => ({
 
   // Attaches a real-time listener to the current user's doc.
   // Replaces any existing listener. Returns the unsubscribe function.
-  subscribeToRequests: (uid) => {
-    if (_unsub) {
-      _unsub()
-      _unsub = null
-    }
-    _unsub = onSnapshot(refs.user(uid), (snap) => {
+  subscribeToRequests: (uid) =>
+    requestsListener.attach(refs.user(uid), (snap) => {
       if (!snap.exists()) return
       const data = snap.data()
       set({
@@ -209,9 +205,7 @@ export const useSocialStore = create((set) => ({
         following: data.following ?? [],
         sentRequests: data.sentRequests ?? [],
       })
-    })
-    return _unsub
-  },
+    }),
 
   // Prefix search on displayName across all users — works regardless of schoolId.
   // Uses Firestore range query ( trick) so no extra index is needed.

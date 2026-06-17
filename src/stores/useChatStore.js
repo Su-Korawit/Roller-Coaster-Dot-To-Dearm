@@ -2,21 +2,20 @@ import { create } from 'zustand'
 import {
   addDoc,
   increment,
-  onSnapshot,
   serverTimestamp,
   setDoc,
   updateDoc,
 } from 'firebase/firestore'
 import { auth } from '../firebase'
 import { refs, cols, queries, buildChatId } from '../lib/db'
+import { createFirestoreListener } from '../lib/firestoreListener'
 import { useUserStore } from './useUserStore'
 
 export { buildChatId }
 
-// Module-level unsub refs — same pattern as useSocialStore.
-// Kept outside Zustand state so replacing them doesn't trigger re-renders.
-let _chatsUnsub = null
-let _messagesUnsub = null
+// Shared listener slots — own the detach-before-reattach lifecycle.
+const chatsListener = createFirestoreListener()
+const messagesListener = createFirestoreListener()
 
 export const useChatStore = create((set) => ({
   chats: [],       // [{ id, members, lastMessage, lastMessageAt, fireStacks }]
@@ -26,9 +25,8 @@ export const useChatStore = create((set) => ({
   // Attaches a real-time listener to every chat this user is a member of,
   // sorted by most recent message. Replaces any existing listener.
   // Returns the unsubscribe function for cleanup.
-  loadChats: (uid) => {
-    if (_chatsUnsub) { _chatsUnsub(); _chatsUnsub = null }
-    _chatsUnsub = onSnapshot(queries.chatsByMember(uid), (snap) => {
+  loadChats: (uid) =>
+    chatsListener.attach(queries.chatsByMember(uid), (snap) => {
       const chats = snap.docs
         .map((d) => ({ id: d.id, ...d.data() }))
         .sort((a, b) => {
@@ -37,9 +35,7 @@ export const useChatStore = create((set) => ({
           return tb - ta
         })
       set({ chats })
-    })
-    return _chatsUnsub
-  },
+    }),
 
   // Sets the active chat in state and ensures the chat document exists in
   // Firestore. Only `members` is merged so re-opening never resets fireStacks
@@ -89,13 +85,10 @@ export const useChatStore = create((set) => ({
 
   // Attaches a real-time listener to a chat's messages, ordered oldest-first.
   // Replaces any existing messages listener. Returns the unsubscribe function.
-  subscribeMessages: (chatId) => {
-    if (_messagesUnsub) { _messagesUnsub(); _messagesUnsub = null }
-    _messagesUnsub = onSnapshot(queries.messagesByChat(chatId), (snap) => {
+  subscribeMessages: (chatId) =>
+    messagesListener.attach(queries.messagesByChat(chatId), (snap) => {
       set({ messages: snap.docs.map((d) => ({ id: d.id, ...d.data() })) })
-    })
-    return _messagesUnsub
-  },
+    }),
 
   // Standalone stacks increment — used for gifts/appointments.
   // Same 1-per-day-per-chat rule as sendMessage.

@@ -1,40 +1,33 @@
 import { create } from 'zustand'
-import { onSnapshot } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
 import { ref as storageRef, uploadBytes } from 'firebase/storage'
 import { auth, functions, storage } from '../firebase'
 import { cols, queries } from '../lib/db'
+import { createFirestoreListener } from '../lib/firestoreListener'
 
-// Module-level unsub refs — same pattern as useChatStore. Kept outside Zustand
-// state so replacing them doesn't trigger re-renders.
-let _productsUnsub = null
-let _purchasesUnsub = null
+// Shared listener slots — own the detach-before-reattach lifecycle.
+const productsListener = createFirestoreListener()
+const purchasesListener = createFirestoreListener()
 
 export const useShopStore = create((set, get) => ({
   products: [],   // active catalogue, sorted by `order`
   purchases: [],  // this user's purchases, live status from the server
 
   // Live active catalogue. Sorted client-side so we don't need a composite index.
-  loadProducts: () => {
-    if (_productsUnsub) { _productsUnsub(); _productsUnsub = null }
-    _productsUnsub = onSnapshot(queries.activeProducts(), (snap) => {
+  loadProducts: () =>
+    productsListener.attach(queries.activeProducts(), (snap) => {
       const products = snap.docs
         .map((d) => ({ id: d.id, ...d.data() }))
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       set({ products })
-    })
-    return _productsUnsub
-  },
+    }),
 
   // Live view of the signed-in user's purchases so payment cards reflect the
   // server-written status (WAITING_PAYMENT → VERIFYING → SUCCESS/FAILED/EXPIRED).
-  loadPurchases: (uid) => {
-    if (_purchasesUnsub) { _purchasesUnsub(); _purchasesUnsub = null }
-    _purchasesUnsub = onSnapshot(queries.purchasesByUser(uid), (snap) => {
+  loadPurchases: (uid) =>
+    purchasesListener.attach(queries.purchasesByUser(uid), (snap) => {
       set({ purchases: snap.docs.map((d) => ({ id: d.id, ...d.data() })) })
-    })
-    return _purchasesUnsub
-  },
+    }),
 
   getPurchase: (id) => get().purchases.find((p) => p.id === id),
 
