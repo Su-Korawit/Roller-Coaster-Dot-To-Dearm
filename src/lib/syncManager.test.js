@@ -22,7 +22,14 @@ vi.stubGlobal('localStorage', {
 })
 
 const { useRoadmapStore } = await import('../stores/useRoadmapStore')
-const { syncRoadmapToFirestore, hydrateRoadmapFromFirestore } = await import('./syncManager')
+const { useTaskStore } = await import('../stores/useTaskStore')
+const { useUserStore } = await import('../stores/useUserStore')
+const {
+  syncRoadmapToFirestore,
+  hydrateRoadmapFromFirestore,
+  syncTasksToFirestore,
+  hydratePortfolioFromFirestore,
+} = await import('./syncManager')
 
 describe('SyncManager (roadmap instance)', () => {
   beforeEach(() => {
@@ -66,5 +73,63 @@ describe('SyncManager (roadmap instance)', () => {
     const { nodes, edges } = useRoadmapStore.getState()
     expect(nodes).toEqual(cloudNodes)
     expect(edges).toEqual([])
+  })
+})
+
+describe('SyncManager (tasks instance)', () => {
+  beforeEach(() => {
+    setDoc.mockReset()
+    getDoc.mockReset()
+    useTaskStore.setState({ tasks: [], trash: [] })
+  })
+
+  it('writes tasks and trash to users/{uid} with merge:true', async () => {
+    const tasks = [{ id: 't1', title: 'Do it', completed: false }]
+    const trash = [{ id: 't0', title: 'Old' }]
+    useTaskStore.setState({ tasks, trash })
+    setDoc.mockResolvedValue(undefined)
+
+    await syncTasksToFirestore('uid-123')
+
+    expect(setDoc).toHaveBeenCalledWith(
+      expect.anything(),
+      { tasks, trash, tasksUpdatedAt: { _type: 'serverTimestamp' } },
+      { merge: true },
+    )
+  })
+})
+
+describe('SyncManager (portfolio instance)', () => {
+  beforeEach(() => {
+    setDoc.mockReset()
+    getDoc.mockReset()
+    useUserStore.setState({ portfolioData: {}, journeys: {}, profilePhotoURL: null })
+  })
+
+  it('maps a Firestore photoURL onto profilePhotoURL when hydrating', async () => {
+    getDoc.mockResolvedValue({
+      exists: () => true,
+      data: () => ({
+        portfolioData: { bio: 'hi' },
+        journeys: { mastery: [] },
+        photoURL: 'https://cdn/me.png',
+      }),
+    })
+
+    await hydratePortfolioFromFirestore('uid-123')
+
+    expect(useUserStore.getState().profilePhotoURL).toBe('https://cdn/me.png')
+  })
+
+  it('seeds Firestore when journeys are missing (first migration)', async () => {
+    getDoc.mockResolvedValue({
+      exists: () => true,
+      data: () => ({ portfolioData: { bio: 'hi' } }), // no journeys field
+    })
+    setDoc.mockResolvedValue(undefined)
+
+    await hydratePortfolioFromFirestore('uid-123')
+
+    expect(setDoc).toHaveBeenCalled()
   })
 })
