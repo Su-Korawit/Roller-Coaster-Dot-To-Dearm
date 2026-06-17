@@ -218,6 +218,7 @@ Central visual feature. Files:
 
 | Term | Meaning |
 |---|---|
+| **Profile** | The bundle of onboarding selections (mbti, program, career, masteryTrack, university) attached to a User document under `profile.*`. Written via `shapes.profileFields` and read via `shapes.readProfile` (the single shape seam in `src/lib/db.js`); `schoolId` stays top-level because Firestore queries filter on it |
 | **Roadmap** | The node-based visual plan a student builds for their career path |
 | **Node / Edge** | React Flow graph elements (ProcessNode, ConditionNode, etc.) |
 | **Journey** | A top-level goal category (e.g. `mastery`, `career`); a user has multiple |

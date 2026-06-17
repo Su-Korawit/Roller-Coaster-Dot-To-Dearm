@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { mbtiColor } from '../constants/mbtiColors'
+import { shapes } from '../lib/db'
 
 function scoreColor(score) {
   if (score >= 90) return '#EF9F27'
@@ -115,7 +116,7 @@ const KEYFRAMES = `
 
 // ─── Avatar component ─────────────────────────────────────────────────────────
 function MatchAvatar({ user, slideDir, delay, reduced }) {
-  const color = mbtiColor(user?.mbti)
+  const color = mbtiColor(shapes.readProfile(user).mbti)
   const src = user?.photoURL
   const initial = (user?.displayName || '?').charAt(0).toUpperCase()
   return (
@@ -364,7 +365,7 @@ function FullMatchOverlay({ score, targetUser, myUser, onClose, onOpenChat, onVi
             <div className="flex items-center gap-3">
               <div
                 className="w-11 h-11 rounded-full overflow-hidden shrink-0 bg-gray-100"
-                style={{ border: `2px solid ${mbtiColor(targetUser?.mbti)}` }}
+                style={{ border: `2px solid ${mbtiColor(shapes.readProfile(targetUser).mbti)}` }}
               >
                 {targetUser?.photoURL
                   ? <img src={targetUser.photoURL} alt="" className="w-full h-full object-cover" />
@@ -377,17 +378,17 @@ function FullMatchOverlay({ score, targetUser, myUser, onClose, onOpenChat, onVi
                   {targetUser?.displayName || 'ผู้ใช้'}
                 </p>
                 <div className="flex gap-1.5 mt-0.5">
-                  {targetUser?.mbti && (
+                  {shapes.readProfile(targetUser).mbti && (
                     <span
                       className="pixel-font text-[6px] px-1.5 py-0.5 rounded text-white"
-                      style={{ background: mbtiColor(targetUser.mbti) }}
+                      style={{ background: mbtiColor(shapes.readProfile(targetUser).mbti) }}
                     >
-                      {targetUser.mbti}
+                      {shapes.readProfile(targetUser).mbti}
                     </span>
                   )}
-                  {targetUser?.program && (
+                  {shapes.readProfile(targetUser).program && (
                     <span className="pixel-font text-[6px] px-1.5 py-0.5 rounded bg-white/20 text-white/80 max-w-[100px] truncate">
-                      {targetUser.program}
+                      {shapes.readProfile(targetUser).program}
                     </span>
                   )}
                 </div>

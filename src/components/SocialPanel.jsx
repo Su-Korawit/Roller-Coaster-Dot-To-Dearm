@@ -10,12 +10,13 @@ import { useSocialStore, calculateMatchScore } from '../stores/useSocialStore'
 import PublicProfileSheet from './PublicProfileSheet'
 import KawaiiMatchOverlay from './KawaiiMatchOverlay'
 import { mbtiColor } from '../constants/mbtiColors'
+import { shapes } from '../lib/db'
 
 const MATCH_THRESHOLD = 70
 
 // ─── Leaflet custom icons ────────────────────────────────────────────────────
 function makeUserIcon(user) {
-  const color = mbtiColor(user.mbti)
+  const color = mbtiColor(shapes.readProfile(user).mbti)
   const inner = user.photoURL
     ? `<img src="${user.photoURL}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
     : `<span style="font-size:13px;line-height:1">🎮</span>`
@@ -232,7 +233,7 @@ function UserCard({ user, following, sentRequests, onFollow, onTap, score = 0, o
       {/* Avatar with MBTI ring */}
       <div
         className="w-10 h-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-white border-2"
-        style={{ borderColor: mbtiColor(user.mbti) }}
+        style={{ borderColor: mbtiColor(shapes.readProfile(user).mbti) }}
       >
         {user.photoURL
           ? <img src={user.photoURL} alt="" className="w-full h-full object-cover" />
@@ -250,10 +251,10 @@ function UserCard({ user, following, sentRequests, onFollow, onTap, score = 0, o
               : null}
         </div>
         <div className="flex items-center gap-1 mt-0.5 flex-wrap">
-          {user.mbti && (
+          {shapes.readProfile(user).mbti && (
             <span className="pixel-font text-[6px] px-1.5 py-0.5 rounded-md text-white"
-              style={{ background: mbtiColor(user.mbti) }}>
-              {user.mbti}
+              style={{ background: mbtiColor(shapes.readProfile(user).mbti) }}>
+              {shapes.readProfile(user).mbti}
             </span>
           )}
           {user.program && (
@@ -399,7 +400,7 @@ function RequestCard({ user, onAccept, onDecline }) {
     <div className="flex items-center gap-3 bg-white rounded-xl px-3 py-2.5 border border-gray-100 shadow-sm">
       <div
         className="w-10 h-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-gray-100 border-2"
-        style={{ borderColor: mbtiColor(user.mbti) }}
+        style={{ borderColor: mbtiColor(shapes.readProfile(user).mbti) }}
       >
         {user.photoURL
           ? <img src={user.photoURL} alt="" className="w-full h-full object-cover" />
@@ -408,10 +409,10 @@ function RequestCard({ user, onAccept, onDecline }) {
       <div className="flex-1 min-w-0">
         <p className="pixel-font text-[9px] text-gray-800 truncate">{user.displayName || 'ผู้ใช้'}</p>
         <div className="flex gap-1 mt-0.5">
-          {user.mbti && (
+          {shapes.readProfile(user).mbti && (
             <span className="pixel-font text-[6px] px-1.5 py-0.5 rounded-md text-white"
-              style={{ background: mbtiColor(user.mbti) }}>
-              {user.mbti}
+              style={{ background: mbtiColor(shapes.readProfile(user).mbti) }}>
+              {shapes.readProfile(user).mbti}
             </span>
           )}
         </div>
@@ -541,8 +542,8 @@ function MatchedTab({ onUserTap, onOpenChat, following }) {
               <div className="flex items-center gap-1 mt-0.5">
                 {m.user?.mbti && (
                   <span className="pixel-font text-[6px] px-1.5 py-0.5 rounded-md text-white"
-                    style={{ background: mbtiColor(m.user.mbti) }}>
-                    {m.user.mbti}
+                    style={{ background: mbtiColor(m.shapes.readProfile(user).mbti) }}>
+                    {m.shapes.readProfile(user).mbti}
                   </span>
                 )}
                 {isOld && (

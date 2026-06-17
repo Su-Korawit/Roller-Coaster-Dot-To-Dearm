@@ -10,7 +10,7 @@ import {
   arrayUnion,
 } from 'firebase/firestore'
 import { auth, db } from '../firebase'
-import { refs, cols, queries } from '../lib/db'
+import { refs, cols, queries, shapes } from '../lib/db'
 
 // ─── Career family mapping ────────────────────────────────────────────────────
 // Groups career ids into families so "similar program" scoring works.
@@ -40,20 +40,22 @@ const CAREER_FAMILY_MAP = {
 }
 
 // ─── Match scoring ─────────────────────────────────────────────────────────────
-// Reads nested profile.* fields first (synced via syncSelectToFirestore),
-// then falls back to flat top-level fields for backwards compatibility.
+// Reads each user's Profile through the canonical shape seam (shapes.readProfile),
+// which resolves profile.* with a legacy top-level fallback.
 export function calculateMatchScore(a, b) {
   if (!a || !b) return 0
   let score = 0
 
-  const aProgram    = a.profile?.program      ?? a.program
-  const bProgram    = b.profile?.program      ?? b.program
-  const aMastery    = a.profile?.masteryTrack ?? a.mastery
-  const bMastery    = b.profile?.masteryTrack ?? b.mastery
-  const aMbti       = a.profile?.mbti         ?? a.mbti
-  const bMbti       = b.profile?.mbti         ?? b.mbti
-  const aUniversity = a.profile?.university   ?? a.university
-  const bUniversity = b.profile?.university   ?? b.university
+  const pa = shapes.readProfile(a)
+  const pb = shapes.readProfile(b)
+  const aProgram    = pa.program
+  const bProgram    = pb.program
+  const aMastery    = pa.masteryTrack
+  const bMastery    = pb.masteryTrack
+  const aMbti       = pa.mbti
+  const bMbti       = pb.mbti
+  const aUniversity = pa.university
+  const bUniversity = pb.university
 
   // Program: 40 pts exact match, 20 pts same career family
   if (aProgram && bProgram) {

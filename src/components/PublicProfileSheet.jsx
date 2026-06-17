@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { doc, getDoc } from 'firebase/firestore'
 import { ArrowLeft, Loader2, Lock, MessageCircle, UserCheck, UserPlus } from 'lucide-react'
 import { db } from '../firebase'
+import { shapes } from '../lib/db'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSocialStore, calculateMatchScore } from '../stores/useSocialStore'
 import { universities } from '../data/onboardingData'
@@ -168,7 +169,7 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
   // from the stored university id as a fallback, mirroring ProfilePanel.
   // Prefer profile.profile.university (synced on every login) over the
   // top-level field (written once at signup and may be stale).
-  const uniId = profile?.profile?.university || profile?.university
+  const { mbti: profileMbti, university: uniId } = shapes.readProfile(profile)
   const universityLogo = universities.find((u) => u.id === uniId)?.image || (uniId ? tcasLogoUrl(uniId) : null)
 
   return (
@@ -222,8 +223,8 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
                 style={{
                   width: 72,
                   height: 72,
-                  border: `3px solid ${mbtiColor(profile.mbti)}`,
-                  boxShadow: `0 0 0 3px ${mbtiColor(profile.mbti)}22`,
+                  border: `3px solid ${mbtiColor(profileMbti)}`,
+                  boxShadow: `0 0 0 3px ${mbtiColor(profileMbti)}22`,
                 }}
               >
                 {profile.photoURL
@@ -237,9 +238,9 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
                 {profile.displayName || 'ผู้ใช้'}
               </p>
 
-              {(profile.bio || profile.mbti) && (
+              {(profile.bio || profileMbti) && (
                 <p className="text-xs text-gray-400 text-center leading-snug max-w-[220px]">
-                  {profile.bio || `MBTI: ${profile.mbti}`}
+                  {profile.bio || `MBTI: ${profileMbti}`}
                 </p>
               )}
             </div>

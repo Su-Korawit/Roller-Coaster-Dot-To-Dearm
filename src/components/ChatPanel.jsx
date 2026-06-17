@@ -4,7 +4,7 @@ import { ArrowLeft, Loader2, Send, Wrench } from 'lucide-react'
 import { db } from '../firebase'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useChatStore } from '../stores/useChatStore'
-import { buildChatId } from '../lib/db'
+import { buildChatId, shapes } from '../lib/db'
 import { ADMIN_UID, ADMIN_DISPLAY_NAME, ADMIN_EMAIL } from '../constants/admin'
 import { useSocialStore } from '../stores/useSocialStore'
 import { useUserStore } from '../stores/useUserStore'
@@ -288,7 +288,7 @@ function ChatWindowView({ user, onBack, onAdminContacted }) {
         ) : (
           <div
             className="w-9 h-9 rounded-full overflow-hidden bg-gray-100 shrink-0 border-2 flex items-center justify-center"
-            style={{ borderColor: mbtiColor(otherUser?.mbti) }}
+            style={{ borderColor: mbtiColor(shapes.readProfile(otherUser).mbti) }}
           >
             {otherUser?.photoURL
               ? <img src={otherUser.photoURL} alt="" className="w-full h-full object-cover" />
@@ -310,12 +310,12 @@ function ChatWindowView({ user, onBack, onAdminContacted }) {
               <p className="pixel-font text-[9px] text-gray-800 truncate">
                 {otherUser?.displayName || '...'}
               </p>
-              {otherUser?.mbti && (
+              {shapes.readProfile(otherUser).mbti && (
                 <span
                   className="pixel-font text-[6px] px-1.5 py-0.5 rounded-md text-white inline-block mt-0.5"
-                  style={{ background: mbtiColor(otherUser.mbti) }}
+                  style={{ background: mbtiColor(shapes.readProfile(otherUser).mbti) }}
                 >
-                  {otherUser.mbti}
+                  {shapes.readProfile(otherUser).mbti}
                 </span>
               )}
             </>
@@ -618,7 +618,7 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, a
               >
                 <div
                   className="w-11 h-11 rounded-full overflow-hidden bg-gray-100 shrink-0 border-2 flex items-center justify-center"
-                  style={{ borderColor: mbtiColor(other?.mbti) }}
+                  style={{ borderColor: mbtiColor(shapes.readProfile(other).mbti) }}
                 >
                   {other?.photoURL
                     ? <img src={other.photoURL} alt="" className="w-full h-full object-cover" />
@@ -690,7 +690,7 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, a
               >
                 <div
                   className="w-11 h-11 rounded-full overflow-hidden bg-gray-100 shrink-0 border-2 flex items-center justify-center"
-                  style={{ borderColor: mbtiColor(other?.mbti) }}
+                  style={{ borderColor: mbtiColor(shapes.readProfile(other).mbti) }}
                 >
                   {other?.photoURL
                     ? <img src={other.photoURL} alt="" className="w-full h-full object-cover" />

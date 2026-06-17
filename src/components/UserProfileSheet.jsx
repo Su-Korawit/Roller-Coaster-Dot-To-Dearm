@@ -4,6 +4,7 @@ import { Flame, Lock, Loader2, MessageCircle, UserCheck, UserPlus } from 'lucide
 import { db } from '../firebase'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSocialStore, calculateMatchScore } from '../stores/useSocialStore'
+import { shapes } from '../lib/db'
 import { mbtiColor } from '../constants/mbtiColors'
 
 // ─── Match score bar — pixel-art segmented style ─────────────────────────────
@@ -119,6 +120,10 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
   const isPrivate = profile?.isPrivate === true
   const canSeeDetails = !isPrivate || iFollow || isSelf
 
+  // Profile fields through the canonical shape seam (handles legacy top-level docs)
+  const { mbti: pMbti, program: pProgram, university: pUniversity, masteryTrack: pMastery } =
+    shapes.readProfile(profile)
+
   async function handleFollow() {
     if (iFollow || isPending || isSelf) return
     setFollowBusy(true)
@@ -169,8 +174,8 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
               <div
                 className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 shrink-0"
                 style={{
-                  border: `4px solid ${mbtiColor(profile.mbti)}`,
-                  boxShadow: `0 0 0 3px ${mbtiColor(profile.mbti)}22`,
+                  border: `4px solid ${mbtiColor(pMbti)}`,
+                  boxShadow: `0 0 0 3px ${mbtiColor(pMbti)}22`,
                 }}
               >
                 {profile.photoURL
@@ -184,12 +189,12 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
               </p>
 
               {/* MBTI badge */}
-              {profile.mbti && (
+              {pMbti && (
                 <span
                   className="pixel-font text-[8px] px-3 py-1 rounded-xl text-white"
-                  style={{ background: mbtiColor(profile.mbti) }}
+                  style={{ background: mbtiColor(pMbti) }}
                 >
-                  {profile.mbti}
+                  {pMbti}
                 </span>
               )}
             </div>
@@ -211,23 +216,23 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
 
             {/* ── Program / University / Mastery tags ── */}
             <div className="flex flex-wrap gap-1.5 mb-4">
-              {profile.program && (
+              {pProgram && (
                 <Tag
-                  label={canSeeDetails ? profile.program : '████████'}
+                  label={canSeeDetails ? pProgram : '████████'}
                   color="bg-blue-50 text-blue-700"
                   blurred={!canSeeDetails}
                 />
               )}
-              {profile.university && (
+              {pUniversity && (
                 <Tag
-                  label={canSeeDetails ? profile.university : '████████'}
+                  label={canSeeDetails ? pUniversity : '████████'}
                   color="bg-purple-50 text-purple-700"
                   blurred={!canSeeDetails}
                 />
               )}
-              {profile.mastery && (
+              {pMastery && (
                 <Tag
-                  label={canSeeDetails ? profile.mastery : '████'}
+                  label={canSeeDetails ? pMastery : '████'}
                   color="bg-amber-50 text-amber-700"
                   blurred={!canSeeDetails}
                 />
