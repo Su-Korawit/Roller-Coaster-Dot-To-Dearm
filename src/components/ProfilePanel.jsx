@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Settings, Share2, Loader2, Camera } from 'lucide-react'
 import { compressImage } from '../utils/compressImage'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { generateJourney } from '../services/aiJourney'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuthStore } from '../stores/useAuthStore'
@@ -271,50 +271,33 @@ export default function ProfilePanel({ onClose }) {
   }
 
   async function generateRoadmap() {
-    const desiredCareer = selectedCareer?.name || 'a chosen career'
-    const mbtiType = mbti || 'unknown'
-    const masteryLevel = selectedMastery?.name || 'general skills'
-    const universityName = selectedUniversity?.name || ''
-    const programName = selectedProgram?.name || ''
-    const currentSituation = [universityName, programName].filter(Boolean).join(' — ') || 'a student exploring career paths'
-
-    const prompt = `Act as an expert career and skills counselor. The user is currently in this situation: ${currentSituation}, their dream career is ${desiredCareer}, their current skill mastery level is ${masteryLevel}, and their MBTI personality type is ${mbtiType}. In addition to skill mastery, the user is also preparing for university admission under the Thai system (TCAS / TGAT / TPAT, often referred to as TCAT). You MUST design a dual-track roadmap that integrates BOTH: 1) Mastery development (career skills, portfolio, real-world capability) and 2) University admission preparation (especially TCAS Round 3: exam-based track requiring TGAT/TPAT and academic subjects). Generate a personalized 5-step "Dual Mastery Journey" roadmap. REQUIREMENTS: Each step MUST clearly explain HOW to practice and master essential career skills (hands-on methods, project-based learning, feedback loops, etc.) AND ALSO include HOW to prepare for TCAS Round 3 (study system, exam strategies, subject prioritization, past papers, score optimization). Explicitly reference the structure of TCAS (Portfolio vs Round 3) and how the user should balance both paths. Tailor everything to the user's ${mbtiType} learning style and adapt to the user's current ${masteryLevel} level. Focus on actionable systems, not theory. Output strictly as a JSON array of objects with 'title' and 'description' keys. Do not include markdown formatting. IMPORTANT: Generate the content STRICTLY in ${aiLanguage} language.`
-
     setIsGenerating(true)
     try {
-      const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
-      const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' })
-      const result = await model.generateContent(prompt)
-      const text = result.response.text()
+      const steps = await generateJourney({
+        career: selectedCareer?.name,
+        mbti,
+        mastery: selectedMastery?.name,
+        university: selectedUniversity?.name,
+        program: selectedProgram?.name,
+        aiLanguage,
+      })
 
-      const cleaned = text.replace(/```json|```/gi, '').trim()
-
-      let parsed
-      try {
-        parsed = JSON.parse(cleaned)
-      } catch (parseErr) {
-        console.error('Gemini JSON parse error:', parseErr, '\nRaw response:', text)
-        alert('AI returned an unexpected format. Please try again.')
-        return
-      }
-
-      if (!Array.isArray(parsed)) {
-        alert('AI returned an unexpected format. Please try again.')
-        return
-      }
-
-      const journeyItems = parsed.map((step) => ({
+      const journeyItems = steps.map((step) => ({
         id: `journey-ai-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        title: step.title || 'Step',
-        desc: step.description || '',
+        title: step.title,
+        desc: step.desc,
       }))
 
       setJourneys('mastery', journeyItems)
       setActiveCategory('mastery')
       if (journeyItems.length > 0) setActiveMasteryBlockId(journeyItems[0].id)
     } catch (err) {
-      console.error('Gemini API error:', err)
-      alert('Failed to connect to AI. Please check your API key or network.')
+      if (err.message === 'AI_BAD_FORMAT') {
+        alert('AI returned an unexpected format. Please try again.')
+      } else {
+        console.error('Gemini API error:', err)
+        alert('Failed to connect to AI. Please check your API key or network.')
+      }
     } finally {
       setIsGenerating(false)
     }
