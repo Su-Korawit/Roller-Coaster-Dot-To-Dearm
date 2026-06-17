@@ -9,7 +9,7 @@ import {
   arrayRemove,
   arrayUnion,
 } from 'firebase/firestore'
-import { auth } from '../firebase'
+import { auth, db } from '../firebase'
 import { refs, cols, queries } from '../lib/db'
 
 // ─── Career family mapping ────────────────────────────────────────────────────
