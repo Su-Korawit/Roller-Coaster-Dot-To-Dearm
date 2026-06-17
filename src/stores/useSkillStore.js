@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { useUserStore } from './useUserStore'
 
 // Max passive equipped slots — unlock by streak milestones
 const MAX_PASSIVE_SLOTS = 3
@@ -52,11 +53,14 @@ export const useSkillStore = create(
           return { passiveSlots: slots, isPlannerActive }
         }),
 
-      buySkill: (skillId, cost, coins, spendCoins) => {
+      // Owns the whole purchase: affordability, coin deduction, and ownership.
+      // Reads coins from useUserStore directly — no spendCoins callback inversion.
+      buySkill: (skillId, cost) => {
         const state = get()
         if (state.ownedSkills.includes(skillId)) return false
+        const { coins, addCoins } = useUserStore.getState()
         if (coins < cost) return false
-        spendCoins(cost)
+        addCoins(-cost)
         set({ ownedSkills: [...state.ownedSkills, skillId] })
         return true
       },

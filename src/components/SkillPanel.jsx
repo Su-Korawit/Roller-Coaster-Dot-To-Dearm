@@ -478,10 +478,7 @@ function SkillInfoSheet({ skill, onClose }) {
   }
 
   function handleBuy() {
-    const { buySkill } = useSkillStore.getState()
-    const { addCoins } = useUserStore.getState()
-    const spendCoins = (amt) => addCoins(-amt)
-    buySkill(skill.id, skill.cost, coins, spendCoins)
+    useSkillStore.getState().buySkill(skill.id, skill.cost)
     onClose()
   }
 

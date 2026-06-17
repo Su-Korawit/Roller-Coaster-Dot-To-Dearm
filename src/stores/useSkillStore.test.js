@@ -7,6 +7,7 @@ vi.stubGlobal('localStorage', {
 })
 
 const { useSkillStore } = await import('./useSkillStore')
+const { useUserStore } = await import('./useUserStore')
 
 const emptySlots = () => [
   { equippedSkillId: null },
@@ -69,5 +70,34 @@ describe('useSkillStore — active equip (ownership-gated)', () => {
     equipActive('capsule')
     equipActive('capsule')
     expect(useSkillStore.getState().equippedActive).toEqual(['capsule'])
+  })
+})
+
+describe('useSkillStore — buySkill (owns coin spend, no callback inversion)', () => {
+  beforeEach(() => {
+    useSkillStore.setState({ ownedSkills: [] })
+    useUserStore.setState({ coins: 100 })
+  })
+
+  it('deducts coins and grants the skill when affordable', () => {
+    const ok = useSkillStore.getState().buySkill('spark', 30)
+    expect(ok).toBe(true)
+    expect(useUserStore.getState().coins).toBe(70)
+    expect(useSkillStore.getState().ownedSkills).toContain('spark')
+  })
+
+  it('refuses when coins are insufficient — no deduction, not owned', () => {
+    useUserStore.setState({ coins: 10 })
+    const ok = useSkillStore.getState().buySkill('spark', 30)
+    expect(ok).toBe(false)
+    expect(useUserStore.getState().coins).toBe(10)
+    expect(useSkillStore.getState().ownedSkills).not.toContain('spark')
+  })
+
+  it('refuses to re-buy an owned skill — no deduction', () => {
+    useSkillStore.setState({ ownedSkills: ['spark'] })
+    const ok = useSkillStore.getState().buySkill('spark', 30)
+    expect(ok).toBe(false)
+    expect(useUserStore.getState().coins).toBe(100)
   })
 })
