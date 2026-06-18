@@ -44,7 +44,8 @@ export function useMytcasFetch(params, deps, { enabled = true } = {}) {
   const [error, setError] = useState(null)
 
   // run() returns the effect cleanup; force=true bypasses the cache (refetch).
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // deps is the caller-supplied dependency array — intentionally dynamic, so the
+  // exhaustive-deps rule can't statically verify it.
   const run = useCallback((force = false) => {
     if (!enabled) return undefined
     let cancelled = false
@@ -56,6 +57,7 @@ export function useMytcasFetch(params, deps, { enabled = true } = {}) {
       .catch((e) => { if (!cancelled) setError(e) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 
   useEffect(() => run(false), [run])
