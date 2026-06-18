@@ -1,4 +1,5 @@
 ﻿import { useEffect, useRef, useState } from 'react'
+import { isEditableTarget } from '../utils/isEditableTarget'
 import Phaser from 'phaser'
 import { useSelectStore } from '../stores/useSelectStore'
 import { MBTI_TYPES, GAME_ASSETS, GAME_ASSET_BY_KEY } from '../game/assetManifest'
@@ -760,6 +761,8 @@ export default function GameCanvas({ active = true }) {
   const gameRef = useRef(null)
   const hideTimerRef = useRef(null)
   const assetUrlsRef = useRef(null) // populated before Phaser boots
+  const activeRef = useRef(active)
+  useEffect(() => { activeRef.current = active }, [active])
 
   // Player locks to the MBTI chosen during onboarding. Held in a ref so the
   // one-time game-creation effect below reads the latest value, not a stale one.
@@ -839,6 +842,27 @@ export default function GameCanvas({ active = true }) {
     game.input.enabled = active
     if (game.input.keyboard) game.input.keyboard.enabled = active
   }, [active])
+
+  // Suppress keyboard while a text field (input/textarea/contenteditable) is
+  // focused — prevents WASD in Roadmap block fields from moving the avatar.
+  useEffect(() => {
+    function onFocusIn(e) {
+      if (!isEditableTarget(e.target)) return
+      const game = gameRef.current
+      if (game?.input?.keyboard) game.input.keyboard.enabled = false
+    }
+    function onFocusOut() {
+      if (isEditableTarget(document.activeElement)) return
+      const game = gameRef.current
+      if (game?.input?.keyboard) game.input.keyboard.enabled = activeRef.current
+    }
+    document.addEventListener('focusin', onFocusIn)
+    document.addEventListener('focusout', onFocusOut)
+    return () => {
+      document.removeEventListener('focusin', onFocusIn)
+      document.removeEventListener('focusout', onFocusOut)
+    }
+  }, [])
 
   return (
     <>

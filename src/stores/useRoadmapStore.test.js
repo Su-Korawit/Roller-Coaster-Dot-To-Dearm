@@ -11,7 +11,7 @@ const { useRoadmapStore } = await import('./useRoadmapStore')
 
 describe('useRoadmapStore', () => {
   beforeEach(() => {
-    useRoadmapStore.setState({ nodes: [], edges: [] })
+    useRoadmapStore.setState({ nodes: [], edges: [], setpoint: null })
   })
 
   it('initializes with empty nodes and edges', () => {
@@ -118,5 +118,22 @@ describe('useRoadmapStore', () => {
     useRoadmapStore.getState().connect({ source: 'c', target: 'b' })
     useRoadmapStore.getState().detachNode('b')
     expect(useRoadmapStore.getState().edges).toHaveLength(0)
+  })
+
+  it('setpoint is null on an empty roadmap', () => {
+    expect(useRoadmapStore.getState().setpoint).toBeNull()
+  })
+
+  it('addNode records the new node id as setpoint', () => {
+    useRoadmapStore.getState().addNode('process')
+    const { nodes, setpoint } = useRoadmapStore.getState()
+    expect(setpoint).toBe(nodes[0].id)
+  })
+
+  it('adding a second node updates setpoint to the latest', () => {
+    useRoadmapStore.getState().addNode('process')
+    useRoadmapStore.getState().addNode('condition')
+    const { nodes, setpoint } = useRoadmapStore.getState()
+    expect(setpoint).toBe(nodes[1].id)
   })
 })

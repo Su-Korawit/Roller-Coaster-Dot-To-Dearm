@@ -16,6 +16,7 @@ import ProcessNode from '../components/roadmap/ProcessNode'
 import ConditionNode from '../components/roadmap/ConditionNode'
 import StageLabelNode from '../components/roadmap/StageLabelNode'
 import ImageNode from '../components/roadmap/ImageNode'
+import TrashZone from '../components/roadmap/TrashZone'
 import TimelineRuler from '../components/roadmap/TimelineRuler'
 import { findProximityConnection } from '../utils/findProximityConnection'
 import { computeNodeCenter } from '../utils/computeNodeCenter'
@@ -46,6 +47,7 @@ export default function RoadmapPage({ onClose }) {
   const connect = useRoadmapStore((s) => s.connect)
   const removeEdge = useRoadmapStore((s) => s.removeEdge)
   const detachNode = useRoadmapStore((s) => s.detachNode)
+  const setpoint = useRoadmapStore((s) => s.setpoint)
 
   const onNodesChange = useCallback(
     (changes) => setNodes(applyNodeChanges(changes, nodes)),
@@ -69,24 +71,51 @@ export default function RoadmapPage({ onClose }) {
   )
   // Dragging a block detaches it from all connections so it can be re-snapped elsewhere.
   const onNodeDragStart = useCallback(
-    (_event, node) => detachNode(node.id),
+    (_event, node) => {
+      detachNode(node.id)
+      setIsDragging(true)
+    },
     [detachNode],
   )
-  // On drop, if a dot landed near a compatible dot, snap the dragged block onto it
-  // and connect — no line to draw.
+  const onNodeDrag = useCallback(
+    (event) => {
+      if (!trashRef.current) return
+      const rect = trashRef.current.getBoundingClientRect()
+      const over = event.clientX >= rect.left && event.clientX <= rect.right &&
+                   event.clientY >= rect.top  && event.clientY <= rect.bottom
+      setIsOverTrash(over)
+    },
+    [],
+  )
+  // On drop: if pointer is over the trash zone, delete the node; otherwise snap/connect.
   const onNodeDragStop = useCallback(
-    (_event, node) => {
+    (event, node) => {
+      setIsDragging(false)
+      setIsOverTrash(false)
+      if (trashRef.current) {
+        const rect = trashRef.current.getBoundingClientRect()
+        if (event.clientX >= rect.left && event.clientX <= rect.right &&
+            event.clientY >= rect.top  && event.clientY <= rect.bottom) {
+          removeNode(node.id)
+          return
+        }
+      }
       const others = nodes.filter((n) => n.id !== node.id)
       const match = findProximityConnection(node, others, SNAP_THRESHOLD)
       if (!match) return
       setNodes(nodes.map((n) => (n.id === node.id ? { ...n, position: match.position } : n)))
       setEdges(addEdge(match.connection, edges))
     },
-    [nodes, edges, setNodes, setEdges],
+    [nodes, edges, setNodes, setEdges, removeNode],
   )
 
   const stableNodeTypes = useMemo(() => nodeTypes, [])
   const stableEdgeTypes = useMemo(() => edgeTypes, [])
+
+  // Trash zone
+  const trashRef = useRef(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isOverTrash, setIsOverTrash] = useState(false)
 
   // Timeline ruler stays in lockstep with the canvas viewport (pan + zoom).
   const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 1 })
@@ -143,12 +172,21 @@ export default function RoadmapPage({ onClose }) {
           onConnect={onConnect}
           onNodeClick={onNodeClick}
           onNodeDragStart={onNodeDragStart}
+          onNodeDrag={onNodeDrag}
           onNodeDragStop={onNodeDragStop}
-          onInit={(instance) => { rfRef.current = instance }}
+          onInit={(instance) => {
+            rfRef.current = instance
+            const setpointNode = setpoint ? nodes.find((n) => n.id === setpoint) : null
+            if (setpointNode) {
+              const c = computeNodeCenter(setpointNode)
+              instance.setCenter(c.x, c.y, { zoom: 1, duration: 0 })
+            } else {
+              instance.fitView({ duration: 0 })
+            }
+          }}
           onMove={onMove}
           connectionMode="loose"
           deleteKeyCode={['Backspace', 'Delete']}
-          fitView
         >
           <Background gap={20} color="#e2e8f0" />
           <Controls />
@@ -200,6 +238,9 @@ export default function RoadmapPage({ onClose }) {
 
         {/* Full-width time ruler, synced both ways with the viewport */}
         <TimelineRuler viewport={viewport} onScrub={onScrub} />
+
+        {/* Trash zone — appears only while a block is being dragged */}
+        <TrashZone ref={trashRef} visible={isDragging} over={isOverTrash} />
       </div>
     </div>
   )

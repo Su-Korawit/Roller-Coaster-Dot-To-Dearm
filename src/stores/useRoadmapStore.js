@@ -13,15 +13,20 @@ export const useRoadmapStore = create(
     (set) => ({
       nodes: [],
       edges: [],
+      setpoint: null,
       setNodes: (nodes) => set({ nodes }),
       setEdges: (edges) => set({ edges }),
       addNode: (type, position = { x: 100, y: 100 }) =>
-        set((state) => ({
-          nodes: [
-            ...state.nodes,
-            { id: nextId(), type, position, data: { label: '', note: '' } },
-          ],
-        })),
+        set((state) => {
+          const id = nextId()
+          return {
+            setpoint: id,
+            nodes: [
+              ...state.nodes,
+              { id, type, position, data: { label: '', note: '' } },
+            ],
+          }
+        }),
       updateNodeData: (id, patch) =>
         set((state) => ({
           nodes: state.nodes.map((n) =>
