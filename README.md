@@ -212,10 +212,15 @@ Each page writes to `useSelectStore` (persisted localStorage) **and** calls `syn
 
 ### Two-way sync on login
 
-After `onAuthStateChanged` fires with a user:
-1. `ensureUserDoc` — creates `users/{uid}` in Firestore if it does not yet exist (sets flat top-level fields from localStorage)
-2. `syncSelectToFirestore(uid)` — pushes all non-null local selections to `users/{uid}.profile` using `setDoc merge:true`
-3. `hydrateSelectStoreFromFirestore(uid)` — reads `users/{uid}.profile` back into localStorage **only for empty fields** (new-device fallback, never overwrites newer local data)
+`onAuthStateChanged` delegates the whole post-login sequence to
+`services/sessionBootstrap.js` (`bootstrapSession`), each step isolated in its
+own `try/catch`:
+1. `ensureUserDoc` — creates `users/{uid}` via `shapes.initialUser` if missing (writes selections under `profile.*`)
+2. `hydrateSelectStoreFromFirestore(uid)` — **Firestore-wins**: reads the doc through `shapes.readProfile` (resolves `profile.*` with a legacy top-level fallback) and overwrites local; if the doc has no `profile.*` yet, backfills it from local
+3. each store hydrates then arms its debounced writer via SyncManager (`set*SyncUser`)
+
+Selections made later are pushed by `syncSelectToFirestore(uid)` (called from the
+5 selection pages) using `shapes.profileFields` → `setDoc(..., { merge: true })`.
 
 ---
 
@@ -225,14 +230,17 @@ After `onAuthStateChanged` fires with a user:
 
 ```
 uid, displayName, email, photoURL     ← from Firebase Auth / SettingsSheet
-mbti, program, university, mastery    ← flat top-level (legacy, set by ensureUserDoc)
+mbti, program, university, mastery    ← flat top-level: LEGACY, old docs only.
+                                        Read via shapes.readProfile fallback;
+                                        new docs no longer write these.
 schoolId, schoolName, schoolLat, schoolLng
 followRequests[], followers[], following[], sentRequests[]
 matchScore, fireStacks
 createdAt
 
-profile: {                            ← written by syncSelectToFirestore
-  mbti, career, masteryTrack, university, program, updatedAt
+profile: {                            ← CANONICAL. Written by shapes.initialUser
+  mbti, career, masteryTrack,           + syncSelectToFirestore (shapes.profileFields);
+  university, program, updatedAt        read everywhere via shapes.readProfile
 }
 
 bio                                   ← set via SettingsSheet
@@ -700,10 +708,13 @@ npm run preview
 
 ---
 
-## Recent Updates (Latest 23 Commits)
+## Recent Updates
 
 | Date | Feature | Details |
 |---|---|---|
+| 2026-06-18 | **Internal Refactor + Test Suite** ✅ | Unified Firestore sync (`lib/syncManager.js`) + real-time listener lifecycle (`lib/firestoreListener.js`); extracted `services/sessionBootstrap.js` and `services/aiJourney.js`; ProfilePanel split into shell + `JourneyManager`; 78 automated tests (Vitest + jsdom + @testing-library/react) |
+| 2026-06-18 | **Fix: Profile Data Consistency (stale MBTI/program)** ✅ | Single Profile shape seam in `lib/db.js` (`shapes.profileFields` / `shapes.readProfile`); all readers go through it; fixes top-level fields not updating after a post-signup selection change |
+| 2026-06-18 | **Fix: Follow/Unfollow Crash** ✅ | `useSocialStore` called `writeBatch(db)` without importing `db` — follow / unfollow / accept threw `ReferenceError` |
 | 2026-06-14 | **Fix: Google Login Error Visibility** ✅ | Real Firebase error codes now surface to UI with Thai messages; generic "unknown error" now appends raw code for debugging; `firebase.js` logs missing env keys on startup |
 | 2026-06-14 | **Game: Collision Detection** ✅ | Player blocked by trees, fences, and walls on outdoor map; no more walking through obstacles |
 | 2026-06-14 | **Game: New Outdoor Map + MBTI Characters** ✅ | Switched to `test3.json` map; all 12 MBTI character spritesheets updated; player sprite locked to selected MBTI type |

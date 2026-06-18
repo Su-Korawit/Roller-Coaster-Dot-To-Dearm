@@ -22,7 +22,7 @@ Mobile-first React web app for Thai students: gamified career planning, MBTI pro
 | Backend | Firebase (Auth, Firestore, Storage, RTDB, Functions) | 12.13 |
 | Payments | PromptPay QR (`promptpay-qr`) + SlipOK API verification | — |
 | Serverless | Vercel `/api/*` (external data) + Firebase Cloud Functions (payments) | — |
-| Testing | Vitest + Playwright; separate Firestore-rules suite | 4.1 / 1.60 |
+| Testing | Vitest + Playwright; jsdom + @testing-library/react for hook/component tests; separate Firestore-rules suite | 4.1 / 1.60 |
 
 ---
 
@@ -46,12 +46,13 @@ Mobile-first React web app for Thai students: gamified career planning, MBTI pro
     │   ├── ui/                 Atomic UI primitives (Button, BottomSheet, Toggle…)
     │   ├── roadmap/            Node-based flow editor nodes + ruler
     │   ├── admin/              Admin dashboard sections
+    │   ├── profile/            ProfilePanel parts (JourneyManager + presentational)
     │   └── shop/               Shop + payment UI
     ├── stores/                 Zustand stores (useXStore.js)
-    ├── hooks/                  Custom React hooks (useXxx.js)
-    ├── services/               Business logic + AI calls (Gemini, shop credit)
-    ├── utils/                  Pure helpers + Firestore sync utilities
-    ├── lib/                    Low-level wrappers: db.js, promptpay.js
+    ├── hooks/                  Custom React hooks (useXxx.js, incl. useMytcasFetch)
+    ├── services/               Business logic: sessionBootstrap, aiJourney, aiTasks, shop*
+    ├── utils/                  Pure helpers + syncSelectToFirestore (manual select sync)
+    ├── lib/                    Low-level wrappers: db.js, syncManager.js, firestoreListener.js, promptpay.js
     ├── constants/              App-wide constants (SCREAMING_SNAKE exports)
     ├── data/                   Static JSON / JS data files
     └── game/                   Phaser asset manifest
@@ -75,20 +76,24 @@ const user = useUserStore((s) => s.user)
 create(persist((set) => ({ ... }), { name: 'rc-select-store' }))
 ```
 
-**Firestore sync** — hydrate on auth, then debounce-push on subscribe:
+**Firestore sync** — `useAuthStore.onAuthStateChanged` delegates the whole
+post-login sequence to `services/sessionBootstrap.js` (`bootstrapSession` /
+`teardownSession`), which hydrates each store then arms its debounced writer:
 ```js
-// In useAuthStore.js onAuthStateChanged
+// services/sessionBootstrap.js — each step isolated in its own try/catch
 await hydrateRoadmapFromFirestore(uid)
 setRoadmapSyncUser(uid)   // attaches a subscribe → debounced write (~1 s)
 ```
 
-**Real-time listeners** held in module-level refs (not in Zustand state):
-```js
-let _chatsUnsub = null
-// cleared and re-attached in loadChats(uid)
-```
+**SyncManager** (`src/lib/syncManager.js`) — one `createFirestoreSync` factory
+backs the tasks/roadmap/portfolio writers (uid + debounce + suppress-on-hydrate
+lifecycle held once). It re-exports the original
+`hydrate*FromFirestore` / `set*SyncUser` names. `syncSelectToFirestore` stays
+separate (manual, no subscription — called from the 5 selection pages).
 
-**Sync utilities:** `src/utils/syncRoadmapToFirestore.js`, `syncTasksToFirestore.js`, `syncSelectToFirestore.js`, `syncPortfolioToFirestore.js`.
+**Real-time listeners** — `src/lib/firestoreListener.js` `createFirestoreListener()`
+owns the onSnapshot detach-before-reattach lifecycle; chat/social/shop stores
+hold `attach`/`detach` slots instead of bare module-level unsub refs.
 
 ---
 
@@ -106,7 +111,15 @@ cols.chatMessages(chatId)
 queries.chatsByMember(uid)             // Query
 queries.messagesByChat(chatId)
 shapes.initialUser(firebaseUser, opts) // Document-shape factory
+shapes.profileFields(select)           // canonical Profile write shape → profile.*
+shapes.readProfile(userDoc)            // canonical Profile read (profile.* + legacy fallback)
 ```
+
+`shapes` is the single seam for the **Profile** (mbti/program/career/masteryTrack/
+university). Writers go through `profileFields` (writes under `profile.*`, maps
+`mastery → masteryTrack`); every reader goes through `readProfile` (reads
+`profile.*`, falls back to legacy top-level fields). `schoolId` stays top-level
+because Firestore queries filter on it. See [[Profile]] in Domain Vocabulary.
 
 ### API Backends
 
@@ -116,9 +129,12 @@ shapes.initialUser(firebaseUser, opts) // Document-shape factory
 | Payments, business logic | Firebase Cloud Functions | Called via Firebase SDK |
 | Dev mocks | Vite middleware in `vite.config.js` | Auto; matches prod routes |
 
-### AI (`src/services/aiTasks.js`, `src/services/shopAi.js`)
+### AI (`src/services/aiTasks.js`, `src/services/shopAi.js`, `src/services/aiJourney.js`)
 
-Gemini 2.5 Flash via `@google/generative-ai`. Key: `VITE_GEMINI_API_KEY`.
+Gemini via `@google/generative-ai`. Key: `VITE_GEMINI_API_KEY`.
+`aiTasks` / `shopAi` use `gemini-2.5-flash`; `aiJourney.generateJourney` (the
+dual-track roadmap generator, extracted out of ProfilePanel) uses
+`gemini-3-flash-preview`.
 
 ---
 
