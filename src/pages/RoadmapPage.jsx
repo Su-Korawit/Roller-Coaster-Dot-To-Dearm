@@ -10,7 +10,7 @@ import {
   addEdge,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { ArrowLeft, X, MousePointer2 } from 'lucide-react'
+import { ArrowLeft, X, MousePointer2, Download, Upload } from 'lucide-react'
 import { useRoadmapStore } from '../stores/useRoadmapStore'
 import ProcessNode from '../components/roadmap/ProcessNode'
 import ConditionNode from '../components/roadmap/ConditionNode'
@@ -22,6 +22,7 @@ import TimelineRuler from '../components/roadmap/TimelineRuler'
 import { findProximityConnection } from '../utils/findProximityConnection'
 import { computeNodeCenter } from '../utils/computeNodeCenter'
 import { computeCenteredPosition } from '../utils/computeCenteredPosition'
+import { toSchema } from '../utils/roadmapExport'
 
 const SNAP_THRESHOLD = 40
 
@@ -54,9 +55,16 @@ export default function RoadmapPage({ onClose }) {
   const clearSelection = useRoadmapStore((s) => s.clearSelection)
   const removeSelection = useRoadmapStore((s) => s.removeSelection)
   const duplicateSelection = useRoadmapStore((s) => s.duplicateSelection)
+  const importRoadmap = useRoadmapStore((s) => s.importRoadmap)
+  const fileInputRef = useRef(null)
 
   // Mobile select mode — tapping a block toggles its selection membership.
   const [mobileSelectMode, setMobileSelectMode] = useState(false)
+
+  // Trash zone
+  const trashRef = useRef(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isOverTrash, setIsOverTrash] = useState(false)
 
   const onNodesChange = useCallback(
     (changes) => setNodes(applyNodeChanges(changes, nodes)),
@@ -121,11 +129,6 @@ export default function RoadmapPage({ onClose }) {
   const stableNodeTypes = useMemo(() => nodeTypes, [])
   const stableEdgeTypes = useMemo(() => edgeTypes, [])
 
-  // Trash zone
-  const trashRef = useRef(null)
-  const [isDragging, setIsDragging] = useState(false)
-  const [isOverTrash, setIsOverTrash] = useState(false)
-
   // Timeline ruler stays in lockstep with the canvas viewport (pan + zoom).
   const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 1 })
   const rfRef = useRef(null)
@@ -167,6 +170,29 @@ export default function RoadmapPage({ onClose }) {
     addNode(type, computeCenteredPosition({ x: center.x + jitter, y: center.y + jitter }, type))
   }, [addNode, nodes.length])
 
+  // Export the whole Roadmap as a schema-v1 JSON download.
+  const handleExport = useCallback(() => {
+    const blob = new Blob([JSON.stringify(toSchema(nodes, edges), null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'roadmap.json'
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [nodes, edges])
+
+  // Import a schema-v1 JSON file, merging it into the current board.
+  const handleImportFile = useCallback(async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow re-picking the same file
+    if (!file) return
+    try {
+      importRoadmap(JSON.parse(await file.text()))
+    } catch {
+      alert('ไฟล์ Roadmap ไม่ถูกต้อง (รองรับเฉพาะ schema v1)')
+    }
+  }, [importRoadmap])
+
   return (
     <div className={`h-full w-full flex flex-col ${overlay ? 'bg-transparent' : 'bg-[#F4F7FC]'}`}>
       {/* Header */}
@@ -179,6 +205,31 @@ export default function RoadmapPage({ onClose }) {
           {overlay ? <X size={20} strokeWidth={2} /> : <ArrowLeft size={20} strokeWidth={2} />}
         </button>
         <h1 className="pixel-font text-[13px] text-ink font-bold">Roadmap</h1>
+
+        {/* Import / Export */}
+        <div className="ml-auto flex items-center gap-1">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            aria-label="นำเข้า Roadmap"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-100 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          >
+            <Upload size={18} strokeWidth={2} />
+          </button>
+          <button
+            onClick={handleExport}
+            aria-label="ส่งออก Roadmap"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-100 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          >
+            <Download size={18} strokeWidth={2} />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={handleImportFile}
+            className="hidden"
+          />
+        </div>
       </div>
 
       {/* Canvas */}

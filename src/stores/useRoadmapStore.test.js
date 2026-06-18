@@ -212,6 +212,56 @@ describe('useRoadmapStore', () => {
     expect(selection).toEqual([copyId])
   })
 
+  it('importRoadmap regenerates node ids so they never collide with existing', () => {
+    useRoadmapStore.getState().setNodes([
+      { id: 'a', type: 'process', position: { x: 0, y: 0 }, data: {} },
+    ])
+    useRoadmapStore.getState().importRoadmap({
+      version: 1,
+      nodes: [{ id: 'a', type: 'process', position: { x: 0, y: 0 }, data: { label: 'imported' } }],
+      edges: [],
+    })
+    const { nodes } = useRoadmapStore.getState()
+    expect(nodes).toHaveLength(2)
+    const ids = nodes.map((n) => n.id)
+    expect(new Set(ids).size).toBe(2) // no duplicate id
+  })
+
+  it('importRoadmap remaps edges onto the regenerated node ids', () => {
+    useRoadmapStore.getState().importRoadmap({
+      version: 1,
+      nodes: [
+        { id: 'x', type: 'process', position: { x: 0, y: 0 }, data: {} },
+        { id: 'y', type: 'process', position: { x: 100, y: 0 }, data: {} },
+      ],
+      edges: [{ id: 'ex', source: 'x', target: 'y', sourceHandle: null, targetHandle: null }],
+    })
+    const { nodes, edges } = useRoadmapStore.getState()
+    expect(edges).toHaveLength(1)
+    const ids = new Set(nodes.map((n) => n.id))
+    expect(ids.has(edges[0].source)).toBe(true)
+    expect(ids.has(edges[0].target)).toBe(true)
+    expect(edges[0].source).not.toBe('x') // remapped, not the original id
+  })
+
+  it('importRoadmap offsets imported nodes so they do not overlap existing ones', () => {
+    useRoadmapStore.getState().setNodes([
+      { id: 'a', type: 'process', position: { x: 0, y: 0 }, data: {} },
+    ])
+    useRoadmapStore.getState().importRoadmap({
+      version: 1,
+      nodes: [{ id: 'b', type: 'process', position: { x: 0, y: 0 }, data: {} }],
+      edges: [],
+    })
+    const { nodes } = useRoadmapStore.getState()
+    const imported = nodes.find((n) => n.position.x !== 0 || n.position.y !== 0)
+    expect(imported).toBeDefined() // shifted off the existing block at (0,0)
+  })
+
+  it('importRoadmap throws on an unsupported version', () => {
+    expect(() => useRoadmapStore.getState().importRoadmap({ version: 99, nodes: [], edges: [] })).toThrow()
+  })
+
   it('setpoint is null on an empty roadmap', () => {
     expect(useRoadmapStore.getState().setpoint).toBeNull()
   })

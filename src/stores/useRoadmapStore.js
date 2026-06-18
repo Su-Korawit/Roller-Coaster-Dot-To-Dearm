@@ -2,6 +2,9 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { addEdge } from '@xyflow/react'
 import { computeSnapPosition } from '../utils/computeSnapPosition'
+import { fromSchema } from '../utils/roadmapExport'
+
+const IMPORT_GAP = 80
 
 let _counter = 0
 function nextId() {
@@ -93,6 +96,34 @@ export const useRoadmapStore = create(
         set((state) => ({
           edges: state.edges.filter((e) => e.source !== id && e.target !== id),
         })),
+      // Merge a schema-v1 file into the current board: validate, regenerate ids
+      // (so they never collide with existing nodes), remap edges onto the new
+      // ids, and shift the imported set right of existing content so nothing
+      // lands on top of an existing block.
+      importRoadmap: (schema) =>
+        set((state) => {
+          const { nodes: incoming, edges: incomingEdges } = fromSchema(schema)
+          if (incoming.length === 0) return {}
+          const maxExistingX = state.nodes.reduce((m, n) => Math.max(m, n.position.x), -Infinity)
+          const minIncomingX = incoming.reduce((m, n) => Math.min(m, n.position.x), Infinity)
+          const dx = state.nodes.length === 0 ? 0 : maxExistingX + IMPORT_GAP - minIncomingX
+          const idMap = new Map(incoming.map((n) => [n.id, nextId()]))
+          const mappedNodes = incoming.map((n) => ({
+            ...n,
+            id: idMap.get(n.id),
+            position: { x: n.position.x + dx, y: n.position.y },
+          }))
+          const mappedEdges = incomingEdges.map((e) => ({
+            ...e,
+            id: nextId(),
+            source: idMap.get(e.source),
+            target: idMap.get(e.target),
+          }))
+          return {
+            nodes: [...state.nodes, ...mappedNodes],
+            edges: [...state.edges, ...mappedEdges],
+          }
+        }),
     }),
     { name: 'rc-roadmap-store' },
   ),
