@@ -20,7 +20,7 @@ export default function ConditionNode({ id, data, selected }) {
         className={`absolute inset-0 rotate-45 border-2 bg-white shadow-md transition-all ${
           selected ? 'border-accent-pink shadow-accent-pink/30 shadow-lg' : 'border-accent-pink/50'
         }`}
-        style={{ borderRadius: '12px' }}
+        style={{ borderRadius: '4px' }}
       />
 
       {/* Centered text (root is upright, so no counter-rotation needed) */}
