@@ -9,7 +9,7 @@ describe('findProximityConnection', () => {
   it('connects a dragged source dot to a nearby target dot and aligns the dragged block', () => {
     const other = { id: 'b', type: 'process', position: { x: 438, y: 100 } }
     expect(findProximityConnection(dragged, [other], 40)).toEqual({
-      connection: { source: 'a', target: 'b', sourceHandle: null },
+      connection: { source: 'a', target: 'b', sourceHandle: null, targetHandle: null },
       position: { x: 310, y: 100 },
     })
   })
@@ -25,7 +25,7 @@ describe('findProximityConnection', () => {
     // dragged process at (264,256): left-target dot at (264,320) — 8px away.
     const draggedP = { id: 'a', type: 'process', position: { x: 264, y: 256 } }
     expect(findProximityConnection(draggedP, [condition], 40)).toEqual({
-      connection: { source: 'c', target: 'a', sourceHandle: 'bottom' },
+      connection: { source: 'c', target: 'a', sourceHandle: 'bottom', targetHandle: null },
       position: { x: 264, y: 264 },
     })
   })
@@ -35,8 +35,19 @@ describe('findProximityConnection', () => {
     const near = { id: 'c', type: 'process', position: { x: 436, y: 100 } } // left-target (436,164), 8px
     const farther = { id: 'b', type: 'process', position: { x: 443, y: 100 } } // left-target (443,164), 15px
     const result = findProximityConnection(dragged, [farther, near], 40)
-    expect(result.connection).toEqual({ source: 'a', target: 'c', sourceHandle: null })
+    expect(result.connection).toEqual({ source: 'a', target: 'c', sourceHandle: null, targetHandle: null })
     expect(result.position).toEqual({ x: 308, y: 100 })
+  })
+
+  it('snaps two image blocks together — dots are plain points with no in/out', () => {
+    // image 128x128 'a' at (300,100): right dot at (428,164).
+    // image 'b' at (438,100): left dot at (438,164) — 10px away.
+    const a = { id: 'a', type: 'image', position: { x: 300, y: 100 } }
+    const b = { id: 'b', type: 'image', position: { x: 438, y: 100 } }
+    expect(findProximityConnection(a, [b], 40)).toEqual({
+      connection: { source: 'a', target: 'b', sourceHandle: 'right', targetHandle: 'left' },
+      position: { x: 310, y: 100 },
+    })
   })
 
   it('connects a dragged process bottom-source dot to a block below it', () => {
@@ -44,14 +55,18 @@ describe('findProximityConnection', () => {
     // 'b' process at (364,174): left-target dot at (364,238) — 10px below.
     const below = { id: 'b', type: 'process', position: { x: 364, y: 174 } }
     expect(findProximityConnection(dragged, [below], 40)).toEqual({
-      connection: { source: 'a', target: 'b', sourceHandle: 'bottom' },
+      connection: { source: 'a', target: 'b', sourceHandle: 'bottom', targetHandle: null },
       position: { x: 300, y: 110 },
     })
   })
 
-  it('does not connect two same-role dots (source-to-source)', () => {
-    // 'b' overlaps 'a': their source dots coincide, but only opposite roles may pair.
+  it('connects two same-role dots — there is no in/out restriction', () => {
+    // 'b' overlaps 'a': their left dots coincide (distance 0) and now connect,
+    // where before same-role (target-to-target) pairs were skipped.
     const overlapping = { id: 'b', type: 'process', position: { x: 300, y: 100 } }
-    expect(findProximityConnection(dragged, [overlapping], 40)).toBeNull()
+    expect(findProximityConnection(dragged, [overlapping], 40)).toEqual({
+      connection: { source: 'a', target: 'b', sourceHandle: null, targetHandle: null },
+      position: { x: 300, y: 100 },
+    })
   })
 })

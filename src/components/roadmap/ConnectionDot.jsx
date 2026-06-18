@@ -3,10 +3,13 @@ import { Handle, useNodeConnections } from '@xyflow/react'
 // A connection dot wrapping a React Flow handle. One size everywhere; colour
 // derives from this specific handle's live connection state — grey when free,
 // green when wired to another block. Per-handle (filtered by handleId), so only
-// the connected dot turns green, not every dot on the block.
+// the connected dot turns green, not every dot on the block. Dots carry no
+// in/out meaning, so a dot is "connected" whether it sits at the source or the
+// target end of the edge.
 export default function ConnectionDot({ type, position, id }) {
-  const connections = useNodeConnections({ handleType: type, handleId: id ?? null })
-  const connected = connections.length > 0
+  const asSource = useNodeConnections({ handleType: 'source', handleId: id ?? null })
+  const asTarget = useNodeConnections({ handleType: 'target', handleId: id ?? null })
+  const connected = asSource.length > 0 || asTarget.length > 0
 
   return (
     <Handle
