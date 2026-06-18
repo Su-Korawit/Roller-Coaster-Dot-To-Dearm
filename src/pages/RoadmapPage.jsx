@@ -18,6 +18,7 @@ import StageLabelNode from '../components/roadmap/StageLabelNode'
 import ImageNode from '../components/roadmap/ImageNode'
 import TimelineRuler from '../components/roadmap/TimelineRuler'
 import { findProximityConnection } from '../utils/findProximityConnection'
+import { computeNodeCenter } from '../utils/computeNodeCenter'
 
 const SNAP_THRESHOLD = 40
 
@@ -114,6 +115,11 @@ export default function RoadmapPage({ onClose }) {
   const onScrub = useCallback((x) => {
     rfRef.current?.setViewport({ ...rfRef.current.getViewport(), x })
   }, [])
+  // Selecting a block pans the canvas so it sits centred on screen (zoom kept).
+  const onNodeClick = useCallback((_event, node) => {
+    const c = computeNodeCenter(node)
+    rfRef.current?.setCenter(c.x, c.y, { zoom: rfRef.current.getViewport().zoom, duration: 400 })
+  }, [])
 
   return (
     <div className={`h-full w-full flex flex-col ${overlay ? 'bg-transparent' : 'bg-[#F4F7FC]'}`}>
@@ -141,6 +147,7 @@ export default function RoadmapPage({ onClose }) {
           onNodesDelete={onNodesDelete}
           onEdgesDelete={onEdgesDelete}
           onConnect={onConnect}
+          onNodeClick={onNodeClick}
           onNodeDragStart={onNodeDragStart}
           onNodeDragStop={onNodeDragStop}
           onInit={(instance) => { rfRef.current = instance }}
