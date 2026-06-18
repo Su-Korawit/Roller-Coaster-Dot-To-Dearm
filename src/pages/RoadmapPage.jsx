@@ -18,6 +18,8 @@ import StageLabelNode from '../components/roadmap/StageLabelNode'
 import ImageNode from '../components/roadmap/ImageNode'
 import TimelineRuler from '../components/roadmap/TimelineRuler'
 import { findProximityConnection } from '../utils/findProximityConnection'
+import { computeNodeCenter } from '../utils/computeNodeCenter'
+import { computeCenteredPosition } from '../utils/computeCenteredPosition'
 
 const SNAP_THRESHOLD = 40
 
@@ -83,37 +85,35 @@ export default function RoadmapPage({ onClose }) {
     [nodes, edges, setNodes, setEdges],
   )
 
-  const addProcessNode = useCallback(() => {
-    const offset = nodes.length * 20
-    addNode('process', { x: 100 + offset, y: 100 + offset })
-  }, [addNode, nodes.length])
-
-  const addConditionNode = useCallback(() => {
-    const offset = nodes.length * 20
-    addNode('condition', { x: 120 + offset, y: 120 + offset })
-  }, [addNode, nodes.length])
-
-  const addStageLabelNode = useCallback(() => {
-    const offset = nodes.length * 20
-    addNode('stageLabel', { x: 80 + offset, y: 40 + offset })
-  }, [addNode, nodes.length])
-
-  const addImageNode = useCallback(() => {
-    const offset = nodes.length * 20
-    addNode('image', { x: 140 + offset, y: 100 + offset })
-  }, [addNode, nodes.length])
-
   const stableNodeTypes = useMemo(() => nodeTypes, [])
   const stableEdgeTypes = useMemo(() => edgeTypes, [])
 
   // Timeline ruler stays in lockstep with the canvas viewport (pan + zoom).
   const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 1 })
   const rfRef = useRef(null)
+  const canvasRef = useRef(null)
   const onMove = useCallback((_event, vp) => setViewport(vp), [])
   // Ruler scrubbed -> pan the canvas horizontally to match.
   const onScrub = useCallback((x) => {
     rfRef.current?.setViewport({ ...rfRef.current.getViewport(), x })
   }, [])
+  // Selecting a block pans the canvas so it sits centred on screen (zoom kept).
+  const onNodeClick = useCallback((_event, node) => {
+    const c = computeNodeCenter(node)
+    rfRef.current?.setCenter(c.x, c.y, { zoom: rfRef.current.getViewport().zoom, duration: 400 })
+  }, [])
+
+  // Drop a new block at the centre of whatever the user is currently viewing
+  // (not a fixed spot on the canvas). A small stagger keeps repeated adds from
+  // stacking exactly on top of each other.
+  const addAtCenter = useCallback((type) => {
+    const rect = canvasRef.current?.getBoundingClientRect()
+    const center = rfRef.current && rect
+      ? rfRef.current.screenToFlowPosition({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 })
+      : { x: 200, y: 200 }
+    const jitter = (nodes.length % 8) * 14
+    addNode(type, computeCenteredPosition({ x: center.x + jitter, y: center.y + jitter }, type))
+  }, [addNode, nodes.length])
 
   return (
     <div className={`h-full w-full flex flex-col ${overlay ? 'bg-transparent' : 'bg-[#F4F7FC]'}`}>
@@ -130,7 +130,7 @@ export default function RoadmapPage({ onClose }) {
       </div>
 
       {/* Canvas */}
-      <div className="flex-1 relative">
+      <div ref={canvasRef} className="flex-1 relative">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -141,6 +141,7 @@ export default function RoadmapPage({ onClose }) {
           onNodesDelete={onNodesDelete}
           onEdgesDelete={onEdgesDelete}
           onConnect={onConnect}
+          onNodeClick={onNodeClick}
           onNodeDragStart={onNodeDragStart}
           onNodeDragStop={onNodeDragStop}
           onInit={(instance) => { rfRef.current = instance }}
@@ -157,7 +158,7 @@ export default function RoadmapPage({ onClose }) {
             <div className="flex items-center gap-2 bg-white rounded-2xl shadow-md px-3 py-2 border border-gray-100 mt-2">
               <span className="pixel-font text-[9px] text-gray-400 mr-1">Add</span>
               <button
-                onClick={addProcessNode}
+                onClick={() => addAtCenter('process')}
                 className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 aria-label="Add Process block"
               >
@@ -165,7 +166,7 @@ export default function RoadmapPage({ onClose }) {
                 <span className="pixel-font text-[8px] text-ink">Process</span>
               </button>
               <button
-                onClick={addConditionNode}
+                onClick={() => addAtCenter('condition')}
                 className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-accent-pink/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-pink"
                 aria-label="Add Condition block"
               >
@@ -173,7 +174,7 @@ export default function RoadmapPage({ onClose }) {
                 <span className="pixel-font text-[8px] text-ink">Condition</span>
               </button>
               <button
-                onClick={addStageLabelNode}
+                onClick={() => addAtCenter('stageLabel')}
                 className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 aria-label="Add Stage Label"
               >
@@ -183,7 +184,7 @@ export default function RoadmapPage({ onClose }) {
                 <span className="pixel-font text-[8px] text-ink">Stage</span>
               </button>
               <button
-                onClick={addImageNode}
+                onClick={() => addAtCenter('image')}
                 className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 aria-label="Add Image block"
               >

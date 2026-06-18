@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
-import { Handle, Position } from '@xyflow/react'
+import { Position } from '@xyflow/react'
 import { useRoadmapStore } from '../../stores/useRoadmapStore'
+import ConnectionDot from './ConnectionDot'
 
 export default function ProcessNode({ id, data, selected }) {
   const updateNodeData = useRoadmapStore((s) => s.updateNodeData)
@@ -16,11 +17,12 @@ export default function ProcessNode({ id, data, selected }) {
 
   return (
     <div
-      className={`min-w-[120px] max-w-[200px] rounded-2xl border-2 bg-white shadow-md px-3 py-2.5 flex flex-col gap-1.5 transition-all ${
+      className={`w-32 h-32 rounded-2xl border-2 bg-white shadow-md p-2.5 flex flex-col gap-1 transition-all ${
         selected ? 'border-brand shadow-brand/30 shadow-lg' : 'border-brand/40'
       }`}
     >
-      <Handle type="target" position={Position.Left} className="!w-2.5 !h-2.5 !bg-brand !border-white !border-2" />
+      <ConnectionDot type="target" position={Position.Left} />
+      <ConnectionDot id="top" type="source" position={Position.Top} />
 
       <input
         className="w-full text-[12px] font-semibold text-ink bg-transparent outline-none placeholder:text-gray-300 focus:placeholder:text-gray-200"
@@ -29,14 +31,14 @@ export default function ProcessNode({ id, data, selected }) {
         onChange={onLabelChange}
       />
       <textarea
-        className="w-full text-[10px] text-gray-500 bg-transparent outline-none resize-none placeholder:text-gray-300 focus:placeholder:text-gray-200 leading-tight"
+        className="w-full flex-1 text-[10px] text-gray-500 bg-transparent outline-none resize-none placeholder:text-gray-300 focus:placeholder:text-gray-200 leading-tight"
         placeholder="Note (optional)"
         value={data.note}
         onChange={onNoteChange}
-        rows={2}
       />
 
-      <Handle type="source" position={Position.Right} className="!w-2.5 !h-2.5 !bg-brand !border-white !border-2" />
+      <ConnectionDot type="source" position={Position.Right} />
+      <ConnectionDot id="bottom" type="source" position={Position.Bottom} />
     </div>
   )
 }

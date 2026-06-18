@@ -16,10 +16,19 @@ function getHandles(node) {
       return [
         { role: 'target', id: null, x, y: y + h / 2 },
         { role: 'source', id: null, x: x + w, y: y + h / 2 },
+        { role: 'source', id: 'top', x: x + w / 2, y },
+        { role: 'source', id: 'bottom', x: x + w / 2, y: y + h },
       ]
     case 'condition':
       return [
         { role: 'target', id: null, x, y: y + h / 2 },
+        { role: 'source', id: 'top', x: x + w / 2, y },
+        { role: 'source', id: 'bottom', x: x + w / 2, y: y + h },
+      ]
+    case 'image':
+      return [
+        { role: 'source', id: 'left', x, y: y + h / 2 },
+        { role: 'source', id: 'right', x: x + w, y: y + h / 2 },
         { role: 'source', id: 'top', x: x + w / 2, y },
         { role: 'source', id: 'bottom', x: x + w / 2, y: y + h },
       ]
@@ -28,9 +37,12 @@ function getHandles(node) {
   }
 }
 
-// When the dragged block is released, find the closest source<->target dot pair
-// within `threshold`. Returns the edge to add plus the position the dragged
-// block must move to so the two dots coincide — or null if nothing is close.
+// When the dragged block is released, find the closest dot pair within
+// `threshold`. Dots have no in/out direction — any dragged dot connects to any
+// nearby dot. Returns the edge to add plus the position the dragged block must
+// move to so the two dots coincide — or null if nothing is close. The edge is
+// still oriented (a real source/target) for React Flow: a target dot becomes
+// the edge target when one is involved, otherwise the dragged dot is the source.
 export function findProximityConnection(draggedNode, otherNodes, threshold) {
   const draggedHandles = getHandles(draggedNode)
   let best = null
@@ -38,16 +50,15 @@ export function findProximityConnection(draggedNode, otherNodes, threshold) {
   for (const other of otherNodes) {
     for (const oh of getHandles(other)) {
       for (const dh of draggedHandles) {
-        if (dh.role === oh.role) continue // need one source + one target
         const dist = Math.hypot(dh.x - oh.x, dh.y - oh.y)
         if (dist > threshold) continue
         if (best && dist >= best.dist) continue
-        const sourceIsDragged = dh.role === 'source'
+        const draggedIsSource = dh.role === 'source' || dh.role === oh.role
         best = {
           dist,
-          connection: sourceIsDragged
-            ? { source: draggedNode.id, target: other.id, sourceHandle: dh.id }
-            : { source: other.id, target: draggedNode.id, sourceHandle: oh.id },
+          connection: draggedIsSource
+            ? { source: draggedNode.id, target: other.id, sourceHandle: dh.id, targetHandle: oh.id }
+            : { source: other.id, target: draggedNode.id, sourceHandle: oh.id, targetHandle: dh.id },
           position: {
             x: draggedNode.position.x + (oh.x - dh.x),
             y: draggedNode.position.y + (oh.y - dh.y),

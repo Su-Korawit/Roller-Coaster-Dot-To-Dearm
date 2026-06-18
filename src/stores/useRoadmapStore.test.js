@@ -109,8 +109,8 @@ describe('useRoadmapStore', () => {
     ])
     useRoadmapStore.getState().connect({ source: 'a', target: 'b', sourceHandle: null })
     const b = useRoadmapStore.getState().nodes.find((n) => n.id === 'b')
-    // right exit of a 160x80 process at (100,100): x = 260, y = 100
-    expect(b.position).toEqual({ x: 260, y: 100 })
+    // right exit of a 128x128 process at (100,100): x = 228, y = 100
+    expect(b.position).toEqual({ x: 228, y: 100 })
   })
 
   it('detachNode removes every edge touching the node (dragging detaches)', () => {
