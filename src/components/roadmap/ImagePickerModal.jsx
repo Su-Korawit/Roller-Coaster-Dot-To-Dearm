@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ref, listAll, getDownloadURL, uploadBytes } from 'firebase/storage'
 import { X, Upload, Loader } from 'lucide-react'
 import { storage } from '../../firebase'
@@ -57,10 +58,14 @@ export default function ImagePickerModal({ nodeId, onClose }) {
     university && { url: tcasLogoUrl(university), label: 'University' },
   ].filter(Boolean)
 
-  return (
+  // Rendered through a portal to document.body: the Image block lives inside
+  // React Flow's transformed viewport, where a position:fixed child would
+  // anchor to that transform (scaled/offset, unclickable) instead of the
+  // screen. Portalling out lets `fixed inset-0` cover the real viewport.
+  return createPortal(
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="w-full max-w-sm aspect-square bg-white rounded-lg shadow-xl flex flex-col overflow-hidden"
+        className="w-full max-w-sm aspect-square max-h-[90vh] bg-white rounded-lg shadow-xl flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -102,7 +107,8 @@ export default function ImagePickerModal({ nodeId, onClose }) {
           <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onFileChange} />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
