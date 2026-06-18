@@ -16,6 +16,8 @@ function getHandles(node) {
       return [
         { role: 'target', id: null, x, y: y + h / 2 },
         { role: 'source', id: null, x: x + w, y: y + h / 2 },
+        { role: 'source', id: 'top', x: x + w / 2, y },
+        { role: 'source', id: 'bottom', x: x + w / 2, y: y + h },
       ]
     case 'condition':
       return [

@@ -39,6 +39,16 @@ describe('findProximityConnection', () => {
     expect(result.position).toEqual({ x: 308, y: 100 })
   })
 
+  it('connects a dragged process bottom-source dot to a block below it', () => {
+    // dragged 'a' process at (300,100): bottom-source dot at (364,228).
+    // 'b' process at (364,174): left-target dot at (364,238) — 10px below.
+    const below = { id: 'b', type: 'process', position: { x: 364, y: 174 } }
+    expect(findProximityConnection(dragged, [below], 40)).toEqual({
+      connection: { source: 'a', target: 'b', sourceHandle: 'bottom' },
+      position: { x: 300, y: 110 },
+    })
+  })
+
   it('does not connect two same-role dots (source-to-source)', () => {
     // 'b' overlaps 'a': their source dots coincide, but only opposite roles may pair.
     const overlapping = { id: 'b', type: 'process', position: { x: 300, y: 100 } }

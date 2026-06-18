@@ -22,6 +22,7 @@ export default function ProcessNode({ id, data, selected }) {
       }`}
     >
       <ConnectionDot type="target" position={Position.Left} />
+      <ConnectionDot id="top" type="source" position={Position.Top} />
 
       <input
         className="w-full text-[12px] font-semibold text-ink bg-transparent outline-none placeholder:text-gray-300 focus:placeholder:text-gray-200"
@@ -37,6 +38,7 @@ export default function ProcessNode({ id, data, selected }) {
       />
 
       <ConnectionDot type="source" position={Position.Right} />
+      <ConnectionDot id="bottom" type="source" position={Position.Bottom} />
     </div>
   )
 }
