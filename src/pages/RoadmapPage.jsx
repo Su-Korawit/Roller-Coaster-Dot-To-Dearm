@@ -53,6 +53,7 @@ export default function RoadmapPage({ onClose }) {
   const setSelection = useRoadmapStore((s) => s.setSelection)
   const clearSelection = useRoadmapStore((s) => s.clearSelection)
   const removeSelection = useRoadmapStore((s) => s.removeSelection)
+  const duplicateSelection = useRoadmapStore((s) => s.duplicateSelection)
 
   // Mobile select mode — tapping a block toggles its selection membership.
   const [mobileSelectMode, setMobileSelectMode] = useState(false)
@@ -284,6 +285,7 @@ export default function RoadmapPage({ onClose }) {
           <Panel position="bottom-center">
             <SelectionActionBar
               count={selection.length}
+              onDuplicate={duplicateSelection}
               onDelete={() => {
                 removeSelection()
                 setMobileSelectMode(false)

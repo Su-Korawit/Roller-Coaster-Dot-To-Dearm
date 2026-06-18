@@ -28,6 +28,28 @@ export const useRoadmapStore = create(
             edges: state.edges.filter((e) => !ids.has(e.source) && !ids.has(e.target)),
           }
         }),
+      duplicateSelection: () =>
+        set((state) => {
+          const selectedIds = new Set(state.selection)
+          const selectedNodes = state.nodes.filter((n) => selectedIds.has(n.id))
+          if (selectedNodes.length === 0) return {}
+          const OFFSET = 60
+          const idMap = new Map(selectedNodes.map((n) => [n.id, nextId()]))
+          const newNodes = selectedNodes.map((n) => ({
+            ...n,
+            id: idMap.get(n.id),
+            position: { x: n.position.x + OFFSET, y: n.position.y + OFFSET },
+            selected: true,
+          }))
+          const newEdges = state.edges
+            .filter((e) => selectedIds.has(e.source) && selectedIds.has(e.target))
+            .map((e) => ({ ...e, id: nextId(), source: idMap.get(e.source), target: idMap.get(e.target) }))
+          return {
+            nodes: [...state.nodes.map((n) => ({ ...n, selected: false })), ...newNodes],
+            edges: [...state.edges, ...newEdges],
+            selection: newNodes.map((n) => n.id),
+          }
+        }),
       addNode: (type, position = { x: 100, y: 100 }) =>
         set((state) => {
           const id = nextId()

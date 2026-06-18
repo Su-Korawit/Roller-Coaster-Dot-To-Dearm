@@ -162,6 +162,56 @@ describe('useRoadmapStore', () => {
     expect(useRoadmapStore.getState().selection).toEqual([])
   })
 
+  it('duplicateSelection copies selected nodes with offset positions', () => {
+    useRoadmapStore.getState().setNodes([
+      { id: 'a', type: 'process', position: { x: 100, y: 100 }, data: { label: 'A' } },
+    ])
+    useRoadmapStore.getState().setSelection(['a'])
+    useRoadmapStore.getState().duplicateSelection()
+    const { nodes } = useRoadmapStore.getState()
+    expect(nodes).toHaveLength(2)
+    const copy = nodes.find((n) => n.id !== 'a')
+    expect(copy.id).not.toBe('a')
+    expect(copy.position.x).not.toBe(100)
+    expect(copy.data.label).toBe('A')
+  })
+
+  it('duplicateSelection preserves edges internal to the selection', () => {
+    useRoadmapStore.getState().setNodes([
+      { id: 'a', type: 'process', position: { x: 0, y: 0 }, data: {} },
+      { id: 'b', type: 'process', position: { x: 200, y: 0 }, data: {} },
+    ])
+    useRoadmapStore.getState().setEdges([{ id: 'e1', source: 'a', target: 'b' }])
+    useRoadmapStore.getState().setSelection(['a', 'b'])
+    useRoadmapStore.getState().duplicateSelection()
+    const { edges } = useRoadmapStore.getState()
+    // original edge + 1 copied internal edge
+    expect(edges).toHaveLength(2)
+  })
+
+  it('duplicateSelection does not copy edges to outside nodes', () => {
+    useRoadmapStore.getState().setNodes([
+      { id: 'a', type: 'process', position: { x: 0, y: 0 }, data: {} },
+      { id: 'b', type: 'process', position: { x: 200, y: 0 }, data: {} },
+    ])
+    useRoadmapStore.getState().setEdges([{ id: 'e1', source: 'a', target: 'b' }])
+    useRoadmapStore.getState().setSelection(['a']) // only 'a', not 'b'
+    useRoadmapStore.getState().duplicateSelection()
+    const { edges } = useRoadmapStore.getState()
+    expect(edges).toHaveLength(1) // original edge preserved, no new edge for external target
+  })
+
+  it('duplicateSelection makes copies the new selection', () => {
+    useRoadmapStore.getState().setNodes([
+      { id: 'a', type: 'process', position: { x: 0, y: 0 }, data: {} },
+    ])
+    useRoadmapStore.getState().setSelection(['a'])
+    useRoadmapStore.getState().duplicateSelection()
+    const { nodes, selection } = useRoadmapStore.getState()
+    const copyId = nodes.find((n) => n.id !== 'a').id
+    expect(selection).toEqual([copyId])
+  })
+
   it('setpoint is null on an empty roadmap', () => {
     expect(useRoadmapStore.getState().setpoint).toBeNull()
   })
