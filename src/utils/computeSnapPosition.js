@@ -1,9 +1,9 @@
 // Default block dimensions per node type, used when React Flow has not yet
 // measured a node (node.measured is absent on first render).
 export const BLOCK_SIZES = {
-  process: { w: 160, h: 80 },
-  condition: { w: 112, h: 112 },
-  image: { w: 112, h: 112 },
+  process: { w: 128, h: 128 },
+  condition: { w: 128, h: 128 },
+  image: { w: 128, h: 128 },
   stageLabel: { w: 120, h: 40 },
 }
 

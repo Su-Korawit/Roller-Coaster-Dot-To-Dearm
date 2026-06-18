@@ -11,7 +11,7 @@ export default function ImageNode({ id, data, selected }) {
   const [pickerOpen, setPickerOpen] = useState(false)
 
   return (
-    <div className="relative w-28 h-28">
+    <div className="relative w-32 h-32">
       <div
         className={`w-full h-full rounded-2xl border-2 bg-white shadow-md overflow-hidden flex items-center justify-center transition-all cursor-pointer ${
           selected ? 'border-brand shadow-brand/30 shadow-lg' : 'border-brand/40'

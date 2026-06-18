@@ -13,7 +13,7 @@ export default function ConditionNode({ id, data, selected }) {
   return (
     // Root stays un-rotated — React Flow computes handle offsets from this
     // element's bounding box, so a transform here would misplace the handles.
-    <div className="relative w-28 h-28">
+    <div className="relative w-32 h-32">
       {/* Visual diamond — rotation lives here, not on the root */}
       <div
         className={`absolute inset-0 rotate-45 border-2 bg-white shadow-md transition-all ${
