@@ -217,7 +217,7 @@ export default function RoadmapPage({ onClose }) {
 
           {/* Tool palette */}
           <Panel position="top-center">
-            <div className="flex items-center gap-2 bg-white rounded-2xl shadow-md px-3 py-2 border border-gray-100 mt-2">
+            <div className="flex items-center gap-2 bg-white rounded-2xl shadow-md px-3 py-2 border border-gray-100 mt-2 max-w-[calc(100vw-1rem)] overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
               <span className="pixel-font text-[9px] text-gray-400 mr-1">Add</span>
               <button
                 onClick={() => addAtCenter('process')}
