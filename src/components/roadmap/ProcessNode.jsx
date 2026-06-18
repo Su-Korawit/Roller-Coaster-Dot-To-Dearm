@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
-import { Handle, Position } from '@xyflow/react'
+import { Position } from '@xyflow/react'
 import { useRoadmapStore } from '../../stores/useRoadmapStore'
+import ConnectionDot from './ConnectionDot'
 
 export default function ProcessNode({ id, data, selected }) {
   const updateNodeData = useRoadmapStore((s) => s.updateNodeData)
@@ -20,7 +21,7 @@ export default function ProcessNode({ id, data, selected }) {
         selected ? 'border-brand shadow-brand/30 shadow-lg' : 'border-brand/40'
       }`}
     >
-      <Handle type="target" position={Position.Left} className="!w-2.5 !h-2.5 !bg-brand !border-white !border-2" />
+      <ConnectionDot type="target" position={Position.Left} />
 
       <input
         className="w-full text-[12px] font-semibold text-ink bg-transparent outline-none placeholder:text-gray-300 focus:placeholder:text-gray-200"
@@ -35,7 +36,7 @@ export default function ProcessNode({ id, data, selected }) {
         onChange={onNoteChange}
       />
 
-      <Handle type="source" position={Position.Right} className="!w-2.5 !h-2.5 !bg-brand !border-white !border-2" />
+      <ConnectionDot type="source" position={Position.Right} />
     </div>
   )
 }

@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Handle, Position } from '@xyflow/react'
+import { Position } from '@xyflow/react'
 import { ImageIcon } from 'lucide-react'
 import ImagePickerModal from './ImagePickerModal'
+import ConnectionDot from './ConnectionDot'
 
 // Decorative connection points on all four sides — used to snap the image
 // adjacent to flow blocks (lineless, like every other connection).
@@ -31,13 +32,7 @@ export default function ImageNode({ id, data, selected }) {
       </div>
 
       {SIDES.map((pos) => (
-        <Handle
-          key={pos}
-          id={pos}
-          type="source"
-          position={pos}
-          className="!w-2.5 !h-2.5 !bg-brand !border-white !border-2"
-        />
+        <ConnectionDot key={pos} id={pos} type="source" position={pos} />
       ))}
 
       {pickerOpen && <ImagePickerModal nodeId={id} onClose={() => setPickerOpen(false)} />}

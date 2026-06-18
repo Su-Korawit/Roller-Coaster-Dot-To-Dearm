@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
-import { Handle, Position } from '@xyflow/react'
+import { Position } from '@xyflow/react'
 import { useRoadmapStore } from '../../stores/useRoadmapStore'
+import ConnectionDot from './ConnectionDot'
 
 export default function ConditionNode({ id, data, selected }) {
   const updateNodeData = useRoadmapStore((s) => s.updateNodeData)
@@ -33,23 +34,9 @@ export default function ConditionNode({ id, data, selected }) {
       </div>
 
       {/* Handles map to the true diamond corners now that the root is upright */}
-      <Handle
-        type="target"
-        position={Position.Left}
-        className="!w-3 !h-3 !bg-green-400 !border-white !border-2"
-      />
-      <Handle
-        id="top"
-        type="source"
-        position={Position.Top}
-        className="!w-3 !h-3 !bg-green-400 !border-white !border-2"
-      />
-      <Handle
-        id="bottom"
-        type="source"
-        position={Position.Bottom}
-        className="!w-3 !h-3 !bg-green-400 !border-white !border-2"
-      />
+      <ConnectionDot type="target" position={Position.Left} />
+      <ConnectionDot id="top" type="source" position={Position.Top} />
+      <ConnectionDot id="bottom" type="source" position={Position.Bottom} />
     </div>
   )
 }
