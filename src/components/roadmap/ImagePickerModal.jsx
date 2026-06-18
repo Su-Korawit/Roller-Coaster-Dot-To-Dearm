@@ -60,7 +60,7 @@ export default function ImagePickerModal({ nodeId, onClose }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="w-full max-w-md max-h-[80vh] bg-white rounded-2xl shadow-xl flex flex-col overflow-hidden"
+        className="w-full max-w-sm aspect-square bg-white rounded-lg shadow-xl flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -69,9 +69,9 @@ export default function ImagePickerModal({ nodeId, onClose }) {
           <button
             onClick={onClose}
             aria-label="ปิด"
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100"
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-700 active:scale-95 transition-all"
           >
-            <X size={18} />
+            <X size={20} strokeWidth={2.5} />
           </button>
         </div>
 
