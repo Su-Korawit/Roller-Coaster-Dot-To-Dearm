@@ -25,6 +25,17 @@ export function toSchema(nodes, edges) {
   }
 }
 
+// Narrow a board to a Selection: keep only the selected nodes and only the
+// edges whose both endpoints are inside the selection (dangling edges to
+// outside nodes are dropped). Used by export-selected.
+export function selectSubset(nodes, edges, selectedIds) {
+  const ids = new Set(selectedIds)
+  return {
+    nodes: nodes.filter((n) => ids.has(n.id)),
+    edges: edges.filter((e) => ids.has(e.source) && ids.has(e.target)),
+  }
+}
+
 // Schema v1 envelope -> React Flow nodes/edges. Throws on an unknown or missing
 // version so a malformed file is rejected gracefully rather than silently
 // corrupting the board.

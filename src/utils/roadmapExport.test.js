@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { toSchema, fromSchema } from './roadmapExport'
+import { toSchema, fromSchema, selectSubset } from './roadmapExport'
 
 const NODES = [
   { id: 'a', type: 'process', position: { x: 10, y: 20 }, data: { label: 'A', note: '' } },
@@ -44,5 +44,39 @@ describe('fromSchema', () => {
 
   it('rejects a schema with a missing version', () => {
     expect(() => fromSchema({ nodes: [], edges: [] })).toThrow()
+  })
+})
+
+describe('selectSubset', () => {
+  const NODES = [
+    { id: 'a', type: 'process', position: { x: 0, y: 0 }, data: {} },
+    { id: 'b', type: 'process', position: { x: 100, y: 0 }, data: {} },
+    { id: 'c', type: 'process', position: { x: 200, y: 0 }, data: {} },
+  ]
+  const EDGES = [
+    { id: 'ab', source: 'a', target: 'b', sourceHandle: null, targetHandle: null },
+    { id: 'bc', source: 'b', target: 'c', sourceHandle: null, targetHandle: null },
+  ]
+
+  it('keeps only the selected nodes', () => {
+    const subset = selectSubset(NODES, EDGES, ['a', 'b'])
+    expect(subset.nodes.map((n) => n.id)).toEqual(['a', 'b'])
+  })
+
+  it('keeps only edges whose both ends are inside the selection', () => {
+    const subset = selectSubset(NODES, EDGES, ['a', 'b'])
+    expect(subset.edges.map((e) => e.id)).toEqual(['ab']) // 'bc' is dangling, dropped
+  })
+
+  it('drops all edges when only one endpoint is selected', () => {
+    const subset = selectSubset(NODES, EDGES, ['b'])
+    expect(subset.edges).toEqual([])
+  })
+
+  it('produces a subset that re-imports as valid schema v1', () => {
+    const subset = selectSubset(NODES, EDGES, ['a', 'b'])
+    const roundTripped = fromSchema(JSON.parse(JSON.stringify(toSchema(subset.nodes, subset.edges))))
+    expect(roundTripped.nodes.map((n) => n.id)).toEqual(['a', 'b'])
+    expect(roundTripped.edges.map((e) => e.id)).toEqual(['ab'])
   })
 })

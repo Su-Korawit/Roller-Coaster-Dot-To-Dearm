@@ -22,7 +22,7 @@ import TimelineRuler from '../components/roadmap/TimelineRuler'
 import { findProximityConnection } from '../utils/findProximityConnection'
 import { computeNodeCenter } from '../utils/computeNodeCenter'
 import { computeCenteredPosition } from '../utils/computeCenteredPosition'
-import { toSchema } from '../utils/roadmapExport'
+import { toSchema, selectSubset } from '../utils/roadmapExport'
 
 const SNAP_THRESHOLD = 40
 
@@ -170,16 +170,27 @@ export default function RoadmapPage({ onClose }) {
     addNode(type, computeCenteredPosition({ x: center.x + jitter, y: center.y + jitter }, type))
   }, [addNode, nodes.length])
 
-  // Export the whole Roadmap as a schema-v1 JSON download.
-  const handleExport = useCallback(() => {
-    const blob = new Blob([JSON.stringify(toSchema(nodes, edges), null, 2)], { type: 'application/json' })
+  // Download a schema envelope as a JSON file.
+  const downloadSchema = useCallback((schema, filename) => {
+    const blob = new Blob([JSON.stringify(schema, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'roadmap.json'
+    a.download = filename
     a.click()
     URL.revokeObjectURL(url)
-  }, [nodes, edges])
+  }, [])
+
+  // Export the whole Roadmap as a schema-v1 JSON download.
+  const handleExport = useCallback(() => {
+    downloadSchema(toSchema(nodes, edges), 'roadmap.json')
+  }, [nodes, edges, downloadSchema])
+
+  // Export only the current Selection (internal edges kept, dangling dropped).
+  const handleExportSelected = useCallback(() => {
+    const subset = selectSubset(nodes, edges, selection)
+    downloadSchema(toSchema(subset.nodes, subset.edges), 'roadmap-selection.json')
+  }, [nodes, edges, selection, downloadSchema])
 
   // Import a schema-v1 JSON file, merging it into the current board.
   const handleImportFile = useCallback(async (e) => {
@@ -337,6 +348,7 @@ export default function RoadmapPage({ onClose }) {
             <SelectionActionBar
               count={selection.length}
               onDuplicate={duplicateSelection}
+              onExport={handleExportSelected}
               onDelete={() => {
                 removeSelection()
                 setMobileSelectMode(false)

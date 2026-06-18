@@ -1,6 +1,6 @@
-import { Trash2, Copy, X } from 'lucide-react'
+import { Trash2, Copy, Download, X } from 'lucide-react'
 
-export default function SelectionActionBar({ count, onDuplicate, onDelete, onCancel }) {
+export default function SelectionActionBar({ count, onDuplicate, onExport, onDelete, onCancel }) {
   if (count === 0) return null
   return (
     <div className="flex items-center gap-3 bg-white rounded-2xl shadow-lg px-4 py-2 border border-gray-100 mb-2">
@@ -12,6 +12,14 @@ export default function SelectionActionBar({ count, onDuplicate, onDelete, onCan
       >
         <Copy size={15} className="text-brand" strokeWidth={2} />
         <span className="pixel-font text-[8px] text-brand">Dupe</span>
+      </button>
+      <button
+        onClick={onExport}
+        aria-label="Export selected blocks"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand/10 hover:bg-brand/20 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand min-h-11 min-w-11"
+      >
+        <Download size={15} className="text-brand" strokeWidth={2} />
+        <span className="pixel-font text-[8px] text-brand">Export</span>
       </button>
       <button
         onClick={onDelete}
