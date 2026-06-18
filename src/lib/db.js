@@ -46,16 +46,41 @@ export const queries = {
 }
 
 // ── Document shapes ───────────────────────────────────────────────────────────
+// The User document's Profile (mbti/program/career/masteryTrack/university) lives
+// under `profile.*` — this module is the single seam for its shape. `schoolId`
+// and friends stay top-level because Firestore queries filter on them.
 export const shapes = {
-  initialUser: (firebaseUser, { mbti = null, program = null, university = null, mastery = null } = {}) => ({
+  // Canonical write shape: maps select-store fields onto profile.*, keeping only
+  // non-empty values and renaming mastery → masteryTrack.
+  profileFields: ({ mbti, career, mastery, university, program } = {}) => {
+    const profile = {}
+    if (mbti)       profile.mbti = mbti
+    if (career)     profile.career = career
+    if (mastery)    profile.masteryTrack = mastery
+    if (university) profile.university = university
+    if (program)    profile.program = program
+    return profile
+  },
+
+  // Canonical read shape: reads profile.* first, falling back to legacy top-level
+  // fields (and the legacy `mastery` name) for documents not yet re-synced.
+  readProfile: (userDoc = {}) => {
+    const p = userDoc.profile ?? {}
+    return {
+      mbti:         p.mbti ?? userDoc.mbti ?? null,
+      program:      p.program ?? userDoc.program ?? null,
+      career:       p.career ?? userDoc.career ?? null,
+      masteryTrack: p.masteryTrack ?? userDoc.mastery ?? null,
+      university:   p.university ?? userDoc.university ?? null,
+    }
+  },
+
+  initialUser: (firebaseUser, select = {}) => ({
     uid:            firebaseUser.uid,
     displayName:    firebaseUser.displayName ?? '',
     email:          firebaseUser.email ?? '',
     photoURL:       firebaseUser.photoURL ?? null,
-    mbti,
-    program,
-    university,
-    mastery,
+    profile:        shapes.profileFields(select),
     schoolId:       null,
     schoolName:     null,
     schoolLat:      null,

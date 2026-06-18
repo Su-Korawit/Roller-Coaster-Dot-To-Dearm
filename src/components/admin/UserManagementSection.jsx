@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react'
 import { collection, getDocs, limit, query, doc, deleteDoc } from 'firebase/firestore'
 import { db } from '../../firebase'
+import { shapes } from '../../lib/db'
 import { useTcasUniversities } from '../../hooks/useMytcas'
 import { useToast } from './Toast'
 
@@ -134,9 +135,7 @@ export default function UserManagementSection() {
           </thead>
           <tbody>
             {filtered.map((u) => {
-              const mbti = u.profile?.mbti ?? u.mbti
-              const program = u.profile?.program ?? u.program
-              const uni = u.profile?.university ?? u.university
+              const { mbti, program, university: uni } = shapes.readProfile(u)
               const created = u.createdAt?.toDate ? u.createdAt.toDate().toLocaleDateString('th-TH') : '—'
               return (
                 <tr key={u.id} className="border-b border-gray-50 last:border-0">

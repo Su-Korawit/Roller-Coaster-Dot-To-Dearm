@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { useUserStore } from './useUserStore'
 
 // Max passive equipped slots — unlock by streak milestones
 const MAX_PASSIVE_SLOTS = 3
@@ -17,9 +18,6 @@ export const useSkillStore = create(
       equippedPassive: [null, null, null],
       // active equipped skill ids (up to 4)
       equippedActive: [],
-      // ── DnD single-slot equipped skills ──────────────────
-      equippedPassiveSkill: null, // skill id or null
-      equippedActiveSkill: null,  // skill id or null
       // 3-slot passive system: each slot has { equippedSkillId: string|null }
       // Slot unlock thresholds are defined in PASSIVE_UNLOCK_THRESHOLDS
       passiveSlots: [
@@ -29,8 +27,6 @@ export const useSkillStore = create(
       ],
       // Derived flag — true when the Planner passive skill is the equipped passive
       isPlannerActive: false,
-      setEquippedPassiveSkill: (id) => set({ equippedPassiveSkill: id, isPlannerActive: id === 'planner' }),
-      setEquippedActiveSkill: (id) => set({ equippedActiveSkill: id }),
 
       // Equip a skill into a specific slot (0/1/2). Skill must be unlocked.
       // A skill can only live in one slot at a time.
@@ -57,11 +53,14 @@ export const useSkillStore = create(
           return { passiveSlots: slots, isPlannerActive }
         }),
 
-      buySkill: (skillId, cost, coins, spendCoins) => {
+      // Owns the whole purchase: affordability, coin deduction, and ownership.
+      // Reads coins from useUserStore directly — no spendCoins callback inversion.
+      buySkill: (skillId, cost) => {
         const state = get()
         if (state.ownedSkills.includes(skillId)) return false
+        const { coins, addCoins } = useUserStore.getState()
         if (coins < cost) return false
-        spendCoins(cost)
+        addCoins(-cost)
         set({ ownedSkills: [...state.ownedSkills, skillId] })
         return true
       },

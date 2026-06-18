@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react'
 import { collection, getDocs, limit, query } from 'firebase/firestore'
 import { db } from '../../firebase'
 import { MBTI_TYPES } from '../../game/assetManifest'
+import { shapes } from '../../lib/db'
 import { useTcasUniversities } from '../../hooks/useMytcas'
 
 // Reads the `users` collection client-side (admin-only Firestore rule guards
@@ -29,14 +30,14 @@ async function getAggregate() {
   // MBTI distribution
   const mbtiCounts = {}
   users.forEach((u) => {
-    const m = u.profile?.mbti ?? u.mbti
+    const m = shapes.readProfile(u).mbti
     if (m) mbtiCounts[m] = (mbtiCounts[m] ?? 0) + 1
   })
 
   // University distribution (top 10)
   const uniCounts = {}
   users.forEach((u) => {
-    const uni = u.profile?.university ?? u.university
+    const uni = shapes.readProfile(u).university
     if (uni) uniCounts[uni] = (uniCounts[uni] ?? 0) + 1
   })
   const topUniversities = Object.entries(uniCounts)
@@ -46,7 +47,7 @@ async function getAggregate() {
   // Program distribution (top 10)
   const progCounts = {}
   users.forEach((u) => {
-    const p = u.profile?.program ?? u.program
+    const p = shapes.readProfile(u).program
     if (p) progCounts[p] = (progCounts[p] ?? 0) + 1
   })
   const topPrograms = Object.entries(progCounts)

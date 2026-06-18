@@ -285,8 +285,8 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
         setReflectionTask(task)
         return
       }
-      const { equippedPassiveSkill } = useSkillStore.getState()
-      const sparkBonus = equippedPassiveSkill === 'spark' ? 2 : 0
+      const { passiveSlots } = useSkillStore.getState()
+      const sparkBonus = passiveSlots.some((s) => s.equippedSkillId === 'spark') ? 2 : 0
       addCoins((task.rewardCoins || 10) + sparkBonus)
     }
     toggleTask(task.id)
@@ -304,8 +304,8 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
       }
       setEvalResult(result)
       // Award coins
-      const { equippedPassiveSkill } = useSkillStore.getState()
-      const sparkBonus = equippedPassiveSkill === 'spark' ? 2 : 0
+      const { passiveSlots } = useSkillStore.getState()
+      const sparkBonus = passiveSlots.some((s) => s.equippedSkillId === 'spark') ? 2 : 0
       addCoins((reflectionTask.rewardCoins || 15) + sparkBonus)
       toggleTask(reflectionTask.id)
       syncSharedTaskStatus(reflectionTask.id)
@@ -419,11 +419,12 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
               onCreate={openCreate}
               onShare={setSharingTask}
               onSkill={(task) => {
-                const { equippedActiveSkill } = useSkillStore.getState()
-                if (!equippedActiveSkill || task.completed) return
-                const timerEnd = equippedActiveSkill === 'capsule' ? Date.now() + 30 * 60 * 1000 : null
-                applySkillToTask(task.id, equippedActiveSkill, timerEnd)
-                setSkillTask({ ...task, assignedSkill: equippedActiveSkill, timerEnd })
+                const { equippedActive } = useSkillStore.getState()
+                const skillId = equippedActive.find((id) => id === 'capsule') ?? equippedActive[0]
+                if (!skillId || task.completed) return
+                const timerEnd = skillId === 'capsule' ? Date.now() + 30 * 60 * 1000 : null
+                applySkillToTask(task.id, skillId, timerEnd)
+                setSkillTask({ ...task, assignedSkill: skillId, timerEnd })
               }}
               onDragEnd={handleDragEnd}
               onAutoGenerate={handleAutoGenerate}

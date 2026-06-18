@@ -2,15 +2,15 @@
 import {
   getDoc,
   getDocs,
-  onSnapshot,
   serverTimestamp,
   setDoc,
   writeBatch,
   arrayRemove,
   arrayUnion,
 } from 'firebase/firestore'
-import { auth } from '../firebase'
-import { refs, cols, queries } from '../lib/db'
+import { auth, db } from '../firebase'
+import { refs, cols, queries, shapes } from '../lib/db'
+import { createFirestoreListener } from '../lib/firestoreListener'
 
 // ─── Career family mapping ────────────────────────────────────────────────────
 // Groups career ids into families so "similar program" scoring works.
@@ -40,20 +40,22 @@ const CAREER_FAMILY_MAP = {
 }
 
 // ─── Match scoring ─────────────────────────────────────────────────────────────
-// Reads nested profile.* fields first (synced via syncSelectToFirestore),
-// then falls back to flat top-level fields for backwards compatibility.
+// Reads each user's Profile through the canonical shape seam (shapes.readProfile),
+// which resolves profile.* with a legacy top-level fallback.
 export function calculateMatchScore(a, b) {
   if (!a || !b) return 0
   let score = 0
 
-  const aProgram    = a.profile?.program      ?? a.program
-  const bProgram    = b.profile?.program      ?? b.program
-  const aMastery    = a.profile?.masteryTrack ?? a.mastery
-  const bMastery    = b.profile?.masteryTrack ?? b.mastery
-  const aMbti       = a.profile?.mbti         ?? a.mbti
-  const bMbti       = b.profile?.mbti         ?? b.mbti
-  const aUniversity = a.profile?.university   ?? a.university
-  const bUniversity = b.profile?.university   ?? b.university
+  const pa = shapes.readProfile(a)
+  const pb = shapes.readProfile(b)
+  const aProgram    = pa.program
+  const bProgram    = pb.program
+  const aMastery    = pa.masteryTrack
+  const bMastery    = pb.masteryTrack
+  const aMbti       = pa.mbti
+  const bMbti       = pb.mbti
+  const aUniversity = pa.university
+  const bUniversity = pb.university
 
   // Program: 40 pts exact match, 20 pts same career family
   if (aProgram && bProgram) {
@@ -88,8 +90,8 @@ function myUid() {
   return uid
 }
 
-// Module-level ref so unsubscribing doesn't cause a Zustand state update.
-let _unsub = null
+// Shared listener slot — owns the detach-before-reattach lifecycle.
+const requestsListener = createFirestoreListener()
 
 export const useSocialStore = create((set) => ({
   nearbyUsers: [],
@@ -193,12 +195,8 @@ export const useSocialStore = create((set) => ({
 
   // Attaches a real-time listener to the current user's doc.
   // Replaces any existing listener. Returns the unsubscribe function.
-  subscribeToRequests: (uid) => {
-    if (_unsub) {
-      _unsub()
-      _unsub = null
-    }
-    _unsub = onSnapshot(refs.user(uid), (snap) => {
+  subscribeToRequests: (uid) =>
+    requestsListener.attach(refs.user(uid), (snap) => {
       if (!snap.exists()) return
       const data = snap.data()
       set({
@@ -207,9 +205,7 @@ export const useSocialStore = create((set) => ({
         following: data.following ?? [],
         sentRequests: data.sentRequests ?? [],
       })
-    })
-    return _unsub
-  },
+    }),
 
   // Prefix search on displayName across all users — works regardless of schoolId.
   // Uses Firestore range query ( trick) so no extra index is needed.

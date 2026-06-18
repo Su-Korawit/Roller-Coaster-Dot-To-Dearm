@@ -1,5 +1,5 @@
 import { setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
-import { refs } from '../lib/db'
+import { refs, shapes } from '../lib/db'
 import { useSelectStore } from '../stores/useSelectStore'
 
 /**
@@ -10,23 +10,14 @@ import { useSelectStore } from '../stores/useSelectStore'
 export async function syncSelectToFirestore(uid) {
   if (!uid) return
 
-  const { mbti, career, mastery, university, program } = useSelectStore.getState()
+  const profile = shapes.profileFields(useSelectStore.getState())
 
-  const profileData = {}
-  if (mbti)       profileData.mbti = mbti
-  if (career)     profileData.career = career
-  if (mastery)    profileData.masteryTrack = mastery
-  if (university) profileData.university = university
-  if (program)    profileData.program = program
-
-  if (Object.keys(profileData).length === 0) return
-
-  profileData.updatedAt = serverTimestamp()
+  if (Object.keys(profile).length === 0) return
 
   try {
     await setDoc(
       refs.user(uid),
-      { profile: profileData },
+      { profile: { ...profile, updatedAt: serverTimestamp() } },
       { merge: true },
     )
   } catch (error) {
@@ -46,23 +37,20 @@ export async function hydrateSelectStoreFromFirestore(uid) {
   try {
     const snap = await getDoc(refs.user(uid))
     if (!snap.exists()) return
+    const data = snap.data()
 
-    const profile = snap.data()?.profile
-    if (!profile) {
-      // First-time migration: push whatever is local up to Firestore.
-      await syncSelectToFirestore(uid)
-      return
-    }
-
+    // Firestore-wins: read through the canonical shape (handles legacy
+    // top-level docs) and overwrite local so it stays consistent across devices.
+    const { mbti, career, masteryTrack, university, program } = shapes.readProfile(data)
     const { setMbti, setCareer, setMastery, setUniversity, setProgram } = useSelectStore.getState()
+    if (mbti)         setMbti(mbti)
+    if (career)       setCareer(career)
+    if (masteryTrack) setMastery(masteryTrack)
+    if (university)   setUniversity(university)
+    if (program)      setProgram(program)
 
-    // Firestore-wins: always overwrite local so background/character stays
-    // consistent across devices.
-    if (profile.mbti)        setMbti(profile.mbti)
-    if (profile.career)      setCareer(profile.career)
-    if (profile.masteryTrack) setMastery(profile.masteryTrack)
-    if (profile.university)  setUniversity(profile.university)
-    if (profile.program)     setProgram(profile.program)
+    // Backfill profile.* for legacy docs that only had top-level fields.
+    if (!data.profile) await syncSelectToFirestore(uid)
   } catch (error) {
     console.error('[hydrateSelectStoreFromFirestore] failed:', error)
   }
