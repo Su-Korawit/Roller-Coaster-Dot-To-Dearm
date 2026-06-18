@@ -14,8 +14,20 @@ export const useRoadmapStore = create(
       nodes: [],
       edges: [],
       setpoint: null,
+      selection: [],
       setNodes: (nodes) => set({ nodes }),
       setEdges: (edges) => set({ edges }),
+      setSelection: (ids) => set({ selection: ids }),
+      clearSelection: () => set({ selection: [] }),
+      removeSelection: () =>
+        set((state) => {
+          const ids = new Set(state.selection)
+          return {
+            selection: [],
+            nodes: state.nodes.filter((n) => !ids.has(n.id)),
+            edges: state.edges.filter((e) => !ids.has(e.source) && !ids.has(e.target)),
+          }
+        }),
       addNode: (type, position = { x: 100, y: 100 }) =>
         set((state) => {
           const id = nextId()

@@ -11,7 +11,7 @@ const { useRoadmapStore } = await import('./useRoadmapStore')
 
 describe('useRoadmapStore', () => {
   beforeEach(() => {
-    useRoadmapStore.setState({ nodes: [], edges: [], setpoint: null })
+    useRoadmapStore.setState({ nodes: [], edges: [], setpoint: null, selection: [] })
   })
 
   it('initializes with empty nodes and edges', () => {
@@ -118,6 +118,48 @@ describe('useRoadmapStore', () => {
     useRoadmapStore.getState().connect({ source: 'c', target: 'b' })
     useRoadmapStore.getState().detachNode('b')
     expect(useRoadmapStore.getState().edges).toHaveLength(0)
+  })
+
+  it('setSelection stores the array of selected ids', () => {
+    useRoadmapStore.getState().setSelection(['a', 'b'])
+    expect(useRoadmapStore.getState().selection).toEqual(['a', 'b'])
+  })
+
+  it('clearSelection empties the selection', () => {
+    useRoadmapStore.getState().setSelection(['a'])
+    useRoadmapStore.getState().clearSelection()
+    expect(useRoadmapStore.getState().selection).toEqual([])
+  })
+
+  it('removeSelection deletes selected nodes', () => {
+    useRoadmapStore.getState().addNode('process')
+    useRoadmapStore.getState().addNode('process')
+    const ids = useRoadmapStore.getState().nodes.map((n) => n.id)
+    useRoadmapStore.getState().setSelection([ids[0]])
+    useRoadmapStore.getState().removeSelection()
+    expect(useRoadmapStore.getState().nodes).toHaveLength(1)
+    expect(useRoadmapStore.getState().nodes[0].id).toBe(ids[1])
+  })
+
+  it('removeSelection prunes edges touching deleted nodes', () => {
+    useRoadmapStore.getState().addNode('process')
+    useRoadmapStore.getState().addNode('process')
+    useRoadmapStore.getState().addNode('process')
+    const [a, b, c] = useRoadmapStore.getState().nodes.map((n) => n.id)
+    useRoadmapStore.getState().connect({ source: a, target: b })
+    useRoadmapStore.getState().connect({ source: b, target: c })
+    useRoadmapStore.getState().setSelection([b])
+    useRoadmapStore.getState().removeSelection()
+    expect(useRoadmapStore.getState().nodes).toHaveLength(2)
+    expect(useRoadmapStore.getState().edges).toHaveLength(0)
+  })
+
+  it('removeSelection clears selection afterward', () => {
+    useRoadmapStore.getState().addNode('process')
+    const id = useRoadmapStore.getState().nodes[0].id
+    useRoadmapStore.getState().setSelection([id])
+    useRoadmapStore.getState().removeSelection()
+    expect(useRoadmapStore.getState().selection).toEqual([])
   })
 
   it('setpoint is null on an empty roadmap', () => {

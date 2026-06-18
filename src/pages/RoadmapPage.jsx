@@ -10,13 +10,14 @@ import {
   addEdge,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { ArrowLeft, X } from 'lucide-react'
+import { ArrowLeft, X, MousePointer2 } from 'lucide-react'
 import { useRoadmapStore } from '../stores/useRoadmapStore'
 import ProcessNode from '../components/roadmap/ProcessNode'
 import ConditionNode from '../components/roadmap/ConditionNode'
 import StageLabelNode from '../components/roadmap/StageLabelNode'
 import ImageNode from '../components/roadmap/ImageNode'
 import TrashZone from '../components/roadmap/TrashZone'
+import SelectionActionBar from '../components/roadmap/SelectionActionBar'
 import TimelineRuler from '../components/roadmap/TimelineRuler'
 import { findProximityConnection } from '../utils/findProximityConnection'
 import { computeNodeCenter } from '../utils/computeNodeCenter'
@@ -48,6 +49,13 @@ export default function RoadmapPage({ onClose }) {
   const removeEdge = useRoadmapStore((s) => s.removeEdge)
   const detachNode = useRoadmapStore((s) => s.detachNode)
   const setpoint = useRoadmapStore((s) => s.setpoint)
+  const selection = useRoadmapStore((s) => s.selection)
+  const setSelection = useRoadmapStore((s) => s.setSelection)
+  const clearSelection = useRoadmapStore((s) => s.clearSelection)
+  const removeSelection = useRoadmapStore((s) => s.removeSelection)
+
+  // Mobile select mode — tapping a block toggles its selection membership.
+  const [mobileSelectMode, setMobileSelectMode] = useState(false)
 
   const onNodesChange = useCallback(
     (changes) => setNodes(applyNodeChanges(changes, nodes)),
@@ -126,11 +134,25 @@ export default function RoadmapPage({ onClose }) {
   const onScrub = useCallback((x) => {
     rfRef.current?.setViewport({ ...rfRef.current.getViewport(), x })
   }, [])
-  // Selecting a block pans the canvas so it sits centred on screen (zoom kept).
+  // Sync React Flow selection → store (fired by marquee/shift-click on desktop)
+  const onSelectionChange = useCallback(
+    ({ nodes: selected }) => {
+      setSelection(selected.map((n) => n.id))
+    },
+    [setSelection],
+  )
+
+  // Selecting a block: mobile select mode toggles membership; otherwise pan to centre.
   const onNodeClick = useCallback((_event, node) => {
+    if (mobileSelectMode) {
+      setNodes(nodes.map((n) =>
+        n.id === node.id ? { ...n, selected: !n.selected } : n,
+      ))
+      return
+    }
     const c = computeNodeCenter(node)
     rfRef.current?.setCenter(c.x, c.y, { zoom: rfRef.current.getViewport().zoom, duration: 400 })
-  }, [])
+  }, [mobileSelectMode, nodes, setNodes])
 
   // Drop a new block at the centre of whatever the user is currently viewing
   // (not a fixed spot on the canvas). A small stagger keeps repeated adds from
@@ -174,6 +196,8 @@ export default function RoadmapPage({ onClose }) {
           onNodeDragStart={onNodeDragStart}
           onNodeDrag={onNodeDrag}
           onNodeDragStop={onNodeDragStop}
+          onSelectionChange={onSelectionChange}
+          multiSelectionKeyCode="Shift"
           onInit={(instance) => {
             rfRef.current = instance
             const setpointNode = setpoint ? nodes.find((n) => n.id === setpoint) : null
@@ -231,7 +255,45 @@ export default function RoadmapPage({ onClose }) {
                 </div>
                 <span className="pixel-font text-[8px] text-ink">Image</span>
               </button>
+              {/* Mobile select mode toggle */}
+              <button
+                onClick={() => {
+                  if (mobileSelectMode) {
+                    setMobileSelectMode(false)
+                    clearSelection()
+                    setNodes(nodes.map((n) => ({ ...n, selected: false })))
+                  } else {
+                    setMobileSelectMode(true)
+                  }
+                }}
+                className={[
+                  'flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl active:scale-95 transition-all',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand md:hidden',
+                  mobileSelectMode ? 'bg-brand/20 hover:bg-brand/30' : 'hover:bg-brand/10',
+                ].join(' ')}
+                aria-label={mobileSelectMode ? 'Exit select mode' : 'Enter select mode'}
+                aria-pressed={mobileSelectMode}
+              >
+                <MousePointer2 size={16} className={mobileSelectMode ? 'text-brand' : 'text-gray-500'} strokeWidth={2} />
+                <span className="pixel-font text-[8px] text-ink">Select</span>
+              </button>
             </div>
+          </Panel>
+
+          {/* Selection action bar */}
+          <Panel position="bottom-center">
+            <SelectionActionBar
+              count={selection.length}
+              onDelete={() => {
+                removeSelection()
+                setMobileSelectMode(false)
+              }}
+              onCancel={() => {
+                clearSelection()
+                setNodes(nodes.map((n) => ({ ...n, selected: false })))
+                setMobileSelectMode(false)
+              }}
+            />
           </Panel>
 
         </ReactFlow>
