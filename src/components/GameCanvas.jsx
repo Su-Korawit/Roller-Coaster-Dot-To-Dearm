@@ -7,6 +7,7 @@ import { MAP_ITEM_BY_KEY } from '../constants/mapItems'
 import { MBTI_TYPES, GAME_ASSETS, GAME_ASSET_BY_KEY } from '../game/assetManifest'
 import { cloudAsset } from '../utils/cloudAsset'
 import { getMapConfig, DEFAULT_MAP_CONFIGS } from '../utils/mapConfig'
+import MapPalette from './MapPalette'
 
 // â”€â”€ CHARACTER MODE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 0 = Basic_Charakter (1 à¸•à¸±à¸§)
@@ -283,13 +284,16 @@ class GameScene extends Phaser.Scene {
 
     // Decoration objects placed by the map owner.
     this._decorGroup = this.add.group()
+    this._mapScale = mapScale
     this._renderDecorations(mapScale)
 
     // Re-render decorations when the store pushes a change (e.g. after hydration).
-    this.game.events.on('mapObjectsChanged', () => this._renderDecorations(mapScale))
-    this.events.once('shutdown', () =>
+    this.game.events.on('mapObjectsChanged', () => this._renderDecorations(this._mapScale))
+    this.game.events.on('editModeChanged',   () => this._renderDecorations(this._mapScale))
+    this.events.once('shutdown', () => {
       this.game.events.off('mapObjectsChanged', undefined, this)
-    )
+      this.game.events.off('editModeChanged',   undefined, this)
+    })
 
     // Door trigger — enter indoor
     this.transitioning = false
@@ -328,6 +332,15 @@ class GameScene extends Phaser.Scene {
     this.lastClickTime = 0
 
     this.input.on('pointerdown', (pointer) => {
+      // In edit mode taps place (not move) — walking is suppressed.
+      if (this.registry.get('editMode')) {
+        const selectedKey = this.registry.get('selectedItemKey')
+        if (selectedKey) {
+          useWorldStore.getState().addObject({ key: selectedKey, x: pointer.worldX, y: pointer.worldY })
+        }
+        return
+      }
+
       const now = this.time.now
       if (now - this.lastClickTime < DOUBLE_CLICK_MS) {
         this.isSprinting = !this.isSprinting
@@ -466,15 +479,25 @@ class GameScene extends Phaser.Scene {
 
   // Destroy and re-spawn all decoration sprites from the registry's mapObjects.
   // Sprites sit above tilemap layers (depth 5) but below the player (depth 10).
+  // In edit mode each sprite is interactive — tapping it removes it from the store.
   _renderDecorations(mapScale) {
     this._decorGroup.clear(true, true)
-    const objects = this.registry.get('mapObjects') ?? []
-    objects.forEach(({ key, x, y }) => {
+    const objects   = this.registry.get('mapObjects') ?? []
+    const editMode  = this.registry.get('editMode') ?? false
+    objects.forEach(({ key, x, y }, index) => {
       const item = MAP_ITEM_BY_KEY[key]
       if (!item || !this.textures.exists(item.spriteKey)) return
       const img = this.add.image(x, y, item.spriteKey)
       img.setScale(mapScale * 0.5)
       img.setDepth(5)
+      if (editMode) {
+        img.setInteractive({ useHandCursor: true })
+        img.on('pointerdown', (ptr) => {
+          ptr.event.stopPropagation()
+          useWorldStore.getState().removeObject(index)
+        })
+        img.setTint(0xddaaff)
+      }
       this._decorGroup.add(img)
     })
   }
@@ -799,13 +822,24 @@ export default function GameCanvas({ active = true }) {
 
   // Personal Map decorations — push into the Phaser registry and notify the
   // scene whenever the store updates (e.g. after sessionBootstrap hydrates).
-  const mapObjects = useWorldStore((s) => s.mapObjects)
+  const mapObjects      = useWorldStore((s) => s.mapObjects)
+  const editMode        = useWorldStore((s) => s.editMode)
+  const selectedItemKey = useWorldStore((s) => s.selectedItemKey)
+
   useEffect(() => {
     const game = gameRef.current
     if (!game) return
     game.registry.set('mapObjects', mapObjects)
     game.events.emit('mapObjectsChanged')
   }, [mapObjects])
+
+  useEffect(() => {
+    const game = gameRef.current
+    if (!game) return
+    game.registry.set('editMode', editMode)
+    game.registry.set('selectedItemKey', selectedItemKey)
+    game.events.emit('editModeChanged')
+  }, [editMode, selectedItemKey])
 
   useEffect(() => {
     let game = null
@@ -831,6 +865,8 @@ export default function GameCanvas({ active = true }) {
       game.registry.set('mapConfigs', assetUrlsRef.current.mapConfigs)
       game.registry.set('tilesetUrls', assetUrlsRef.current.tilesetUrls)
       game.registry.set('mapObjects', useWorldStore.getState().mapObjects)
+      game.registry.set('editMode', useWorldStore.getState().editMode)
+      game.registry.set('selectedItemKey', useWorldStore.getState().selectedItemKey)
       gameRef.current = game
       game.events.on('zoomChanged', (v) => {
         setZoom(+v.toFixed(1))
@@ -908,6 +944,7 @@ export default function GameCanvas({ active = true }) {
         ref={containerRef}
         style={{ width: '100%', height: '100%', overflow: 'hidden' }}
       />
+      <MapPalette />
       <div style={{
         position: 'absolute',
         bottom: 24,

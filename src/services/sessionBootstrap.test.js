@@ -9,7 +9,10 @@ const m = vi.hoisted(() => ({
   hydrateRoadmap: vi.fn(),
   setRoadmapSyncUser: vi.fn(),
   hydrateMap: vi.fn(),
+  armMapSync: vi.fn(),
+  disarmMapSync: vi.fn(),
   setCoins: vi.fn(),
+  setMapOwner: vi.fn(),
   getDoc: vi.fn(),
   setDoc: vi.fn(),
 }))
@@ -25,6 +28,9 @@ vi.mock('../lib/db', () => ({
 vi.mock('../stores/useUserStore', () => ({
   useUserStore: { getState: () => ({ setCoins: m.setCoins }) },
 }))
+vi.mock('../stores/useWorldStore', () => ({
+  useWorldStore: { getState: () => ({ setMapOwner: m.setMapOwner }) },
+}))
 vi.mock('../utils/syncSelectToFirestore', () => ({
   hydrateSelectStoreFromFirestore: (...a) => m.hydrateSelect(...a),
 }))
@@ -36,13 +42,15 @@ vi.mock('../lib/syncManager', () => ({
   hydrateRoadmapFromFirestore: (...a) => m.hydrateRoadmap(...a),
   setRoadmapSyncUser: (...a) => m.setRoadmapSyncUser(...a),
   hydrateMapFromFirestore: (...a) => m.hydrateMap(...a),
+  armMapSync: (...a) => m.armMapSync(...a),
+  disarmMapSync: (...a) => m.disarmMapSync(...a),
 }))
 
 const { bootstrapSession, teardownSession } = await import('./sessionBootstrap')
 
 describe('bootstrapSession', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    vi.resetAllMocks()
     vi.spyOn(console, 'error').mockImplementation(() => {})
     m.getDoc.mockResolvedValue({ exists: () => true, data: () => ({ coins: 0 }) })
   })
@@ -68,6 +76,12 @@ describe('bootstrapSession', () => {
     await bootstrapSession({ uid: 'u1' })
     expect(m.hydrateRoadmap).toHaveBeenCalledWith('u1')
   })
+
+  it('sets the current map owner to own uid and arms the map sync writer', async () => {
+    await bootstrapSession({ uid: 'u1' })
+    expect(m.setMapOwner).toHaveBeenCalledWith('u1')
+    expect(m.armMapSync).toHaveBeenCalledWith('u1')
+  })
 })
 
 describe('teardownSession', () => {
@@ -80,5 +94,11 @@ describe('teardownSession', () => {
     expect(m.setPortfolioSyncUser).toHaveBeenCalledWith(null)
     expect(m.setTaskSyncUser).toHaveBeenCalledWith(null)
     expect(m.setRoadmapSyncUser).toHaveBeenCalledWith(null)
+  })
+
+  it('disarms the map sync writer and clears the map owner on logout', () => {
+    teardownSession()
+    expect(m.disarmMapSync).toHaveBeenCalled()
+    expect(m.setMapOwner).toHaveBeenCalledWith(null)
   })
 })

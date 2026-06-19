@@ -27,6 +27,7 @@ vi.stubGlobal('localStorage', {
 const { useRoadmapStore } = await import('../stores/useRoadmapStore')
 const { useTaskStore } = await import('../stores/useTaskStore')
 const { useUserStore } = await import('../stores/useUserStore')
+const { useWorldStore } = await import('../stores/useWorldStore')
 const {
   syncRoadmapToFirestore,
   hydrateRoadmapFromFirestore,
@@ -34,6 +35,8 @@ const {
   hydratePortfolioFromFirestore,
   syncMapToFirestore,
   hydrateMapFromFirestore,
+  armMapSync,
+  disarmMapSync,
 } = await import('./syncManager')
 
 describe('SyncManager (roadmap instance)', () => {
@@ -170,7 +173,6 @@ describe('SyncManager (map instance)', () => {
       data: () => ({ objects: cloudObjects }),
     })
 
-    const { useWorldStore } = await import('../stores/useWorldStore')
     useWorldStore.setState({ mapObjects: [] })
 
     await hydrateMapFromFirestore('uid-123')
@@ -181,11 +183,77 @@ describe('SyncManager (map instance)', () => {
   it('leaves mapObjects empty when the map doc has no objects field', async () => {
     getDoc.mockResolvedValue({ exists: () => true, data: () => ({}) })
 
-    const { useWorldStore } = await import('../stores/useWorldStore')
     useWorldStore.setState({ mapObjects: [] })
 
     await hydrateMapFromFirestore('uid-123')
 
     expect(useWorldStore.getState().mapObjects).toEqual([])
+  })
+})
+
+describe('SyncManager (armMapSync / disarmMapSync)', () => {
+  beforeEach(() => {
+    setDoc.mockReset()
+    disarmMapSync()
+    useWorldStore.setState({
+      mapObjects: [],
+      currentMapOwnerUid: null,
+      editMode: false,
+      selectedItemKey: null,
+    })
+  })
+
+  it('debounces a write to maps/{uid} when mapObjects change on the owner\'s own map', async () => {
+    vi.useFakeTimers()
+    setDoc.mockResolvedValue(undefined)
+
+    useWorldStore.setState({ currentMapOwnerUid: 'uid-123' })
+    armMapSync('uid-123')
+
+    useWorldStore.getState().addObject({ key: 'wood_bridge', x: 10, y: 20 })
+
+    // Not yet — debounce hasn't fired
+    expect(setDoc).not.toHaveBeenCalled()
+
+    await vi.runAllTimersAsync()
+
+    expect(setDoc).toHaveBeenCalledWith(
+      { _path: 'maps/uid-123' },
+      expect.objectContaining({ objects: [{ key: 'wood_bridge', x: 10, y: 20 }] }),
+      { merge: true },
+    )
+
+    vi.useRealTimers()
+  })
+
+  it('does not write when the signed-in user is viewing someone else\'s map', async () => {
+    vi.useFakeTimers()
+
+    // uid-123 is logged in but viewing uid-other's map
+    useWorldStore.setState({ currentMapOwnerUid: 'uid-other' })
+    armMapSync('uid-123')
+
+    useWorldStore.getState().addObject({ key: 'wood_bridge', x: 10, y: 20 })
+    await vi.runAllTimersAsync()
+
+    expect(setDoc).not.toHaveBeenCalled()
+
+    vi.useRealTimers()
+  })
+
+  it('stops writing after disarmMapSync is called', async () => {
+    vi.useFakeTimers()
+    setDoc.mockResolvedValue(undefined)
+
+    useWorldStore.setState({ currentMapOwnerUid: 'uid-123' })
+    armMapSync('uid-123')
+    disarmMapSync()
+
+    useWorldStore.getState().addObject({ key: 'wood_bridge', x: 10, y: 20 })
+    await vi.runAllTimersAsync()
+
+    expect(setDoc).not.toHaveBeenCalled()
+
+    vi.useRealTimers()
   })
 })

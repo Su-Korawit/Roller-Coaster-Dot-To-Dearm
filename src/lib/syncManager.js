@@ -148,6 +148,39 @@ export const setPortfolioSyncUser = portfolioSync.setSyncUser
 // push/hydrate functions rather than createFirestoreSync (which always writes
 // to refs.user). The debounced writer is wired up in sessionBootstrap.
 
+// ── Personal Map debounced writer ────────────────────────────────────────────
+// Module-level state mirrors the createFirestoreSync lifecycle pattern but writes
+// to refs.map (not refs.user), and only fires when viewing the owner's own map.
+let _mapTimer = null
+let _mapCurrentUid = null
+let _mapSubscribed = false
+
+export function armMapSync(uid) {
+  _mapCurrentUid = uid
+  if (!uid) {
+    clearTimeout(_mapTimer)
+    return
+  }
+  if (_mapSubscribed) return
+  _mapSubscribed = true
+  useWorldStore.subscribe((state, prev) => {
+    if (!_mapCurrentUid) return
+    if (state.mapObjects === prev.mapObjects) return
+    if (state.currentMapOwnerUid !== _mapCurrentUid) return
+    clearTimeout(_mapTimer)
+    _mapTimer = setTimeout(
+      () => syncMapToFirestore(_mapCurrentUid, useWorldStore.getState().mapObjects),
+      1000,
+    )
+  })
+}
+
+export function disarmMapSync() {
+  _mapCurrentUid = null
+  clearTimeout(_mapTimer)
+  _mapSubscribed = false
+}
+
 export async function syncMapToFirestore(uid, objects) {
   if (!uid) return
   try {

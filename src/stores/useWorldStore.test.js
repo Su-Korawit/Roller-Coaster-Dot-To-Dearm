@@ -4,7 +4,12 @@ const { useWorldStore } = await import('./useWorldStore')
 
 describe('useWorldStore', () => {
   beforeEach(() => {
-    useWorldStore.setState({ currentMapOwnerUid: null, mapObjects: [] })
+    useWorldStore.setState({
+      currentMapOwnerUid: null,
+      mapObjects: [],
+      editMode: false,
+      selectedItemKey: null,
+    })
   })
 
   it('initializes with null currentMapOwnerUid', () => {
@@ -37,5 +42,102 @@ describe('useWorldStore', () => {
     useWorldStore.getState().setMapObjects([{ key: 'grass_things', x: 50, y: 50 }])
     expect(useWorldStore.getState().mapObjects).toHaveLength(1)
     expect(useWorldStore.getState().mapObjects[0].key).toBe('grass_things')
+  })
+
+  // ── Edit mode ────────────────────────────────────────────────────────────
+
+  it('initializes with editMode false', () => {
+    expect(useWorldStore.getState().editMode).toBe(false)
+  })
+
+  it('toggleEditMode switches editMode on then off', () => {
+    useWorldStore.getState().toggleEditMode()
+    expect(useWorldStore.getState().editMode).toBe(true)
+    useWorldStore.getState().toggleEditMode()
+    expect(useWorldStore.getState().editMode).toBe(false)
+  })
+
+  // ── Palette selection ────────────────────────────────────────────────────
+
+  it('initializes with selectedItemKey null', () => {
+    expect(useWorldStore.getState().selectedItemKey).toBeNull()
+  })
+
+  it('setSelectedItem sets selectedItemKey', () => {
+    useWorldStore.getState().setSelectedItem('wood_bridge')
+    expect(useWorldStore.getState().selectedItemKey).toBe('wood_bridge')
+  })
+
+  it('setSelectedItem can clear back to null', () => {
+    useWorldStore.getState().setSelectedItem('wood_bridge')
+    useWorldStore.getState().setSelectedItem(null)
+    expect(useWorldStore.getState().selectedItemKey).toBeNull()
+  })
+
+  // ── addObject ────────────────────────────────────────────────────────────
+
+  it('addObject appends a decoration to mapObjects', () => {
+    useWorldStore.getState().addObject({ key: 'wood_bridge', x: 100, y: 200 })
+    expect(useWorldStore.getState().mapObjects).toEqual([
+      { key: 'wood_bridge', x: 100, y: 200 },
+    ])
+  })
+
+  it('addObject appends without losing existing objects', () => {
+    useWorldStore.setState({ mapObjects: [{ key: 'wood_bridge', x: 0, y: 0 }] })
+    useWorldStore.getState().addObject({ key: 'grass_things', x: 50, y: 50 })
+    expect(useWorldStore.getState().mapObjects).toHaveLength(2)
+  })
+
+  // ── removeObject ─────────────────────────────────────────────────────────
+
+  it('removeObject removes the decoration at the given index', () => {
+    useWorldStore.setState({
+      mapObjects: [
+        { key: 'wood_bridge', x: 0, y: 0 },
+        { key: 'grass_things', x: 50, y: 50 },
+      ],
+    })
+    useWorldStore.getState().removeObject(0)
+    expect(useWorldStore.getState().mapObjects).toHaveLength(1)
+    expect(useWorldStore.getState().mapObjects[0].key).toBe('grass_things')
+  })
+
+  it('removeObject leaves other objects untouched', () => {
+    useWorldStore.setState({
+      mapObjects: [
+        { key: 'wood_bridge', x: 0, y: 0 },
+        { key: 'grass_things', x: 50, y: 50 },
+        { key: 'wood_bridge', x: 100, y: 100 },
+      ],
+    })
+    useWorldStore.getState().removeObject(1)
+    expect(useWorldStore.getState().mapObjects).toHaveLength(2)
+    expect(useWorldStore.getState().mapObjects[0].key).toBe('wood_bridge')
+    expect(useWorldStore.getState().mapObjects[1].x).toBe(100)
+  })
+
+  // ── moveObject ───────────────────────────────────────────────────────────
+
+  it('moveObject updates the position of the decoration at the given index', () => {
+    useWorldStore.setState({ mapObjects: [{ key: 'wood_bridge', x: 0, y: 0 }] })
+    useWorldStore.getState().moveObject(0, 300, 400)
+    expect(useWorldStore.getState().mapObjects[0]).toEqual({
+      key: 'wood_bridge', x: 300, y: 400,
+    })
+  })
+
+  it('moveObject preserves key and other objects', () => {
+    useWorldStore.setState({
+      mapObjects: [
+        { key: 'wood_bridge', x: 0, y: 0 },
+        { key: 'grass_things', x: 50, y: 50 },
+      ],
+    })
+    useWorldStore.getState().moveObject(1, 200, 250)
+    expect(useWorldStore.getState().mapObjects[0].x).toBe(0)
+    expect(useWorldStore.getState().mapObjects[1]).toEqual({
+      key: 'grass_things', x: 200, y: 250,
+    })
   })
 })

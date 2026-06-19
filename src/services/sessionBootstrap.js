@@ -13,6 +13,7 @@
 import { getDoc, setDoc } from 'firebase/firestore'
 import { refs, shapes } from '../lib/db'
 import { useUserStore } from '../stores/useUserStore'
+import { useWorldStore } from '../stores/useWorldStore'
 import { hydrateSelectStoreFromFirestore } from '../utils/syncSelectToFirestore'
 import {
   hydratePortfolioFromFirestore,
@@ -22,6 +23,8 @@ import {
   hydrateRoadmapFromFirestore,
   setRoadmapSyncUser,
   hydrateMapFromFirestore,
+  armMapSync,
+  disarmMapSync,
 } from '../lib/syncManager'
 
 function readSelectStore() {
@@ -94,6 +97,8 @@ export async function bootstrapSession(firebaseUser) {
 
   try {
     await hydrateMapFromFirestore(uid)
+    useWorldStore.getState().setMapOwner(uid)
+    armMapSync(uid)
   } catch (e) {
     console.error('[sessionBootstrap] hydrate map failed:', e)
   }
@@ -106,4 +111,6 @@ export function teardownSession() {
   setPortfolioSyncUser(null)
   setTaskSyncUser(null)
   setRoadmapSyncUser(null)
+  disarmMapSync()
+  useWorldStore.getState().setMapOwner(null)
 }
