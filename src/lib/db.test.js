@@ -11,7 +11,7 @@ vi.mock('firebase/firestore', () => ({
   serverTimestamp: () => ({ _type: 'serverTimestamp' }),
 }))
 
-const { shapes, refs, cols } = await import('./db')
+const { shapes, refs, cols, prefixUpperBound } = await import('./db')
 
 describe('shapes.readProfile', () => {
   it('reads canonical nested profile.* fields', () => {
@@ -27,7 +27,7 @@ describe('shapes.readProfile', () => {
     })
   })
 
-  it('falls back to legacy top-level fields, mapping mastery → masteryTrack', () => {
+  it('falls back to legacy top-level fields, mapping mastery to masteryTrack', () => {
     const legacyDoc = { mbti: 'ENFP', program: 'Med', university: 'MU', mastery: 'beginner' }
     const r = shapes.readProfile(legacyDoc)
     expect(r.mbti).toBe('ENFP')
@@ -43,7 +43,7 @@ describe('shapes.readProfile', () => {
 })
 
 describe('shapes.profileFields', () => {
-  it('keeps only non-empty fields and maps mastery → masteryTrack', () => {
+  it('keeps only non-empty fields and maps mastery to masteryTrack', () => {
     expect(shapes.profileFields({ mbti: 'INTJ', career: '', mastery: 'advanced', university: null, program: 'CS' }))
       .toEqual({ mbti: 'INTJ', masteryTrack: 'advanced', program: 'CS' })
   })
@@ -58,5 +58,15 @@ describe('refs.map', () => {
 describe('cols.maps', () => {
   it('is the maps collection ref', () => {
     expect(cols.maps).toEqual({ _col: 'maps' })
+  })
+})
+
+describe('prefixUpperBound', () => {
+  it('appends U+F8FF for Firestore prefix range upper bound', () => {
+    expect(prefixUpperBound('test')).toBe('test')
+  })
+
+  it('appends U+F8FF to empty string', () => {
+    expect(prefixUpperBound('')).toBe('')
   })
 })

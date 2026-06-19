@@ -34,6 +34,8 @@ export const cols = {
 }
 
 // ── Query builders ────────────────────────────────────────────────────────────
+export const prefixUpperBound = (term) => term + ''
+
 export const queries = {
   chatsByMember:     (uid)      => query(cols.chats, where('members', 'array-contains', uid)),
   messagesByChat:    (chatId)   => query(cols.chatMessages(chatId), orderBy('createdAt', 'asc')),
@@ -42,6 +44,12 @@ export const queries = {
     cols.users,
     where('displayName', '>=', term),
     where('displayName', '<=', term + ''),
+    limit(20),
+  ),
+  searchUsersBySchool: (term)    => query(
+    cols.users,
+    where('schoolName', '>=', term),
+    where('schoolName', '<=', prefixUpperBound(term)),
     limit(20),
   ),
   matchedUsers:    () => query(cols.users, where('matchScore', '>', 0), limit(20)),

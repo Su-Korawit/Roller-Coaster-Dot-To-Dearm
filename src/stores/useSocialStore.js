@@ -148,8 +148,18 @@ export const useSocialStore = create((set) => ({
       set({ searchResults: [] })
       return
     }
-    const snap = await getDocs(queries.searchUsersByName(term))
-    const results = snap.docs.map((d) => d.data()).filter((u) => u.uid !== uid)
+    const [nameSnap, schoolSnap] = await Promise.all([
+      getDocs(queries.searchUsersByName(term)),
+      getDocs(queries.searchUsersBySchool(term)),
+    ])
+    const seen = new Set()
+    const results = [...nameSnap.docs, ...schoolSnap.docs]
+      .map((d) => d.data())
+      .filter((u) => {
+        if (u.uid === uid || seen.has(u.uid)) return false
+        seen.add(u.uid)
+        return true
+      })
     set({ searchResults: results })
   },
 

@@ -18,7 +18,9 @@ vi.mock('firebase/firestore', () => ({
   limit: vi.fn(),
 }))
 
-const { calculateMatchScore } = await import('./useSocialStore')
+import { getDocs } from 'firebase/firestore'
+import { auth } from '../firebase'
+const { calculateMatchScore, useSocialStore } = await import('./useSocialStore')
 
 describe('calculateMatchScore (through the profile shape seam)', () => {
   it('scores 40 for an exact program match on nested profile.*', () => {
@@ -39,5 +41,25 @@ describe('calculateMatchScore (through the profile shape seam)', () => {
   it('bridges legacy mastery name to masteryTrack', () => {
     // one side legacy top-level `mastery`, other side nested `masteryTrack`
     expect(calculateMatchScore({ mastery: 'adv' }, { profile: { masteryTrack: 'adv' } })).toBe(25)
+  })
+})
+
+describe('useSocialStore.searchUsers', () => {
+  it('merges displayName and schoolName results, deduplicates by uid', async () => {
+    auth.currentUser = { uid: 'me' }
+    const userA = { uid: 'a', displayName: 'Alice' }
+    const userB = { uid: 'b', displayName: 'Bob', schoolName: 'โรงเรียนสวนกุหลาบ' }
+
+    // First getDocs call (name query) → userA
+    // Second getDocs call (school query) → userB + userA (duplicate)
+    getDocs
+      .mockResolvedValueOnce({ docs: [{ data: () => userA }] })
+      .mockResolvedValueOnce({ docs: [{ data: () => userB }, { data: () => userA }] })
+
+    await useSocialStore.getState().searchUsers('test')
+
+    const results = useSocialStore.getState().searchResults
+    expect(results).toHaveLength(2)
+    expect(results.map((u) => u.uid).sort()).toEqual(['a', 'b'])
   })
 })
