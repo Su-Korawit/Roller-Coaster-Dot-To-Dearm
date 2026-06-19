@@ -10,6 +10,7 @@ import { useSocialStore } from '../stores/useSocialStore'
 import { useUserStore } from '../stores/useUserStore'
 import { mbtiColor } from '../constants/mbtiColors'
 import ShopChatView from './shop/ShopChatView'
+import { visitMap } from '../lib/syncManager'
 
 const GIFTS = [
   { emoji: '🌟', name: 'Star',   coins: 10 },
@@ -211,7 +212,7 @@ function CreditModal({ msg, friendUser, onDone, onClose }) {
 }
 
 // ─── ChatWindowView ───────────────────────────────────────────────────────────
-function ChatWindowView({ user, onBack, onAdminContacted }) {
+function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
   const { activeChat, messages, sendMessage, subscribeMessages } = useChatStore()
   const chats = useChatStore((s) => s.chats)
 
@@ -480,6 +481,15 @@ function ChatWindowView({ user, onBack, onAdminContacted }) {
         >
           🎁
         </button>
+        {!isAdminChat && otherUser?.uid && (
+          <button
+            onClick={() => onVisitMap?.(otherUser.uid)}
+            className="w-9 h-9 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-lg active:scale-90 transition-transform shrink-0"
+            title={`เข้าแมพ ${otherUser.displayName || ''}`}
+          >
+            🏠
+          </button>
+        )}
         <button
           onClick={() => alert('นัดหมาย — เร็วๆ นี้!')}
           className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-lg active:scale-90 transition-transform shrink-0"
@@ -836,6 +846,10 @@ export default function ChatPanel({ onClose, initialView = 'list', onAdminContac
               user={user}
               onBack={() => setView('list')}
               onAdminContacted={onAdminContacted}
+              onVisitMap={async (uid) => {
+                await visitMap(uid)
+                onClose()
+              }}
             />
           )}
         </div>

@@ -1,7 +1,7 @@
 import { useWorldStore } from '../stores/useWorldStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { MAP_ITEMS } from '../constants/mapItems'
-import { syncMapToFirestore } from '../lib/syncManager'
+import { syncMapToFirestore, returnHome } from '../lib/syncManager'
 
 export default function MapPalette() {
   const user = useAuthStore((s) => s.user)
@@ -12,8 +12,41 @@ export default function MapPalette() {
   const setSelectedItem    = useWorldStore((s) => s.setSelectedItem)
   const mapObjects         = useWorldStore((s) => s.mapObjects)
 
-  // Only the map owner sees the palette
-  if (!user || currentMapOwnerUid !== user.uid) return null
+  if (!user || !currentMapOwnerUid) return null
+
+  // Visitor mode: viewing someone else's map
+  const isVisiting = currentMapOwnerUid !== user.uid
+  if (isVisiting) {
+    return (
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 56,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 30,
+          pointerEvents: 'auto',
+        }}
+      >
+        <button
+          onClick={() => returnHome(user.uid)}
+          style={{
+            background: 'rgba(26,16,53,0.85)',
+            border: '2px solid rgba(167,139,218,0.5)',
+            borderRadius: 20,
+            color: '#fff',
+            padding: '7px 20px',
+            fontSize: 13,
+            fontFamily: 'Noto Sans Thai, sans-serif',
+            cursor: 'pointer',
+            backdropFilter: 'blur(4px)',
+          }}
+        >
+          ← กลับแมพเรา
+        </button>
+      </div>
+    )
+  }
 
   async function handleSave() {
     await syncMapToFirestore(user.uid, mapObjects)

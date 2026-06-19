@@ -37,6 +37,8 @@ const {
   hydrateMapFromFirestore,
   armMapSync,
   disarmMapSync,
+  visitMap,
+  returnHome,
 } = await import('./syncManager')
 
 describe('SyncManager (roadmap instance)', () => {
@@ -255,5 +257,82 @@ describe('SyncManager (armMapSync / disarmMapSync)', () => {
     expect(setDoc).not.toHaveBeenCalled()
 
     vi.useRealTimers()
+  })
+})
+
+describe('visitMap / returnHome', () => {
+  beforeEach(() => {
+    setDoc.mockReset()
+    getDoc.mockReset()
+    disarmMapSync()
+    useWorldStore.setState({
+      currentMapOwnerUid: 'uid-self',
+      mapObjects: [{ key: 'wood_bridge', x: 0, y: 0 }],
+      editMode: false,
+      selectedItemKey: null,
+    })
+  })
+
+  it('visitMap swaps currentMapOwnerUid to the visited owner', async () => {
+    getDoc.mockResolvedValue({ exists: () => false, data: () => ({}) })
+
+    await visitMap('uid-friend')
+
+    expect(useWorldStore.getState().currentMapOwnerUid).toBe('uid-friend')
+  })
+
+  it('visitMap clears mapObjects before loading the visited map', async () => {
+    let capturedObjects = null
+    getDoc.mockImplementation(async () => {
+      capturedObjects = useWorldStore.getState().mapObjects
+      return { exists: () => false, data: () => ({}) }
+    })
+
+    await visitMap('uid-friend')
+
+    expect(capturedObjects).toEqual([])
+  })
+
+  it('visitMap loads the visited owner\'s objects from Firestore', async () => {
+    const friendObjects = [{ key: 'grass_things', x: 100, y: 200 }]
+    getDoc.mockResolvedValue({
+      exists: () => true,
+      data: () => ({ objects: friendObjects }),
+    })
+
+    await visitMap('uid-friend')
+
+    expect(useWorldStore.getState().mapObjects).toEqual(friendObjects)
+  })
+
+  it('visitMap resets editMode to false', async () => {
+    useWorldStore.setState({ editMode: true })
+    getDoc.mockResolvedValue({ exists: () => false, data: () => ({}) })
+
+    await visitMap('uid-friend')
+
+    expect(useWorldStore.getState().editMode).toBe(false)
+  })
+
+  it('returnHome swaps currentMapOwnerUid back to the signed-in user', async () => {
+    useWorldStore.setState({ currentMapOwnerUid: 'uid-friend' })
+    getDoc.mockResolvedValue({ exists: () => false, data: () => ({}) })
+
+    await returnHome('uid-self')
+
+    expect(useWorldStore.getState().currentMapOwnerUid).toBe('uid-self')
+  })
+
+  it('returnHome loads self\'s objects from Firestore', async () => {
+    const ownObjects = [{ key: 'wood_bridge', x: 50, y: 75 }]
+    useWorldStore.setState({ currentMapOwnerUid: 'uid-friend', mapObjects: [] })
+    getDoc.mockResolvedValue({
+      exists: () => true,
+      data: () => ({ objects: ownObjects }),
+    })
+
+    await returnHome('uid-self')
+
+    expect(useWorldStore.getState().mapObjects).toEqual(ownObjects)
   })
 })

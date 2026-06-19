@@ -190,6 +190,20 @@ export async function syncMapToFirestore(uid, objects) {
   }
 }
 
+// Visit another user's Personal Map: swap owner, clear stale objects, load theirs.
+export async function visitMap(ownerUid) {
+  if (!ownerUid) return
+  useWorldStore.setState({ currentMapOwnerUid: ownerUid, mapObjects: [], editMode: false })
+  await hydrateMapFromFirestore(ownerUid)
+}
+
+// Return to the signed-in user's own Personal Map.
+export async function returnHome(selfUid) {
+  if (!selfUid) return
+  useWorldStore.setState({ currentMapOwnerUid: selfUid, mapObjects: [], editMode: false })
+  await hydrateMapFromFirestore(selfUid)
+}
+
 export async function hydrateMapFromFirestore(uid) {
   if (!uid) return
   try {
