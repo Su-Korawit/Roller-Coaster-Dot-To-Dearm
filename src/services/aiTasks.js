@@ -1,17 +1,8 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
-
-const GEMINI_MODEL = 'gemini-2.5-flash'
+import { getModel, parseJSONSafe } from '../lib/geminiClient'
 
 async function callGemini(prompt) {
-  const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
-  const model = genAI.getGenerativeModel({ model: GEMINI_MODEL })
-  const result = await model.generateContent(prompt)
+  const result = await getModel().generateContent(prompt)
   return result.response.text()
-}
-
-function parseJSON(text) {
-  const cleaned = text.replace(/```json|```/gi, '').trim()
-  return JSON.parse(cleaned)
 }
 
 // Generates a daily task for the active mastery journey block.
@@ -29,7 +20,7 @@ export async function generateAIDailyTask({ activeMasteryBlockId, journeys, aiLa
   const text = await callGemini(prompt)
   let parsed
   try {
-    parsed = parseJSON(text)
+    parsed = parseJSONSafe(text)
   } catch {
     console.error('AI daily task parse error. Raw:', text)
     parsed = { title: `Work on: ${block.title}`, description: 'Continue making progress on this milestone.', progress_reward: 10 }
@@ -63,7 +54,7 @@ export async function evaluateAndCompleteTask(task, userReflection, { aiLanguage
 
   try {
     const text = await callGemini(prompt)
-    const parsed = parseJSON(text)
+    const parsed = parseJSONSafe(text)
     note = parsed.summary || note
     gainedPercent = typeof parsed.progress_inc === 'number'
       ? Math.min(20, Math.max(0, parsed.progress_inc))

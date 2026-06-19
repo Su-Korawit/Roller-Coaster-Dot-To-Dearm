@@ -12,7 +12,7 @@
 //   โยน Error('AI_BAD_FORMAT') เมื่อผลลัพธ์ไม่ใช่ JSON array เพื่อให้ผู้เรียก
 //         แยกข้อความแจ้งเตือน "รูปแบบผิด" กับ "เชื่อมต่อไม่ได้" ได้เหมือนเดิม
 // ============================================================================
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { getModel, parseJSONSafe } from '../lib/geminiClient'
 
 /**
  * Generate a 5-step dual-track (mastery + TCAS) journey via Gemini.
@@ -38,16 +38,12 @@ export async function generateJourney({ career, mbti, mastery, university, progr
 
   const prompt = `Act as an expert career and skills counselor. The user is currently in this situation: ${currentSituation}, their dream career is ${desiredCareer}, their current skill mastery level is ${masteryLevel}, and their MBTI personality type is ${mbtiType}. In addition to skill mastery, the user is also preparing for university admission under the Thai system (TCAS / TGAT / TPAT, often referred to as TCAT). You MUST design a dual-track roadmap that integrates BOTH: 1) Mastery development (career skills, portfolio, real-world capability) and 2) University admission preparation (especially TCAS Round 3: exam-based track requiring TGAT/TPAT and academic subjects). Generate a personalized 5-step "Dual Mastery Journey" roadmap. REQUIREMENTS: Each step MUST clearly explain HOW to practice and master essential career skills (hands-on methods, project-based learning, feedback loops, etc.) AND ALSO include HOW to prepare for TCAS Round 3 (study system, exam strategies, subject prioritization, past papers, score optimization). Explicitly reference the structure of TCAS (Portfolio vs Round 3) and how the user should balance both paths. Tailor everything to the user's ${mbtiType} learning style and adapt to the user's current ${masteryLevel} level. Focus on actionable systems, not theory. Output strictly as a JSON array of objects with 'title' and 'description' keys. Do not include markdown formatting. IMPORTANT: Generate the content STRICTLY in ${aiLanguage} language.`
 
-  const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
-  const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' })
-  const result = await model.generateContent(prompt)
+  const result = await getModel({ model: 'gemini-3-flash-preview' }).generateContent(prompt)
   const text = result.response.text()
-
-  const cleaned = text.replace(/```json|```/gi, '').trim()
 
   let parsed
   try {
-    parsed = JSON.parse(cleaned)
+    parsed = parseJSONSafe(text)
   } catch (parseErr) {
     console.error('Gemini JSON parse error:', parseErr, '\nRaw response:', text)
     throw new Error('AI_BAD_FORMAT')
