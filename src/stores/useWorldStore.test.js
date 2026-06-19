@@ -9,6 +9,7 @@ describe('useWorldStore', () => {
       mapObjects: [],
       editMode: false,
       selectedItemKey: null,
+      remotePlayers: {},
     })
   })
 
@@ -125,6 +126,38 @@ describe('useWorldStore', () => {
     expect(useWorldStore.getState().mapObjects[0]).toEqual({
       key: 'wood_bridge', x: 300, y: 400,
     })
+  })
+
+  // ── remotePlayers ────────────────────────────────────────────────────────
+
+  it('initializes with empty remotePlayers', () => {
+    expect(useWorldStore.getState().remotePlayers).toEqual({})
+  })
+
+  it('setRemotePlayers populates the remote player map from a presence snapshot', () => {
+    const snapshot = {
+      'uid-a': { x: 10, y: 20, dir: 'down', moving: false, mbti: 'INTJ', name: 'Alice' },
+    }
+    useWorldStore.getState().setRemotePlayers(snapshot)
+    expect(useWorldStore.getState().remotePlayers).toEqual(snapshot)
+  })
+
+  it('setRemotePlayers replaces all previous remote players (handles leaves)', () => {
+    useWorldStore.getState().setRemotePlayers({
+      'uid-a': { x: 0, y: 0, mbti: 'INTJ', name: 'Alice' },
+      'uid-b': { x: 5, y: 5, mbti: 'ENFP', name: 'Bob' },
+    })
+    useWorldStore.getState().setRemotePlayers({
+      'uid-a': { x: 0, y: 0, mbti: 'INTJ', name: 'Alice' },
+    })
+    expect(Object.keys(useWorldStore.getState().remotePlayers)).toHaveLength(1)
+    expect(useWorldStore.getState().remotePlayers['uid-b']).toBeUndefined()
+  })
+
+  it('setRemotePlayers({}) clears all remote players', () => {
+    useWorldStore.getState().setRemotePlayers({ 'uid-a': { x: 0 } })
+    useWorldStore.getState().setRemotePlayers({})
+    expect(useWorldStore.getState().remotePlayers).toEqual({})
   })
 
   it('moveObject preserves key and other objects', () => {

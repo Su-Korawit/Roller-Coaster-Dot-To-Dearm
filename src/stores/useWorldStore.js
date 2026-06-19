@@ -5,9 +5,12 @@ export const useWorldStore = create((set) => ({
   mapObjects:        [],
   editMode:          false,
   selectedItemKey:   null,
+  remotePlayers:     {},
 
   setMapOwner:   (uid)     => set({ currentMapOwnerUid: uid }),
   setMapObjects: (objects) => set({ mapObjects: objects }),
+
+  setRemotePlayers: (snapshot) => set({ remotePlayers: snapshot }),
 
   toggleEditMode: () => set((s) => ({ editMode: !s.editMode })),
   setSelectedItem: (key) => set({ selectedItemKey: key }),

@@ -3,11 +3,13 @@ import { isEditableTarget } from '../utils/isEditableTarget'
 import Phaser from 'phaser'
 import { useSelectStore } from '../stores/useSelectStore'
 import { useWorldStore } from '../stores/useWorldStore'
+import { useAuthStore } from '../stores/useAuthStore'
 import { MAP_ITEM_BY_KEY } from '../constants/mapItems'
 import { MBTI_TYPES, GAME_ASSETS, GAME_ASSET_BY_KEY } from '../game/assetManifest'
 import { cloudAsset } from '../utils/cloudAsset'
 import { getMapConfig, DEFAULT_MAP_CONFIGS } from '../utils/mapConfig'
 import MapPalette from './MapPalette'
+import { joinWorld, leaveWorld, subscribeWorldPlayers, updateSelf } from '../lib/presence'
 
 // â”€â”€ CHARACTER MODE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 0 = Basic_Charakter (1 à¸•à¸±à¸§)
@@ -295,6 +297,25 @@ class GameScene extends Phaser.Scene {
       this.game.events.off('editModeChanged',   undefined, this)
     })
 
+    // Remote avatar tracking — uid → { sprite, label, targetX, targetY }
+    this._remoteAvatars = new Map()
+    this._currentDir    = 'down'
+
+    const onRemoteChanged = () => {
+      const players = this.registry.get('remotePlayers') ?? {}
+      const selfUid = this.registry.get('selfUid') ?? ''
+      this._reconcileRemotePlayers(players, selfUid)
+    }
+    this.game.events.on('remotePlayersChanged', onRemoteChanged)
+    this.events.once('shutdown', () => {
+      this.game.events.off('remotePlayersChanged', onRemoteChanged)
+      for (const entry of this._remoteAvatars.values()) {
+        entry.sprite.destroy()
+        entry.label.destroy()
+      }
+      this._remoteAvatars.clear()
+    })
+
     // Door trigger — enter indoor
     this.transitioning = false
     const doorToIndoor = map.getObjectLayer('Doors') &&
@@ -393,6 +414,8 @@ class GameScene extends Phaser.Scene {
   }
 
   update() {
+    this._tickPresence()
+
     const p1 = this.input.pointer1
     const p2 = this.input.pointer2
     if (p1.isDown && p2.isDown) {
@@ -435,6 +458,7 @@ class GameScene extends Phaser.Scene {
         const dir = Math.abs(vx) >= Math.abs(vy)
           ? (vx > 0 ? 'walk-right' : 'walk-left')
           : (vy > 0 ? 'walk-down' : 'walk-up')
+        this._currentDir = dir
         const animKey = `${this.currentMbti}-${dir}`
         if (this.player.anims.currentAnim?.key !== animKey) this.player.play(animKey)
       }
@@ -470,6 +494,7 @@ class GameScene extends Phaser.Scene {
     const dir = Math.abs(dx) > Math.abs(dy)
       ? (dx > 0 ? 'walk-right' : 'walk-left')
       : (dy > 0 ? 'walk-down'  : 'walk-up')
+    this._currentDir = dir
 
     const animKey = `${this.currentMbti}-${dir}`
     if (this.player.anims.currentAnim?.key !== animKey) {
@@ -500,6 +525,79 @@ class GameScene extends Phaser.Scene {
       }
       this._decorGroup.add(img)
     })
+  }
+
+  // Create / update / destroy remote avatar sprites to match the presence snapshot.
+  // Sprites: depth 8 (above decorations, below local player at 10).
+  // Name labels: depth 9, centered above sprite.
+  _reconcileRemotePlayers(players, selfUid) {
+    const scale = this._mapScale
+
+    // Remove avatars for players who left
+    for (const [uid, entry] of this._remoteAvatars) {
+      if (!players[uid]) {
+        entry.sprite.destroy()
+        entry.label.destroy()
+        this._remoteAvatars.delete(uid)
+      }
+    }
+
+    // Create or update avatars for current players
+    for (const [uid, state] of Object.entries(players)) {
+      if (uid === selfUid) continue
+      const { x, y, dir = 'walk-down', moving = false, mbti = 'INTJ', name = '' } = state
+      const animKey = moving ? `${mbti}-${dir}` : `${mbti}-idle`
+
+      if (this._remoteAvatars.has(uid)) {
+        const entry = this._remoteAvatars.get(uid)
+        entry.targetX = x
+        entry.targetY = y
+        if (this.anims.exists(animKey) && entry.sprite.anims.currentAnim?.key !== animKey) {
+          entry.sprite.play(animKey)
+        }
+        entry.label.setText(name)
+      } else {
+        const spriteMbti = this.textures.exists(mbti) ? mbti : MBTI_TYPES[0]
+        const sprite = this.add.sprite(x, y, spriteMbti)
+        sprite.setScale(scale)
+        sprite.setDepth(8)
+        if (this.anims.exists(animKey)) sprite.play(animKey)
+
+        const label = this.add.text(x, y - 24 * scale, name, {
+          fontSize: '8px',
+          color: '#ffffff',
+          stroke: '#000000',
+          strokeThickness: 2,
+        })
+        label.setDepth(9)
+        label.setOrigin(0.5, 1)
+
+        this._remoteAvatars.set(uid, { sprite, label, targetX: x, targetY: y })
+      }
+    }
+  }
+
+  // Runs at the top of update() every frame: lerps remote avatars and broadcasts self.
+  _tickPresence() {
+    for (const entry of this._remoteAvatars.values()) {
+      entry.sprite.x = Phaser.Math.Linear(entry.sprite.x, entry.targetX, 0.2)
+      entry.sprite.y = Phaser.Math.Linear(entry.sprite.y, entry.targetY, 0.2)
+      entry.label.x  = entry.sprite.x
+      entry.label.y  = entry.sprite.y - 24 * this._mapScale
+    }
+
+    const ownerUid = this.registry.get('ownerUid')
+    const selfUid  = this.registry.get('selfUid')
+    if (ownerUid && selfUid) {
+      updateSelf(ownerUid, selfUid, {
+        x:      this.player.x,
+        y:      this.player.y,
+        dir:    this._currentDir ?? 'down',
+        moving: this.isMoving || this.usingWasd,
+        mbti:   this.currentMbti,
+        name:   this.registry.get('selfName') ?? '',
+      })
+    }
   }
 }
 
@@ -820,11 +918,16 @@ export default function GameCanvas({ active = true }) {
   const selectedMbtiRef = useRef(selectedMbti)
   useEffect(() => { selectedMbtiRef.current = selectedMbti }, [selectedMbti])
 
+  const user    = useAuthStore((s) => s.user)
+  const selfUid = user?.uid ?? null
+
   // Personal Map decorations — push into the Phaser registry and notify the
   // scene whenever the store updates (e.g. after sessionBootstrap hydrates).
   const mapObjects      = useWorldStore((s) => s.mapObjects)
   const editMode        = useWorldStore((s) => s.editMode)
   const selectedItemKey = useWorldStore((s) => s.selectedItemKey)
+  const currentMapOwnerUid = useWorldStore((s) => s.currentMapOwnerUid)
+  const remotePlayers      = useWorldStore((s) => s.remotePlayers)
 
   useEffect(() => {
     const game = gameRef.current
@@ -840,6 +943,51 @@ export default function GameCanvas({ active = true }) {
     game.registry.set('selectedItemKey', selectedItemKey)
     game.events.emit('editModeChanged')
   }, [editMode, selectedItemKey])
+
+  // Keep selfUid and display name in the registry for GameScene to read during update().
+  useEffect(() => {
+    const game = gameRef.current
+    if (!game) return
+    game.registry.set('selfUid',  selfUid  ?? '')
+    game.registry.set('selfName', user?.displayName ?? '')
+  }, [selfUid, user])
+
+  // Push remotePlayers into the registry and notify GameScene to reconcile sprites.
+  useEffect(() => {
+    const game = gameRef.current
+    if (!game) return
+    game.registry.set('remotePlayers', remotePlayers)
+    game.events.emit('remotePlayersChanged')
+  }, [remotePlayers])
+
+  // Arm/disarm presence room whenever the visited map owner changes.
+  useEffect(() => {
+    if (!currentMapOwnerUid || !selfUid) return
+
+    const selfState = {
+      x: 0, y: 0, dir: 'down', moving: false,
+      mbti:     selectedMbtiRef.current ?? 'INTJ',
+      name:     user?.displayName ?? '',
+      photoURL: user?.photoURL ?? null,
+    }
+    joinWorld(currentMapOwnerUid, selfUid, selfState).catch(() => {})
+
+    if (gameRef.current) {
+      gameRef.current.registry.set('ownerUid', currentMapOwnerUid)
+      gameRef.current.registry.set('selfUid',  selfUid)
+      gameRef.current.registry.set('selfName', user?.displayName ?? '')
+    }
+
+    const unsub = subscribeWorldPlayers(currentMapOwnerUid, (snapshot) => {
+      useWorldStore.getState().setRemotePlayers(snapshot)
+    })
+
+    return () => {
+      leaveWorld(currentMapOwnerUid, selfUid)
+      unsub()
+      useWorldStore.getState().setRemotePlayers({})
+    }
+  }, [currentMapOwnerUid, selfUid])  // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     let game = null
