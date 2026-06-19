@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { GripVertical, Loader2, Share2, Trash, Trash2 } from 'lucide-react'
-import { addDoc, collection, doc, getDoc, increment, serverTimestamp, updateDoc } from 'firebase/firestore'
-import { db } from '../firebase'
+import { addDoc, getDoc, increment, serverTimestamp, updateDoc } from 'firebase/firestore'
+import { refs, cols } from '../lib/db'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useChatStore } from '../stores/useChatStore'
 import { useTaskStore } from '../stores/useTaskStore'
@@ -23,10 +23,10 @@ function addSharedRef(taskId, chatId, msgId) {
   localStorage.setItem('rc-shared-task-refs', JSON.stringify(refs))
 }
 async function syncSharedTaskStatus(taskId) {
-  const refs = getSharedRefs()[taskId] ?? []
-  for (const { chatId, msgId } of refs) {
+  const sharedRefs = getSharedRefs()[taskId] ?? []
+  for (const { chatId, msgId } of sharedRefs) {
     try {
-      await updateDoc(doc(db, 'chats', chatId, 'messages', msgId), {
+      await updateDoc(refs.chatMessage(chatId, msgId), {
         'taskSnapshot.status': 'completed',
       })
     } catch (e) {
@@ -56,7 +56,7 @@ function TaskShareSheet({ task, onClose }) {
       ...new Set(chats.flatMap((c) => c.members?.filter((uid) => uid !== user.uid) ?? [])),
     ].filter((uid) => !participants[uid])
     needed.forEach(async (uid) => {
-      const snap = await getDoc(doc(db, 'users', uid))
+      const snap = await getDoc(refs.user(uid))
       if (snap.exists()) setParticipants((p) => ({ ...p, [uid]: snap.data() }))
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -67,7 +67,7 @@ function TaskShareSheet({ task, onClose }) {
     if (!uid || sending) return
     setSending(chat.id)
     try {
-      const msgRef = await addDoc(collection(db, 'chats', chat.id, 'messages'), {
+      const msgRef = await addDoc(cols.chatMessages(chat.id), {
         senderId: uid,
         text: `📋 ${task.title}`,
         type: 'shared_task',
@@ -85,7 +85,7 @@ function TaskShareSheet({ task, onClose }) {
         newsItem: null,
         createdAt: serverTimestamp(),
       })
-      await updateDoc(doc(db, 'chats', chat.id), {
+      await updateDoc(refs.chat(chat.id), {
         lastMessage: `📋 ${task.title}`,
         lastMessageAt: serverTimestamp(),
         fireStacks: increment(1),

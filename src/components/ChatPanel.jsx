@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { addDoc, collection, doc, getDoc, increment, serverTimestamp, updateDoc } from 'firebase/firestore'
+import { addDoc, getDoc, increment, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { ArrowLeft, Loader2, Send, Wrench } from 'lucide-react'
-import { db } from '../firebase'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useChatStore } from '../stores/useChatStore'
-import { buildChatId, shapes } from '../lib/db'
+import { buildChatId, shapes, refs, cols } from '../lib/db'
 import { ADMIN_UID, ADMIN_DISPLAY_NAME, ADMIN_EMAIL } from '../constants/admin'
 import { useSocialStore } from '../stores/useSocialStore'
 import { useUserStore } from '../stores/useUserStore'
@@ -41,14 +40,14 @@ function GiftModal({ chatId, myUid, onClose }) {
     // Optimistic deduct — roll back on error
     addCoins(-gift.coins)
     try {
-      await addDoc(collection(db, 'chats', chatId, 'messages'), {
+      await addDoc(cols.chatMessages(chatId), {
         senderId: myUid,
         text: `${gift.emoji} ${gift.name}`,
         type: 'gift',
         giftItem: { name: gift.name, emoji: gift.emoji, coins: gift.coins },
         createdAt: serverTimestamp(),
       })
-      await updateDoc(doc(db, 'chats', chatId), {
+      await updateDoc(refs.chat(chatId), {
         lastMessage: `${gift.emoji} ส่งของขวัญ`,
         lastMessageAt: serverTimestamp(),
         fireStacks: increment(1),
@@ -149,7 +148,7 @@ function CreditModal({ msg, friendUser, onDone, onClose }) {
       if (snap.linkedJourneyKey && snap.linkedJourneyId) {
         addCreditToJourney(snap.linkedJourneyKey, snap.linkedJourneyId, creditNote)
       }
-      await addDoc(collection(db, 'users', friendUser?.uid, 'receivedCredits'), {
+      await addDoc(cols.userCredits(friendUser?.uid), {
         fromUid: user?.uid ?? '',
         fromName: user?.displayName ?? '',
         taskTitle: snap.title,
@@ -771,7 +770,7 @@ export default function ChatPanel({ onClose, initialView = 'list', onAdminContac
     ].filter((uid) => !participants[uid])
 
     needed.forEach(async (uid) => {
-      const snap = await getDoc(doc(db, 'users', uid))
+      const snap = await getDoc(refs.user(uid))
       if (snap.exists()) setParticipants((p) => ({ ...p, [uid]: snap.data() }))
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -783,7 +782,7 @@ export default function ChatPanel({ onClose, initialView = 'list', onAdminContac
   async function handleSelectFriend(uid) {
     let other = participants[uid]
     if (!other) {
-      const snap = await getDoc(doc(db, 'users', uid))
+      const snap = await getDoc(refs.user(uid))
       other = snap.exists() ? snap.data() : { uid, displayName: 'Unknown', photoURL: null }
       setParticipants((p) => ({ ...p, [uid]: other }))
     }

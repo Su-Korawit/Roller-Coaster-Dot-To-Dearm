@@ -11,12 +11,13 @@ import { db } from '../firebase'
 
 // ── Document refs ─────────────────────────────────────────────────────────────
 export const refs = {
-  user:      (uid)            => doc(db, 'users', uid),
-  userMatch: (uid, targetUid) => doc(db, 'users', uid, 'matches', targetUid),
-  chat:      (chatId)         => doc(db, 'chats', chatId),
-  purchase:  (purchaseId)     => doc(db, 'purchases', purchaseId),
-  product:   (productId)      => doc(db, 'shopProducts', productId),
-  map:       (uid)            => doc(db, 'maps', uid),
+  user:        (uid)            => doc(db, 'users', uid),
+  userMatch:   (uid, targetUid) => doc(db, 'users', uid, 'matches', targetUid),
+  chat:        (chatId)         => doc(db, 'chats', chatId),
+  chatMessage: (chatId, msgId)  => doc(db, 'chats', chatId, 'messages', msgId),
+  purchase:    (purchaseId)     => doc(db, 'purchases', purchaseId),
+  product:     (productId)      => doc(db, 'shopProducts', productId),
+  map:         (uid)            => doc(db, 'maps', uid),
 }
 
 // ── Collection refs ───────────────────────────────────────────────────────────
@@ -29,6 +30,7 @@ export const cols = {
   maps:         collection(db, 'maps'),
   chatMessages: (chatId) => collection(db, 'chats', chatId, 'messages'),
   userMatches:  (uid)    => collection(db, 'users', uid, 'matches'),
+  userCredits:  (uid)    => collection(db, 'users', uid, 'receivedCredits'),
 }
 
 // ── Query builders ────────────────────────────────────────────────────────────

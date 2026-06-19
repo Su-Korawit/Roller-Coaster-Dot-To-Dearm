@@ -12,10 +12,10 @@ import SocialPanel from '../components/SocialPanel'
 import ChatPanel from '../components/ChatPanel'
 import CalendarPopup from '../components/CalendarPopup'
 import DailyLoginModal from '../components/DailyLoginModal'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
-import { auth, db } from '../firebase'
+import { getDoc, setDoc } from 'firebase/firestore'
+import { auth } from '../firebase'
 import { useChatStore } from '../stores/useChatStore'
-import { buildChatId } from '../lib/db'
+import { buildChatId, refs } from '../lib/db'
 import { ADMIN_UID, ADMIN_DISPLAY_NAME } from '../constants/admin'
 import GameCanvas from '../components/GameCanvas'
 import RoadmapPage from './RoadmapPage'
@@ -103,7 +103,7 @@ function HomePage() {
     const myUid = auth.currentUser?.uid
     if (!myUid) return
     const chatId = [myUid, ADMIN_UID].sort().join('_')
-    await setDoc(doc(db, 'chats', chatId), {
+    await setDoc(refs.chat(chatId), {
       members: [myUid, ADMIN_UID].sort(),
       isAdminChat: true,
     }, { merge: true })
@@ -125,7 +125,7 @@ function HomePage() {
   async function handleOpenChat(userId) {
     const myUid = auth.currentUser?.uid
     if (!myUid || !userId) return
-    const snap = await getDoc(doc(db, 'users', userId))
+    const snap = await getDoc(refs.user(userId))
     const otherUser = snap.exists()
       ? snap.data()
       : { uid: userId, displayName: 'Unknown', photoURL: null }
