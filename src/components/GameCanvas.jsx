@@ -2,6 +2,8 @@
 import { isEditableTarget } from '../utils/isEditableTarget'
 import Phaser from 'phaser'
 import { useSelectStore } from '../stores/useSelectStore'
+import { useWorldStore } from '../stores/useWorldStore'
+import { MAP_ITEM_BY_KEY } from '../constants/mapItems'
 import { MBTI_TYPES, GAME_ASSETS, GAME_ASSET_BY_KEY } from '../game/assetManifest'
 import { cloudAsset } from '../utils/cloudAsset'
 import { getMapConfig, DEFAULT_MAP_CONFIGS } from '../utils/mapConfig'
@@ -279,7 +281,17 @@ class GameScene extends Phaser.Scene {
     // where a walkable layer (e.g. the Bridge) sits on top.
     applyCollision(this, map, layerInfos, cfg, this.player)
 
-    // Door trigger â€“ enter indoor
+    // Decoration objects placed by the map owner.
+    this._decorGroup = this.add.group()
+    this._renderDecorations(mapScale)
+
+    // Re-render decorations when the store pushes a change (e.g. after hydration).
+    this.game.events.on('mapObjectsChanged', () => this._renderDecorations(mapScale))
+    this.events.once('shutdown', () =>
+      this.game.events.off('mapObjectsChanged', undefined, this)
+    )
+
+    // Door trigger — enter indoor
     this.transitioning = false
     const doorToIndoor = map.getObjectLayer('Doors') &&
       map.findObject('Doors', o => o.name === 'door_to_indoor')
@@ -450,6 +462,21 @@ class GameScene extends Phaser.Scene {
     if (this.player.anims.currentAnim?.key !== animKey) {
       this.player.play(animKey)
     }
+  }
+
+  // Destroy and re-spawn all decoration sprites from the registry's mapObjects.
+  // Sprites sit above tilemap layers (depth 5) but below the player (depth 10).
+  _renderDecorations(mapScale) {
+    this._decorGroup.clear(true, true)
+    const objects = this.registry.get('mapObjects') ?? []
+    objects.forEach(({ key, x, y }) => {
+      const item = MAP_ITEM_BY_KEY[key]
+      if (!item || !this.textures.exists(item.spriteKey)) return
+      const img = this.add.image(x, y, item.spriteKey)
+      img.setScale(mapScale * 0.5)
+      img.setDepth(5)
+      this._decorGroup.add(img)
+    })
   }
 }
 
@@ -770,6 +797,16 @@ export default function GameCanvas({ active = true }) {
   const selectedMbtiRef = useRef(selectedMbti)
   useEffect(() => { selectedMbtiRef.current = selectedMbti }, [selectedMbti])
 
+  // Personal Map decorations — push into the Phaser registry and notify the
+  // scene whenever the store updates (e.g. after sessionBootstrap hydrates).
+  const mapObjects = useWorldStore((s) => s.mapObjects)
+  useEffect(() => {
+    const game = gameRef.current
+    if (!game) return
+    game.registry.set('mapObjects', mapObjects)
+    game.events.emit('mapObjectsChanged')
+  }, [mapObjects])
+
   useEffect(() => {
     let game = null
     let cancelled = false
@@ -793,6 +830,7 @@ export default function GameCanvas({ active = true }) {
       game.registry.set('assetUrls', assetUrlsRef.current.assetUrls)
       game.registry.set('mapConfigs', assetUrlsRef.current.mapConfigs)
       game.registry.set('tilesetUrls', assetUrlsRef.current.tilesetUrls)
+      game.registry.set('mapObjects', useWorldStore.getState().mapObjects)
       gameRef.current = game
       game.events.on('zoomChanged', (v) => {
         setZoom(+v.toFixed(1))

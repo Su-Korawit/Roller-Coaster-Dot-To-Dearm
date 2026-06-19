@@ -8,6 +8,7 @@ const m = vi.hoisted(() => ({
   setTaskSyncUser: vi.fn(),
   hydrateRoadmap: vi.fn(),
   setRoadmapSyncUser: vi.fn(),
+  hydrateMap: vi.fn(),
   setCoins: vi.fn(),
   getDoc: vi.fn(),
   setDoc: vi.fn(),
@@ -34,6 +35,7 @@ vi.mock('../lib/syncManager', () => ({
   setTaskSyncUser: (...a) => m.setTaskSyncUser(...a),
   hydrateRoadmapFromFirestore: (...a) => m.hydrateRoadmap(...a),
   setRoadmapSyncUser: (...a) => m.setRoadmapSyncUser(...a),
+  hydrateMapFromFirestore: (...a) => m.hydrateMap(...a),
 }))
 
 const { bootstrapSession, teardownSession } = await import('./sessionBootstrap')
@@ -54,6 +56,17 @@ describe('bootstrapSession', () => {
     expect(m.setTaskSyncUser).toHaveBeenCalledWith('u1')
     expect(m.hydrateRoadmap).toHaveBeenCalledWith('u1')
     expect(m.setRoadmapSyncUser).toHaveBeenCalledWith('u1')
+  })
+
+  it('hydrates the Personal Map on login', async () => {
+    await bootstrapSession({ uid: 'u1' })
+    expect(m.hydrateMap).toHaveBeenCalledWith('u1')
+  })
+
+  it('keeps hydrating later stores when map hydration throws', async () => {
+    m.hydrateMap.mockRejectedValue(new Error('map boom'))
+    await bootstrapSession({ uid: 'u1' })
+    expect(m.hydrateRoadmap).toHaveBeenCalledWith('u1')
   })
 })
 

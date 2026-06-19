@@ -100,6 +100,13 @@ service cloud.firestore {
       );
     }
 
+    // Personal Maps — each user's decoration objects.
+    // Anyone signed-in can visit (read); only the owner can save decorations (write).
+    match /maps/{ownerUid} {
+      allow read:  if isSignedIn();
+      allow write: if isSignedIn() && request.auth.uid == ownerUid;
+    }
+
     // Slip dedup ledger: server-only (no client access at all).
     match /usedSlips/{transRef} {
       allow read, write: if false;

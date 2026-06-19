@@ -4,7 +4,7 @@
 import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing'
-import { doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore'
 
 // Section admins are gated by token email — authenticate with an email claim.
 const SUPER_UID = 'IaltEhO0mPVfK3ng8npr4CdqnEE3'
@@ -84,5 +84,34 @@ describe('section-scoped admin writes', () => {
     const maps = emailCtx('takada', 'takadaoni07@gmail.com')
     await assertFails(deleteDoc(doc(maps, 'users/bob')))
     await assertSucceeds(deleteDoc(doc(sa, 'users/alice')))
+  })
+})
+
+describe('Personal Map rules (maps/{ownerUid})', () => {
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore()
+      await setDoc(doc(db, 'maps/alice'), { objects: [{ key: 'wood_bridge', x: 10, y: 20 }] })
+    })
+  })
+
+  it('allows any signed-in user to read a Personal Map', async () => {
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    await assertSucceeds(getDoc(doc(bob, 'maps/alice')))
+  })
+
+  it('allows the owner to write their own Personal Map', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(setDoc(doc(alice, 'maps/alice'), { objects: [] }))
+  })
+
+  it('BLOCKS a non-owner from writing another user Personal Map', async () => {
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    await assertFails(setDoc(doc(bob, 'maps/alice'), { objects: [] }))
+  })
+
+  it('BLOCKS an unauthenticated user from reading a Personal Map', async () => {
+    const anon = testEnv.unauthenticatedContext().firestore()
+    await assertFails(getDoc(doc(anon, 'maps/alice')))
   })
 })

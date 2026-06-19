@@ -16,6 +16,7 @@ export const refs = {
   chat:      (chatId)         => doc(db, 'chats', chatId),
   purchase:  (purchaseId)     => doc(db, 'purchases', purchaseId),
   product:   (productId)      => doc(db, 'shopProducts', productId),
+  map:       (uid)            => doc(db, 'maps', uid),
 }
 
 // ── Collection refs ───────────────────────────────────────────────────────────
@@ -25,6 +26,7 @@ export const cols = {
   chats:        collection(db, 'chats'),
   shopProducts: collection(db, 'shopProducts'),
   purchases:    collection(db, 'purchases'),
+  maps:         collection(db, 'maps'),
   chatMessages: (chatId) => collection(db, 'chats', chatId, 'messages'),
   userMatches:  (uid)    => collection(db, 'users', uid, 'matches'),
 }

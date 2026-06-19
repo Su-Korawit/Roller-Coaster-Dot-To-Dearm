@@ -11,7 +11,10 @@ vi.mock('firebase/firestore', () => ({
   serverTimestamp: () => ({ _type: 'serverTimestamp' }),
 }))
 vi.mock('./db', () => ({
-  refs: { user: (uid) => ({ _path: `users/${uid}` }) },
+  refs: {
+    user: (uid) => ({ _path: `users/${uid}` }),
+    map:  (uid) => ({ _path: `maps/${uid}` }),
+  },
 }))
 
 // Stub localStorage so Zustand persist doesn't blow up
@@ -29,6 +32,8 @@ const {
   hydrateRoadmapFromFirestore,
   syncTasksToFirestore,
   hydratePortfolioFromFirestore,
+  syncMapToFirestore,
+  hydrateMapFromFirestore,
 } = await import('./syncManager')
 
 describe('SyncManager (roadmap instance)', () => {
@@ -131,5 +136,56 @@ describe('SyncManager (portfolio instance)', () => {
     await hydratePortfolioFromFirestore('uid-123')
 
     expect(setDoc).toHaveBeenCalled()
+  })
+})
+
+describe('SyncManager (map instance)', () => {
+  beforeEach(() => {
+    setDoc.mockReset()
+    getDoc.mockReset()
+  })
+
+  it('writes objects to maps/{uid} (not users/{uid}) with merge:true', async () => {
+    const objects = [{ key: 'wood_bridge', x: 100, y: 200 }]
+    setDoc.mockResolvedValue(undefined)
+
+    await syncMapToFirestore('uid-123', objects)
+
+    expect(setDoc).toHaveBeenCalledWith(
+      { _path: 'maps/uid-123' },
+      { objects, mapUpdatedAt: { _type: 'serverTimestamp' } },
+      { merge: true },
+    )
+  })
+
+  it('does nothing when uid is null', async () => {
+    await syncMapToFirestore(null, [])
+    expect(setDoc).not.toHaveBeenCalled()
+  })
+
+  it('loads objects from maps/{uid} into the useWorldStore', async () => {
+    const cloudObjects = [{ key: 'grass_things', x: 50, y: 75 }]
+    getDoc.mockResolvedValue({
+      exists: () => true,
+      data: () => ({ objects: cloudObjects }),
+    })
+
+    const { useWorldStore } = await import('../stores/useWorldStore')
+    useWorldStore.setState({ mapObjects: [] })
+
+    await hydrateMapFromFirestore('uid-123')
+
+    expect(useWorldStore.getState().mapObjects).toEqual(cloudObjects)
+  })
+
+  it('leaves mapObjects empty when the map doc has no objects field', async () => {
+    getDoc.mockResolvedValue({ exists: () => true, data: () => ({}) })
+
+    const { useWorldStore } = await import('../stores/useWorldStore')
+    useWorldStore.setState({ mapObjects: [] })
+
+    await hydrateMapFromFirestore('uid-123')
+
+    expect(useWorldStore.getState().mapObjects).toEqual([])
   })
 })

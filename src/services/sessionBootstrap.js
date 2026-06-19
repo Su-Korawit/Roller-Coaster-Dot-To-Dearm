@@ -21,6 +21,7 @@ import {
   setTaskSyncUser,
   hydrateRoadmapFromFirestore,
   setRoadmapSyncUser,
+  hydrateMapFromFirestore,
 } from '../lib/syncManager'
 
 function readSelectStore() {
@@ -89,6 +90,12 @@ export async function bootstrapSession(firebaseUser) {
     setRoadmapSyncUser(uid)
   } catch (e) {
     console.error('[sessionBootstrap] hydrate/arm roadmap failed:', e)
+  }
+
+  try {
+    await hydrateMapFromFirestore(uid)
+  } catch (e) {
+    console.error('[sessionBootstrap] hydrate map failed:', e)
   }
 }
 

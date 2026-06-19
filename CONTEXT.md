@@ -237,6 +237,10 @@ Central visual feature. Files:
 | **Profile** | The bundle of onboarding selections (mbti, program, career, masteryTrack, university) attached to a User document under `profile.*`. Written via `shapes.profileFields` and read via `shapes.readProfile` (the single shape seam in `src/lib/db.js`); `schoolId` stays top-level because Firestore queries filter on it |
 | **Roadmap** | The node-based visual plan a student builds for their career path |
 | **Node / Edge** | React Flow graph elements (ProcessNode, ConditionNode, etc.) |
+| **Selection** | The set of currently-selected roadmap blocks. Built on desktop via React Flow marquee / Shift-click, on mobile via a Select mode (tap-to-toggle, with Cancel). Duplicate, bulk-delete, and export-selected all act on it |
+| **Trash zone** | A drop target shown at the bottom-centre of the canvas only while a block is being dragged; dropping a block on it deletes that block |
+| **Setpoint** | The most recently added block; the canvas centres on it when the Roadmap opens (replaces `fitView`) |
+| **Roadmap export schema** | Versioned JSON (`{ version, nodes, edges }`) that serialises a Roadmap, or a Selection subset, independently of React Flow's runtime node shape. The contract a future AI generator reads/writes — see ADR-0001 |
 | **Journey** | A top-level goal category (e.g. `mastery`, `career`); a user has multiple |
 | **Mastery block** | One milestone/step within the mastery journey |
 | **Stack / fireStack** | Daily chat interaction credit; one per chat per day; used for social ranking |
@@ -244,3 +248,7 @@ Central visual feature. Files:
 | **Capsule** | Active skill timer — a skill the user has committed to for a time window |
 | **Coins** | In-app currency earned through streaks, AI tasks, matches |
 | **Streak** | Consecutive daily login / task-completion counter |
+| **Personal Map** | A user's own instance of the base Phaser world (`test3` tilemap) plus the **Decoration objects** they have placed. Persisted at `maps/{ownerUid}` in Firestore. Distinct from **Roadmap** (the React Flow career plan) |
+| **Decoration object** | One item a user places on their Personal Map: `{ key, x, y }`. `key` is a stable item identifier from `src/constants/mapItems.js`; `spriteKey` is the Phaser texture key used to render it |
+| **Visit** | Rendering another user's Personal Map and joining its live presence room. The viewer is the **visitor**; the map's `ownerUid` is the **owner** |
+| **Map room / presence** | The set of users currently inside a given Personal Map, broadcast in real time via RTDB at `/worlds/{ownerUid}/players/{uid}` |

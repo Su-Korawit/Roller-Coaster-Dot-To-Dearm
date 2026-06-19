@@ -18,6 +18,7 @@ import { refs } from './db'
 import { useTaskStore } from '../stores/useTaskStore'
 import { useRoadmapStore } from '../stores/useRoadmapStore'
 import { useUserStore } from '../stores/useUserStore'
+import { useWorldStore } from '../stores/useWorldStore'
 
 /**
  * Build a debounced Firestore sync for a single Zustand store.
@@ -141,3 +142,28 @@ export const setRoadmapSyncUser = roadmapSync.setSyncUser
 export const syncPortfolioToFirestore = portfolioSync.push
 export const hydratePortfolioFromFirestore = portfolioSync.hydrate
 export const setPortfolioSyncUser = portfolioSync.setSyncUser
+
+// ── Personal Map ─────────────────────────────────────────────────────────────
+// Maps live at maps/{uid}, not under users/{uid}, so we use standalone
+// push/hydrate functions rather than createFirestoreSync (which always writes
+// to refs.user). The debounced writer is wired up in sessionBootstrap.
+
+export async function syncMapToFirestore(uid, objects) {
+  if (!uid) return
+  try {
+    await setDoc(refs.map(uid), { objects, mapUpdatedAt: serverTimestamp() }, { merge: true })
+  } catch (e) {
+    console.error('[syncMap] push failed:', e)
+  }
+}
+
+export async function hydrateMapFromFirestore(uid) {
+  if (!uid) return
+  try {
+    const snap = await getDoc(refs.map(uid))
+    const data = snap.exists() ? snap.data() : {}
+    if (data.objects) useWorldStore.getState().setMapObjects(data.objects)
+  } catch (e) {
+    console.error('[syncMap] hydrate failed:', e)
+  }
+}
