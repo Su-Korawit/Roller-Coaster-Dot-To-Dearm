@@ -12,3 +12,7 @@ export const APP_VIEWS = {
   MUSIC: 'music',
   PLANNER_CALENDAR: 'planner_calendar',
 }
+
+export function shouldShowNav(view) {
+  return view !== APP_VIEWS.CHAT
+}

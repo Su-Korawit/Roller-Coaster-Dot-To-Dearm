@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Calendar, MessageCircle, Map } from 'lucide-react'
 import { useUserStore } from '../stores/useUserStore'
 import { useAuthStore } from '../stores/useAuthStore'
-import { APP_VIEWS } from '../constants/appViews'
+import { APP_VIEWS, shouldShowNav } from '../constants/appViews'
 import BottomNavBar from '../components/BottomNavBar'
 import TaskPanel from '../components/TaskPanel'
 import NewsPanel from '../components/NewsPanel'
@@ -391,7 +391,7 @@ function HomePage() {
       )}
 
       {/* ── BOTTOM NAV ── */}
-      <BottomNavBar active={activeTab} onChange={handleTabChange} />
+      {shouldShowNav(activeTab) && <BottomNavBar active={activeTab} onChange={handleTabChange} />}
     </section>
   )
 }
