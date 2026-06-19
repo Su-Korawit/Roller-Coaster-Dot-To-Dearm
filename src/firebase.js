@@ -17,7 +17,10 @@ const firebaseConfig = {
 
 // กันเคส env หายเงียบ (เช่น แก้ .env แล้วลืม restart dev server) ซึ่งทำให้
 // auth ล้มทันทีแบบหา code ไม่เจอ — log ชื่อคีย์ที่ขาดให้เห็นชัดตั้งแต่ตอนโหลด
-const missingEnv = ['apiKey', 'authDomain', 'projectId'].filter((k) => !firebaseConfig[k])
+// databaseURL is required now that live presence (RTDB) is a real consumer — a
+// missing/blank URL fails silently with an opaque "configure your DB URL" warning
+// at the first joinWorld(), so surface it loudly at load like the auth keys.
+const missingEnv = ['apiKey', 'authDomain', 'projectId', 'databaseURL'].filter((k) => !firebaseConfig[k])
 if (missingEnv.length) {
   console.error('[firebase] missing config keys:', missingEnv.join(', '), '— ตรวจ .env แล้ว restart dev server')
 }
