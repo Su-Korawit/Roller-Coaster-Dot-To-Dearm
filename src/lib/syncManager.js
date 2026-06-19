@@ -30,19 +30,23 @@ import { useWorldStore } from '../stores/useWorldStore'
  * @param {(data) => object}  opts.fromDoc   store.setState updates from a Firestore doc ({} = none)
  * @param {(state, prev) => boolean} opts.changed   whether a relevant slice changed
  * @param {(data) => boolean} opts.needsSeed  whether to push local up on first migration
+ * @param {(uid) => DocumentRef} [opts.ref]   doc ref factory — defaults to refs.user
+ * @param {(state, uid) => boolean} [opts.guard]  extra condition checked before debouncing
  * @returns {{ push(uid): Promise<void>, hydrate(uid): Promise<void>, setSyncUser(uid): void }}
  */
-export function createFirestoreSync({ store, logName, toDoc, fromDoc, changed, needsSeed }) {
+export function createFirestoreSync({ store, logName, toDoc, fromDoc, changed, needsSeed, ref, guard }) {
+  const getRef = ref ?? refs.user
+
   let currentUid = null   // latest signed-in uid; null when logged out
   let subscribed = false  // store subscription is set up once
   let timer = null        // debounce handle for auto-sync writes
   let suppress = false    // skip auto-sync while hydrating from Firestore
 
-  // Write the store's slice into Firestore users/{uid}; merge keeps other fields.
+  // Write the store's slice into the target doc; merge keeps other fields.
   async function push(uid) {
     if (!uid) return
     try {
-      await setDoc(refs.user(uid), toDoc(store.getState()), { merge: true })
+      await setDoc(getRef(uid), toDoc(store.getState()), { merge: true })
     } catch (error) {
       console.error(`[${logName}] push failed:`, error)
     }
@@ -52,7 +56,7 @@ export function createFirestoreSync({ store, logName, toDoc, fromDoc, changed, n
   async function hydrate(uid) {
     if (!uid) return
     try {
-      const snap = await getDoc(refs.user(uid))
+      const snap = await getDoc(getRef(uid))
       const data = snap.exists() ? snap.data() : {}
 
       const updates = fromDoc(data)
@@ -81,6 +85,7 @@ export function createFirestoreSync({ store, logName, toDoc, fromDoc, changed, n
     store.subscribe((state, prev) => {
       if (suppress || !currentUid) return
       if (!changed(state, prev)) return
+      if (guard && !guard(state, currentUid)) return
       clearTimeout(timer)
       timer = setTimeout(() => push(currentUid), 1000)
     })
@@ -144,43 +149,23 @@ export const hydratePortfolioFromFirestore = portfolioSync.hydrate
 export const setPortfolioSyncUser = portfolioSync.setSyncUser
 
 // ── Personal Map ─────────────────────────────────────────────────────────────
-// Maps live at maps/{uid}, not under users/{uid}, so we use standalone
-// push/hydrate functions rather than createFirestoreSync (which always writes
-// to refs.user). The debounced writer is wired up in sessionBootstrap.
+// Maps live at maps/{uid} rather than users/{uid} — use ref: refs.map.
+// guard ensures the debounce only fires when viewing the owner's own map.
+const mapSync = createFirestoreSync({
+  store: useWorldStore,
+  logName: 'syncMap',
+  ref: refs.map,
+  toDoc: ({ mapObjects }) => ({ objects: mapObjects, mapUpdatedAt: serverTimestamp() }),
+  fromDoc: (data) => (data.objects ? { mapObjects: data.objects } : {}),
+  changed: (s, p) => s.mapObjects !== p.mapObjects,
+  guard: (s, uid) => s.currentMapOwnerUid === uid,
+  needsSeed: () => false,
+})
 
-// ── Personal Map debounced writer ────────────────────────────────────────────
-// Module-level state mirrors the createFirestoreSync lifecycle pattern but writes
-// to refs.map (not refs.user), and only fires when viewing the owner's own map.
-let _mapTimer = null
-let _mapCurrentUid = null
-let _mapSubscribed = false
+export const armMapSync = mapSync.setSyncUser
+export const disarmMapSync = () => mapSync.setSyncUser(null)
 
-export function armMapSync(uid) {
-  _mapCurrentUid = uid
-  if (!uid) {
-    clearTimeout(_mapTimer)
-    return
-  }
-  if (_mapSubscribed) return
-  _mapSubscribed = true
-  useWorldStore.subscribe((state, prev) => {
-    if (!_mapCurrentUid) return
-    if (state.mapObjects === prev.mapObjects) return
-    if (state.currentMapOwnerUid !== _mapCurrentUid) return
-    clearTimeout(_mapTimer)
-    _mapTimer = setTimeout(
-      () => syncMapToFirestore(_mapCurrentUid, useWorldStore.getState().mapObjects),
-      1000,
-    )
-  })
-}
-
-export function disarmMapSync() {
-  _mapCurrentUid = null
-  clearTimeout(_mapTimer)
-  _mapSubscribed = false
-}
-
+// Manual save — called from MapPalette after an explicit decoration change.
 export async function syncMapToFirestore(uid, objects) {
   if (!uid) return
   try {
@@ -204,13 +189,4 @@ export async function returnHome(selfUid) {
   await hydrateMapFromFirestore(selfUid)
 }
 
-export async function hydrateMapFromFirestore(uid) {
-  if (!uid) return
-  try {
-    const snap = await getDoc(refs.map(uid))
-    const data = snap.exists() ? snap.data() : {}
-    if (data.objects) useWorldStore.getState().setMapObjects(data.objects)
-  } catch (e) {
-    console.error('[syncMap] hydrate failed:', e)
-  }
-}
+export const hydrateMapFromFirestore = mapSync.hydrate
