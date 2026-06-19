@@ -9,79 +9,11 @@ import {
   arrayUnion,
 } from 'firebase/firestore'
 import { auth, db } from '../firebase'
-import { refs, cols, queries, shapes } from '../lib/db'
+import { refs, cols, queries } from '../lib/db'
 import { createFirestoreListener } from '../lib/firestoreListener'
+import { calculateMatchScore } from '../services/socialService'
 
-// ─── Career family mapping ────────────────────────────────────────────────────
-// Groups career ids into families so "similar program" scoring works.
-// Handles both id (e.g. 'data-scientist') and display name (e.g. 'Data Scientist').
-const CAREER_FAMILY_MAP = {
-  'data-scientist': 'analyst',    'Data Scientist': 'analyst',
-  'ml-engineer': 'analyst',       'AI / ML Specialist': 'analyst',
-  'ai-architect': 'analyst',      'AI Solutions Architect': 'analyst',
-  'prompt-engineer': 'analyst',   'Prompt Engineer': 'analyst',
-  'product-manager': 'analyst',   'Product Manager': 'analyst',
-  'fintech-developer': 'analyst', 'Fintech Developer': 'analyst',
-  'ui-ux': 'diplomat',            'UI/UX Designer': 'diplomat',
-  'content-strategist': 'diplomat','Content Strategist': 'diplomat',
-  'learning-designer': 'diplomat','Learning Experience Designer': 'diplomat',
-  'wellness-coach': 'diplomat',   'Digital Wellness Coach': 'diplomat',
-  'hr-tech': 'diplomat',          'HR Tech Specialist': 'diplomat',
-  'cybersecurity': 'sentinel',    'Cybersecurity Analyst': 'sentinel',
-  'compliance-officer': 'sentinel','Digital Compliance Officer': 'sentinel',
-  'project-manager': 'sentinel',  'Project Manager (Agile)': 'sentinel',
-  'cloud-ops': 'sentinel',        'Cloud Operations Engineer': 'sentinel',
-  'business-analyst': 'sentinel', 'Business Analyst': 'sentinel',
-  'fullstack-dev': 'explorer',    'Full-Stack Developer': 'explorer',
-  'digital-artist': 'explorer',   'Digital Artist / 3D Creator': 'explorer',
-  'game-developer': 'explorer',   'Game Developer': 'explorer',
-  'growth-hacker': 'explorer',    'Growth Hacker': 'explorer',
-  'iot-engineer': 'explorer',     'IoT / Hardware Engineer': 'explorer',
-}
-
-// ─── Match scoring ─────────────────────────────────────────────────────────────
-// Reads each user's Profile through the canonical shape seam (shapes.readProfile),
-// which resolves profile.* with a legacy top-level fallback.
-export function calculateMatchScore(a, b) {
-  if (!a || !b) return 0
-  let score = 0
-
-  const pa = shapes.readProfile(a)
-  const pb = shapes.readProfile(b)
-  const aProgram    = pa.program
-  const bProgram    = pb.program
-  const aMastery    = pa.masteryTrack
-  const bMastery    = pb.masteryTrack
-  const aMbti       = pa.mbti
-  const bMbti       = pb.mbti
-  const aUniversity = pa.university
-  const bUniversity = pb.university
-
-  // Program: 40 pts exact match, 20 pts same career family
-  if (aProgram && bProgram) {
-    if (aProgram === bProgram) {
-      score += 40
-    } else {
-      const fa = CAREER_FAMILY_MAP[aProgram]
-      const fb = CAREER_FAMILY_MAP[bProgram]
-      if (fa && fb && fa === fb) score += 20
-    }
-  }
-
-  // Mastery track: 25 pts
-  if (aMastery && bMastery && aMastery === bMastery) score += 25
-
-  // MBTI type: 15 pts
-  if (aMbti && bMbti && aMbti === bMbti) score += 15
-
-  // University: 10 pts
-  if (aUniversity && bUniversity && aUniversity === bUniversity) score += 10
-
-  // Same school (schoolId): 10 pts — always top-level
-  if (a.schoolId && b.schoolId && a.schoolId === b.schoolId) score += 10
-
-  return Math.min(score, 100)
-}
+export { calculateMatchScore }
 
 // Throws if called before auth is ready — actions guard against this.
 function myUid() {
