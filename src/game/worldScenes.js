@@ -14,6 +14,9 @@ const SPEED = 80
 const SPRINT_MULTIPLIER = 2
 const ARRIVE_THRESHOLD = 4
 const DOUBLE_CLICK_MS = 300
+const JOYSTICK_DEADZONE = 15   // screen px — below this the avatar stays put (the "rest" zone near the press point)
+const JOYSTICK_SPRINT   = 60   // screen px — at/beyond this distance the avatar sprints
+const DEFAULT_CONTROL_MODE = 'joystick'
 
 const PLAYER_KEY = 'Basic_Charakter'
 export const getZoom = (w) => w < 768 ? 1.5 : w < 1024 ? 3 : 2.5
@@ -327,6 +330,10 @@ export class GameScene extends Phaser.Scene {
     this.targetY  = 0
     this.isSprinting  = false
     this.lastClickTime = 0
+    this.joystickActive    = false
+    this.joystickOriginX   = 0
+    this.joystickOriginY   = 0
+    this.joystickPointerId = -1
 
     this.input.on('pointerdown', (pointer) => {
       if (this.registry.get('editMode')) {
@@ -337,17 +344,38 @@ export class GameScene extends Phaser.Scene {
         return
       }
 
+      const controlMode = this.registry.get('controlMode') ?? DEFAULT_CONTROL_MODE
+      if (controlMode === 'joystick') {
+        // Second finger = pinch-zoom; don't hijack it as a joystick.
+        if (this.input.pointer2.isDown) return
+        this.joystickActive    = true
+        this.joystickOriginX   = pointer.x
+        this.joystickOriginY   = pointer.y
+        this.joystickPointerId = pointer.id
+        return
+      }
+
+      // click-to-move
       const now = this.time.now
       if (now - this.lastClickTime < DOUBLE_CLICK_MS) {
         this.isSprinting = !this.isSprinting
       }
       this.lastClickTime = now
-
       this.targetX  = pointer.worldX
       this.targetY  = pointer.worldY
       this.isMoving = true
       this.marker.setPosition(pointer.worldX, pointer.worldY).setVisible(true)
     })
+
+    const cancelJoystick = (pointer) => {
+      if (pointer.id === this.joystickPointerId) {
+        this.joystickActive = false
+        this.player.setVelocity(0, 0)
+        this.player.play(`${this.currentMbti}-idle`)
+      }
+    }
+    this.input.on('pointerup', cancelJoystick)
+    this.input.on('pointerupoutside', cancelJoystick)
 
     this.cameras.main.setBounds(0, 0, worldW, worldH)
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1)
@@ -366,10 +394,11 @@ export class GameScene extends Phaser.Scene {
     this.lastPinchDist = null
 
     this.wasd = this.input.keyboard.addKeys({
-      up:    Phaser.Input.Keyboard.KeyCodes.W,
-      down:  Phaser.Input.Keyboard.KeyCodes.S,
-      left:  Phaser.Input.Keyboard.KeyCodes.A,
-      right: Phaser.Input.Keyboard.KeyCodes.D,
+      up:     Phaser.Input.Keyboard.KeyCodes.W,
+      down:   Phaser.Input.Keyboard.KeyCodes.S,
+      left:   Phaser.Input.Keyboard.KeyCodes.A,
+      right:  Phaser.Input.Keyboard.KeyCodes.D,
+      sprint: Phaser.Input.Keyboard.KeyCodes.SHIFT,
     })
     this.usingWasd = false
 
@@ -392,6 +421,10 @@ export class GameScene extends Phaser.Scene {
     const p1 = this.input.pointer1
     const p2 = this.input.pointer2
     if (p1.isDown && p2.isDown) {
+      if (this.joystickActive) {
+        this.joystickActive = false
+        this.player.setVelocity(0, 0)
+      }
       const dist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y)
       if (this.lastPinchDist !== null) {
         const next = Phaser.Math.Clamp(
@@ -406,8 +439,6 @@ export class GameScene extends Phaser.Scene {
       this.lastPinchDist = null
     }
 
-    const spd = SPEED * (this.isSprinting ? SPRINT_MULTIPLIER : 1)
-
     const { up, down, left, right } = this.wasd
     const wasdActive = up.isDown || down.isDown || left.isDown || right.isDown
 
@@ -416,6 +447,7 @@ export class GameScene extends Phaser.Scene {
       this.isMoving = false
       this.marker.setVisible(false)
 
+      const spd = SPEED * (this.wasd.sprint.isDown ? SPRINT_MULTIPLIER : 1)
       let vx = 0, vy = 0
       if (left.isDown)  vx -= spd
       if (right.isDown) vx += spd
@@ -444,8 +476,51 @@ export class GameScene extends Phaser.Scene {
       this.player.play(`${this.currentMbti}-idle`)
     }
 
+    const controlMode = this.registry.get('controlMode') ?? DEFAULT_CONTROL_MODE
+    if (controlMode === 'joystick') {
+      // Find the specific pointer that started the joystick
+      const allPointers = [this.input.pointer1, this.input.pointer2]
+      const ptr = allPointers.find(p => p.id === this.joystickPointerId) ?? this.input.activePointer
+      if (!this.joystickActive || !ptr.isDown) {
+        if (this.joystickActive) {
+          this.joystickActive = false
+          this.player.setVelocity(0, 0)
+          this.player.play(`${this.currentMbti}-idle`)
+        }
+        return
+      }
+      const dx  = ptr.x - this.joystickOriginX
+      const dy  = ptr.y - this.joystickOriginY
+      const mag = Math.hypot(dx, dy)
+      if (mag < JOYSTICK_DEADZONE) {
+        this.player.setVelocity(0, 0)
+        const idleKey = `${this.currentMbti}-idle`
+        if (this.player.anims.currentAnim?.key !== idleKey) this.player.play(idleKey)
+        return
+      }
+      const jspd = SPEED * (mag >= JOYSTICK_SPRINT ? SPRINT_MULTIPLIER : 1)
+      const vx = (dx / mag) * jspd
+      const vy = (dy / mag) * jspd
+      this.player.setVelocity(vx, vy)
+      const dir = Math.abs(vx) >= Math.abs(vy)
+        ? (vx > 0 ? 'walk-right' : 'walk-left')
+        : (vy > 0 ? 'walk-down' : 'walk-up')
+      this._currentDir = dir
+      const animKey = `${this.currentMbti}-${dir}`
+      if (this.player.anims.currentAnim?.key !== animKey) this.player.play(animKey)
+      return
+    }
+
+    // joystick was active but controlMode switched — stop the avatar
+    if (this.joystickActive) {
+      this.joystickActive = false
+      this.player.setVelocity(0, 0)
+      this.player.play(`${this.currentMbti}-idle`)
+    }
+
     if (!this.isMoving) return
 
+    const spd = SPEED * (this.isSprinting ? SPRINT_MULTIPLIER : 1)
     const dx       = this.targetX - this.player.x
     const dy       = this.targetY - this.player.y
     const distance = Math.sqrt(dx * dx + dy * dy)
@@ -562,7 +637,7 @@ export class GameScene extends Phaser.Scene {
         x:      this.player.x,
         y:      this.player.y,
         dir:    this._currentDir ?? 'down',
-        moving: this.isMoving || this.usingWasd,
+        moving: this.isMoving || this.usingWasd || this.joystickActive,
         mbti:   this.currentMbti,
         name:   this.registry.get('selfName') ?? '',
       })
@@ -732,8 +807,22 @@ export class IndoorScene extends Phaser.Scene {
     this.targetY     = 0
     this.isSprinting = false
     this.lastClickTime = 0
+    this.joystickActive    = false
+    this.joystickOriginX   = 0
+    this.joystickOriginY   = 0
+    this.joystickPointerId = -1
 
     this.input.on('pointerdown', (pointer) => {
+      const controlMode = this.registry.get('controlMode') ?? DEFAULT_CONTROL_MODE
+      if (controlMode === 'joystick') {
+        if (this.input.pointer2.isDown) return
+        this.joystickActive    = true
+        this.joystickOriginX   = pointer.x
+        this.joystickOriginY   = pointer.y
+        this.joystickPointerId = pointer.id
+        return
+      }
+
       const now = this.time.now
       if (now - this.lastClickTime < DOUBLE_CLICK_MS) {
         this.isSprinting = !this.isSprinting
@@ -744,6 +833,16 @@ export class IndoorScene extends Phaser.Scene {
       this.isMoving = true
       this.marker.setPosition(pointer.worldX, pointer.worldY).setVisible(true)
     })
+
+    const cancelJoystick = (pointer) => {
+      if (pointer.id === this.joystickPointerId) {
+        this.joystickActive = false
+        this.player.setVelocity(0, 0)
+        this.player.play(`${this.currentMbti}-idle`)
+      }
+    }
+    this.input.on('pointerup', cancelJoystick)
+    this.input.on('pointerupoutside', cancelJoystick)
 
     this.cameras.main.setBounds(0, 0, worldW, worldH)
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1)
@@ -762,10 +861,11 @@ export class IndoorScene extends Phaser.Scene {
     this.lastPinchDist = null
 
     this.wasd = this.input.keyboard.addKeys({
-      up:    Phaser.Input.Keyboard.KeyCodes.W,
-      down:  Phaser.Input.Keyboard.KeyCodes.S,
-      left:  Phaser.Input.Keyboard.KeyCodes.A,
-      right: Phaser.Input.Keyboard.KeyCodes.D,
+      up:     Phaser.Input.Keyboard.KeyCodes.W,
+      down:   Phaser.Input.Keyboard.KeyCodes.S,
+      left:   Phaser.Input.Keyboard.KeyCodes.A,
+      right:  Phaser.Input.Keyboard.KeyCodes.D,
+      sprint: Phaser.Input.Keyboard.KeyCodes.SHIFT,
     })
     this.usingWasd = false
 
@@ -786,6 +886,10 @@ export class IndoorScene extends Phaser.Scene {
     const p1 = this.input.pointer1
     const p2 = this.input.pointer2
     if (p1.isDown && p2.isDown) {
+      if (this.joystickActive) {
+        this.joystickActive = false
+        this.player.setVelocity(0, 0)
+      }
       const dist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y)
       if (this.lastPinchDist !== null) {
         const next = Phaser.Math.Clamp(
@@ -800,8 +904,6 @@ export class IndoorScene extends Phaser.Scene {
       this.lastPinchDist = null
     }
 
-    const spd = SPEED * (this.isSprinting ? SPRINT_MULTIPLIER : 1)
-
     const { up, down, left, right } = this.wasd
     const wasdActive = up.isDown || down.isDown || left.isDown || right.isDown
 
@@ -810,6 +912,7 @@ export class IndoorScene extends Phaser.Scene {
       this.isMoving = false
       this.marker.setVisible(false)
 
+      const spd = SPEED * (this.wasd.sprint.isDown ? SPRINT_MULTIPLIER : 1)
       let vx = 0, vy = 0
       if (left.isDown)  vx -= spd
       if (right.isDown) vx += spd
@@ -837,8 +940,51 @@ export class IndoorScene extends Phaser.Scene {
       this.player.play(`${this.currentMbti}-idle`)
     }
 
+    const controlMode = this.registry.get('controlMode') ?? DEFAULT_CONTROL_MODE
+    if (controlMode === 'joystick') {
+      // Find the specific pointer that started the joystick
+      const allPointers = [this.input.pointer1, this.input.pointer2]
+      const ptr = allPointers.find(p => p.id === this.joystickPointerId) ?? this.input.activePointer
+      if (!this.joystickActive || !ptr.isDown) {
+        if (this.joystickActive) {
+          this.joystickActive = false
+          this.player.setVelocity(0, 0)
+          this.player.play(`${this.currentMbti}-idle`)
+        }
+        return
+      }
+      const dx  = ptr.x - this.joystickOriginX
+      const dy  = ptr.y - this.joystickOriginY
+      const mag = Math.hypot(dx, dy)
+      if (mag < JOYSTICK_DEADZONE) {
+        this.player.setVelocity(0, 0)
+        const idleKey = `${this.currentMbti}-idle`
+        if (this.player.anims.currentAnim?.key !== idleKey) this.player.play(idleKey)
+        return
+      }
+      const jspd = SPEED * (mag >= JOYSTICK_SPRINT ? SPRINT_MULTIPLIER : 1)
+      const vx = (dx / mag) * jspd
+      const vy = (dy / mag) * jspd
+      // (no this._currentDir here — IndoorScene has no presence broadcast)
+      this.player.setVelocity(vx, vy)
+      const dir = Math.abs(vx) >= Math.abs(vy)
+        ? (vx > 0 ? 'walk-right' : 'walk-left')
+        : (vy > 0 ? 'walk-down' : 'walk-up')
+      const animKey = `${this.currentMbti}-${dir}`
+      if (this.player.anims.currentAnim?.key !== animKey) this.player.play(animKey)
+      return
+    }
+
+    // joystick was active but controlMode switched — stop the avatar
+    if (this.joystickActive) {
+      this.joystickActive = false
+      this.player.setVelocity(0, 0)
+      this.player.play(`${this.currentMbti}-idle`)
+    }
+
     if (!this.isMoving) return
 
+    const spd = SPEED * (this.isSprinting ? SPRINT_MULTIPLIER : 1)
     const dx       = this.targetX - this.player.x
     const dy       = this.targetY - this.player.y
     const distance = Math.sqrt(dx * dx + dy * dy)

@@ -30,7 +30,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
   const navigate = useNavigate()
   const authUser = useAuthStore((s) => s.user)
   const signOut = useAuthStore((s) => s.signOut)
-  const { aiLanguage, setAiLanguage, resetUser, setProfilePhotoURL } = useUserStore()
+  const { aiLanguage, setAiLanguage, controlMode, setControlMode, resetUser, setProfilePhotoURL } = useUserStore()
   const { resetSelection } = useSelectStore()
 
   const uid = authUser?.uid
@@ -285,6 +285,28 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
                     }`}
                   >
                     {lang === 'Thai' ? 'ภาษาไทย' : 'English'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="pixel-font text-[8px] text-gray-400 mb-1.5">Movement Control</p>
+              <div className="flex gap-2">
+                {[
+                  { value: 'joystick',    label: 'Joystick' },
+                  { value: 'clickToMove', label: 'แตะเพื่อเดิน' },
+                ].map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => setControlMode(value)}
+                    className={`flex-1 rounded-xl py-2 text-sm border transition-colors ${
+                      controlMode === value
+                        ? 'bg-brand border-brand text-white font-semibold'
+                        : 'bg-white border-purple-200 text-purple-500'
+                    }`}
+                  >
+                    {label}
                   </button>
                 ))}
               </div>

@@ -35,7 +35,7 @@ export default function GameCanvas({ active = true }) {
   const selectedItemKey = useWorldStore((s) => s.selectedItemKey)
   const currentMapOwnerUid = useWorldStore((s) => s.currentMapOwnerUid)
   const remotePlayers      = useWorldStore((s) => s.remotePlayers)
-  const controlMode = useUserStore((s) => s.controlMode)
+  const controlMode        = useUserStore((s) => s.controlMode)
 
   useEffect(() => {
     const game = gameRef.current
