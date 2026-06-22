@@ -28,6 +28,7 @@ export const useUserStore = create(
       journeys: defaultJourneys,
       activeMasteryBlockId: null,
       aiLanguage: 'Thai',
+      controlMode: 'joystick',
       profilePhotoURL: null,
 
       setUser: (user) => set({ user }),
@@ -35,6 +36,7 @@ export const useUserStore = create(
       setUserName: (userName) => set({ userName }),
       setActiveMasteryBlockId: (id) => set({ activeMasteryBlockId: id }),
       setAiLanguage: (lang) => set({ aiLanguage: lang }),
+      setControlMode: (mode) => set({ controlMode: mode }),
       addCoins: (amount) => set((state) => ({ coins: state.coins + amount })),
       setCoins: (amount) => set({ coins: amount }),
       setStreak: (streak) => set({ streak }),
@@ -142,6 +144,7 @@ export const useUserStore = create(
           journeys: defaultJourneys,
           activeMasteryBlockId: null,
           aiLanguage: 'Thai',
+          controlMode: 'joystick',
           profilePhotoURL: null,
         }),
     }),
