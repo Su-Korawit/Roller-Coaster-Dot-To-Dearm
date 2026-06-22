@@ -3,6 +3,7 @@ import Phaser from 'phaser'
 import { useSelectStore } from '../stores/useSelectStore'
 import { useWorldStore } from '../stores/useWorldStore'
 import { useAuthStore } from '../stores/useAuthStore'
+import { useUserStore } from '../stores/useUserStore'
 import MapPalette from './MapPalette'
 import { isEditableTarget } from '../utils/isEditableTarget'
 import { joinWorld, leaveWorld, subscribeWorldPlayers } from '../lib/presence'
@@ -34,6 +35,7 @@ export default function GameCanvas({ active = true }) {
   const selectedItemKey = useWorldStore((s) => s.selectedItemKey)
   const currentMapOwnerUid = useWorldStore((s) => s.currentMapOwnerUid)
   const remotePlayers      = useWorldStore((s) => s.remotePlayers)
+  const controlMode = useUserStore((s) => s.controlMode)
 
   useEffect(() => {
     const game = gameRef.current
@@ -65,6 +67,12 @@ export default function GameCanvas({ active = true }) {
     game.registry.set('remotePlayers', remotePlayers)
     game.events.emit('remotePlayersChanged')
   }, [remotePlayers])
+
+  useEffect(() => {
+    const game = gameRef.current
+    if (!game) return
+    game.registry.set('controlMode', controlMode)
+  }, [controlMode])
 
   // Arm/disarm presence room whenever the visited map owner changes.
   useEffect(() => {
@@ -121,6 +129,7 @@ export default function GameCanvas({ active = true }) {
       game.registry.set('mapObjects', useWorldStore.getState().mapObjects)
       game.registry.set('editMode', useWorldStore.getState().editMode)
       game.registry.set('selectedItemKey', useWorldStore.getState().selectedItemKey)
+      game.registry.set('controlMode', useUserStore.getState().controlMode)
       gameRef.current = game
       game.events.on('zoomChanged', (v) => {
         setZoom(+v.toFixed(1))
