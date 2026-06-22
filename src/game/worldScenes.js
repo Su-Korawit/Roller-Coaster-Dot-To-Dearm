@@ -785,8 +785,20 @@ export class IndoorScene extends Phaser.Scene {
     this.targetY     = 0
     this.isSprinting = false
     this.lastClickTime = 0
+    this.joystickActive  = false
+    this.joystickOriginX = 0
+    this.joystickOriginY = 0
 
     this.input.on('pointerdown', (pointer) => {
+      const controlMode = this.registry.get('controlMode') ?? 'joystick'
+      if (controlMode === 'joystick') {
+        if (this.input.pointer2.isDown) return
+        this.joystickActive  = true
+        this.joystickOriginX = pointer.x
+        this.joystickOriginY = pointer.y
+        return
+      }
+
       const now = this.time.now
       if (now - this.lastClickTime < DOUBLE_CLICK_MS) {
         this.isSprinting = !this.isSprinting
@@ -815,10 +827,11 @@ export class IndoorScene extends Phaser.Scene {
     this.lastPinchDist = null
 
     this.wasd = this.input.keyboard.addKeys({
-      up:    Phaser.Input.Keyboard.KeyCodes.W,
-      down:  Phaser.Input.Keyboard.KeyCodes.S,
-      left:  Phaser.Input.Keyboard.KeyCodes.A,
-      right: Phaser.Input.Keyboard.KeyCodes.D,
+      up:     Phaser.Input.Keyboard.KeyCodes.W,
+      down:   Phaser.Input.Keyboard.KeyCodes.S,
+      left:   Phaser.Input.Keyboard.KeyCodes.A,
+      right:  Phaser.Input.Keyboard.KeyCodes.D,
+      sprint: Phaser.Input.Keyboard.KeyCodes.SHIFT,
     })
     this.usingWasd = false
 
@@ -839,6 +852,10 @@ export class IndoorScene extends Phaser.Scene {
     const p1 = this.input.pointer1
     const p2 = this.input.pointer2
     if (p1.isDown && p2.isDown) {
+      if (this.joystickActive) {
+        this.joystickActive = false
+        this.player.setVelocity(0, 0)
+      }
       const dist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y)
       if (this.lastPinchDist !== null) {
         const next = Phaser.Math.Clamp(
@@ -853,8 +870,6 @@ export class IndoorScene extends Phaser.Scene {
       this.lastPinchDist = null
     }
 
-    const spd = SPEED * (this.isSprinting ? SPRINT_MULTIPLIER : 1)
-
     const { up, down, left, right } = this.wasd
     const wasdActive = up.isDown || down.isDown || left.isDown || right.isDown
 
@@ -863,6 +878,7 @@ export class IndoorScene extends Phaser.Scene {
       this.isMoving = false
       this.marker.setVisible(false)
 
+      const spd = SPEED * (this.wasd.sprint.isDown ? SPRINT_MULTIPLIER : 1)
       let vx = 0, vy = 0
       if (left.isDown)  vx -= spd
       if (right.isDown) vx += spd
@@ -890,8 +906,41 @@ export class IndoorScene extends Phaser.Scene {
       this.player.play(`${this.currentMbti}-idle`)
     }
 
+    const controlMode = this.registry.get('controlMode') ?? 'joystick'
+    if (controlMode === 'joystick') {
+      const ptr = this.input.activePointer
+      if (!this.joystickActive || !ptr.isDown) {
+        if (this.joystickActive) {
+          this.joystickActive = false
+          this.player.setVelocity(0, 0)
+          this.player.play(`${this.currentMbti}-idle`)
+        }
+        return
+      }
+      const dx  = ptr.x - this.joystickOriginX
+      const dy  = ptr.y - this.joystickOriginY
+      const mag = Math.hypot(dx, dy)
+      if (mag < JOYSTICK_DEADZONE) {
+        this.player.setVelocity(0, 0)
+        const idleKey = `${this.currentMbti}-idle`
+        if (this.player.anims.currentAnim?.key !== idleKey) this.player.play(idleKey)
+        return
+      }
+      const jspd = SPEED * (mag >= JOYSTICK_SPRINT ? SPRINT_MULTIPLIER : 1)
+      const vx = (dx / mag) * jspd
+      const vy = (dy / mag) * jspd
+      this.player.setVelocity(vx, vy)
+      const dir = Math.abs(vx) >= Math.abs(vy)
+        ? (vx > 0 ? 'walk-right' : 'walk-left')
+        : (vy > 0 ? 'walk-down' : 'walk-up')
+      const animKey = `${this.currentMbti}-${dir}`
+      if (this.player.anims.currentAnim?.key !== animKey) this.player.play(animKey)
+      return
+    }
+
     if (!this.isMoving) return
 
+    const spd = SPEED * (this.isSprinting ? SPRINT_MULTIPLIER : 1)
     const dx       = this.targetX - this.player.x
     const dy       = this.targetY - this.player.y
     const distance = Math.sqrt(dx * dx + dy * dy)
