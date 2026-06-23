@@ -52,6 +52,13 @@ service firebase.storage {
       allow write: if isSuperAdmin() || userEmail() == 'itcity9476@gmail.com';
     }
 
+    // Welcome page media — game preview, news covers, testimonial avatars.
+    // Public read (download URLs are public tokens); super-admin writes via Dashboard.
+    match /welcome/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
     // Payment slips uploaded by users before Cloud Function verification.
     // Owner writes their own slip; super-admin may read for dispute review.
     match /slips/{uid}/{purchaseId} {

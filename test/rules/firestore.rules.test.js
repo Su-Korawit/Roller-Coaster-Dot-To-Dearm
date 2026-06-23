@@ -115,3 +115,22 @@ describe('Personal Map rules (maps/{ownerUid})', () => {
     await assertFails(getDoc(doc(anon, 'maps/alice')))
   })
 })
+
+describe('welcomeConfig rules', () => {
+  it('allows anyone (even unauthenticated) to read welcome content', async () => {
+    const anon = testEnv.unauthenticatedContext().firestore()
+    await assertSucceeds(getDoc(doc(anon, 'welcomeConfig/stats')))
+    await assertSucceeds(getDoc(doc(anon, 'welcomeConfig/news/items/n1')))
+  })
+
+  it('lets the super-admin write welcome content', async () => {
+    const sa = testEnv.authenticatedContext(SUPER_UID).firestore()
+    await assertSucceeds(setDoc(doc(sa, 'welcomeConfig/stats'), { items: [] }))
+    await assertSucceeds(setDoc(doc(sa, 'welcomeConfig/news/items/n2'), { titleTh: 'x' }))
+  })
+
+  it('BLOCKS a non-admin signed-in user from writing welcome content', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(setDoc(doc(alice, 'welcomeConfig/stats'), { items: [] }))
+  })
+})

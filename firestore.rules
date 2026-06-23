@@ -85,6 +85,14 @@ service cloud.firestore {
       allow write: if canEditMusic();
     }
 
+    // Welcome / landing page content. World-readable (the landing page is public,
+    // even for unauthenticated visitors); only the super-admin edits it via the
+    // Admin Dashboard. Recursive so the news/faq/testimonials subcollections inherit.
+    match /welcomeConfig/{document=**} {
+      allow read:  if true;
+      allow write: if isSuperAdmin();
+    }
+
     // Shop catalog: signed-in users read active products; super-admin manages.
     match /shopProducts/{productId} {
       allow read:  if isSignedIn();
