@@ -7,6 +7,7 @@ import NewsSection from '../components/welcome/NewsSection'
 import HowItWorks from '../components/welcome/HowItWorks'
 import Testimonials from '../components/welcome/Testimonials'
 import FaqSection from '../components/welcome/FaqSection'
+import DonateSection from '../components/welcome/DonateSection'
 import WelcomeFooter from '../components/welcome/WelcomeFooter'
 
 export default function WelcomePage() {
@@ -21,6 +22,7 @@ export default function WelcomePage() {
       <HowItWorks />
       <Testimonials testimonials={testimonials} />
       <FaqSection faq={faq} />
+      <DonateSection />
       <WelcomeFooter />
     </main>
   )
