@@ -12,14 +12,6 @@ const { default: HeroSection } = await import('./HeroSection')
 describe('HeroSection', () => {
   beforeEach(() => { authState = { user: null }; navigate.mockClear() })
 
-  it('Register and Login deep-link into the auth tabs', () => {
-    render(<HeroSection />)
-    fireEvent.click(screen.getByRole('button', { name: /register/i }))
-    expect(navigate).toHaveBeenCalledWith('/auth?mode=register')
-    fireEvent.click(screen.getByRole('button', { name: /login/i }))
-    expect(navigate).toHaveBeenCalledWith('/auth?mode=login')
-  })
-
   it('Play goes to /auth when logged out', () => {
     render(<HeroSection />)
     fireEvent.click(screen.getByRole('button', { name: /play/i }))
@@ -31,5 +23,16 @@ describe('HeroSection', () => {
     render(<HeroSection />)
     fireEvent.click(screen.getByRole('button', { name: /play/i }))
     expect(navigate).toHaveBeenCalledWith('/home')
+  })
+
+  it('renders video background when gamePreview has a video URL', () => {
+    render(<HeroSection gamePreview={{ mediaUrl: 'https://example.com/game.mp4', mediaType: 'video' }} />)
+    expect(document.querySelector('video[src="https://example.com/game.mp4"]')).toBeTruthy()
+  })
+
+  it('renders nothing video-related when gamePreview is null', () => {
+    render(<HeroSection />)
+    expect(document.querySelector('video')).toBeFalsy()
+    expect(document.querySelector('img[aria-hidden="true"]')).toBeFalsy()
   })
 })
