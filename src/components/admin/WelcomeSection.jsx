@@ -8,7 +8,7 @@ import { refs, cols } from '../../lib/db'
 import { useToast } from './Toast'
 
 async function uploadWelcomeMedia(file, kind) {
-  const path = `welcome/${kind}/${file.name}`
+  const path = `welcome/${kind}/${Date.now()}-${file.name}`
   await uploadBytes(storageRef(storage, path), file, { contentType: file.type || 'image/png' })
   return getDownloadURL(storageRef(storage, path))
 }
@@ -54,9 +54,9 @@ export default function WelcomeSection() {
 
   // ── Stats (array on one doc) ──
   async function saveStats(next) {
-    setStats(next)
     try {
       await setDoc(refs.welcomeStats(), { items: next })
+      setStats(next)
       toast.success?.('บันทึก Stats แล้ว')
     } catch {
       toast.error?.('บันทึกไม่สำเร็จ')

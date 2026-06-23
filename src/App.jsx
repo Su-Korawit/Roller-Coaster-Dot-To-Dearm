@@ -7,7 +7,6 @@ import ProgramPage from './pages/ProgramPage'
 import RegisterPage from './pages/RegisterPage'
 import UniversityPage from './pages/UniversityPage'
 import WhyPage from './pages/WhyPage'
-import AuthPage from './pages/AuthPage'
 import AdminPage from './pages/AdminPage'
 import RoadmapPage from './pages/RoadmapPage'
 import WelcomePage from './pages/WelcomePage'
@@ -42,7 +41,7 @@ function RequireAuth() {
     )
   }
 
-  if (!user) return <AuthPage />
+  if (!user) return <Navigate to="/auth" replace />
   return <Outlet />
 }
 
