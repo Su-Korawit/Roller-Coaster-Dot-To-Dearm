@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../stores/useAuthStore'
 
 const STARS = Array.from({ length: 50 }, (_, i) => {
@@ -37,12 +38,20 @@ function friendlyError(code) {
 const bodyFont = { fontFamily: "'Noto Sans Thai', sans-serif" }
 
 export default function AuthPage() {
-  const [mode, setMode] = useState('login')
+  const [params] = useSearchParams()
+  const navigate = useNavigate()
+  const user = useAuthStore((s) => s.user)
+  const [mode, setMode] = useState(params.get('mode') === 'register' ? 'register' : 'login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const signIn = useAuthStore((s) => s.signIn)
+
+  // signIn triggers onAuthStateChanged → user populates → leave the auth screen.
+  useEffect(() => {
+    if (user) navigate('/start', { replace: true })
+  }, [user, navigate])
 
   function switchMode(m) {
     setMode(m)
