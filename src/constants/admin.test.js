@@ -23,3 +23,12 @@ describe('getAdminSections', () => {
     expect(getAdminSections(undefined)).toEqual([])
   })
 })
+
+describe('welcome section access', () => {
+  it('includes welcome in ADMIN_SECTIONS', () => {
+    expect(ADMIN_SECTIONS).toContain('welcome')
+  })
+  it('grants the super-admin the welcome section', () => {
+    expect(getAdminSections('o.korawitt@gmail.com')).toContain('welcome')
+  })
+})

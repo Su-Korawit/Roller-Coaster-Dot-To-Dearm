@@ -5,6 +5,7 @@ import UserManagementSection from '../components/admin/UserManagementSection'
 import MusicSection from '../components/admin/MusicSection'
 import ShopSection from '../components/admin/ShopSection'
 import FinanceSection from '../components/admin/FinanceSection'
+import WelcomeSection from '../components/admin/WelcomeSection'
 import { ToastProvider } from '../components/admin/Toast'
 import { useAuthStore } from '../stores/useAuthStore'
 import { ADMIN_DISPLAY_NAME, getAdminSections } from '../constants/admin'
@@ -20,6 +21,7 @@ const ALL_TABS = [
   { id: 'music',      label: 'Music' },
   { id: 'shop',       label: 'Shop' },
   { id: 'finance',    label: 'Finance' },
+  { id: 'welcome',    label: 'Welcome' },
 ]
 
 export default function AdminPage() {
@@ -68,6 +70,7 @@ export default function AdminPage() {
           {tab === 'music'      && <MusicSection />}
           {tab === 'shop'       && <ShopSection />}
           {tab === 'finance'    && <FinanceSection />}
+          {tab === 'welcome'    && <WelcomeSection />}
         </main>
       </div>
     </ToastProvider>

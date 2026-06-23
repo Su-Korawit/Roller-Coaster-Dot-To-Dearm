@@ -6,10 +6,10 @@ export const ADMIN_DISPLAY_NAME = 'ผู้พัฒนาระบบ'
 // The super-admin gets every section. Adding/removing an admin here must be
 // mirrored in firestore.rules + storage.rules (those gate writes by token email).
 // Keys must be lowercase — getAdminSections() lowercases the lookup email.
-export const ADMIN_SECTIONS = ['analytics', 'users', 'characters', 'maps', 'music', 'shop', 'finance']
+export const ADMIN_SECTIONS = ['analytics', 'users', 'characters', 'maps', 'music', 'shop', 'finance', 'welcome']
 
 export const ADMIN_ROLES = {
-  'o.korawitt@gmail.com': ['analytics', 'users', 'characters', 'maps', 'music', 'shop', 'finance'],
+  'o.korawitt@gmail.com': ['analytics', 'users', 'characters', 'maps', 'music', 'shop', 'finance', 'welcome'],
   'takadaoni07@gmail.com': ['maps'],
   'play198725@gmail.com': ['characters'],
   'itcity9476@gmail.com': ['music'],
