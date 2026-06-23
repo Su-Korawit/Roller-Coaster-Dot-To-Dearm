@@ -35,38 +35,58 @@ export default function WelcomeSection() {
     setFaq(fq.docs.map((d) => ({ id: d.id, ...d.data() })))
     setTestimonials(ts.docs.map((d) => ({ id: d.id, ...d.data() })))
   }
-  useEffect(() => { reload().catch((e) => toast.error?.(String(e))) }, [])
+  useEffect(() => { reload().catch((e) => toast.error?.(String(e))) }, []) // eslint-disable-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
 
   // ── Game preview ──
   async function onUploadPreview(e) {
     const file = e.target.files?.[0]
     if (!file) return
-    const mediaUrl = await uploadWelcomeMedia(file, 'gamePreview')
-    const mediaType = file.type.startsWith('video') ? 'video' : 'gif'
-    await setDoc(refs.welcomeGamePreview(), { mediaUrl, mediaType })
-    setGamePreview({ mediaUrl, mediaType })
-    toast.success?.('อัปเดต Game Preview แล้ว')
+    try {
+      const mediaUrl = await uploadWelcomeMedia(file, 'gamePreview')
+      const mediaType = file.type.startsWith('video') ? 'video' : 'gif'
+      await setDoc(refs.welcomeGamePreview(), { mediaUrl, mediaType })
+      setGamePreview({ mediaUrl, mediaType })
+      toast.success?.('อัปเดต Game Preview แล้ว')
+    } catch {
+      toast.error?.('อัปโหลดไม่สำเร็จ')
+    }
   }
 
   // ── Stats (array on one doc) ──
   async function saveStats(next) {
     setStats(next)
-    await setDoc(refs.welcomeStats(), { items: next })
-    toast.success?.('บันทึก Stats แล้ว')
+    try {
+      await setDoc(refs.welcomeStats(), { items: next })
+      toast.success?.('บันทึก Stats แล้ว')
+    } catch {
+      toast.error?.('บันทึกไม่สำเร็จ')
+    }
   }
 
   // ── Generic list CRUD ──
   async function addItem(col, payload, withCreatedAt) {
-    await addDoc(col, withCreatedAt ? { ...payload, createdAt: serverTimestamp() } : payload)
-    await reload()
+    try {
+      await addDoc(col, withCreatedAt ? { ...payload, createdAt: serverTimestamp() } : payload)
+      await reload()
+    } catch {
+      toast.error?.('บันทึกไม่สำเร็จ')
+    }
   }
   async function removeItem(col, id) {
-    await deleteDoc(doc(col, id))
-    await reload()
+    try {
+      await deleteDoc(doc(col, id))
+      await reload()
+    } catch {
+      toast.error?.('บันทึกไม่สำเร็จ')
+    }
   }
   async function patchItem(col, id, payload) {
-    await updateDoc(doc(col, id), payload)
-    await reload()
+    try {
+      await updateDoc(doc(col, id), payload)
+      await reload()
+    } catch {
+      toast.error?.('บันทึกไม่สำเร็จ')
+    }
   }
 
   return (
@@ -118,6 +138,7 @@ export default function WelcomeSection() {
         onRemove={(id) => removeItem(cols.welcomeNews, id)}
         upload={(file) => uploadWelcomeMedia(file, 'news')}
         uploadTarget="coverUrl"
+        onError={(msg) => toast.error?.(msg)}
       />
 
       {/* FAQ */}
@@ -150,15 +171,26 @@ export default function WelcomeSection() {
         onRemove={(id) => removeItem(cols.welcomeTestimonials, id)}
         upload={(file) => uploadWelcomeMedia(file, 'testimonials')}
         uploadTarget="avatarUrl"
+        onError={(msg) => toast.error?.(msg)}
       />
     </div>
   )
 }
 
 // Small reusable add/edit/delete editor for a list collection.
-function ListEditor({ title, items, fields, onAdd, onPatch, onRemove, upload, uploadTarget }) {
+function ListEditor({ title, items, fields, onAdd, onPatch, onRemove, upload, uploadTarget, onError }) {
   const blank = Object.fromEntries(fields.map((f) => [f.key, f.number ? 0 : '']))
   const [draft, setDraft] = useState(blank)
+  // Local edits for existing items, keyed by id; flushed to Firestore on Save.
+  const [edits, setEdits] = useState({})
+
+  function valueOf(it, key) {
+    const f = fields.find((x) => x.key === key)
+    return edits[it.id]?.[key] ?? it[key] ?? (f?.number ? 0 : '')
+  }
+  function editField(id, key, val) {
+    setEdits((e) => ({ ...e, [id]: { ...e[id], [key]: val } }))
+  }
 
   function setField(obj, setObj, key, val, number) {
     setObj({ ...obj, [key]: number ? Number(val) : val })
@@ -167,8 +199,12 @@ function ListEditor({ title, items, fields, onAdd, onPatch, onRemove, upload, up
   async function handleUpload(e, apply) {
     const file = e.target.files?.[0]
     if (!file || !upload) return
-    const url = await upload(file)
-    apply(uploadTarget, url)
+    try {
+      const url = await upload(file)
+      apply(uploadTarget, url)
+    } catch {
+      onError?.('อัปโหลดไม่สำเร็จ')
+    }
   }
 
   return (
@@ -185,23 +221,36 @@ function ListEditor({ title, items, fields, onAdd, onPatch, onRemove, upload, up
                 {f.textarea ? (
                   <textarea
                     className="w-full border rounded px-2 py-1 text-sm" rows={3}
-                    value={it[f.key] ?? ''}
-                    onChange={(e) => onPatch(it.id, { [f.key]: e.target.value })}
+                    value={valueOf(it, f.key)}
+                    onChange={(e) => editField(it.id, f.key, e.target.value)}
                   />
                 ) : (
                   <input
                     className="w-full border rounded px-2 py-1 text-sm"
                     type={f.number ? 'number' : 'text'}
-                    value={it[f.key] ?? (f.number ? 0 : '')}
-                    onChange={(e) => onPatch(it.id, { [f.key]: f.number ? Number(e.target.value) : e.target.value })}
+                    value={valueOf(it, f.key)}
+                    onChange={(e) => editField(it.id, f.key, f.number ? Number(e.target.value) : e.target.value)}
                   />
                 )}
               </div>
             ))}
             {upload && (
-              <input type="file" className="text-xs" onChange={(e) => handleUpload(e, (k, url) => onPatch(it.id, { [k]: url }))} />
+              <input type="file" className="text-xs" onChange={(e) => handleUpload(e, (k, url) => editField(it.id, k, url))} />
             )}
-            <button className="text-rose-600 text-sm mt-2" onClick={() => onRemove(it.id)}>ลบ</button>
+            <div className="flex gap-2 mt-2">
+              <button
+                className="bg-brand text-white rounded px-3 py-1 text-sm"
+                onClick={async () => {
+                  if (edits[it.id]) {
+                    await onPatch(it.id, edits[it.id])
+                    setEdits((e) => { const n = { ...e }; delete n[it.id]; return n })
+                  }
+                }}
+              >
+                บันทึก
+              </button>
+              <button className="text-rose-600 text-sm" onClick={() => onRemove(it.id)}>ลบ</button>
+            </div>
           </div>
         ))}
       </div>
