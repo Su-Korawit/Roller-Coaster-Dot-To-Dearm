@@ -105,3 +105,28 @@ html {
   -webkit-text-fill-color: transparent;
   color: transparent;
 }
+
+/* ── Welcome page: neo-brutalist "pixel kawaii" surface language ───────────── */
+.neo-card {
+  border: 2px solid var(--color-ink);
+  border-radius: 1rem;
+  background: var(--color-surface);
+  box-shadow: 4px 4px 0 0 var(--color-ink);
+}
+.neo-btn {
+  border: 2px solid var(--color-ink);
+  box-shadow: 4px 4px 0 0 var(--color-ink);
+  transition: transform 120ms steps(2), box-shadow 120ms steps(2);
+}
+.neo-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 0 var(--color-ink);
+}
+.neo-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 0 var(--color-ink);
+}
+@media (prefers-reduced-motion: reduce) {
+  .neo-btn { transition: none; }
+  .neo-btn:hover, .neo-btn:active { transform: none; }
+}
