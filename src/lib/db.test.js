@@ -13,6 +13,19 @@ vi.mock('firebase/firestore', () => ({
 
 const { shapes, refs, cols, prefixUpperBound } = await import('./db')
 
+describe('welcome refs/cols', () => {
+  it('points doc refs at welcomeConfig singletons', () => {
+    expect(refs.welcomeGamePreview()).toEqual({ _path: 'welcomeConfig/gamePreview' })
+    expect(refs.welcomeStats()).toEqual({ _path: 'welcomeConfig/stats' })
+  })
+
+  it('points list cols at welcomeConfig/<section>/items subcollections', () => {
+    expect(cols.welcomeNews).toEqual({ _col: 'welcomeConfig/news/items' })
+    expect(cols.welcomeFaq).toEqual({ _col: 'welcomeConfig/faq/items' })
+    expect(cols.welcomeTestimonials).toEqual({ _col: 'welcomeConfig/testimonials/items' })
+  })
+})
+
 describe('shapes.readProfile', () => {
   it('reads canonical nested profile.* fields', () => {
     const userDoc = {

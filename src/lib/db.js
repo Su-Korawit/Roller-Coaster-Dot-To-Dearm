@@ -18,6 +18,8 @@ export const refs = {
   purchase:    (purchaseId)     => doc(db, 'purchases', purchaseId),
   product:     (productId)      => doc(db, 'shopProducts', productId),
   map:         (uid)            => doc(db, 'maps', uid),
+  welcomeGamePreview: ()        => doc(db, 'welcomeConfig', 'gamePreview'),
+  welcomeStats:       ()        => doc(db, 'welcomeConfig', 'stats'),
 }
 
 // ── Collection refs ───────────────────────────────────────────────────────────
@@ -31,6 +33,9 @@ export const cols = {
   chatMessages: (chatId) => collection(db, 'chats', chatId, 'messages'),
   userMatches:  (uid)    => collection(db, 'users', uid, 'matches'),
   userCredits:  (uid)    => collection(db, 'users', uid, 'receivedCredits'),
+  welcomeNews:         collection(db, 'welcomeConfig', 'news', 'items'),
+  welcomeFaq:          collection(db, 'welcomeConfig', 'faq', 'items'),
+  welcomeTestimonials: collection(db, 'welcomeConfig', 'testimonials', 'items'),
 }
 
 // ── Query builders ────────────────────────────────────────────────────────────
