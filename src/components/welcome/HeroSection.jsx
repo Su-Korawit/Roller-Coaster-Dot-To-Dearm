@@ -39,15 +39,14 @@ export default function HeroSection({ gamePreview }) {
 
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center text-center px-6">
-        <span className="text-6xl md:text-8xl mb-4" aria-hidden="true">🎢</span>
         <h1 className="pixel-font title-gradient text-2xl md:text-5xl leading-relaxed">
           ROLLER COASTER
         </h1>
         <p
-          className="mt-4 max-w-xl text-base md:text-lg text-white/70"
+          className="mt-4 text-sm md:text-base text-white/70 whitespace-nowrap"
           style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
         >
-          วางแผนเส้นทางอนาคตของคุณด้วย AI เชื่อมต่อกับเพื่อนที่ใช่ และเรียนรู้ผ่านโลกเกม
+          วางแผนอนาคต · เชื่อมต่อเพื่อน · เรียนรู้ผ่านเกม
         </p>
         <button
           onClick={onPlay}
