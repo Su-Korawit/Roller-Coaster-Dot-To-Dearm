@@ -10,6 +10,7 @@ import WhyPage from './pages/WhyPage'
 import AuthPage from './pages/AuthPage'
 import AdminPage from './pages/AdminPage'
 import RoadmapPage from './pages/RoadmapPage'
+import WelcomePage from './pages/WelcomePage'
 import { useSelectStore } from './stores/useSelectStore'
 import { useAuthStore } from './stores/useAuthStore'
 import { getAdminSections } from './constants/admin'
@@ -79,9 +80,13 @@ function App() {
         <Route path="/admin" element={<AdminPage />} />
       </Route>
 
+      {/* Public — landing + auth, outside the mobile frame so the page can scroll */}
+      <Route path="/" element={<WelcomePage />} />
+      <Route path="/auth" element={<AuthPage />} />
+
       <Route element={<MobileLayout />}>
         <Route element={<RequireAuth />}>
-          <Route path="/" element={<RootRedirect />} />
+          <Route path="/start" element={<RootRedirect />} />
           <Route path="/why" element={<WhyPage />} />
           <Route path="/select/mbti" element={<MbtiPage />} />
           <Route path="/select/career" element={<CareerPage />} />

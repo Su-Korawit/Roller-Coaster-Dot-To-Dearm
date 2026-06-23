@@ -76,7 +76,7 @@ function WhyPage() {
 
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-40">
         <Button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/start')}
           variant="secondary"
           aria-label="Ready to use — go to registration"
         >
