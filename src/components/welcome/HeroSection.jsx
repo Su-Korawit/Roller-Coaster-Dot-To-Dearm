@@ -33,7 +33,7 @@ export default function HeroSection({ gamePreview }) {
       {/* Dark overlay (always shown — softens video, deepens gradient) */}
       <div
         className="absolute inset-0"
-        style={{ background: 'rgba(26,16,53,0.6)' }}
+        style={{ background: 'rgba(26,16,53,0.35)' }}
         aria-hidden="true"
       />
 
@@ -50,7 +50,7 @@ export default function HeroSection({ gamePreview }) {
         </p>
         <button
           onClick={onPlay}
-          className="neo-btn mt-10 pixel-font text-[13px] text-white rounded-2xl px-12 py-5 bg-brand-strong"
+          className="neo-btn mt-16 pixel-font text-[10px] text-white rounded-xl px-8 py-3 bg-brand-strong"
         >
           ▶ PLAY
         </button>
