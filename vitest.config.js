@@ -4,6 +4,7 @@ import { defineConfig } from 'vitest/config'
 // test/rules are excluded here and run separately via `npm run test:rules`.
 export default defineConfig({
   test: {
+    globals: true,
     exclude: ['**/node_modules/**', '**/dist/**', 'test/rules/**'],
   },
 })
