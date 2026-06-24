@@ -317,7 +317,10 @@ export default function MapDashboard() {
   const adminUid = useAuthStore((s) => s.user?.uid)
   const toast = useToast()
   const mountedRef = useRef(true)
-  useEffect(() => () => { mountedRef.current = false }, [])
+  useEffect(() => {
+    mountedRef.current = true
+    return () => { mountedRef.current = false }
+  }, [])
 
   const loadMaps = useCallback(async () => {
     setLoading(true)

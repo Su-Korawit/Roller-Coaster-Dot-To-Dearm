@@ -113,7 +113,10 @@ export function CharactersGrid({ onStatus }) {
   const [busyCode, setBusyCode]       = useState(null) // code mid-copy
   const toast = useToast()
   const mountedRef = useRef(true)
-  useEffect(() => () => { mountedRef.current = false }, [])
+  useEffect(() => {
+    mountedRef.current = true
+    return () => { mountedRef.current = false }
+  }, [])
 
   // Check which characters are already uploaded to Storage.
   const refreshList = useCallback(async () => {
