@@ -5,6 +5,7 @@ import { MBTI_TYPES, GAME_ASSETS, GAME_ASSET_BY_KEY } from './assetManifest'
 import { cloudAsset } from '../utils/cloudAsset'
 import { getMapConfig, DEFAULT_MAP_CONFIGS } from '../utils/mapConfig'
 import { updateSelf } from '../lib/presence'
+import { parseMapMeta } from '../utils/tiledMapMeta'
 
 // 0 = Basic_Charakter (1 ตัว)
 // 1 = MBTI rotation (16 ตัว สลับทุก 1 วิ)
@@ -71,7 +72,7 @@ function attachLocalFallback(scene, localByKey) {
     scene.load.start()
   }
   // preload() re-runs on every scene.start, so remove the listener on shutdown
-  // to stop handlers accumulating across indoor↔outdoor transitions.
+  // to stop handlers accumulating across map transitions.
   scene.load.on('loaderror', handler)
   scene.events.once('shutdown', () => scene.load.off('loaderror', handler))
 }
@@ -106,30 +107,34 @@ function applyCollision(scene, map, layerInfos, cfg, player) {
   })
 }
 
-// Resolve all data Phaser needs before booting: character/map URLs, map configs,
-// and a resolved tileset image URL per Tiled tileset name.
-export async function loadSceneData() {
-  const [assetUrls, test3Cfg, indoorCfg] = await Promise.all([
+// Resolve all data Phaser needs before booting/switching to one map: character
+// URLs, that map's config (via getMapConfig), and a resolved tileset image URL
+// per Tiled tileset name. Called once per map (entry boot + each portal switch).
+export async function loadSceneData(mapKey) {
+  const [assetUrls, mapConfig] = await Promise.all([
     resolveAssetUrls(),
-    getMapConfig('test3'),
-    getMapConfig('indoor'),
+    getMapConfig(mapKey),
   ])
-  const [test3Tiles, indoorTiles] = await Promise.all([
-    resolveMapTilesets(test3Cfg),
-    resolveMapTilesets(indoorCfg),
-  ])
-  return {
-    assetUrls,
-    mapConfigs: { test3: test3Cfg, indoor: indoorCfg },
-    tilesetUrls: { test3: test3Tiles, indoor: indoorTiles },
-  }
+  const tilesetUrls = await resolveMapTilesets(mapConfig)
+  return { assetUrls, mapConfig, tilesetUrls }
 }
 
-// ── GameScene ─────────────────────────────────────────────────────────────────
+// ── MapScene ────────────────────────────────────────────────────────────────
+// One generic, data-driven scene that renders ANY map. It reads `mapKey` and
+// `spawn` from init data; the map's config/tilesets are loaded into the registry
+// by GameCanvas before the scene starts. Capability flags on the config gate
+// presence (multiplayer) and decoration editing (editable). Map switching goes
+// through a `mapChangeRequested` game event (NOT scene.restart) so React can
+// reload the target map's data before the new scene's preload runs.
 
-export class GameScene extends Phaser.Scene {
+export class MapScene extends Phaser.Scene {
   constructor() {
-    super({ key: 'GameScene' })
+    super({ key: 'MapScene' })
+  }
+
+  init(data) {
+    this.mapKey = data?.mapKey ?? 'test3'
+    this.spawnName = data?.spawn ?? null   // null → use map's default spawn
   }
 
   preload() {
@@ -140,10 +145,10 @@ export class GameScene extends Phaser.Scene {
     const r = this.registry
     const localByKey = {}
 
-    localByKey['test3'] = { local: GAME_ASSET_BY_KEY['test3']?.localPath, kind: 'tilemap' }
-    this.load.tilemapTiledJSON('test3', urlFor(r, 'test3'))
+    localByKey[this.mapKey] = { local: GAME_ASSET_BY_KEY[this.mapKey]?.localPath, kind: 'tilemap' }
+    this.load.tilemapTiledJSON(this.mapKey, urlFor(r, this.mapKey) ?? `/maps/${this.mapKey}.json`)
 
-    const tiles = r.get('tilesetUrls')?.test3 ?? {}
+    const tiles = r.get('tilesetUrls') ?? {}
     Object.entries(tiles).forEach(([name, { url, local }]) => {
       localByKey[name] = { local, kind: 'image' }
       this.load.image(name, url)
@@ -154,7 +159,7 @@ export class GameScene extends Phaser.Scene {
         frameWidth: 48, frameHeight: 48,
       })
     } else {
-      MBTI_TYPES.forEach(mbti => {
+      MBTI_TYPES.forEach((mbti) => {
         localByKey[mbti] = {
           local: GAME_ASSET_BY_KEY[mbti]?.localPath,
           kind: 'spritesheet',
@@ -168,8 +173,12 @@ export class GameScene extends Phaser.Scene {
   }
 
   create() {
-    const map = this.make.tilemap({ key: 'test3' })
-    const cfg = this.registry.get('mapConfigs')?.test3 ?? DEFAULT_MAP_CONFIGS.test3
+    const map = this.make.tilemap({ key: this.mapKey })
+    const cfg = this.registry.get('mapConfig')
+      ?? DEFAULT_MAP_CONFIGS[this.mapKey]
+      ?? { tilesets: {}, collision: {}, hidden: {} }
+
+    this._multiplayer = !!cfg.multiplayer
 
     const tilesets = map.tilesets
       .map(ts => map.addTilesetImage(ts.name, ts.name))
@@ -203,9 +212,9 @@ export class GameScene extends Phaser.Scene {
       { key: 'walk-right', start: 12, end: 15 },
     ]
     // Phaser's AnimationManager is global and scene.start() re-runs create(), so
-    // guard every anims.create() with exists() (IndoorScene does the same). The
-    // textures.exists() check guards the loaderror→retry race where create() can
-    // run before a re-queued spritesheet finished loading.
+    // guard every anims.create() with exists(). The textures.exists() check guards
+    // the loaderror→retry race where create() can run before a re-queued
+    // spritesheet finished loading.
     if (CHARACTER_MODE === 0) {
       DIRS.forEach(({ key, start, end }) => {
         const animKey = `${PLAYER_KEY}-${key}`
@@ -257,8 +266,16 @@ export class GameScene extends Phaser.Scene {
       this.currentMbti = MBTI_TYPES[this.mbtiIndex]
     }
 
-    const spawnX = 35 * 16 * mapScale
-    const spawnY = 32 * 16 * mapScale
+    // Spawn at the named Spawns-layer object (or this map's default), falling
+    // back to map center. parseMapMeta needs the raw Tiled JSON, which Phaser
+    // caches under the tilemap key.
+    const rawJson = this.cache.tilemap.get(this.mapKey)?.data
+    const meta = rawJson ? parseMapMeta(rawJson) : { spawns: [], portals: [], defaultSpawnName: null }
+    const spawnName = this.spawnName ?? cfg.defaultSpawn ?? meta.defaultSpawnName
+    const spawnObj = meta.spawns.find((s) => s.name === spawnName) ?? meta.spawns[0] ?? null
+    const spawnX = (spawnObj ? spawnObj.x : (map.width / 2) * 16) * mapScale
+    const spawnY = (spawnObj ? spawnObj.y : (map.height / 2) * 16) * mapScale
+
     this.player = this.physics.add.sprite(spawnX, spawnY, this.currentMbti)
     this.player.setScale(mapScale)
     this.player.body.setSize(16, 20)
@@ -298,26 +315,31 @@ export class GameScene extends Phaser.Scene {
       this._remoteAvatars.clear()
     })
 
-    this.transitioning = false
-    const doorToIndoor = map.getObjectLayer('Doors') &&
-      map.findObject('Doors', o => o.name === 'door_to_indoor')
-    if (doorToIndoor) {
+    // Block portal re-fire for 500ms after (re)spawn so arriving on top of a
+    // return portal doesn't immediately bounce the player back.
+    this.transitioning = true
+    this.time.delayedCall(500, () => { this.transitioning = false })
+
+    // Portals: one overlap zone per Portals-layer object. Switching maps goes
+    // through the game event so GameCanvas can reload the target's data (config/
+    // tilesets) into the registry before the next scene's preload runs.
+    meta.portals.forEach((p) => {
+      if (!p.target) return
       const dz = this.add.zone(
-        doorToIndoor.x * mapScale + doorToIndoor.width  * mapScale / 2,
-        doorToIndoor.y * mapScale + doorToIndoor.height * mapScale / 2,
-        doorToIndoor.width  * mapScale,
-        doorToIndoor.height * mapScale,
+        p.x * mapScale + (p.width * mapScale) / 2,
+        p.y * mapScale + (p.height * mapScale) / 2,
+        p.width * mapScale,
+        p.height * mapScale,
       )
       this.physics.world.enable(dz)
       dz.body.setAllowGravity(false)
       dz.body.moves = false
       this.physics.add.overlap(this.player, dz, () => {
-        if (!this.transitioning) {
-          this.transitioning = true
-          this.scene.start('IndoorScene')
-        }
+        if (this.transitioning) return
+        this.transitioning = true
+        this.game.events.emit('mapChangeRequested', { mapKey: p.target, spawn: p.targetSpawn ?? null })
       })
-    }
+    })
 
     this.marker = this.add.graphics()
     this.marker.fillStyle(0xffff00, 1)
@@ -336,7 +358,8 @@ export class GameScene extends Phaser.Scene {
     this.joystickPointerId = -1
 
     this.input.on('pointerdown', (pointer) => {
-      if (this.registry.get('editMode')) {
+      // Decoration placement only on editable maps while edit mode is on.
+      if (cfg.editable && this.registry.get('editMode')) {
         const selectedKey = this.registry.get('selectedItemKey')
         if (selectedKey) {
           useWorldStore.getState().addObject({ key: selectedKey, x: pointer.worldX, y: pointer.worldY })
@@ -404,7 +427,7 @@ export class GameScene extends Phaser.Scene {
 
     // this.scale is the game-level ScaleManager (not a per-scene plugin), so its
     // listeners aren't cleared on scene shutdown — remove ours explicitly or they
-    // accumulate across every indoor↔outdoor transition.
+    // accumulate across every map transition.
     const onResize = (gameSize) => {
       const newZoom = getZoom(gameSize.width)
       this.cameras.main.setSize(gameSize.width, gameSize.height)
@@ -621,7 +644,8 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  // Runs at the top of update() every frame: lerps remote avatars and broadcasts self.
+  // Runs at the top of update() every frame: lerps remote avatars and (only on
+  // multiplayer maps) broadcasts self into the current map's presence room.
   _tickPresence() {
     for (const entry of this._remoteAvatars.values()) {
       entry.sprite.x = Phaser.Math.Linear(entry.sprite.x, entry.targetX, 0.2)
@@ -630,10 +654,11 @@ export class GameScene extends Phaser.Scene {
       entry.label.y  = entry.sprite.y - 24 * this._mapScale
     }
 
+    if (!this._multiplayer) return
     const ownerUid = this.registry.get('ownerUid')
     const selfUid  = this.registry.get('selfUid')
     if (ownerUid && selfUid) {
-      updateSelf(ownerUid, selfUid, {
+      updateSelf(ownerUid, this.mapKey, selfUid, {
         x:      this.player.x,
         y:      this.player.y,
         dir:    this._currentDir ?? 'down',
@@ -641,375 +666,6 @@ export class GameScene extends Phaser.Scene {
         mbti:   this.currentMbti,
         name:   this.registry.get('selfName') ?? '',
       })
-    }
-  }
-}
-
-// ── IndoorScene ───────────────────────────────────────────────────────────────
-
-export class IndoorScene extends Phaser.Scene {
-  constructor() {
-    super({ key: 'IndoorScene' })
-  }
-
-  preload() {
-    const onLoadError = (file) => console.error('Failed to load:', file.src)
-    this.load.on('loaderror', onLoadError)
-    this.events.once('shutdown', () => this.load.off('loaderror', onLoadError))
-
-    const r = this.registry
-    const localByKey = {}
-
-    localByKey['indoor'] = { local: GAME_ASSET_BY_KEY['indoor']?.localPath, kind: 'tilemap' }
-    this.load.tilemapTiledJSON('indoor', urlFor(r, 'indoor'))
-
-    const tiles = r.get('tilesetUrls')?.indoor ?? {}
-    Object.entries(tiles).forEach(([name, { url, local }]) => {
-      localByKey[name] = { local, kind: 'image' }
-      this.load.image(name, url)
-    })
-
-    attachLocalFallback(this, localByKey)
-  }
-
-  create() {
-    const map = this.make.tilemap({ key: 'indoor' })
-    const cfg = this.registry.get('mapConfigs')?.indoor ?? DEFAULT_MAP_CONFIGS.indoor
-
-    const tilesets = map.tilesets
-      .map(ts => map.addTilesetImage(ts.name, ts.name))
-      .filter(Boolean)
-
-    const layerInfos = map.layers.map((ld, i) => {
-      const layer = map.createLayer(ld.name, tilesets, 0, 0)
-      if (layer) {
-        layer.setDepth(i)
-        if (cfg.hidden?.[ld.name]) layer.setVisible(false)
-      }
-      return { name: ld.name, layer }
-    })
-    const layers = layerInfos.map(l => l.layer).filter(Boolean)
-
-    const scaleX   = this.scale.width  / map.widthInPixels
-    const scaleY   = this.scale.height / map.heightInPixels
-    const mapScale = Math.ceil(Math.max(scaleX, scaleY))
-
-    layers.forEach(layer => layer && layer.setScale(mapScale))
-
-    const worldW = map.widthInPixels  * mapScale
-    const worldH = map.heightInPixels * mapScale
-
-    this.physics.world.setBounds(0, 0, worldW, worldH)
-
-    const spawnDoor = map.getObjectLayer('Door') &&
-      map.findObject('Door', o => o.name === 'door_to_world')
-    const spawnX = 6 * 16 * mapScale
-    const spawnY = 12 * 16 * mapScale
-
-    // Animations — guard against duplicates if GameScene already created them
-    const DIRS = [
-      { key: 'walk-down',  start: 0,  end: 3  },
-      { key: 'walk-up',    start: 4,  end: 7  },
-      { key: 'walk-left',  start: 8,  end: 11 },
-      { key: 'walk-right', start: 12, end: 15 },
-    ]
-    if (CHARACTER_MODE === 0) {
-      DIRS.forEach(({ key, start, end }) => {
-        const animKey = `${PLAYER_KEY}-${key}`
-        if (!this.anims.exists(animKey)) {
-          this.anims.create({
-            key: animKey,
-            frames: this.anims.generateFrameNumbers(PLAYER_KEY, { start, end }),
-            frameRate: 8,
-            repeat: -1,
-          })
-        }
-      })
-      const idleKey = `${PLAYER_KEY}-idle`
-      if (!this.anims.exists(idleKey)) {
-        this.anims.create({
-          key: idleKey,
-          frames: this.anims.generateFrameNumbers(PLAYER_KEY, { frames: [0] }),
-          frameRate: 1,
-          repeat: 0,
-        })
-      }
-      this.currentMbti = PLAYER_KEY
-    } else {
-      MBTI_TYPES.forEach(mbti => {
-        if (!this.textures.exists(mbti)) return
-        DIRS.forEach(({ key, start, end }) => {
-          const animKey = `${mbti}-${key}`
-          if (!this.anims.exists(animKey)) {
-            this.anims.create({
-              key: animKey,
-              frames: this.anims.generateFrameNumbers(mbti, { start, end }),
-              frameRate: 8,
-              repeat: -1,
-            })
-          }
-        })
-        const idleKey = `${mbti}-idle`
-        if (!this.anims.exists(idleKey)) {
-          this.anims.create({
-            key: idleKey,
-            frames: this.anims.generateFrameNumbers(mbti, { frames: [0] }),
-            frameRate: 1,
-            repeat: 0,
-          })
-        }
-      })
-      const chosen = this.registry.get('selectedMbti')
-      this.mbtiIndex   = Math.max(0, MBTI_TYPES.indexOf(chosen))
-      this.currentMbti = MBTI_TYPES[this.mbtiIndex]
-    }
-
-    this.player = this.physics.add.sprite(spawnX, spawnY, this.currentMbti)
-    this.player.setScale(mapScale)
-    this.player.body.setSize(16, 20)
-    this.player.body.setOffset(16, 12)
-    this.player.setDepth(5)
-    this.player.setCollideWorldBounds(true)
-    this.player.play(`${this.currentMbti}-idle`)
-
-    applyCollision(this, map, layerInfos, cfg, this.player)
-
-    // Block for 500ms so spawn doesn't immediately re-fire the exit door.
-    this.transitioning = true
-    this.time.delayedCall(500, () => { this.transitioning = false })
-
-    if (spawnDoor) {
-      const dz = this.add.zone(
-        spawnDoor.x * mapScale + (spawnDoor.width  * mapScale) / 2,
-        spawnDoor.y * mapScale + (spawnDoor.height * mapScale) / 2,
-        spawnDoor.width  * mapScale,
-        spawnDoor.height * mapScale,
-      )
-      this.physics.world.enable(dz)
-      dz.body.setAllowGravity(false)
-      dz.body.moves = false
-      this.physics.add.overlap(this.player, dz, () => {
-        if (!this.transitioning) {
-          this.transitioning = true
-          this.scene.start('GameScene')
-        }
-      })
-    }
-
-    this.marker = this.add.graphics()
-    this.marker.fillStyle(0xffff00, 1)
-    this.marker.fillCircle(0, 0, 4)
-    this.marker.setDepth(10)
-    this.marker.setVisible(false)
-
-    this.isMoving    = false
-    this.targetX     = 0
-    this.targetY     = 0
-    this.isSprinting = false
-    this.lastClickTime = 0
-    this.joystickActive    = false
-    this.joystickOriginX   = 0
-    this.joystickOriginY   = 0
-    this.joystickPointerId = -1
-
-    this.input.on('pointerdown', (pointer) => {
-      const controlMode = this.registry.get('controlMode') ?? DEFAULT_CONTROL_MODE
-      if (controlMode === 'joystick') {
-        if (this.input.pointer2.isDown) return
-        this.joystickActive    = true
-        this.joystickOriginX   = pointer.x
-        this.joystickOriginY   = pointer.y
-        this.joystickPointerId = pointer.id
-        return
-      }
-
-      const now = this.time.now
-      if (now - this.lastClickTime < DOUBLE_CLICK_MS) {
-        this.isSprinting = !this.isSprinting
-      }
-      this.lastClickTime = now
-      this.targetX  = pointer.worldX
-      this.targetY  = pointer.worldY
-      this.isMoving = true
-      this.marker.setPosition(pointer.worldX, pointer.worldY).setVisible(true)
-    })
-
-    const cancelJoystick = (pointer) => {
-      if (pointer.id === this.joystickPointerId) {
-        this.joystickActive = false
-        this.player.setVelocity(0, 0)
-        this.player.play(`${this.currentMbti}-idle`)
-      }
-    }
-    this.input.on('pointerup', cancelJoystick)
-    this.input.on('pointerupoutside', cancelJoystick)
-
-    this.cameras.main.setBounds(0, 0, worldW, worldH)
-    this.cameras.main.startFollow(this.player, true, 0.1, 0.1)
-    this.cameras.main.setZoom(getZoom(this.scale.width))
-    this.game.events.emit('zoomChanged', getZoom(this.scale.width))
-    this.cameras.main.centerOn(spawnX, spawnY)
-
-    this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY) => {
-      const current = this.cameras.main.zoom
-      const next = Phaser.Math.Clamp(current + (deltaY > 0 ? -0.1 : 0.1), 1.0, 3.0)
-      this.cameras.main.setZoom(next)
-      this.game.events.emit('zoomChanged', next)
-    })
-
-    this.input.addPointer(1)
-    this.lastPinchDist = null
-
-    this.wasd = this.input.keyboard.addKeys({
-      up:     Phaser.Input.Keyboard.KeyCodes.W,
-      down:   Phaser.Input.Keyboard.KeyCodes.S,
-      left:   Phaser.Input.Keyboard.KeyCodes.A,
-      right:  Phaser.Input.Keyboard.KeyCodes.D,
-      sprint: Phaser.Input.Keyboard.KeyCodes.SHIFT,
-    })
-    this.usingWasd = false
-
-    // this.scale is the game-level ScaleManager (not a per-scene plugin), so its
-    // listeners aren't cleared on scene shutdown — remove ours explicitly or they
-    // accumulate across every indoor↔outdoor transition.
-    const onResize = (gameSize) => {
-      const newZoom = getZoom(gameSize.width)
-      this.cameras.main.setSize(gameSize.width, gameSize.height)
-      this.cameras.main.setZoom(newZoom)
-      this.game.events.emit('zoomChanged', newZoom)
-    }
-    this.scale.on('resize', onResize)
-    this.events.once('shutdown', () => this.scale.off('resize', onResize))
-  }
-
-  update() {
-    const p1 = this.input.pointer1
-    const p2 = this.input.pointer2
-    if (p1.isDown && p2.isDown) {
-      if (this.joystickActive) {
-        this.joystickActive = false
-        this.player.setVelocity(0, 0)
-      }
-      const dist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y)
-      if (this.lastPinchDist !== null) {
-        const next = Phaser.Math.Clamp(
-          this.cameras.main.zoom + (dist - this.lastPinchDist) * 0.005,
-          1.0, 3.0
-        )
-        this.cameras.main.setZoom(next)
-        this.game.events.emit('zoomChanged', next)
-      }
-      this.lastPinchDist = dist
-    } else {
-      this.lastPinchDist = null
-    }
-
-    const { up, down, left, right } = this.wasd
-    const wasdActive = up.isDown || down.isDown || left.isDown || right.isDown
-
-    if (wasdActive) {
-      this.usingWasd = true
-      this.isMoving = false
-      this.marker.setVisible(false)
-
-      const spd = SPEED * (this.wasd.sprint.isDown ? SPRINT_MULTIPLIER : 1)
-      let vx = 0, vy = 0
-      if (left.isDown)  vx -= spd
-      if (right.isDown) vx += spd
-      if (up.isDown)    vy -= spd
-      if (down.isDown)  vy += spd
-      if (vx !== 0 && vy !== 0) { vx *= Math.SQRT1_2; vy *= Math.SQRT1_2 }
-      this.player.setVelocity(vx, vy)
-
-      if (vx === 0 && vy === 0) {
-        const idleKey = `${this.currentMbti}-idle`
-        if (this.player.anims.currentAnim?.key !== idleKey) this.player.play(idleKey)
-      } else {
-        const dir = Math.abs(vx) >= Math.abs(vy)
-          ? (vx > 0 ? 'walk-right' : 'walk-left')
-          : (vy > 0 ? 'walk-down' : 'walk-up')
-        const animKey = `${this.currentMbti}-${dir}`
-        if (this.player.anims.currentAnim?.key !== animKey) this.player.play(animKey)
-      }
-      return
-    }
-
-    if (this.usingWasd) {
-      this.usingWasd = false
-      this.player.setVelocity(0, 0)
-      this.player.play(`${this.currentMbti}-idle`)
-    }
-
-    const controlMode = this.registry.get('controlMode') ?? DEFAULT_CONTROL_MODE
-    if (controlMode === 'joystick') {
-      // Find the specific pointer that started the joystick
-      const allPointers = [this.input.pointer1, this.input.pointer2]
-      const ptr = allPointers.find(p => p.id === this.joystickPointerId) ?? this.input.activePointer
-      if (!this.joystickActive || !ptr.isDown) {
-        if (this.joystickActive) {
-          this.joystickActive = false
-          this.player.setVelocity(0, 0)
-          this.player.play(`${this.currentMbti}-idle`)
-        }
-        return
-      }
-      const dx  = ptr.x - this.joystickOriginX
-      const dy  = ptr.y - this.joystickOriginY
-      const mag = Math.hypot(dx, dy)
-      if (mag < JOYSTICK_DEADZONE) {
-        this.player.setVelocity(0, 0)
-        const idleKey = `${this.currentMbti}-idle`
-        if (this.player.anims.currentAnim?.key !== idleKey) this.player.play(idleKey)
-        return
-      }
-      const jspd = SPEED * (mag >= JOYSTICK_SPRINT ? SPRINT_MULTIPLIER : 1)
-      const vx = (dx / mag) * jspd
-      const vy = (dy / mag) * jspd
-      // (no this._currentDir here — IndoorScene has no presence broadcast)
-      this.player.setVelocity(vx, vy)
-      const dir = Math.abs(vx) >= Math.abs(vy)
-        ? (vx > 0 ? 'walk-right' : 'walk-left')
-        : (vy > 0 ? 'walk-down' : 'walk-up')
-      const animKey = `${this.currentMbti}-${dir}`
-      if (this.player.anims.currentAnim?.key !== animKey) this.player.play(animKey)
-      return
-    }
-
-    // joystick was active but controlMode switched — stop the avatar
-    if (this.joystickActive) {
-      this.joystickActive = false
-      this.player.setVelocity(0, 0)
-      this.player.play(`${this.currentMbti}-idle`)
-    }
-
-    if (!this.isMoving) return
-
-    const spd = SPEED * (this.isSprinting ? SPRINT_MULTIPLIER : 1)
-    const dx       = this.targetX - this.player.x
-    const dy       = this.targetY - this.player.y
-    const distance = Math.sqrt(dx * dx + dy * dy)
-
-    if (distance < ARRIVE_THRESHOLD) {
-      this.player.setVelocity(0, 0)
-      this.player.play(`${this.currentMbti}-idle`)
-      this.isMoving = false
-      this.isSprinting = false
-      this.marker.setVisible(false)
-      return
-    }
-
-    this.player.setVelocity(
-      (dx / distance) * spd,
-      (dy / distance) * spd,
-    )
-
-    const dir = Math.abs(dx) > Math.abs(dy)
-      ? (dx > 0 ? 'walk-right' : 'walk-left')
-      : (dy > 0 ? 'walk-down'  : 'walk-up')
-
-    const animKey = `${this.currentMbti}-${dir}`
-    if (this.player.anims.currentAnim?.key !== animKey) {
-      this.player.play(animKey)
     }
   }
 }
