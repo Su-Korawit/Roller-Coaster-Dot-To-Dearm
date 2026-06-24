@@ -11,7 +11,7 @@ function objectLayer(map, name) {
 }
 
 export function parseMapMeta(map) {
-  const tilesetNames = (map.tilesets || []).map((t) => t.name)
+  const tilesetNames = [...new Set((map.tilesets || []).map((t) => t.name))]
 
   const spawnLayer = objectLayer(map, 'Spawns')
   const spawns = (spawnLayer?.objects || []).map((o) => ({

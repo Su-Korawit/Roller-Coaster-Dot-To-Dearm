@@ -486,6 +486,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   update() {
+    if (this.preview) return
     this._tickPresence()
 
     const p1 = this.input.pointer1
