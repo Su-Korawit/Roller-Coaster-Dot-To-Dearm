@@ -107,6 +107,13 @@ describe('bootstrapSession', () => {
     expect(m.hydrateFarm).toHaveBeenCalledWith('u1')
   })
 
+  it('keeps arming inventory sync even when farm hydration throws', async () => {
+    m.hydrateFarm.mockRejectedValueOnce(new Error('farm err'))
+    await bootstrapSession({ uid: 'u1' })
+    expect(m.setInventorySyncUser).toHaveBeenCalledWith('u1')  // still armed
+    expect(m.armFarmSync).not.toHaveBeenCalled()               // farm sync not armed
+  })
+
   it('sets the current map owner to own uid and arms the map sync writer', async () => {
     await bootstrapSession({ uid: 'u1' })
     expect(m.setMapOwner).toHaveBeenCalledWith('u1')

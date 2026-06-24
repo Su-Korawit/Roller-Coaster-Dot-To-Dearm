@@ -5,6 +5,7 @@ export const tileKey = (x, y) => `${x}_${y}`
 
 export function occupiedTiles(x, y, plantId) {
   const plant = PLANTS[plantId]
+  if (!plant) return []
   const tiles = []
   for (let dy = 0; dy < plant.size.h; dy++) {
     for (let dx = 0; dx < plant.size.w; dx++) {

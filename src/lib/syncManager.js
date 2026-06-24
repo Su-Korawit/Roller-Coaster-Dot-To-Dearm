@@ -206,8 +206,16 @@ const farmSync = createFirestoreSync({
   store: useFarmStore,
   logName: 'syncFarm',
   ref: refs.map,
-  toDoc: ({ plotsByMap }) => ({ farm: plotsByMap, farmUpdatedAt: serverTimestamp() }),
-  fromDoc: (data) => (data.farm ? { plotsByMap: data.farm } : {}),
+  toDoc: ({ plotsByMap, currentMapKey }) => ({
+    farm: currentMapKey ? { [currentMapKey]: plotsByMap[currentMapKey] ?? {} } : {},
+    farmUpdatedAt: serverTimestamp(),
+  }),
+  fromDoc: (data) => {
+    if (!data.farm) return {}
+    const currentMapKey = useFarmStore.getState().currentMapKey
+    const plotsByMap = data.farm
+    return { plotsByMap, plots: (currentMapKey && plotsByMap[currentMapKey]) || {} }
+  },
   changed: (s, p) => s.plotsByMap !== p.plotsByMap,
   guard: (_s, uid) => useWorldStore.getState().currentMapOwnerUid === uid,
   needsSeed: () => false,

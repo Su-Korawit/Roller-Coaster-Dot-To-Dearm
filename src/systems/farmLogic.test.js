@@ -15,6 +15,10 @@ describe('farmLogic', () => {
     ])
   })
 
+  it('returns empty array for unknown plantId', () => {
+    expect(occupiedTiles(0, 0, 'banana')).toEqual([])
+  })
+
   it('rejects planting on an occupied tile', () => {
     const plots = { '5_3': { plantId: 'turnip', plantedAt: 0, tileX: 5, tileY: 3 } }
     expect(canPlant(plots, 5, 3, 'carrot')).toEqual({ ok: false, reason: 'มีพืชอยู่แล้ว' })
