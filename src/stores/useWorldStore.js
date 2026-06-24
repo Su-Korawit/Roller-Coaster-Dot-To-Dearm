@@ -1,14 +1,30 @@
 import { create } from 'zustand'
 
+const objectsFor = (objectsByMap, key) => (key && objectsByMap[key]) || []
+
 export const useWorldStore = create((set) => ({
   currentMapOwnerUid: null,
-  mapObjects:        [],
+  currentMapKey:     null,
+  objectsByMap:      {},
+  mapObjects:        [],   // derived = objectsByMap[currentMapKey] ?? []
   editMode:          false,
   selectedItemKey:   null,
   remotePlayers:     {},
 
-  setMapOwner:   (uid)     => set({ currentMapOwnerUid: uid }),
-  setMapObjects: (objects) => set({ mapObjects: objects }),
+  setMapOwner: (uid) => set({ currentMapOwnerUid: uid }),
+
+  setCurrentMapKey: (key) =>
+    set((s) => ({ currentMapKey: key, mapObjects: objectsFor(s.objectsByMap, key) })),
+
+  setObjectsByMap: (obj) =>
+    set((s) => ({ objectsByMap: obj, mapObjects: objectsFor(obj, s.currentMapKey) })),
+
+  // Replace the current map's objects.
+  setMapObjects: (objects) =>
+    set((s) => {
+      const next = { ...s.objectsByMap, [s.currentMapKey]: objects }
+      return { objectsByMap: next, mapObjects: objects }
+    }),
 
   setRemotePlayers: (snapshot) => set({ remotePlayers: snapshot }),
 
@@ -16,13 +32,20 @@ export const useWorldStore = create((set) => ({
   setSelectedItem: (key) => set({ selectedItemKey: key }),
 
   addObject: (obj) =>
-    set((s) => ({ mapObjects: [...s.mapObjects, obj] })),
+    set((s) => {
+      const arr = [...objectsFor(s.objectsByMap, s.currentMapKey), obj]
+      return { objectsByMap: { ...s.objectsByMap, [s.currentMapKey]: arr }, mapObjects: arr }
+    }),
 
   removeObject: (i) =>
-    set((s) => ({ mapObjects: s.mapObjects.filter((_, idx) => idx !== i) })),
+    set((s) => {
+      const arr = objectsFor(s.objectsByMap, s.currentMapKey).filter((_, idx) => idx !== i)
+      return { objectsByMap: { ...s.objectsByMap, [s.currentMapKey]: arr }, mapObjects: arr }
+    }),
 
   moveObject: (i, x, y) =>
-    set((s) => ({
-      mapObjects: s.mapObjects.map((o, idx) => idx === i ? { ...o, x, y } : o),
-    })),
+    set((s) => {
+      const arr = objectsFor(s.objectsByMap, s.currentMapKey).map((o, idx) => idx === i ? { ...o, x, y } : o)
+      return { objectsByMap: { ...s.objectsByMap, [s.currentMapKey]: arr }, mapObjects: arr }
+    }),
 }))

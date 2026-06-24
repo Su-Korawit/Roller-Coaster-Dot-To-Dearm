@@ -155,9 +155,14 @@ const mapSync = createFirestoreSync({
   store: useWorldStore,
   logName: 'syncMap',
   ref: refs.map,
-  toDoc: ({ mapObjects }) => ({ objects: mapObjects, mapUpdatedAt: serverTimestamp() }),
-  fromDoc: (data) => (data.objects ? { mapObjects: data.objects } : {}),
-  changed: (s, p) => s.mapObjects !== p.mapObjects,
+  toDoc: ({ objectsByMap }) => ({ objectsByMap, mapUpdatedAt: serverTimestamp() }),
+  fromDoc: (data) => {
+    if (data.objectsByMap) return { objectsByMap: data.objectsByMap }
+    // Back-compat: migrate an old flat `objects` array into the entry map slot.
+    if (data.objects) return { objectsByMap: { test3: data.objects } }
+    return {}
+  },
+  changed: (s, p) => s.objectsByMap !== p.objectsByMap,
   guard: (s, uid) => s.currentMapOwnerUid === uid,
   needsSeed: () => false,
 })
@@ -166,10 +171,10 @@ export const armMapSync = mapSync.setSyncUser
 export const disarmMapSync = () => mapSync.setSyncUser(null)
 
 // Manual save — called from MapPalette after an explicit decoration change.
-export async function syncMapToFirestore(uid, objects) {
+export async function syncMapToFirestore(uid, objectsByMap) {
   if (!uid) return
   try {
-    await setDoc(refs.map(uid), { objects, mapUpdatedAt: serverTimestamp() }, { merge: true })
+    await setDoc(refs.map(uid), { objectsByMap, mapUpdatedAt: serverTimestamp() }, { merge: true })
   } catch (e) {
     console.error('[syncMap] push failed:', e)
   }
@@ -178,14 +183,14 @@ export async function syncMapToFirestore(uid, objects) {
 // Visit another user's Personal Map: swap owner, clear stale objects, load theirs.
 export async function visitMap(ownerUid) {
   if (!ownerUid) return
-  useWorldStore.setState({ currentMapOwnerUid: ownerUid, mapObjects: [], editMode: false })
+  useWorldStore.setState({ currentMapOwnerUid: ownerUid, objectsByMap: {}, mapObjects: [], editMode: false })
   await hydrateMapFromFirestore(ownerUid)
 }
 
 // Return to the signed-in user's own Personal Map.
 export async function returnHome(selfUid) {
   if (!selfUid) return
-  useWorldStore.setState({ currentMapOwnerUid: selfUid, mapObjects: [], editMode: false })
+  useWorldStore.setState({ currentMapOwnerUid: selfUid, objectsByMap: {}, mapObjects: [], editMode: false })
   await hydrateMapFromFirestore(selfUid)
 }
 

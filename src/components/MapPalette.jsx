@@ -10,7 +10,6 @@ export default function MapPalette() {
   const selectedItemKey    = useWorldStore((s) => s.selectedItemKey)
   const toggleEditMode     = useWorldStore((s) => s.toggleEditMode)
   const setSelectedItem    = useWorldStore((s) => s.setSelectedItem)
-  const mapObjects         = useWorldStore((s) => s.mapObjects)
 
   if (!user || !currentMapOwnerUid) return null
 
@@ -49,7 +48,7 @@ export default function MapPalette() {
   }
 
   async function handleSave() {
-    await syncMapToFirestore(user.uid, mapObjects)
+    await syncMapToFirestore(user.uid, useWorldStore.getState().objectsByMap)
   }
 
   return (
