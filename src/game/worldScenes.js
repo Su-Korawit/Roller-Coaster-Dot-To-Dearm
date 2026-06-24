@@ -135,6 +135,7 @@ export class MapScene extends Phaser.Scene {
   init(data) {
     this.mapKey = data?.mapKey ?? 'test3'
     this.spawnName = data?.spawn ?? null   // null → use map's default spawn
+    this.preview = !!data?.preview
   }
 
   preload() {
@@ -275,6 +276,42 @@ export class MapScene extends Phaser.Scene {
     const spawnObj = meta.spawns.find((s) => s.name === spawnName) ?? meta.spawns[0] ?? null
     const spawnX = (spawnObj ? spawnObj.x : (map.width / 2) * 16) * mapScale
     const spawnY = (spawnObj ? spawnObj.y : (map.height / 2) * 16) * mapScale
+
+    if (this.preview) {
+      // Draw spawn pins
+      meta.spawns.forEach((s) => {
+        const px = s.x * mapScale
+        const py = s.y * mapScale
+        const pin = this.add.graphics()
+        pin.fillStyle(0x22cc44, 0.9)
+        pin.fillCircle(px, py, 6 * mapScale)
+        pin.setDepth(20)
+        const label = this.add.text(px + 8 * mapScale, py - 6 * mapScale, s.name, {
+          fontSize: `${8 * mapScale}px`,
+          color: '#ffffff',
+          stroke: '#000000',
+          strokeThickness: 2,
+        })
+        label.setDepth(21)
+      })
+      // Draw portal rects
+      meta.portals.forEach((p) => {
+        const rect = this.add.graphics()
+        rect.fillStyle(0x4488ff, 0.4)
+        rect.fillRect(p.x * mapScale, p.y * mapScale, p.width * mapScale, p.height * mapScale)
+        rect.lineStyle(2, 0x4488ff, 0.9)
+        rect.strokeRect(p.x * mapScale, p.y * mapScale, p.width * mapScale, p.height * mapScale)
+        rect.setDepth(20)
+      })
+      // Fit camera to map
+      const fitZoom = Math.min(
+        this.scale.width / worldW,
+        this.scale.height / worldH,
+      )
+      this.cameras.main.setZoom(fitZoom)
+      this.cameras.main.centerOn(worldW / 2, worldH / 2)
+      return   // skip all player/physics/input/presence setup
+    }
 
     this.player = this.physics.add.sprite(spawnX, spawnY, this.currentMbti)
     this.player.setScale(mapScale)
