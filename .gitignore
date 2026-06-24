@@ -34,3 +34,5 @@ serviceAccountKey.json
 *serviceAccount*.json
 
 .vercel
+
+.superpowers/
