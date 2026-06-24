@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { pickEntryKey } from './mapConfig'
 
 const setDoc = vi.fn(() => Promise.resolve())
 vi.mock('firebase/firestore', () => ({
@@ -10,6 +11,24 @@ vi.mock('firebase/firestore', () => ({
 vi.mock('../firebase', () => ({ db: {} }))
 
 import { saveMapConfig } from './mapConfig'
+
+describe('pickEntryKey', () => {
+  it('returns the map flagged isEntry', () => {
+    expect(pickEntryKey([
+      { key: 'a', order: 1, isEntry: false },
+      { key: 'b', order: 2, isEntry: true },
+    ])).toBe('b')
+  })
+  it('falls back to lowest order when none flagged', () => {
+    expect(pickEntryKey([
+      { key: 'a', order: 5 },
+      { key: 'b', order: 2 },
+    ])).toBe('b')
+  })
+  it('returns null for an empty registry', () => {
+    expect(pickEntryKey([])).toBeNull()
+  })
+})
 
 const cfg = { tilesets: {}, collision: {}, hidden: {} }
 

@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, setDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore'
 import { db } from '../firebase'
 
 // Per-map runtime config the game needs but the Tiled JSON can't carry reliably:
@@ -48,7 +48,18 @@ const cfgRef = (key) => doc(db, 'mapConfigs', key)
 // Returns the stored config for a map, or its built-in default. Falls back to the
 // default on any read error so the game still boots offline / before first save.
 export async function getMapConfig(key) {
-  const fallback = DEFAULT_MAP_CONFIGS[key] ?? { tilesets: {}, collision: {}, hidden: {} }
+  const base = DEFAULT_MAP_CONFIGS[key] ?? { tilesets: {}, collision: {}, hidden: {} }
+  const fallback = {
+    tilesets: base.tilesets ?? {},
+    collision: base.collision ?? {},
+    hidden: base.hidden ?? {},
+    displayName: key,
+    order: 0,
+    isEntry: key === 'test3',   // preserve test3 as the original home map
+    defaultSpawn: null,
+    multiplayer: key === 'test3',
+    editable: key === 'test3',
+  }
   try {
     const snap = await getDoc(cfgRef(key))
     if (!snap.exists()) return fallback
@@ -57,17 +68,44 @@ export async function getMapConfig(key) {
       tilesets: d.tilesets ?? fallback.tilesets,
       collision: d.collision ?? {},
       hidden: d.hidden ?? {},
+      displayName: d.displayName ?? fallback.displayName,
+      order: d.order ?? fallback.order,
+      isEntry: d.isEntry ?? fallback.isEntry,
+      defaultSpawn: d.defaultSpawn ?? fallback.defaultSpawn,
+      multiplayer: d.multiplayer ?? fallback.multiplayer,
+      editable: d.editable ?? fallback.editable,
     }
   } catch {
     return fallback
   }
 }
 
-export async function saveMapConfig(key, { tilesets, collision, hidden }, uid) {
+export async function saveMapConfig(key, cfg, uid) {
   if (!uid) console.warn('[saveMapConfig] no uid passed — updatedBy will be null (audit trail lost)')
+  const { tilesets, collision, hidden, displayName, order, isEntry, defaultSpawn, multiplayer, editable } = cfg
   await setDoc(
     cfgRef(key),
-    { tilesets, collision, hidden, updatedAt: serverTimestamp(), updatedBy: uid ?? null },
+    {
+      tilesets, collision, hidden,
+      displayName, order, isEntry, defaultSpawn, multiplayer, editable,
+      updatedAt: serverTimestamp(), updatedBy: uid ?? null,
+    },
     { merge: true },
   )
+}
+
+// List every map in the registry, sorted by order then key.
+export async function listMapConfigs() {
+  const snap = await getDocs(collection(db, 'mapConfigs'))
+  const maps = snap.docs.map((d) => ({ key: d.id, ...d.data() }))
+  maps.sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.key.localeCompare(b.key))
+  return maps
+}
+
+// Pure: choose which map loads on boot.
+export function pickEntryKey(maps) {
+  if (!maps || maps.length === 0) return null
+  const flagged = maps.find((m) => m.isEntry === true)
+  if (flagged) return flagged.key
+  return [...maps].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))[0].key
 }
