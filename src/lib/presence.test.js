@@ -32,19 +32,19 @@ describe('presence — joinWorld', () => {
     onDisconnectObj.remove.mockResolvedValue(undefined)
   })
 
-  it('writes own state to worlds/{ownerUid}/players/{selfUid}', async () => {
-    await joinWorld('owner-1', 'self-1', { x: 0, y: 0, mbti: 'INTJ', name: 'Alice' })
+  it('writes own state to worlds/{ownerUid}/maps/{mapKey}/players/{selfUid}', async () => {
+    await joinWorld('owner-1', 'test3', 'self-1', { x: 0, y: 0, mbti: 'INTJ', name: 'Alice' })
 
     expect(setFn).toHaveBeenCalledWith(
-      { _path: 'worlds/owner-1/players/self-1' },
+      { _path: 'worlds/owner-1/maps/test3/players/self-1' },
       { x: 0, y: 0, mbti: 'INTJ', name: 'Alice' },
     )
   })
 
   it('arms onDisconnect().remove() so the node is cleared on close', async () => {
-    await joinWorld('owner-1', 'self-1', { x: 0, y: 0 })
+    await joinWorld('owner-1', 'test3', 'self-1', { x: 0, y: 0 })
 
-    expect(onDisconnectFn).toHaveBeenCalledWith({ _path: 'worlds/owner-1/players/self-1' })
+    expect(onDisconnectFn).toHaveBeenCalledWith({ _path: 'worlds/owner-1/maps/test3/players/self-1' })
     expect(onDisconnectObj.remove).toHaveBeenCalled()
   })
 })
@@ -58,15 +58,15 @@ describe('presence — leaveWorld', () => {
   })
 
   it('removes own player node from RTDB', () => {
-    leaveWorld('owner-1', 'self-1')
+    leaveWorld('owner-1', 'test3', 'self-1')
 
-    expect(removeFn).toHaveBeenCalledWith({ _path: 'worlds/owner-1/players/self-1' })
+    expect(removeFn).toHaveBeenCalledWith({ _path: 'worlds/owner-1/maps/test3/players/self-1' })
   })
 
   it('cancels the onDisconnect handler', () => {
-    leaveWorld('owner-1', 'self-1')
+    leaveWorld('owner-1', 'test3', 'self-1')
 
-    expect(onDisconnectFn).toHaveBeenCalledWith({ _path: 'worlds/owner-1/players/self-1' })
+    expect(onDisconnectFn).toHaveBeenCalledWith({ _path: 'worlds/owner-1/maps/test3/players/self-1' })
     expect(onDisconnectObj.cancel).toHaveBeenCalled()
   })
 })
@@ -85,7 +85,7 @@ describe('presence — subscribeWorldPlayers', () => {
       return () => {}
     })
 
-    subscribeWorldPlayers('owner-1', cb)
+    subscribeWorldPlayers('owner-1', 'test3', cb)
 
     expect(cb).toHaveBeenCalledWith(players)
   })
@@ -97,7 +97,7 @@ describe('presence — subscribeWorldPlayers', () => {
       return () => {}
     })
 
-    subscribeWorldPlayers('owner-1', cb)
+    subscribeWorldPlayers('owner-1', 'test3', cb)
 
     expect(cb).toHaveBeenCalledWith({})
   })
@@ -108,8 +108,8 @@ describe('presence — subscribeWorldPlayers', () => {
       .mockReturnValueOnce(unsub1)
       .mockReturnValue(() => {})
 
-    subscribeWorldPlayers('owner-1', () => {})
-    subscribeWorldPlayers('owner-2', () => {})
+    subscribeWorldPlayers('owner-1', 'test3', () => {})
+    subscribeWorldPlayers('owner-2', 'test3', () => {})
 
     expect(unsub1).toHaveBeenCalled()
   })
@@ -128,26 +128,26 @@ describe('presence — updateSelf (throttle)', () => {
   })
 
   it('writes on the first call', () => {
-    updateSelf('owner-1', 'self-1', { x: 10, y: 20 })
+    updateSelf('owner-1', 'test3', 'self-1', { x: 10, y: 20 })
 
     expect(setFn).toHaveBeenCalledTimes(1)
     expect(setFn).toHaveBeenCalledWith(
-      { _path: 'worlds/owner-1/players/self-1' },
+      { _path: 'worlds/owner-1/maps/test3/players/self-1' },
       { x: 10, y: 20 },
     )
   })
 
   it('ignores a second call within the throttle window', () => {
-    updateSelf('owner-1', 'self-1', { x: 10 })
-    updateSelf('owner-1', 'self-1', { x: 20 })  // too soon
+    updateSelf('owner-1', 'test3', 'self-1', { x: 10 })
+    updateSelf('owner-1', 'test3', 'self-1', { x: 20 })  // too soon
 
     expect(setFn).toHaveBeenCalledTimes(1)
   })
 
   it('allows a write after the throttle interval elapses', async () => {
-    updateSelf('owner-1', 'self-1', { x: 10 })
+    updateSelf('owner-1', 'test3', 'self-1', { x: 10 })
     await vi.advanceTimersByTimeAsync(150)         // past 120ms window
-    updateSelf('owner-1', 'self-1', { x: 20 })
+    updateSelf('owner-1', 'test3', 'self-1', { x: 20 })
 
     expect(setFn).toHaveBeenCalledTimes(2)
   })
