@@ -33,7 +33,7 @@ export default function HeroSection({ gamePreview }) {
       {/* Dark overlay (always shown — softens video, deepens gradient) */}
       <div
         className="absolute inset-0"
-        style={{ background: 'rgba(26,16,53,0.35)' }}
+        style={{ background: 'rgba(26,16,53,0.45)' }}
         aria-hidden="true"
       />
 
