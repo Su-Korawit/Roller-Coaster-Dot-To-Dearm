@@ -11,6 +11,7 @@ import { autoMatchTilesets } from '../../utils/resolveTilesets'
 import { validateMap } from '../../utils/validateMap'
 import MapConfigEditor from './MapConfigEditor'
 import MapInfoScreen from './MapInfoScreen'
+import MapDocsPanel from './MapDocsPanel'
 import { useToast } from './Toast'
 
 // ── Health pill ───────────────────────────────────────────────────────────────
@@ -308,6 +309,7 @@ export default function MapDashboard() {
   const [maps, setMaps]           = useState([])
   const [loading, setLoading]     = useState(true)
   const [showUpload, setShowUpload] = useState(false)
+  const [showDocs, setShowDocs]   = useState(false)         // MapDocsPanel
   const [editKey, setEditKey]     = useState(null)          // MapConfigEditor
   const [infoKey, setInfoKey]     = useState(null)          // MapInfoScreen
   const [deleteKey, setDeleteKey] = useState(null)          // key pending delete guard
@@ -368,6 +370,10 @@ export default function MapDashboard() {
             disabled={loading}
             className="text-xs text-brand hover:underline disabled:opacity-50"
           >Refresh</button>
+          <button
+            onClick={() => setShowDocs(true)}
+            className="px-3 py-1.5 rounded-xl border border-brand text-brand text-xs font-semibold hover:bg-brand/5 transition-colors"
+          >คู่มือการสร้างแมพ</button>
           <button
             onClick={() => { setShowUpload(true); setDeleteKey(null) }}
             disabled={showUpload || loading}
@@ -489,6 +495,9 @@ export default function MapDashboard() {
           }}
         />
       )}
+
+      {/* MapDocsPanel overlay — opens via "คู่มือการสร้างแมพ" button */}
+      {showDocs && <MapDocsPanel onClose={() => setShowDocs(false)} />}
     </div>
   )
 }
