@@ -45,36 +45,31 @@ export const DEFAULT_MAP_CONFIGS = {
 
 const cfgRef = (key) => doc(db, 'mapConfigs', key)
 
+// Shared helper: merge Firestore data with per-key registry defaults so every
+// field is always defined regardless of which Firestore doc fields exist.
+function withRegistryDefaults(key, data) {
+  const base = DEFAULT_MAP_CONFIGS[key] ?? { tilesets: {}, collision: {}, hidden: {} }
+  return {
+    tilesets:     data.tilesets     ?? base.tilesets ?? {},
+    collision:    data.collision    ?? base.collision ?? {},
+    hidden:       data.hidden       ?? base.hidden    ?? {},
+    displayName:  data.displayName  ?? key,
+    order:        data.order        ?? 0,
+    isEntry:      data.isEntry      ?? (key === 'test3'),
+    defaultSpawn: data.defaultSpawn ?? null,
+    multiplayer:  data.multiplayer  ?? (key === 'test3'),
+    editable:     data.editable     ?? (key === 'test3'),
+  }
+}
+
 // Returns the stored config for a map, or its built-in default. Falls back to the
 // default on any read error so the game still boots offline / before first save.
 export async function getMapConfig(key) {
-  const base = DEFAULT_MAP_CONFIGS[key] ?? { tilesets: {}, collision: {}, hidden: {} }
-  const fallback = {
-    tilesets: base.tilesets ?? {},
-    collision: base.collision ?? {},
-    hidden: base.hidden ?? {},
-    displayName: key,
-    order: 0,
-    isEntry: key === 'test3',   // preserve test3 as the original home map
-    defaultSpawn: null,
-    multiplayer: key === 'test3',
-    editable: key === 'test3',
-  }
+  const fallback = withRegistryDefaults(key, {})
   try {
     const snap = await getDoc(cfgRef(key))
     if (!snap.exists()) return fallback
-    const d = snap.data()
-    return {
-      tilesets: d.tilesets ?? fallback.tilesets,
-      collision: d.collision ?? {},
-      hidden: d.hidden ?? {},
-      displayName: d.displayName ?? fallback.displayName,
-      order: d.order ?? fallback.order,
-      isEntry: d.isEntry ?? fallback.isEntry,
-      defaultSpawn: d.defaultSpawn ?? fallback.defaultSpawn,
-      multiplayer: d.multiplayer ?? fallback.multiplayer,
-      editable: d.editable ?? fallback.editable,
-    }
+    return withRegistryDefaults(key, snap.data())
   } catch {
     return fallback
   }
@@ -83,21 +78,22 @@ export async function getMapConfig(key) {
 export async function saveMapConfig(key, cfg, uid) {
   if (!uid) console.warn('[saveMapConfig] no uid passed — updatedBy will be null (audit trail lost)')
   const { tilesets, collision, hidden, displayName, order, isEntry, defaultSpawn, multiplayer, editable } = cfg
-  await setDoc(
-    cfgRef(key),
-    {
+  // Strip undefined values so callers that omit new registry fields don't write
+  // `undefined` to Firestore (the modular SDK throws on undefined field values).
+  const payload = Object.fromEntries(
+    Object.entries({
       tilesets, collision, hidden,
       displayName, order, isEntry, defaultSpawn, multiplayer, editable,
       updatedAt: serverTimestamp(), updatedBy: uid ?? null,
-    },
-    { merge: true },
+    }).filter(([, v]) => v !== undefined),
   )
+  await setDoc(cfgRef(key), payload, { merge: true })
 }
 
 // List every map in the registry, sorted by order then key.
 export async function listMapConfigs() {
   const snap = await getDocs(collection(db, 'mapConfigs'))
-  const maps = snap.docs.map((d) => ({ key: d.id, ...d.data() }))
+  const maps = snap.docs.map((d) => ({ key: d.id, ...withRegistryDefaults(d.id, d.data()) }))
   maps.sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.key.localeCompare(b.key))
   return maps
 }

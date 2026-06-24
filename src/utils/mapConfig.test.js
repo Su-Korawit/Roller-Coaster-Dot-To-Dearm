@@ -2,15 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { pickEntryKey } from './mapConfig'
 
 const setDoc = vi.fn(() => Promise.resolve())
+const getDocs = vi.fn()
 vi.mock('firebase/firestore', () => ({
   doc: (_db, col, key) => ({ col, key }),
+  collection: (_db, col) => ({ col }),
   getDoc: vi.fn(),
+  getDocs: (...args) => getDocs(...args),
   setDoc: (...args) => setDoc(...args),
   serverTimestamp: () => '__ts__',
 }))
 vi.mock('../firebase', () => ({ db: {} }))
 
-import { saveMapConfig } from './mapConfig'
+import { saveMapConfig, listMapConfigs } from './mapConfig'
 
 describe('pickEntryKey', () => {
   it('returns the map flagged isEntry', () => {
@@ -49,5 +52,32 @@ describe('saveMapConfig (L-1 regression guard)', () => {
     expect(warn).not.toHaveBeenCalled()
     expect(setDoc.mock.calls[0][1].updatedBy).toBe('admin123')
     warn.mockRestore()
+  })
+
+  it('omits undefined registry fields when caller does not supply them', async () => {
+    await saveMapConfig('k', { tilesets: {}, collision: {}, hidden: {} }, 'u1')
+    const payload = setDoc.mock.calls[0][1]
+    // No key in the payload should hold undefined
+    expect(Object.values(payload).every((v) => v !== undefined)).toBe(true)
+    // Registry-only fields not passed by the caller must be absent entirely
+    expect('displayName' in payload).toBe(false)
+    expect('order' in payload).toBe(false)
+  })
+})
+
+describe('listMapConfigs — registry defaults', () => {
+  beforeEach(() => getDocs.mockClear())
+
+  it('applies defaults when a Firestore doc has no registry fields', async () => {
+    getDocs.mockResolvedValueOnce({
+      docs: [{ id: 'foo', data: () => ({}) }],
+    })
+    const maps = await listMapConfigs()
+    expect(maps).toHaveLength(1)
+    const [entry] = maps
+    expect(entry.key).toBe('foo')
+    expect(entry.displayName).toBe('foo')          // default: the key
+    expect(typeof entry.order).toBe('number')       // default: 0
+    expect(typeof entry.isEntry).toBe('boolean')   // default: false (not test3)
   })
 })
