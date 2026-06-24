@@ -10,6 +10,7 @@ import { parseMapMeta } from '../../utils/tiledMapMeta'
 import { autoMatchTilesets } from '../../utils/resolveTilesets'
 import { validateMap } from '../../utils/validateMap'
 import MapConfigEditor from './MapConfigEditor'
+import MapInfoScreen from './MapInfoScreen'
 import { useToast } from './Toast'
 
 // ── Health pill ───────────────────────────────────────────────────────────────
@@ -308,6 +309,7 @@ export default function MapDashboard() {
   const [loading, setLoading]     = useState(true)
   const [showUpload, setShowUpload] = useState(false)
   const [editKey, setEditKey]     = useState(null)          // MapConfigEditor
+  const [infoKey, setInfoKey]     = useState(null)          // MapInfoScreen
   const [deleteKey, setDeleteKey] = useState(null)          // key pending delete guard
   const [deletingKey, setDeletingKey] = useState(null)      // key mid-delete
   const adminUid = useAuthStore((s) => s.user?.uid)
@@ -419,7 +421,7 @@ export default function MapDashboard() {
                   {/* Actions */}
                   <div className="flex items-center gap-2 shrink-0">
                     <button
-                      onClick={() => { setEditKey(map.key); setDeleteKey(null) }}
+                      onClick={() => { setInfoKey(map.key); setDeleteKey(null) }}
                       disabled={isDeleting}
                       className="px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-semibold hover:bg-brand-strong transition-colors disabled:opacity-50"
                     >ตั้งค่า</button>
@@ -461,7 +463,7 @@ export default function MapDashboard() {
         </div>
       )}
 
-      {/* MapConfigEditor modal */}
+      {/* MapConfigEditor modal (legacy — kept for JSON re-upload workflow) */}
       {editKey && (
         <MapConfigEditor
           mapKey={editKey}
@@ -470,6 +472,19 @@ export default function MapDashboard() {
           onSaved={() => {
             toast?.success('บันทึก config แล้ว')
             setEditKey(null)
+            loadMaps()
+          }}
+        />
+      )}
+
+      {/* MapInfoScreen modal — opens via "ตั้งค่า" button */}
+      {infoKey && (
+        <MapInfoScreen
+          mapKey={infoKey}
+          adminUid={adminUid}
+          onClose={() => setInfoKey(null)}
+          onSaved={() => {
+            setInfoKey(null)
             loadMaps()
           }}
         />
