@@ -116,7 +116,11 @@ export async function loadSceneData(mapKey) {
     getMapConfig(mapKey),
   ])
   const tilesetUrls = await resolveMapTilesets(mapConfig)
-  return { assetUrls, mapConfig, tilesetUrls }
+  // Resolve the map JSON URL (uploaded maps live in Storage, not /maps/*.json).
+  // Store it under the map key so MapScene.preload() can use it directly via
+  // urlFor() without falling back to the public-folder path that 404s for uploaded maps.
+  const mapJsonUrl = await cloudAsset(`maps/${mapKey}.json`, { fallback: `/maps/${mapKey}.json` })
+  return { assetUrls: { ...assetUrls, [mapKey]: mapJsonUrl }, mapConfig, tilesetUrls }
 }
 
 // ── MapScene ────────────────────────────────────────────────────────────────
@@ -136,6 +140,10 @@ export class MapScene extends Phaser.Scene {
     this.mapKey = data?.mapKey ?? 'test3'
     this.spawnName = data?.spawn ?? null   // null → use map's default spawn
     this.preview = !!data?.preview
+    // Always initialise before create() or update() runs — preview mode returns
+    // early from create() before the normal _remoteAvatars = new Map() line,
+    // causing _tickPresence() to crash on the first frame.
+    this._remoteAvatars = new Map()
   }
 
   preload() {

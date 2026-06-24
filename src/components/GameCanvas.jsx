@@ -125,7 +125,7 @@ export default function GameCanvas({ active = true }) {
       }
       game = new Phaser.Game(config)
       game.registry.set('selectedMbti', selectedMbtiRef.current)
-      game.registry.set('assetUrls', { ...assetUrlsRef.current.assetUrls, [assetUrlsRef.current.mapKey]: undefined })
+      game.registry.set('assetUrls', assetUrlsRef.current.assetUrls)
       game.registry.set('mapConfig', assetUrlsRef.current.mapConfig)
       game.registry.set('tilesetUrls', assetUrlsRef.current.tilesetUrls)
       game.registry.set('mapObjects', useWorldStore.getState().mapObjects)
@@ -144,9 +144,10 @@ export default function GameCanvas({ active = true }) {
       // the registry before restarting the scene so preload can access fresh URLs.
       game.events.on('mapChangeRequested', async ({ mapKey, spawn }) => {
         const data = await loadSceneData(mapKey)
+        if (cancelled) return   // component unmounted during await — game is destroyed
         game.registry.set('mapConfig', data.mapConfig)
         game.registry.set('tilesetUrls', data.tilesetUrls)
-        game.registry.set('assetUrls', { ...data.assetUrls, [mapKey]: undefined })
+        game.registry.set('assetUrls', data.assetUrls)
         useWorldStore.getState().setCurrentMapKey(mapKey)
         game.scene.start('MapScene', { mapKey, spawn })
       })
@@ -164,7 +165,9 @@ export default function GameCanvas({ active = true }) {
         const { width, height } = containerRef.current.getBoundingClientRect()
         if (width > 0 && height > 0) bootGame(width, height)
       }
-    })()
+    })().catch((e) => {
+      console.error('[GameCanvas] boot failed:', e)
+    })
 
     const ro = new ResizeObserver((entries) => {
       const { width, height } = entries[0].contentRect
