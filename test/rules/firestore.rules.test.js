@@ -1,6 +1,7 @@
 // Security-rules regression test for C-2: cross-user writes to a user doc must be
-// limited to the four social array fields. Requires the Firestore emulator — run:
-//   firebase emulators:exec --only firestore "npm run test:rules"
+// limited to the four social array fields. Requires the Firestore + Database
+// emulators (the rules suite now covers both) — run:
+//   npm run test:rules:emu
 import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing'

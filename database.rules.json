@@ -2,10 +2,14 @@
   "rules": {
     "worlds": {
       "$ownerUid": {
-        "players": {
-          ".read": "auth != null",
-          "$uid": {
-            ".write": "auth != null && auth.uid === $uid"
+        "maps": {
+          "$mapKey": {
+            "players": {
+              ".read": "auth != null",
+              "$uid": {
+                ".write": "auth != null && auth.uid === $uid"
+              }
+            }
           }
         }
       }
