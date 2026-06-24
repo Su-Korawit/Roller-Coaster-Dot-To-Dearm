@@ -19,6 +19,8 @@ import { useTaskStore } from '../stores/useTaskStore'
 import { useRoadmapStore } from '../stores/useRoadmapStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useWorldStore } from '../stores/useWorldStore'
+import { useInventoryStore } from '../stores/useInventoryStore'
+import { useFarmStore } from '../stores/useFarmStore'
 
 /**
  * Build a debounced Firestore sync for a single Zustand store.
@@ -170,6 +172,51 @@ const mapSync = createFirestoreSync({
 export const armMapSync = mapSync.setSyncUser
 export const disarmMapSync = () => mapSync.setSyncUser(null)
 
+// ── Inventory + farm gold (owner-private) → users/{uid} ───────────────────────
+const inventorySync = createFirestoreSync({
+  store: useInventoryStore,
+  logName: 'syncInventory',
+  toDoc: ({ hotbar, storage, gold }) => ({
+    inventory: { hotbar, storage },
+    farmGold: gold,
+    inventoryUpdatedAt: serverTimestamp(),
+  }),
+  fromDoc: (data) => {
+    const updates = {}
+    if (data.inventory) {
+      updates.hotbar = data.inventory.hotbar ?? Array(8).fill(null)
+      updates.storage = data.inventory.storage ?? Array(30).fill(null)
+    }
+    if (typeof data.farmGold === 'number') updates.gold = data.farmGold
+    return updates
+  },
+  changed: (s, p) => s.hotbar !== p.hotbar || s.storage !== p.storage || s.gold !== p.gold,
+  needsSeed: () => false,
+})
+
+export const hydrateInventoryFromFirestore = inventorySync.hydrate
+export const setInventorySyncUser = inventorySync.setSyncUser
+export const disarmInventorySync = () => inventorySync.setSyncUser(null)
+
+// ── Farm plots (visitor-readable) → maps/{uid}; owner-only writes ─────────────
+// guard mirrors mapSync: only debounce-write when viewing one's OWN map, so
+// visiting a friend (which loads their plots into the store) never overwrites
+// your own map doc.
+const farmSync = createFirestoreSync({
+  store: useFarmStore,
+  logName: 'syncFarm',
+  ref: refs.map,
+  toDoc: ({ plotsByMap }) => ({ farm: plotsByMap, farmUpdatedAt: serverTimestamp() }),
+  fromDoc: (data) => (data.farm ? { plotsByMap: data.farm } : {}),
+  changed: (s, p) => s.plotsByMap !== p.plotsByMap,
+  guard: (_s, uid) => useWorldStore.getState().currentMapOwnerUid === uid,
+  needsSeed: () => false,
+})
+
+export const hydrateFarmFromFirestore = farmSync.hydrate
+export const armFarmSync = farmSync.setSyncUser
+export const disarmFarmSync = () => farmSync.setSyncUser(null)
+
 // Manual save — called from MapPalette after an explicit decoration change.
 export async function syncMapToFirestore(uid, objectsByMap) {
   if (!uid) return
@@ -184,14 +231,18 @@ export async function syncMapToFirestore(uid, objectsByMap) {
 export async function visitMap(ownerUid) {
   if (!ownerUid) return
   useWorldStore.setState({ currentMapOwnerUid: ownerUid, objectsByMap: {}, mapObjects: [], editMode: false })
+  useFarmStore.setState({ plotsByMap: {}, plots: {} })
   await hydrateMapFromFirestore(ownerUid)
+  await hydrateFarmFromFirestore(ownerUid)
 }
 
 // Return to the signed-in user's own Personal Map.
 export async function returnHome(selfUid) {
   if (!selfUid) return
   useWorldStore.setState({ currentMapOwnerUid: selfUid, objectsByMap: {}, mapObjects: [], editMode: false })
+  useFarmStore.setState({ plotsByMap: {}, plots: {} })
   await hydrateMapFromFirestore(selfUid)
+  await hydrateFarmFromFirestore(selfUid)
 }
 
 export const hydrateMapFromFirestore = mapSync.hydrate

@@ -4,6 +4,7 @@ import { useSelectStore } from '../stores/useSelectStore'
 import { useWorldStore } from '../stores/useWorldStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useUserStore } from '../stores/useUserStore'
+import { useFarmStore } from '../stores/useFarmStore'
 import MapPalette from './MapPalette'
 import { isEditableTarget } from '../utils/isEditableTarget'
 import { joinWorld, leaveWorld, subscribeWorldPlayers } from '../lib/presence'
@@ -153,6 +154,7 @@ export default function GameCanvas({ active = true }) {
           game.registry.set('tilesetUrls', data.tilesetUrls)
           game.registry.set('assetUrls', data.assetUrls)
           useWorldStore.getState().setCurrentMapKey(mapKey)
+          useFarmStore.getState().setCurrentMapKey(mapKey)
           game.scene.start('MapScene', { mapKey, spawn })
         } finally {
           switching = false
@@ -168,6 +170,7 @@ export default function GameCanvas({ active = true }) {
       if (cancelled) return
       assetUrlsRef.current = { ...data, mapKey: entryKey }
       useWorldStore.getState().setCurrentMapKey(entryKey)
+      useFarmStore.getState().setCurrentMapKey(entryKey)
       if (containerRef.current) {
         const { width, height } = containerRef.current.getBoundingClientRect()
         if (width > 0 && height > 0) bootGame(width, height)

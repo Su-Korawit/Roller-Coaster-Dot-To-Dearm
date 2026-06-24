@@ -11,6 +11,12 @@ const m = vi.hoisted(() => ({
   hydrateMap: vi.fn(),
   armMapSync: vi.fn(),
   disarmMapSync: vi.fn(),
+  hydrateInventory: vi.fn(),
+  setInventorySyncUser: vi.fn(),
+  disarmInventorySync: vi.fn(),
+  hydrateFarm: vi.fn(),
+  armFarmSync: vi.fn(),
+  disarmFarmSync: vi.fn(),
   setCoins: vi.fn(),
   setMapOwner: vi.fn(),
   getDoc: vi.fn(),
@@ -44,6 +50,12 @@ vi.mock('../lib/syncManager', () => ({
   hydrateMapFromFirestore: (...a) => m.hydrateMap(...a),
   armMapSync: (...a) => m.armMapSync(...a),
   disarmMapSync: (...a) => m.disarmMapSync(...a),
+  hydrateInventoryFromFirestore: (...a) => m.hydrateInventory(...a),
+  setInventorySyncUser: (...a) => m.setInventorySyncUser(...a),
+  disarmInventorySync: (...a) => m.disarmInventorySync(...a),
+  hydrateFarmFromFirestore: (...a) => m.hydrateFarm(...a),
+  armFarmSync: (...a) => m.armFarmSync(...a),
+  disarmFarmSync: (...a) => m.disarmFarmSync(...a),
 }))
 
 const { bootstrapSession, teardownSession } = await import('./sessionBootstrap')
@@ -77,6 +89,24 @@ describe('bootstrapSession', () => {
     expect(m.hydrateRoadmap).toHaveBeenCalledWith('u1')
   })
 
+  it('hydrates inventory and arms its sync writer on login', async () => {
+    await bootstrapSession({ uid: 'u1' })
+    expect(m.hydrateInventory).toHaveBeenCalledWith('u1')
+    expect(m.setInventorySyncUser).toHaveBeenCalledWith('u1')
+  })
+
+  it('hydrates farm and arms its sync writer on login', async () => {
+    await bootstrapSession({ uid: 'u1' })
+    expect(m.hydrateFarm).toHaveBeenCalledWith('u1')
+    expect(m.armFarmSync).toHaveBeenCalledWith('u1')
+  })
+
+  it('keeps hydrating farm even when inventory hydration throws', async () => {
+    m.hydrateInventory.mockRejectedValue(new Error('inventory boom'))
+    await bootstrapSession({ uid: 'u1' })
+    expect(m.hydrateFarm).toHaveBeenCalledWith('u1')
+  })
+
   it('sets the current map owner to own uid and arms the map sync writer', async () => {
     await bootstrapSession({ uid: 'u1' })
     expect(m.setMapOwner).toHaveBeenCalledWith('u1')
@@ -100,5 +130,11 @@ describe('teardownSession', () => {
     teardownSession()
     expect(m.disarmMapSync).toHaveBeenCalled()
     expect(m.setMapOwner).toHaveBeenCalledWith(null)
+  })
+
+  it('disarms inventory and farm sync writers on logout', () => {
+    teardownSession()
+    expect(m.disarmInventorySync).toHaveBeenCalled()
+    expect(m.disarmFarmSync).toHaveBeenCalled()
   })
 })

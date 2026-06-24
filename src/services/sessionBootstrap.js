@@ -25,6 +25,12 @@ import {
   hydrateMapFromFirestore,
   armMapSync,
   disarmMapSync,
+  hydrateInventoryFromFirestore,
+  setInventorySyncUser,
+  disarmInventorySync,
+  hydrateFarmFromFirestore,
+  armFarmSync,
+  disarmFarmSync,
 } from '../lib/syncManager'
 
 function readSelectStore() {
@@ -102,6 +108,20 @@ export async function bootstrapSession(firebaseUser) {
   } catch (e) {
     console.error('[sessionBootstrap] hydrate map failed:', e)
   }
+
+  try {
+    await hydrateInventoryFromFirestore(uid)
+    setInventorySyncUser(uid)
+  } catch (e) {
+    console.error('[sessionBootstrap] hydrate/arm inventory failed:', e)
+  }
+
+  try {
+    await hydrateFarmFromFirestore(uid)
+    armFarmSync(uid)
+  } catch (e) {
+    console.error('[sessionBootstrap] hydrate/arm farm failed:', e)
+  }
 }
 
 /**
@@ -112,5 +132,7 @@ export function teardownSession() {
   setTaskSyncUser(null)
   setRoadmapSyncUser(null)
   disarmMapSync()
+  disarmInventorySync()
+  disarmFarmSync()
   useWorldStore.getState().setMapOwner(null)
 }
