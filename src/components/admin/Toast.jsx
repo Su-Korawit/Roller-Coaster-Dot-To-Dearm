@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 
 const ToastCtx = createContext(null)
 
@@ -24,10 +24,10 @@ export function ToastProvider({ children }) {
     return () => Object.values(timers).forEach(clearTimeout)
   }, [])
 
-  const toast = {
+  const toast = useMemo(() => ({
     success: (msg) => add('success', msg),
     error:   (msg) => add('error', msg),
-  }
+  }), [add])
 
   return (
     <ToastCtx.Provider value={toast}>
