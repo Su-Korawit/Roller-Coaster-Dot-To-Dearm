@@ -7,7 +7,8 @@ import { useUserStore } from '../stores/useUserStore'
 import MapPalette from './MapPalette'
 import { isEditableTarget } from '../utils/isEditableTarget'
 import { joinWorld, leaveWorld, subscribeWorldPlayers } from '../lib/presence'
-import { GameScene, IndoorScene, loadSceneData } from '../game/worldScenes'
+import { MapScene, loadSceneData } from '../game/worldScenes'
+import { listMapConfigs, pickEntryKey } from '../utils/mapConfig'
 
 export default function GameCanvas({ active = true }) {
   const containerRef = useRef(null)
@@ -34,6 +35,7 @@ export default function GameCanvas({ active = true }) {
   const editMode        = useWorldStore((s) => s.editMode)
   const selectedItemKey = useWorldStore((s) => s.selectedItemKey)
   const currentMapOwnerUid = useWorldStore((s) => s.currentMapOwnerUid)
+  const currentMapKey      = useWorldStore((s) => s.currentMapKey)
   const remotePlayers      = useWorldStore((s) => s.remotePlayers)
   const controlMode        = useUserStore((s) => s.controlMode)
 
@@ -52,7 +54,7 @@ export default function GameCanvas({ active = true }) {
     game.events.emit('editModeChanged')
   }, [editMode, selectedItemKey])
 
-  // Keep selfUid and display name in the registry for GameScene to read during update().
+  // Keep selfUid and display name in the registry for MapScene to read during update().
   useEffect(() => {
     const game = gameRef.current
     if (!game) return
@@ -60,7 +62,7 @@ export default function GameCanvas({ active = true }) {
     game.registry.set('selfName', user?.displayName ?? '')
   }, [selfUid, user])
 
-  // Push remotePlayers into the registry and notify GameScene to reconcile sprites.
+  // Push remotePlayers into the registry and notify MapScene to reconcile sprites.
   useEffect(() => {
     const game = gameRef.current
     if (!game) return
@@ -74,9 +76,9 @@ export default function GameCanvas({ active = true }) {
     game.registry.set('controlMode', controlMode)
   }, [controlMode])
 
-  // Arm/disarm presence room whenever the visited map owner changes.
+  // Arm/disarm presence room whenever the visited map owner or current map changes.
   useEffect(() => {
-    if (!currentMapOwnerUid || !selfUid) return
+    if (!currentMapOwnerUid || !selfUid || !currentMapKey) return
 
     const selfState = {
       x: 0, y: 0, dir: 'down', moving: false,
@@ -84,7 +86,7 @@ export default function GameCanvas({ active = true }) {
       name:     user?.displayName ?? '',
       photoURL: user?.photoURL ?? null,
     }
-    joinWorld(currentMapOwnerUid, selfUid, selfState).catch(() => {})
+    joinWorld(currentMapOwnerUid, currentMapKey, selfUid, selfState).catch(() => {})
 
     if (gameRef.current) {
       gameRef.current.registry.set('ownerUid', currentMapOwnerUid)
@@ -92,16 +94,16 @@ export default function GameCanvas({ active = true }) {
       gameRef.current.registry.set('selfName', user?.displayName ?? '')
     }
 
-    const unsub = subscribeWorldPlayers(currentMapOwnerUid, (snapshot) => {
+    const unsub = subscribeWorldPlayers(currentMapOwnerUid, currentMapKey, (snapshot) => {
       useWorldStore.getState().setRemotePlayers(snapshot)
     })
 
     return () => {
-      leaveWorld(currentMapOwnerUid, selfUid)
+      leaveWorld(currentMapOwnerUid, currentMapKey, selfUid)
       unsub()
       useWorldStore.getState().setRemotePlayers({})
     }
-  }, [currentMapOwnerUid, selfUid])  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentMapOwnerUid, selfUid, currentMapKey])  // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     let game = null
@@ -118,18 +120,19 @@ export default function GameCanvas({ active = true }) {
           default: 'arcade',
           arcade: { gravity: { y: 0 }, debug: false },
         },
-        scene: [GameScene, IndoorScene],
+        scene: [MapScene],
         scale: { mode: Phaser.Scale.RESIZE, width, height },
       }
       game = new Phaser.Game(config)
       game.registry.set('selectedMbti', selectedMbtiRef.current)
-      game.registry.set('assetUrls', assetUrlsRef.current.assetUrls)
-      game.registry.set('mapConfigs', assetUrlsRef.current.mapConfigs)
+      game.registry.set('assetUrls', { ...assetUrlsRef.current.assetUrls, [assetUrlsRef.current.mapKey]: undefined })
+      game.registry.set('mapConfig', assetUrlsRef.current.mapConfig)
       game.registry.set('tilesetUrls', assetUrlsRef.current.tilesetUrls)
       game.registry.set('mapObjects', useWorldStore.getState().mapObjects)
       game.registry.set('editMode', useWorldStore.getState().editMode)
       game.registry.set('selectedItemKey', useWorldStore.getState().selectedItemKey)
       game.registry.set('controlMode', useUserStore.getState().controlMode)
+      game.scene.start('MapScene', { mapKey: assetUrlsRef.current.mapKey, spawn: null })
       gameRef.current = game
       game.events.on('zoomChanged', (v) => {
         setZoom(+v.toFixed(1))
@@ -137,17 +140,31 @@ export default function GameCanvas({ active = true }) {
         clearTimeout(hideTimerRef.current)
         hideTimerRef.current = setTimeout(() => setShowZoom(false), 1500)
       })
+      // Handle portal-driven map switches: reload target map's config/tilesets into
+      // the registry before restarting the scene so preload can access fresh URLs.
+      game.events.on('mapChangeRequested', async ({ mapKey, spawn }) => {
+        const data = await loadSceneData(mapKey)
+        game.registry.set('mapConfig', data.mapConfig)
+        game.registry.set('tilesetUrls', data.tilesetUrls)
+        game.registry.set('assetUrls', { ...data.assetUrls, [mapKey]: undefined })
+        useWorldStore.getState().setCurrentMapKey(mapKey)
+        game.scene.start('MapScene', { mapKey, spawn })
+      })
     }
 
-    // Resolve map configs + cloud URLs first, then let the ResizeObserver boot.
-    loadSceneData().then((data) => {
+    // Resolve entry map configs + cloud URLs first, then let the ResizeObserver boot.
+    ;(async () => {
+      const maps = await listMapConfigs()
+      const entryKey = pickEntryKey(maps) ?? 'test3'
+      const data = await loadSceneData(entryKey)
       if (cancelled) return
-      assetUrlsRef.current = data
+      assetUrlsRef.current = { ...data, mapKey: entryKey }
+      useWorldStore.getState().setCurrentMapKey(entryKey)
       if (containerRef.current) {
         const { width, height } = containerRef.current.getBoundingClientRect()
         if (width > 0 && height > 0) bootGame(width, height)
       }
-    })
+    })()
 
     const ro = new ResizeObserver((entries) => {
       const { width, height } = entries[0].contentRect
