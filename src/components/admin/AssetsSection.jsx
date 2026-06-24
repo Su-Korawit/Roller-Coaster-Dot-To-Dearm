@@ -1,11 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { ref, uploadBytes, uploadBytesResumable, getMetadata, listAll } from 'firebase/storage'
-import { doc, getDoc } from 'firebase/firestore'
-import { storage, db } from '../../firebase'
-import { useAuthStore } from '../../stores/useAuthStore'
+import { ref, uploadBytes, uploadBytesResumable, listAll } from 'firebase/storage'
+import { storage } from '../../firebase'
 import { cloudAsset, bustCache } from '../../utils/cloudAsset'
 import { MBTI_TYPES, GAME_ASSET_BY_KEY } from '../../game/assetManifest'
-import MapConfigEditor from './MapConfigEditor'
 import StorageBrowser from './StorageBrowser'
 import { useToast } from './Toast'
 
@@ -240,101 +237,10 @@ export function CharactersGrid({ onStatus }) {
   )
 }
 
-// ── Maps list ─────────────────────────────────────────────────────────────────
-
-const MAP_KEYS = ['test3', 'indoor']
-
-export function MapsPanel() {
-  const [meta, setMeta]       = useState({})
-  const [cfgStatus, setCfgStatus] = useState({}) // key -> { hasFirestore, tilesetCount }
-  const [refresh, setRefresh] = useState(0)
-  const [editKey, setEditKey] = useState(null)
-  const adminUid = useAuthStore((s) => s.user?.uid)
-  const toast = useToast()
-
-  useEffect(() => {
-    MAP_KEYS.forEach(async (key) => {
-      const path = GAME_ASSET_BY_KEY[key]?.storagePath
-      if (!path) return
-      try {
-        const m = await getMetadata(ref(storage, path))
-        setMeta((prev) => ({ ...prev, [key]: { size: m.size, updated: m.updated } }))
-      } catch {
-        setMeta((prev) => ({ ...prev, [key]: null }))
-      }
-    })
-  }, [refresh])
-
-  // Load tileset status from Firestore so we can show a health pill per map.
-  useEffect(() => {
-    MAP_KEYS.forEach(async (key) => {
-      try {
-        const snap = await getDoc(doc(db, 'mapConfigs', key))
-        if (snap.exists()) {
-          const d = snap.data()
-          const count = Object.keys(d.tilesets || {}).length
-          const filled = Object.values(d.tilesets || {}).filter(Boolean).length
-          setCfgStatus((prev) => ({ ...prev, [key]: { hasFirestore: true, tilesetCount: count, filled } }))
-        } else {
-          setCfgStatus((prev) => ({ ...prev, [key]: { hasFirestore: false } }))
-        }
-      } catch {
-        setCfgStatus((prev) => ({ ...prev, [key]: { hasFirestore: false } }))
-      }
-    })
-  }, [refresh])
-
-  const handleSaved = useCallback((key) => {
-    const path = GAME_ASSET_BY_KEY[key]?.storagePath
-    if (path) bustCache(path)
-    setRefresh((n) => n + 1)
-    toast?.success('บันทึก config แล้ว')
-  }, [toast])
-
-  return (
-    <div>
-      <h3 className="font-semibold text-gray-800 mb-4">Maps</h3>
-      <div className="space-y-3">
-        {MAP_KEYS.map((key) => {
-          const m = meta[key]
-          const cs = cfgStatus[key]
-          return (
-            <div key={key} className="flex items-center gap-4 p-4 rounded-2xl bg-white shadow-sm border border-gray-100">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-semibold text-gray-800 text-sm">{key}.json</p>
-                  {cs && (
-                    cs.hasFirestore
-                      ? <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-semibold">✓ {cs.filled} tilesets</span>
-                      : <span className="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-semibold">⚠ ใช้ค่า default</span>
-                  )}
-                </div>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  {m === undefined ? 'ตรวจสอบ...' :
-                   m === null     ? '⚠ ยังไม่ได้ upload ขึ้น Storage' :
-                   `${(m.size / 1024).toFixed(1)} KB · อัปเดต ${new Date(m.updated).toLocaleDateString('th-TH')}`}
-                </p>
-              </div>
-              <button
-                onClick={() => setEditKey(key)}
-                className="px-4 py-1.5 rounded-xl bg-brand text-white text-xs font-semibold hover:bg-brand-strong transition-colors"
-              >ตั้งค่า / Replace</button>
-            </div>
-          )
-        })}
-      </div>
-
-      {editKey && (
-        <MapConfigEditor
-          mapKey={editKey}
-          adminUid={adminUid}
-          onClose={() => setEditKey(null)}
-          onSaved={() => handleSaved(editKey)}
-        />
-      )}
-    </div>
-  )
-}
+// ── Maps panel ────────────────────────────────────────────────────────────────
+// Re-export MapDashboard under the MapsPanel name that AdminPage already imports.
+// This keeps AdminPage untouched while the implementation moves to MapDashboard.
+export { default as MapsPanel } from './MapDashboard'
 
 // CharactersGrid and MapsPanel are rendered as independent, permission-scoped
 // tabs by AdminPage — see src/pages/AdminPage.jsx.
