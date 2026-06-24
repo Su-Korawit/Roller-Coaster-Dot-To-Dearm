@@ -22,6 +22,7 @@ export const useWorldStore = create((set) => ({
   // Replace the current map's objects.
   setMapObjects: (objects) =>
     set((s) => {
+      if (!s.currentMapKey) return {}
       const next = { ...s.objectsByMap, [s.currentMapKey]: objects }
       return { objectsByMap: next, mapObjects: objects }
     }),
@@ -33,18 +34,21 @@ export const useWorldStore = create((set) => ({
 
   addObject: (obj) =>
     set((s) => {
+      if (!s.currentMapKey) return {}
       const arr = [...objectsFor(s.objectsByMap, s.currentMapKey), obj]
       return { objectsByMap: { ...s.objectsByMap, [s.currentMapKey]: arr }, mapObjects: arr }
     }),
 
   removeObject: (i) =>
     set((s) => {
+      if (!s.currentMapKey) return {}
       const arr = objectsFor(s.objectsByMap, s.currentMapKey).filter((_, idx) => idx !== i)
       return { objectsByMap: { ...s.objectsByMap, [s.currentMapKey]: arr }, mapObjects: arr }
     }),
 
   moveObject: (i, x, y) =>
     set((s) => {
+      if (!s.currentMapKey) return {}
       const arr = objectsFor(s.objectsByMap, s.currentMapKey).map((o, idx) => idx === i ? { ...o, x, y } : o)
       return { objectsByMap: { ...s.objectsByMap, [s.currentMapKey]: arr }, mapObjects: arr }
     }),

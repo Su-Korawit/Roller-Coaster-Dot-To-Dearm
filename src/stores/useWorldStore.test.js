@@ -97,10 +97,18 @@ describe('useWorldStore', () => {
   // ── addObject ────────────────────────────────────────────────────────────
 
   it('addObject appends a decoration to mapObjects', () => {
+    useWorldStore.setState({ currentMapKey: 'a', objectsByMap: {} })
     useWorldStore.getState().addObject({ key: 'wood_bridge', x: 100, y: 200 })
     expect(useWorldStore.getState().mapObjects).toEqual([
       { key: 'wood_bridge', x: 100, y: 200 },
     ])
+  })
+
+  it('setMapObjects is a no-op when currentMapKey is null (no "null" key corruption)', () => {
+    useWorldStore.setState({ currentMapKey: null, objectsByMap: {} })
+    useWorldStore.getState().setMapObjects([{ key: 'x', x: 0, y: 0 }])
+    expect('null' in useWorldStore.getState().objectsByMap).toBe(false)
+    expect(useWorldStore.getState().objectsByMap).toEqual({})
   })
 
   it('addObject appends without losing existing objects', () => {
