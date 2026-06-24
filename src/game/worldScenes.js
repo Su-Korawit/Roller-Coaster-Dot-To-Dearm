@@ -335,11 +335,13 @@ export class MapScene extends Phaser.Scene {
     this._mapScale = mapScale
     this._renderDecorations(mapScale)
 
-    this.game.events.on('mapObjectsChanged', () => this._renderDecorations(this._mapScale))
-    this.game.events.on('editModeChanged',   () => this._renderDecorations(this._mapScale))
+    const onMapObjectsChanged = () => this._renderDecorations(this._mapScale)
+    const onEditModeChanged   = () => this._renderDecorations(this._mapScale)
+    this.game.events.on('mapObjectsChanged', onMapObjectsChanged)
+    this.game.events.on('editModeChanged',   onEditModeChanged)
     this.events.once('shutdown', () => {
-      this.game.events.off('mapObjectsChanged', undefined, this)
-      this.game.events.off('editModeChanged',   undefined, this)
+      this.game.events.off('mapObjectsChanged', onMapObjectsChanged)
+      this.game.events.off('editModeChanged',   onEditModeChanged)
     })
 
     this._remoteAvatars = new Map()

@@ -34,7 +34,7 @@ export default function MapPreview({ mapKey, width = '100%', height = 240 }) {
       game.registry.set('editMode', false)
       game.registry.set('remotePlayers', {})
       game.scene.start('MapScene', { mapKey, preview: true })
-    })
+    }).catch((e) => { console.error('[MapPreview] load failed:', e) })
 
     return () => {
       cancelled = true

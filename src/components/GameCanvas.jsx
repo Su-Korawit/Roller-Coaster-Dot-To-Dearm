@@ -142,14 +142,21 @@ export default function GameCanvas({ active = true }) {
       })
       // Handle portal-driven map switches: reload target map's config/tilesets into
       // the registry before restarting the scene so preload can access fresh URLs.
+      let switching = false
       game.events.on('mapChangeRequested', async ({ mapKey, spawn }) => {
-        const data = await loadSceneData(mapKey)
-        if (cancelled) return   // component unmounted during await — game is destroyed
-        game.registry.set('mapConfig', data.mapConfig)
-        game.registry.set('tilesetUrls', data.tilesetUrls)
-        game.registry.set('assetUrls', data.assetUrls)
-        useWorldStore.getState().setCurrentMapKey(mapKey)
-        game.scene.start('MapScene', { mapKey, spawn })
+        if (switching) return
+        switching = true
+        try {
+          const data = await loadSceneData(mapKey)
+          if (cancelled) return   // component unmounted during await — game is destroyed
+          game.registry.set('mapConfig', data.mapConfig)
+          game.registry.set('tilesetUrls', data.tilesetUrls)
+          game.registry.set('assetUrls', data.assetUrls)
+          useWorldStore.getState().setCurrentMapKey(mapKey)
+          game.scene.start('MapScene', { mapKey, spawn })
+        } finally {
+          switching = false
+        }
       })
     }
 
