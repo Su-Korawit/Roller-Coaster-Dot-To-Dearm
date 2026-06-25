@@ -37,6 +37,18 @@ function interactionsFrom(map) {
   }))
 }
 
+function labelsFrom(map) {
+  const layer = objectLayer(map, 'Labels')
+  return (layer?.objects || [])
+    .map((o) => ({
+      x: o.x,
+      y: o.y,
+      text: propValue(o, 'text') ?? '',
+      color: propValue(o, 'color') ?? '#000000',
+    }))
+    .filter((l) => l.text !== '')
+}
+
 export function parseMapMeta(map) {
   const tilesetNames = [...new Set((map.tilesets || []).map((t) => t.name))]
 
@@ -70,5 +82,6 @@ export function parseMapMeta(map) {
     portals,
     farmTiles: farmTilesFrom(map),
     interactions: interactionsFrom(map),
+    labels: labelsFrom(map),
   }
 }

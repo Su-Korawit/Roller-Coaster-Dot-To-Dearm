@@ -101,3 +101,46 @@ describe('parseMapMeta farm extensions', () => {
     expect(m.interactions).toEqual([])
   })
 })
+
+describe('parseMapMeta labels', () => {
+  it('parses Labels points with text and optional color', () => {
+    const map = {
+      width: 2, height: 2, tilesets: [], layers: [
+        {
+          name: 'Labels', type: 'objectgroup', objects: [
+            { x: 64, y: 32, properties: [{ name: 'text', value: 'ร้านค้า' }, { name: 'color', value: '#ff0000' }] },
+            { x: 128, y: 96, properties: [{ name: 'text', value: 'ทางออก' }] },
+          ],
+        },
+      ],
+    }
+    const m = parseMapMeta(map)
+    expect(m.labels).toEqual([
+      { x: 64, y: 32, text: 'ร้านค้า', color: '#ff0000' },
+      { x: 128, y: 96, text: 'ทางออก', color: '#000000' },
+    ])
+  })
+
+  it('returns empty labels when the layer is absent', () => {
+    const m = parseMapMeta({ width: 2, height: 2, tilesets: [], layers: [] })
+    expect(m.labels).toEqual([])
+  })
+
+  it('filters out objects with empty or absent text', () => {
+    const map = {
+      width: 2, height: 2, tilesets: [], layers: [
+        {
+          name: 'Labels', type: 'objectgroup', objects: [
+            { x: 10, y: 10, properties: [{ name: 'text', value: '' }] },
+            { x: 20, y: 20, properties: [] },
+            { x: 30, y: 30, properties: [{ name: 'text', value: 'ฟาร์ม' }] },
+          ],
+        },
+      ],
+    }
+    const m = parseMapMeta(map)
+    expect(m.labels).toEqual([
+      { x: 30, y: 30, text: 'ฟาร์ม', color: '#000000' },
+    ])
+  })
+})
