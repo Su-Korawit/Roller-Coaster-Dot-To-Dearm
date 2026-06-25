@@ -4,10 +4,8 @@ export const SHOPS = {
     name: 'ร้านเมล็ดพันธุ์',
     triggerName: 'shop_seed',
     sells: [
-      { itemId: 'turnip_seed',  price: 5  },
-      { itemId: 'carrot_seed',  price: 8  },
-      { itemId: 'potato_seed',  price: 6  },
-      { itemId: 'pumpkin_seed', price: 20 },
+      { itemId: 'rice_seed',   price: 5 },
+      { itemId: 'tomato_seed', price: 8 },
     ],
     buysType: 'produce',
   },
