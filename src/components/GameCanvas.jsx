@@ -21,6 +21,7 @@ import { listMapConfigs, pickEntryKey } from '../utils/mapConfig'
 import { ITEMS } from '../data/ItemData'
 import { getShop } from '../data/ShopData'
 import { tileKey, isReady } from '../systems/farmLogic'
+import { addToSlots } from '../systems/inventoryLogic'
 import { plantSeed, harvestAt } from '../systems/farmActions'
 
 export default function GameCanvas({ active = true }) {
@@ -317,17 +318,19 @@ export default function GameCanvas({ active = true }) {
       price: s.price,
       playerCount: useInventoryStore.getState().countItem(s.itemId),
     }))
-  }, [shopState])
+  }, [shopState, hotbar, storage])
 
   // ---------- Storage move/swap handlers ----------
   const handleMoveToStorage = (fromIndex) => {
     const inv = useInventoryStore.getState()
     const slot = inv.hotbar[fromIndex]
     if (!slot) return
-    const success = inv.addItem(slot.itemId, slot.count)
-    if (success) {
-      const newHotbar = [...inv.hotbar]; newHotbar[fromIndex] = null
-      useInventoryStore.setState({ hotbar: newHotbar })
+    const stackMax = ITEMS[slot.itemId]?.stackMax ?? 99
+    const result = addToSlots(inv.storage, slot.itemId, slot.count, stackMax)
+    if (result.remaining === 0) {
+      const newHotbar = [...inv.hotbar]
+      newHotbar[fromIndex] = null
+      useInventoryStore.setState({ hotbar: newHotbar, storage: result.slots })
     }
   }
 
@@ -335,10 +338,12 @@ export default function GameCanvas({ active = true }) {
     const inv = useInventoryStore.getState()
     const slot = inv.storage[fromIndex]
     if (!slot) return
-    const success = inv.addItem(slot.itemId, slot.count)
-    if (success) {
-      const newStorage = [...inv.storage]; newStorage[fromIndex] = null
-      useInventoryStore.setState({ storage: newStorage })
+    const stackMax = ITEMS[slot.itemId]?.stackMax ?? 99
+    const result = addToSlots(inv.hotbar, slot.itemId, slot.count, stackMax)
+    if (result.remaining === 0) {
+      const newStorage = [...inv.storage]
+      newStorage[fromIndex] = null
+      useInventoryStore.setState({ hotbar: result.slots, storage: newStorage })
     }
   }
 
