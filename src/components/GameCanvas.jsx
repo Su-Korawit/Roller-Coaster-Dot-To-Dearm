@@ -1,15 +1,27 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Phaser from 'phaser'
 import { useSelectStore } from '../stores/useSelectStore'
 import { useWorldStore } from '../stores/useWorldStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useFarmStore } from '../stores/useFarmStore'
+import { useInventoryStore } from '../stores/useInventoryStore'
 import MapPalette from './MapPalette'
+import { Hotbar } from './Hotbar'
+import { SeedPicker } from './SeedPicker'
+import { ShopUI } from './ShopUI'
+import { StorageUI } from './StorageUI'
+import { DayNightOverlay } from './DayNightOverlay'
+import { NotificationContainer } from './NotificationContainer'
+import FarmActionButton from './FarmActionButton'
 import { isEditableTarget } from '../utils/isEditableTarget'
 import { joinWorld, leaveWorld, subscribeWorldPlayers } from '../lib/presence'
 import { MapScene, loadSceneData } from '../game/worldScenes'
 import { listMapConfigs, pickEntryKey } from '../utils/mapConfig'
+import { ITEMS } from '../data/ItemData'
+import { getShop } from '../data/ShopData'
+import { tileKey, isReady } from '../systems/farmLogic'
+import { plantSeed, harvestAt } from '../systems/farmActions'
 
 export default function GameCanvas({ active = true }) {
   const containerRef = useRef(null)
@@ -39,6 +51,19 @@ export default function GameCanvas({ active = true }) {
   const currentMapKey      = useWorldStore((s) => s.currentMapKey)
   const remotePlayers      = useWorldStore((s) => s.remotePlayers)
   const controlMode        = useUserStore((s) => s.controlMode)
+
+  // Farm state
+  const [activeTile, setActiveTile] = useState(null)
+  const [seedPickerOpen, setSeedPickerOpen] = useState(false)
+  const [shopState, setShopState] = useState(null)   // { shopId } | null
+  const [chestOpen, setChestOpen] = useState(false)
+  const plots = useFarmStore((s) => s.plots)
+  const isOwner = currentMapOwnerUid && selfUid && currentMapOwnerUid === selfUid
+
+  // Inventory subscriptions
+  const hotbar  = useInventoryStore((s) => s.hotbar)
+  const storage = useInventoryStore((s) => s.storage)
+  const gold    = useInventoryStore((s) => s.gold)
 
   useEffect(() => {
     const game = gameRef.current
@@ -106,6 +131,13 @@ export default function GameCanvas({ active = true }) {
     }
   }, [currentMapOwnerUid, selfUid, currentMapKey])  // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Bridge farm store → scene so crops re-render on plant/harvest.
+  useEffect(() => {
+    const game = gameRef.current
+    if (!game) return
+    game.events.emit('farmChanged')
+  }, [plots])
+
   useEffect(() => {
     let game = null
     let cancelled = false
@@ -160,6 +192,12 @@ export default function GameCanvas({ active = true }) {
           switching = false
         }
       })
+      // Farm scene event wiring
+      game.events.on('farmTileChanged', (tile) => setActiveTile(tile))
+      game.events.on('shopEntered', ({ shopId }) => setShopState({ shopId }))
+      game.events.on('shopExited', () => setShopState(null))
+      game.events.on('chestOpened', () => setChestOpen(true))
+      game.events.on('chestClosed', () => setChestOpen(false))
     }
 
     // Resolve entry map configs + cloud URLs first, then let the ResizeObserver boot.
@@ -230,13 +268,194 @@ export default function GameCanvas({ active = true }) {
     }
   }, [])
 
+  // ---------- Action button state ----------
+  const activePlot = activeTile ? plots[tileKey(activeTile.tileX, activeTile.tileY)] : null
+  const activeReady = activePlot && !activePlot.anchorKey && isReady(activePlot.plantedAt, activePlot.plantId, Date.now())
+  const showAction = active && isOwner && activeTile != null
+  const actionLabel = activePlot ? (activeReady ? 'เก็บเกี่ยว' : 'กำลังโต…') : 'ปลูก'
+
+  const handleAction = () => {
+    if (!activeTile) return
+    if (!activePlot) { setSeedPickerOpen(true); return }
+    if (activeReady) harvestAt({ tileX: activeTile.tileX, tileY: activeTile.tileY })
+  }
+
+  // ---------- Derived seed / produce lists ----------
+  const seedItems = useMemo(() => {
+    const byId = {}
+    ;[...hotbar, ...storage].forEach(slot => {
+      if (!slot) return
+      if (ITEMS[slot.itemId]?.type === 'seed') {
+        byId[slot.itemId] = (byId[slot.itemId] ?? 0) + slot.count
+      }
+    })
+    return Object.entries(byId).map(([itemId, count]) => ({
+      itemId, count, name: ITEMS[itemId]?.name ?? itemId, iconIndex: ITEMS[itemId]?.iconIndex ?? 0,
+    }))
+  }, [hotbar, storage])
+
+  const produceList = useMemo(() => {
+    const byId = {}
+    ;[...hotbar, ...storage].forEach(slot => {
+      if (!slot) return
+      if (ITEMS[slot.itemId]?.type === 'produce') {
+        byId[slot.itemId] = (byId[slot.itemId] ?? 0) + slot.count
+      }
+    })
+    return Object.entries(byId).map(([itemId, count]) => ({
+      itemId, count, name: ITEMS[itemId]?.name ?? itemId, sellPrice: ITEMS[itemId]?.sellPrice ?? 0,
+    }))
+  }, [hotbar, storage])
+
+  const stockList = useMemo(() => {
+    if (!shopState?.shopId) return []
+    const shop = getShop(shopState.shopId)
+    if (!shop) return []
+    return shop.sells.map(s => ({
+      itemId: s.itemId,
+      name: ITEMS[s.itemId]?.name ?? s.itemId,
+      price: s.price,
+      playerCount: useInventoryStore.getState().countItem(s.itemId),
+    }))
+  }, [shopState])
+
+  // ---------- Storage move/swap handlers ----------
+  const handleMoveToStorage = (fromIndex) => {
+    const inv = useInventoryStore.getState()
+    const slot = inv.hotbar[fromIndex]
+    if (!slot) return
+    const success = inv.addItem(slot.itemId, slot.count)
+    if (success) {
+      const newHotbar = [...inv.hotbar]; newHotbar[fromIndex] = null
+      useInventoryStore.setState({ hotbar: newHotbar })
+    }
+  }
+
+  const handleMoveToHotbar = (fromIndex) => {
+    const inv = useInventoryStore.getState()
+    const slot = inv.storage[fromIndex]
+    if (!slot) return
+    const success = inv.addItem(slot.itemId, slot.count)
+    if (success) {
+      const newStorage = [...inv.storage]; newStorage[fromIndex] = null
+      useInventoryStore.setState({ storage: newStorage })
+    }
+  }
+
+  const handleSwapSlots = (fromIndex, toIndex, isHotbarSwap) => {
+    const inv = useInventoryStore.getState()
+    if (isHotbarSwap) {
+      const newHotbar = [...inv.hotbar]
+      ;[newHotbar[fromIndex], newHotbar[toIndex]] = [newHotbar[toIndex], newHotbar[fromIndex]]
+      useInventoryStore.setState({ hotbar: newHotbar })
+    } else {
+      const newStorage = [...inv.storage]
+      ;[newStorage[fromIndex], newStorage[toIndex]] = [newStorage[toIndex], newStorage[fromIndex]]
+      useInventoryStore.setState({ storage: newStorage })
+    }
+  }
+
+  // ---------- Shop buy/sell handlers ----------
+  const handleBuy = (itemId, qty) => {
+    const shop = getShop(shopState?.shopId)
+    if (!shop) return {}
+    const item = shop.sells.find(s => s.itemId === itemId)
+    if (!item) return {}
+    const total = item.price * qty
+    const inv = useInventoryStore.getState()
+    if (!inv.hasGold(total)) return { success: false, reason: 'เงินไม่พอ' }
+    inv.removeGold(total)
+    inv.addItem(itemId, qty)
+    return { success: true }
+  }
+
+  const handleSell = (itemId, count) => {
+    const inv = useInventoryStore.getState()
+    const sellPrice = ITEMS[itemId]?.sellPrice ?? 0
+    const goldEarned = sellPrice * count
+    inv.removeItem(itemId, count)
+    inv.addGold(goldEarned)
+    return { success: true, goldEarned }
+  }
+
+  const handleSellAll = () => {
+    const inv = useInventoryStore.getState()
+    const allSlots = [...inv.hotbar, ...inv.storage]
+    let totalEarned = 0
+    const sold = {}
+    allSlots.forEach(slot => {
+      if (!slot) return
+      if (ITEMS[slot.itemId]?.type === 'produce') {
+        sold[slot.itemId] = (sold[slot.itemId] ?? 0) + slot.count
+      }
+    })
+    if (Object.keys(sold).length === 0) return { success: false, reason: 'ไม่มีของขาย' }
+    Object.entries(sold).forEach(([itemId, count]) => {
+      const sellPrice = ITEMS[itemId]?.sellPrice ?? 0
+      inv.removeItem(itemId, count)
+      inv.addGold(sellPrice * count)
+      totalEarned += sellPrice * count
+    })
+    return { success: true, totalEarned }
+  }
+
   return (
     <>
       <div
         ref={containerRef}
         style={{ width: '100%', height: '100%', overflow: 'hidden' }}
       />
-      <MapPalette />
+      {active && (
+        <Hotbar slots={hotbar} selectedIndex={0} gold={gold} onSelectSlot={() => {}} />
+      )}
+      {showAction && (
+        <FarmActionButton label={actionLabel} onAction={handleAction} />
+      )}
+      {active && (
+        <SeedPicker
+          isOpen={seedPickerOpen}
+          seeds={seedItems}
+          onSelect={(seedItemId) => {
+            if (activeTile) {
+              plantSeed({
+                tileX: activeTile.tileX,
+                tileY: activeTile.tileY,
+                seedItemId,
+                farmTiles: gameRef.current?.scene?.getScene('MapScene')?._farmTiles,
+              })
+            }
+            setSeedPickerOpen(false)
+          }}
+          onClose={() => setSeedPickerOpen(false)}
+        />
+      )}
+      {active && shopState && (
+        <ShopUI
+          isOpen
+          shop={getShop(shopState.shopId)}
+          stockList={stockList}
+          produceList={produceList}
+          gold={gold}
+          onBuy={handleBuy}
+          onSell={handleSell}
+          onSellAll={handleSellAll}
+          onClose={() => setShopState(null)}
+        />
+      )}
+      {active && chestOpen && (
+        <StorageUI
+          isOpen
+          hotbarSlots={hotbar}
+          storageSlots={storage}
+          gold={gold}
+          onMoveToStorage={handleMoveToStorage}
+          onMoveToHotbar={handleMoveToHotbar}
+          onSwapSlots={handleSwapSlots}
+          onClose={() => setChestOpen(false)}
+        />
+      )}
+      {active && <DayNightOverlay dayNight={null} />}
+      {active && <NotificationContainer />}
       <div style={{
         position: 'absolute',
         bottom: 24,
