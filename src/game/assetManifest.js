@@ -53,6 +53,15 @@ export const GAME_ASSETS = [
   object('Basic_Furniture', 'Basic_Furniture'),
   object('Chest', 'Chest'),
 
+  // Crops — 6×2 grid of 16px frames (turnip/carrot/potato/pumpkin stages)
+  {
+    key: 'crops',
+    type: 'spritesheet',
+    storagePath: 'sprites/objects/Basic_Plants.png',
+    localPath: '/assets/sprites/Objects/Basic_Plants.png',
+    frameConfig: { frameWidth: 16, frameHeight: 16 },
+  },
+
   // Characters — one 48×48 spritesheet per MBTI type
   ...MBTI_TYPES.map((m) => ({
     key: m,
@@ -69,7 +78,7 @@ export const GAME_SCENE_KEYS = [
   'Grass', 'Water', 'Wooden_House', 'Wooden_House_Walls_Tilset',
   'Wooden_House_Roof_Tilset', 'Hills', 'Tilled_Dirt', 'Tilled_Dirt_v2',
   'Tilled_Dirt_Wide', 'Tilled_Dirt_Wide_v2', 'Fences',
-  'Wood_Bridge', 'Basic_Grass_Biom_things_1',
+  'Wood_Bridge', 'Basic_Grass_Biom_things_1', 'crops',
   ...MBTI_TYPES,
 ]
 
