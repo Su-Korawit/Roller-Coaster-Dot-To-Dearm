@@ -55,7 +55,9 @@ export default function GameCanvas({ active = true }) {
 
   // Farm state
   const [activeTile, setActiveTile] = useState(null)
-  const [seedPickerOpen, setSeedPickerOpen] = useState(false)
+  const [selectedHotbarIndex, setSelectedHotbarIndex] = useState(0)
+  const selectedHotbarIndexRef = useRef(0)
+  useEffect(() => { selectedHotbarIndexRef.current = selectedHotbarIndex }, [selectedHotbarIndex])
   const [shopState, setShopState] = useState(null)   // { shopId } | null
   const [chestOpen, setChestOpen] = useState(false)
   const plots = useFarmStore((s) => s.plots)
@@ -426,7 +428,7 @@ export default function GameCanvas({ active = true }) {
         style={{ width: '100%', height: '100%', overflow: 'hidden' }}
       />
       {active && (
-        <Hotbar slots={hotbar} selectedIndex={0} gold={gold} onSelectSlot={() => {}} />
+        <Hotbar slots={hotbar} selectedIndex={selectedHotbarIndex} gold={gold} onSelectSlot={setSelectedHotbarIndex} />
       )}
       {showAction && (
         <FarmActionButton label={actionLabel} onAction={handleAction} />
