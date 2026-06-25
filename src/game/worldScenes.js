@@ -287,7 +287,7 @@ export class MapScene extends Phaser.Scene {
     // back to map center. parseMapMeta needs the raw Tiled JSON, which Phaser
     // caches under the tilemap key.
     const rawJson = this.cache.tilemap.get(this.mapKey)?.data
-    const meta = rawJson ? parseMapMeta(rawJson) : { spawns: [], portals: [], defaultSpawnName: null, farmTiles: new Set(), interactions: [] }
+    const meta = rawJson ? parseMapMeta(rawJson) : { spawns: [], portals: [], defaultSpawnName: null, farmTiles: new Set(), interactions: [], labels: [] }
     this._farmTiles = meta.farmTiles ?? new Set()
     this._interactions = meta.interactions ?? []
     this._labels = meta.labels ?? []
@@ -323,7 +323,7 @@ export class MapScene extends Phaser.Scene {
         rect.setDepth(20)
       })
       // Draw label text (admin preview)
-      meta.labels.forEach((lb) => {
+      (meta.labels ?? []).forEach((lb) => {
         const txt = this.add.text(lb.x * mapScale, lb.y * mapScale, lb.text, {
           fontSize: `${8 * mapScale}px`,
           color: lb.color,
