@@ -323,7 +323,7 @@ export class MapScene extends Phaser.Scene {
         rect.setDepth(20)
       })
       // Draw label text (admin preview)
-      (meta.labels ?? []).forEach((lb) => {
+      this._labels.forEach((lb) => {
         const txt = this.add.text(lb.x * mapScale, lb.y * mapScale, lb.text, {
           fontSize: `${8 * mapScale}px`,
           color: lb.color,
