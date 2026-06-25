@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Settings, Share2 } from 'lucide-react'
+import { Settings, Share2, Pencil } from 'lucide-react'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuthStore } from '../stores/useAuthStore'
@@ -94,7 +94,8 @@ export default function ProfilePanel({ onClose }) {
           onClick={() => navigate('/select/mbti')}
           className="w-full rounded-2xl border-2 border-dashed border-purple-200 py-3 text-sm text-purple-400 hover:border-purple-400 hover:text-purple-500 transition-colors"
         >
-          ✏️ Edit your path
+          <Pencil size={12} strokeWidth={2} className="inline mr-1" />
+          Edit your path
         </button>
       </div>
 

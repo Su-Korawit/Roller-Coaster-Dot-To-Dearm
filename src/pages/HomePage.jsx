@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Calendar, MessageCircle, Map } from 'lucide-react'
+import { Calendar, MessageCircle, Map, Newspaper } from 'lucide-react'
 import { useUserStore } from '../stores/useUserStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { APP_VIEWS, shouldShowNav } from '../constants/appViews'
@@ -271,7 +271,7 @@ function HomePage() {
           aria-label="ข่าวสาร"
           className="relative flex items-center gap-2 bg-white/90 rounded-2xl shadow-lg px-4 py-2 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
-          <span className="text-base" aria-hidden="true">📰</span>
+          <Newspaper size={18} strokeWidth={1.5} className="text-gray-600" aria-hidden="true" />
           <span className="pixel-font text-[10px] text-gray-700">News</span>
           {!newsRead && (
             <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center" aria-hidden="true">

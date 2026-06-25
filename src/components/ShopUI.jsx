@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { getItemAbbr } from '../utils/itemHelpers'
+import { GoldIcon } from './ui/GoldIcon'
 
 const TYPE_COLORS = {
   buy: { btn: '#a8e6a3', border: '#3d8b3d' },
@@ -305,7 +306,10 @@ export function ShopUI({
           <div style={styles.header}>
             <div style={styles.titleBlock}>
               <h2 style={styles.title}>🏪 {shop?.name ?? 'ร้านค้า'}</h2>
-              <div style={styles.gold}>💰 {gold}g</div>
+              <div style={{ ...styles.gold, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <GoldIcon size={14} />
+                {gold}g
+              </div>
             </div>
             <button style={styles.closeBtn} onClick={onClose}>✕</button>
           </div>
@@ -377,7 +381,7 @@ export function ShopUI({
                   ))
                 )}
                 <button style={styles.sellAllBtn} onClick={handleSellAll} disabled={produceList.length === 0}>
-                  💰 ขายทั้งหมดเลย — {totalProduceValue}g
+                  ขายทั้งหมด — {totalProduceValue}g
                 </button>
               </>
             )}

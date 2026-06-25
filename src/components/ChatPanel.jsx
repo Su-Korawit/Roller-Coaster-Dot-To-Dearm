@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { addDoc, getDoc, increment, serverTimestamp, updateDoc } from 'firebase/firestore'
-import { ArrowLeft, Loader2, Send, Wrench } from 'lucide-react'
+import { ArrowLeft, ClipboardList, Loader2, Send, Wrench } from 'lucide-react'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useChatStore } from '../stores/useChatStore'
 import { buildChatId, shapes, refs, cols } from '../lib/db'
@@ -420,7 +420,7 @@ function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
                     <div className="flex flex-col w-52">
                       {/* Header row */}
                       <div className="flex items-start gap-2 px-3 pt-3 pb-2 border-b border-brand/20">
-                        <span className="text-lg leading-none shrink-0">📋</span>
+                        <ClipboardList size={18} strokeWidth={1.5} className="shrink-0 text-brand" aria-hidden="true" />
                         <div className="flex-1 min-w-0">
                           <p className="thai-font text-[10px] text-brand mb-0.5">Task ของ {snap.ownerName}</p>
                           <p className="text-[12px] font-semibold text-white leading-snug"
