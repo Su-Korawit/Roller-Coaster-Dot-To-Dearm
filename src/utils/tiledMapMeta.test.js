@@ -59,3 +59,45 @@ describe('parseMapMeta', () => {
     expect(m.defaultSpawnName).toBeNull()
   })
 })
+
+describe('parseMapMeta farm extensions', () => {
+  it('builds a farmTiles set from non-zero FarmGround cells', () => {
+    const map = {
+      width: 3, height: 2, tilesets: [], layers: [
+        { name: 'FarmGround', type: 'tilelayer', data: [0, 7, 0, 0, 0, 9] },
+      ],
+    }
+    const m = parseMapMeta(map)
+    expect(m.farmTiles instanceof Set).toBe(true)
+    expect([...m.farmTiles].sort()).toEqual(['1_0', '2_1'])
+  })
+
+  it('returns an empty farmTiles set when FarmGround layer is absent', () => {
+    const m = parseMapMeta({ width: 2, height: 2, tilesets: [], layers: [] })
+    expect(m.farmTiles instanceof Set).toBe(true)
+    expect(m.farmTiles.size).toBe(0)
+  })
+
+  it('parses Interactions objects with action/shopId', () => {
+    const map = {
+      width: 2, height: 2, tilesets: [], layers: [
+        {
+          name: 'Interactions', type: 'objectgroup', objects: [
+            { x: 32, y: 48, width: 16, height: 16, properties: [{ name: 'action', value: 'shop' }, { name: 'shopId', value: 'seed_shop' }] },
+            { x: 80, y: 16, width: 16, height: 16, properties: [{ name: 'action', value: 'chest' }] },
+          ],
+        },
+      ],
+    }
+    const m = parseMapMeta(map)
+    expect(m.interactions).toEqual([
+      { x: 32, y: 48, width: 16, height: 16, action: 'shop', shopId: 'seed_shop' },
+      { x: 80, y: 16, width: 16, height: 16, action: 'chest', shopId: null },
+    ])
+  })
+
+  it('returns empty interactions when the layer is absent', () => {
+    const m = parseMapMeta({ width: 2, height: 2, tilesets: [], layers: [] })
+    expect(m.interactions).toEqual([])
+  })
+})

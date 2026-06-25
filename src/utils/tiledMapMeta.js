@@ -10,6 +10,33 @@ function objectLayer(map, name) {
   return (map.layers || []).find((l) => l.name === name && l.type === 'objectgroup') || null
 }
 
+function tileLayer(map, name) {
+  return (map.layers || []).find((l) => l.name === name && l.type === 'tilelayer') || null
+}
+
+function farmTilesFrom(map) {
+  const layer = tileLayer(map, 'FarmGround')
+  const tiles = new Set()
+  if (!layer || !Array.isArray(layer.data)) return tiles
+  const w = map.width
+  layer.data.forEach((gid, i) => {
+    if (gid !== 0) tiles.add(`${i % w}_${Math.floor(i / w)}`)
+  })
+  return tiles
+}
+
+function interactionsFrom(map) {
+  const layer = objectLayer(map, 'Interactions')
+  return (layer?.objects || []).map((o) => ({
+    x: o.x,
+    y: o.y,
+    width: o.width,
+    height: o.height,
+    action: propValue(o, 'action'),
+    shopId: propValue(o, 'shopId'),
+  }))
+}
+
 export function parseMapMeta(map) {
   const tilesetNames = [...new Set((map.tilesets || []).map((t) => t.name))]
 
@@ -40,5 +67,7 @@ export function parseMapMeta(map) {
     spawns,
     defaultSpawnName,
     portals,
+    farmTiles: farmTilesFrom(map),
+    interactions: interactionsFrom(map),
   }
 }
