@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { getItemAbbr } from '../utils/itemHelpers'
+import { ItemSprite } from './ItemSprite'
 import { GoldIcon } from './ui/GoldIcon'
 
 const TYPE_COLORS = {
@@ -327,7 +327,7 @@ export function ShopUI({
               const maxAffordable = Math.max(1, Math.floor(gold / item.price))
               return (
                 <div key={item.itemId} style={styles.itemRow}>
-                  <div style={styles.itemAbbr}>{getItemAbbr(item.itemId)}</div>
+                  <div style={styles.itemAbbr}><ItemSprite itemId={item.itemId} size={28} /></div>
                   <div style={styles.itemInfo}>
                     <div style={styles.itemName}>{item.name}</div>
                     <div style={styles.itemSub}>ราคา: {item.price}g × {qty} = {total}g | มี: {item.playerCount}</div>
@@ -358,7 +358,7 @@ export function ShopUI({
                 ) : (
                   produceList.map(item => (
                     <div key={item.itemId} style={styles.itemRow}>
-                      <div style={styles.itemAbbr}>{getItemAbbr(item.itemId)}</div>
+                      <div style={styles.itemAbbr}><ItemSprite itemId={item.itemId} size={28} /></div>
                       <div style={styles.itemInfo}>
                         <div style={styles.itemName}>{item.name} ×{item.count}</div>
                         <div style={styles.itemSub}>ราคา: {item.sellPrice}g/ชิ้น | รวม: {item.count * item.sellPrice}g</div>
