@@ -70,6 +70,13 @@ service cloud.firestore {
       }
     }
 
+    // Asset folder registry (tilesets, objects, custom folders for sprites).
+    // Admin-only read/write — maps admin manages asset folders via Admin Dashboard.
+    match /assetFolders/{folderId} {
+      allow read:  if canEditMaps();
+      allow write: if canEditMaps();
+    }
+
     // Per-map runtime config (tileset→Storage mapping, per-layer collision).
     // World-readable so the game can boot for anyone; the super-admin and the
     // Maps-section admin edit it via the Admin Dashboard.
