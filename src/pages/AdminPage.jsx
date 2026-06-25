@@ -2,6 +2,7 @@ import { useState } from 'react'
 import AnalyticsSection from '../components/admin/AnalyticsSection'
 import { CharactersGrid, MapsPanel } from '../components/admin/AssetsSection'
 import UserManagementSection from '../components/admin/UserManagementSection'
+import AssetsManagerSection from '../components/admin/AssetsManagerSection'
 import MusicSection from '../components/admin/MusicSection'
 import ShopSection from '../components/admin/ShopSection'
 import FinanceSection from '../components/admin/FinanceSection'
@@ -18,6 +19,7 @@ const ALL_TABS = [
   { id: 'users',      label: 'Users' },
   { id: 'characters', label: 'Characters' },
   { id: 'maps',       label: 'Maps' },
+  { id: 'assets',     label: 'Assets' },
   { id: 'music',      label: 'Music' },
   { id: 'shop',       label: 'Shop' },
   { id: 'finance',    label: 'Finance' },
@@ -67,6 +69,7 @@ export default function AdminPage() {
           {tab === 'users'      && <UserManagementSection />}
           {tab === 'characters' && <CharactersGrid />}
           {tab === 'maps'       && <MapsPanel />}
+          {tab === 'assets'     && <AssetsManagerSection />}
           {tab === 'music'      && <MusicSection />}
           {tab === 'shop'       && <ShopSection />}
           {tab === 'finance'    && <FinanceSection />}
