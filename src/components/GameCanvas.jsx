@@ -8,7 +8,6 @@ import { useFarmStore } from '../stores/useFarmStore'
 import { useInventoryStore } from '../stores/useInventoryStore'
 import MapPalette from './MapPalette'
 import { Hotbar } from './Hotbar'
-import { SeedPicker } from './SeedPicker'
 import { ShopUI } from './ShopUI'
 import { StorageUI } from './StorageUI'
 import { DayNightOverlay } from './DayNightOverlay'
@@ -284,29 +283,34 @@ export default function GameCanvas({ active = true }) {
   // ---------- Action button state ----------
   const activePlot = activeTile ? plots[tileKey(activeTile.tileX, activeTile.tileY)] : null
   const activeReady = activePlot && !activePlot.anchorKey && isReady(activePlot.plantedAt, activePlot.plantId, Date.now(), farmPlants)
-  const showAction = active && isOwner && activeTile != null
-  const actionLabel = activePlot ? (activeReady ? 'เก็บเกี่ยว' : 'กำลังโต…') : 'ปลูก'
+  const showAction = active && isOwner && activePlot != null
+  const actionLabel = activeReady ? 'เก็บเกี่ยว' : 'กำลังโต…'
 
   const handleAction = () => {
-    if (!activeTile) return
-    if (!activePlot) { setSeedPickerOpen(true); return }
-    if (activeReady) harvestAt({ tileX: activeTile.tileX, tileY: activeTile.tileY })
+    if (!activeTile || !activePlot || !activeReady) return
+    harvestAt({ tileX: activeTile.tileX, tileY: activeTile.tileY })
   }
 
-  // ---------- Derived seed / produce lists ----------
-  const seedItems = useMemo(() => {
-    const byId = {}
-    ;[...hotbar, ...storage].forEach(slot => {
-      if (!slot) return
-      if (farmItems[slot.itemId]?.type === 'seed') {
-        byId[slot.itemId] = (byId[slot.itemId] ?? 0) + slot.count
-      }
+  // Auto-plant: when player steps onto an empty farm tile, plant from selected hotbar slot.
+  useEffect(() => {
+    if (!activeTile || !isOwner) return
+    const { plots: currentPlots } = useFarmStore.getState()
+    const plot = currentPlots[tileKey(activeTile.tileX, activeTile.tileY)]
+    if (plot) return
+    const { hotbar: currentHotbar } = useInventoryStore.getState()
+    const slot = currentHotbar[selectedHotbarIndexRef.current]
+    if (!slot) return
+    const { items } = useFarmDataStore.getState()
+    if (items[slot.itemId]?.type !== 'seed') return
+    plantSeed({
+      tileX: activeTile.tileX,
+      tileY: activeTile.tileY,
+      seedItemId: slot.itemId,
+      farmTiles: gameRef.current?.scene?.getScene('MapScene')?._farmTiles,
     })
-    return Object.entries(byId).map(([itemId, count]) => ({
-      itemId, count, name: farmItems[itemId]?.name ?? itemId, iconIndex: farmItems[itemId]?.iconIndex ?? 0,
-    }))
-  }, [hotbar, storage, farmItems])
+  }, [activeTile, isOwner]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ---------- Derived produce list ----------
   const produceList = useMemo(() => {
     const byId = {}
     ;[...hotbar, ...storage].forEach(slot => {
@@ -432,24 +436,6 @@ export default function GameCanvas({ active = true }) {
       )}
       {showAction && (
         <FarmActionButton label={actionLabel} onAction={handleAction} />
-      )}
-      {active && (
-        <SeedPicker
-          isOpen={seedPickerOpen}
-          seeds={seedItems}
-          onSelect={(seedItemId) => {
-            if (activeTile) {
-              plantSeed({
-                tileX: activeTile.tileX,
-                tileY: activeTile.tileY,
-                seedItemId,
-                farmTiles: gameRef.current?.scene?.getScene('MapScene')?._farmTiles,
-              })
-            }
-            setSeedPickerOpen(false)
-          }}
-          onClose={() => setSeedPickerOpen(false)}
-        />
       )}
       {active && shopState && (
         <ShopUI
