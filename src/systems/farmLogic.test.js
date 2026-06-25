@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { tileKey, occupiedTiles, canPlant, currentStage, isReady, rollYield } from './farmLogic'
+import { tileKey, occupiedTiles, canPlant, currentStage, isReady, rollYield, resolveAnchor } from './farmLogic'
 
 // turnip growTime = [15, 30, 60] seconds → reaches stage1@15s, stage2@45s, stage3@105s
 const SECOND = 1000
@@ -51,5 +51,34 @@ describe('farmLogic', () => {
     // turnip yieldMin=1, yieldMax=3 → span 3
     expect(rollYield('turnip', () => 0)).toBe(1)
     expect(rollYield('turnip', () => 0.99)).toBe(3)
+  })
+})
+
+describe('farmLogic FarmGround + anchor', () => {
+  const farm = new Set(['5_3', '6_4', '7_4', '6_5', '7_5'])
+
+  it('rejects planting when any occupied tile is off FarmGround', () => {
+    // pumpkin is 2x2 anchored at 6,4 → needs 6_4,7_4,6_5,7_5 (all present) → ok
+    expect(canPlant({}, 6, 4, 'pumpkin', farm)).toEqual({ ok: true })
+    // anchor 5,3 single turnip on farm → ok
+    expect(canPlant({}, 5, 3, 'turnip', farm)).toEqual({ ok: true })
+    // turnip on a non-farm tile → rejected
+    expect(canPlant({}, 0, 0, 'turnip', farm)).toEqual({ ok: false, reason: 'นอกแปลงดิน' })
+  })
+
+  it('rejects a 2x2 plant straddling the FarmGround edge', () => {
+    const edgeFarm = new Set(['6_4', '7_4']) // bottom row missing
+    expect(canPlant({}, 6, 4, 'pumpkin', edgeFarm)).toEqual({ ok: false, reason: 'นอกแปลงดิน' })
+  })
+
+  it('skips the FarmGround check when farmTiles is omitted', () => {
+    expect(canPlant({}, 0, 0, 'turnip')).toEqual({ ok: true })
+  })
+
+  it('resolves a satellite tile to its anchor key', () => {
+    const plots = { '6_4': { plantId: 'pumpkin', plantedAt: 0 }, '7_5': { anchorKey: '6_4' } }
+    expect(resolveAnchor(plots, 7, 5)).toBe('6_4')
+    expect(resolveAnchor(plots, 6, 4)).toBe('6_4')
+    expect(resolveAnchor(plots, 1, 1)).toBe('1_1')
   })
 })

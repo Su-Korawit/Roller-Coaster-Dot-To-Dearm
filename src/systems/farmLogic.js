@@ -15,12 +15,22 @@ export function occupiedTiles(x, y, plantId) {
   return tiles
 }
 
-export function canPlant(plots, x, y, plantId) {
+export function canPlant(plots, x, y, plantId, farmTiles) {
   if (!PLANTS[plantId]) return { ok: false, reason: 'ไม่รู้จักพืชนี้' }
   for (const t of occupiedTiles(x, y, plantId)) {
-    if (plots[tileKey(t.x, t.y)]) return { ok: false, reason: 'มีพืชอยู่แล้ว' }
+    const k = tileKey(t.x, t.y)
+    if (plots[k]) return { ok: false, reason: 'มีพืชอยู่แล้ว' }
+    if (farmTiles && !farmTiles.has(k)) return { ok: false, reason: 'นอกแปลงดิน' }
   }
   return { ok: true }
+}
+
+// Given any tile, return the anchor tileKey: a satellite tile points to its
+// anchor via anchorKey; an anchor or empty tile resolves to itself.
+export function resolveAnchor(plots, x, y) {
+  const k = tileKey(x, y)
+  const plot = plots[k]
+  return plot && plot.anchorKey ? plot.anchorKey : k
 }
 
 // Cumulative seconds required to REACH each stage (1..3).
