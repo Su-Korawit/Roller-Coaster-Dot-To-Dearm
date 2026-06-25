@@ -290,6 +290,7 @@ export class MapScene extends Phaser.Scene {
     const meta = rawJson ? parseMapMeta(rawJson) : { spawns: [], portals: [], defaultSpawnName: null, farmTiles: new Set(), interactions: [] }
     this._farmTiles = meta.farmTiles ?? new Set()
     this._interactions = meta.interactions ?? []
+    this._labels = meta.labels ?? []
     const spawnName = this.spawnName ?? cfg.defaultSpawn ?? meta.defaultSpawnName
     const spawnObj = meta.spawns.find((s) => s.name === spawnName) ?? meta.spawns[0] ?? null
     const spawnX = (spawnObj ? spawnObj.x : (map.width / 2) * 16) * mapScale
@@ -321,6 +322,17 @@ export class MapScene extends Phaser.Scene {
         rect.strokeRect(p.x * mapScale, p.y * mapScale, p.width * mapScale, p.height * mapScale)
         rect.setDepth(20)
       })
+      // Draw label text (admin preview)
+      meta.labels.forEach((lb) => {
+        const txt = this.add.text(lb.x * mapScale, lb.y * mapScale, lb.text, {
+          fontSize: `${8 * mapScale}px`,
+          color: lb.color,
+          stroke: '#ffffff',
+          strokeThickness: 1,
+        })
+        txt.setDepth(22)
+        txt.setOrigin(0.5, 1)
+      })
       // Fit camera to map (cover — no black borders)
       const fitZoom = Math.max(
         this.scale.width / worldW,
@@ -344,6 +356,7 @@ export class MapScene extends Phaser.Scene {
     this._decorGroup = this.add.group()
     this._mapScale = mapScale
     this._renderDecorations(mapScale)
+    this._renderLabels(mapScale)
 
     const onMapObjectsChanged = () => this._renderDecorations(this._mapScale)
     const onEditModeChanged   = () => this._renderDecorations(this._mapScale)
@@ -736,6 +749,19 @@ export class MapScene extends Phaser.Scene {
       img.setScale(mapScale).setDepth(9)
       this._cropGroup.add(img)
     }
+  }
+
+  _renderLabels(mapScale, depth = 6) {
+    (this._labels ?? []).forEach((lb) => {
+      const txt = this.add.text(lb.x * mapScale, lb.y * mapScale, lb.text, {
+        fontSize: `${8 * mapScale}px`,
+        color: lb.color,
+        stroke: '#ffffff',
+        strokeThickness: 1,
+      })
+      txt.setDepth(depth)
+      txt.setOrigin(0.5, 1)
+    })
   }
 
   // Create / update / destroy remote avatar sprites to match the presence snapshot.
