@@ -6,14 +6,14 @@ describe('getAdminSections', () => {
     expect(getAdminSections('o.korawitt@gmail.com').sort()).toEqual([...ADMIN_SECTIONS].sort())
   })
 
-  it('scopes each section admin to their single section', () => {
-    expect(getAdminSections('takadaoni07@gmail.com')).toEqual(['maps'])
+  it('scopes each section admin to their allowed sections', () => {
+    expect(getAdminSections('takadaoni07@gmail.com')).toEqual(['maps', 'assets'])
     expect(getAdminSections('play198725@gmail.com')).toEqual(['characters'])
     expect(getAdminSections('itcity9476@gmail.com')).toEqual(['music'])
   })
 
   it('is case-insensitive on the email', () => {
-    expect(getAdminSections('Takadaoni07@Gmail.com')).toEqual(['maps'])
+    expect(getAdminSections('Takadaoni07@Gmail.com')).toEqual(['maps', 'assets'])
   })
 
   it('returns [] for unknown emails and falsy input', () => {
