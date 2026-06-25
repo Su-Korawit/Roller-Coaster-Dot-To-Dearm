@@ -64,6 +64,7 @@ export default function GameCanvas({ active = true }) {
   // Farm data store subscriptions (replaces static ITEMS/getShop imports)
   const farmItems = useFarmDataStore((s) => s.items)
   const farmShops = useFarmDataStore((s) => s.shops)
+  const farmPlants = useFarmDataStore((s) => s.plants)
 
   // Inventory subscriptions
   const hotbar  = useInventoryStore((s) => s.hotbar)
@@ -280,7 +281,7 @@ export default function GameCanvas({ active = true }) {
 
   // ---------- Action button state ----------
   const activePlot = activeTile ? plots[tileKey(activeTile.tileX, activeTile.tileY)] : null
-  const activeReady = activePlot && !activePlot.anchorKey && isReady(activePlot.plantedAt, activePlot.plantId, Date.now())
+  const activeReady = activePlot && !activePlot.anchorKey && isReady(activePlot.plantedAt, activePlot.plantId, Date.now(), farmPlants)
   const showAction = active && isOwner && activeTile != null
   const actionLabel = activePlot ? (activeReady ? 'เก็บเกี่ยว' : 'กำลังโต…') : 'ปลูก'
 
