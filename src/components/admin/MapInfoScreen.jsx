@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { ref, uploadBytesResumable, listAll } from 'firebase/storage'
+import { ref, uploadBytesResumable, uploadBytes, listAll } from 'firebase/storage'
 import { storage } from '../../firebase'
 import { cloudAsset, bustCache } from '../../utils/cloudAsset'
 import { getMapConfig, saveMapConfig } from '../../utils/mapConfig'
@@ -94,6 +94,8 @@ export default function MapInfoScreen({ mapKey, adminUid, onClose, onSaved }) {
   const [hidden, setHidden] = useState({})
   const [browser, setBrowser] = useState(null)    // { name } | null
   const [saving, setSaving] = useState(false)
+  const [replacing, setReplacing] = useState(false) // uploading new JSON file
+  const replaceInputRef = useRef(null)
   const toast = useToast()
   const mountedRef = useRef(true)
   useEffect(() => {
@@ -180,6 +182,59 @@ export default function MapInfoScreen({ mapKey, adminUid, onClose, onSaved }) {
     toast?.success(`อัปโหลด tileset "${name}" แล้ว`)
   }
 
+  async function handleReplaceFile(file) {
+    if (!file) return
+    let json
+    try {
+      json = JSON.parse(await file.text())
+    } catch {
+      toast?.error('ไฟล์ไม่ใช่ JSON ที่ถูกต้อง')
+      return
+    }
+    setReplacing(true)
+    try {
+      // Upload JSON to Storage, overwriting the existing file
+      await uploadBytes(
+        ref(storage, `maps/${mapKey}.json`),
+        file,
+        { contentType: 'application/json' },
+      )
+
+      const parsedMeta = parseMapMeta(json)
+      const layers = (json.layers || []).filter((l) => l.type === 'tilelayer')
+
+      // Re-auto-match tilesets from Storage for any new tileset names
+      let mergedTilesets = { ...tilesets }
+      try {
+        const [tsResult, objResult] = await Promise.all([
+          listAll(ref(storage, 'sprites/tilesets')).catch(() => ({ items: [] })),
+          listAll(ref(storage, 'sprites/objects')).catch(() => ({ items: [] })),
+        ])
+        const storagePaths = [
+          ...tsResult.items.map((i) => i.fullPath),
+          ...objResult.items.map((i) => i.fullPath),
+        ]
+        const { matched } = autoMatchTilesets(parsedMeta.tilesetNames, storagePaths)
+        parsedMeta.tilesetNames.forEach((name) => {
+          if (!mergedTilesets[name] && matched[name]) mergedTilesets[name] = matched[name]
+        })
+      } catch { /* Storage unreachable — keep existing mappings */ }
+
+      setMeta(parsedMeta)
+      setTileLayers(layers)
+      setTilesets(mergedTilesets)
+      if (!defaultSpawn && parsedMeta.defaultSpawnName) setDefaultSpawn(parsedMeta.defaultSpawnName)
+
+      toast?.success('อัปโหลดไฟล์แมพใหม่แล้ว — กด "บันทึก" เพื่อยืนยัน config')
+    } catch (err) {
+      toast?.error('อัปโหลดไม่สำเร็จ: ' + (err.message || ''))
+    } finally {
+      if (mountedRef.current) setReplacing(false)
+      // Reset file input so same file can be re-selected
+      if (replaceInputRef.current) replaceInputRef.current.value = ''
+    }
+  }
+
   async function handleSave() {
     setSaving(true)
     try {
@@ -230,8 +285,24 @@ export default function MapInfoScreen({ mapKey, adminUid, onClose, onSaved }) {
         ) : (
           <div className="p-5 overflow-y-auto space-y-6">
             {/* Map preview */}
-            <section>
+            <section className="space-y-2">
               <MapPreview mapKey={mapKey} height={200} />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => replaceInputRef.current?.click()}
+                  disabled={replacing || saving}
+                  className="px-3 py-1.5 rounded-lg border border-brand text-brand text-xs font-semibold hover:bg-brand/5 transition-colors disabled:opacity-50"
+                >
+                  {replacing ? 'กำลังอัปโหลด...' : 'เปลี่ยนไฟล์แมพ (.json)'}
+                </button>
+                <input
+                  ref={replaceInputRef}
+                  type="file"
+                  accept=".json"
+                  className="hidden"
+                  onChange={(e) => handleReplaceFile(e.target.files?.[0])}
+                />
+              </div>
             </section>
 
             {/* Basic info */}
@@ -382,6 +453,29 @@ export default function MapInfoScreen({ mapKey, adminUid, onClose, onSaved }) {
                           ซ่อน
                         </label>
                       </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+            {/* Portals */}
+            {(meta?.portals ?? []).length > 0 && (
+              <section className="space-y-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase">
+                  Portals ({meta.portals.length})
+                </p>
+                <div className="space-y-1">
+                  {meta.portals.map((p, i) => (
+                    <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50">
+                      <span className="text-sm text-gray-800">
+                        {p.name || `Portal ${i + 1}`}
+                        <span className="ml-2 text-[11px] text-gray-400 font-mono">({Math.round(p.x)}, {Math.round(p.y)})</span>
+                      </span>
+                      <span className={`text-xs font-mono font-semibold ${p.target ? 'text-brand' : 'text-red-400'}`}>
+                        {p.target
+                          ? `→ ${p.target}${p.targetSpawn ? ` : ${p.targetSpawn}` : ''}`
+                          : 'ไม่มี target'}
+                      </span>
                     </div>
                   ))}
                 </div>

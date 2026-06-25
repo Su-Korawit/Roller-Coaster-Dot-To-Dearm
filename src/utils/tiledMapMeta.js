@@ -52,6 +52,7 @@ export function parseMapMeta(map) {
 
   const portalLayer = objectLayer(map, 'Portals')
   const portals = (portalLayer?.objects || []).map((o) => ({
+    name: o.name || null,
     x: o.x,
     y: o.y,
     width: o.width,

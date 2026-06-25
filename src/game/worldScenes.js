@@ -487,8 +487,10 @@ export class MapScene extends Phaser.Scene {
 
     this.cameras.main.setBounds(0, 0, worldW, worldH)
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1)
-    this.cameras.main.setZoom(getZoom(this.scale.width))
-    this.game.events.emit('zoomChanged', getZoom(this.scale.width))
+    const initZoom = this.registry.get('savedZoom') ?? getZoom(this.scale.width)
+    this.registry.set('savedZoom', null)
+    this.cameras.main.setZoom(initZoom)
+    this.game.events.emit('zoomChanged', initZoom)
     this.cameras.main.centerOn(this.player.x, this.player.y)
 
     this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY) => {

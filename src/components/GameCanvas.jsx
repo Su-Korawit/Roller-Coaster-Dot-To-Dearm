@@ -187,6 +187,11 @@ export default function GameCanvas({ active = true }) {
           game.registry.set('mapConfig', data.mapConfig)
           game.registry.set('tilesetUrls', data.tilesetUrls)
           game.registry.set('assetUrls', data.assetUrls)
+          // Persist zoom so the new scene restores it instead of resetting to default
+          const activeScene = game.scene.getScene('MapScene')
+          if (activeScene?.cameras?.main) {
+            game.registry.set('savedZoom', activeScene.cameras.main.zoom)
+          }
           useWorldStore.getState().setCurrentMapKey(mapKey)
           useFarmStore.getState().setCurrentMapKey(mapKey)
           game.scene.start('MapScene', { mapKey, spawn })
