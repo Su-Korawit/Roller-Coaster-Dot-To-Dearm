@@ -7,6 +7,7 @@ import { ITEMS } from '../data/ItemData.js'
 import { PLANTS } from '../data/PlantData.js'
 import { canPlant, resolveAnchor, isReady } from './farmLogic.js'
 import { notify } from './NotificationSystem.js'
+import { sound } from './SoundManager.js'
 
 // Would `count` of itemId fit into the current slots without overflow?
 function fits(inv, itemId, count) {
@@ -46,6 +47,7 @@ export function plantSeed({ tileX, tileY, seedItemId, farmTiles }) {
     return { ok: false, reason: 'ปลูกไม่สำเร็จ' }
   }
   notify.planted?.(PLANTS[plantId]?.name ?? plantId)
+  sound.playPlant()
   return { ok: true }
 }
 
@@ -68,5 +70,6 @@ export function harvestAt({ tileX, tileY }) {
   if (!produce) return { ok: false, reason: 'เก็บไม่สำเร็จ' }
   useInventoryStore.getState().addItem(produce.itemId, produce.count)
   notify.harvested?.(ITEMS[produce.itemId]?.name ?? produce.itemId, produce.count)
+  sound.playHarvest()
   return { ok: true, produce }
 }

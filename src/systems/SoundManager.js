@@ -1,12 +1,14 @@
-const SOUND_URLS = {
-  walk:    '/assets/sounds/walk.mp3',
-  plant:   '/assets/sounds/plant.mp3',
-  harvest: '/assets/sounds/harvest.mp3',
-  buy:     '/assets/sounds/buy.mp3',
-  sell:    '/assets/sounds/sell.mp3',
-  door:    '/assets/sounds/door.mp3',
-  newday:  '/assets/sounds/newday.mp3',
-  error:   '/assets/sounds/error.mp3',
+import { cloudAsset } from '../utils/cloudAsset.js'
+
+const SOUND_PATHS = {
+  walk:    'sounds/walk.mp3',
+  plant:   'sounds/plant.mp3',
+  harvest: 'sounds/harvest.mp3',
+  buy:     'sounds/buy.mp3',
+  sell:    'sounds/sell.mp3',
+  door:    'sounds/door.mp3',
+  newday:  'sounds/newday.mp3',
+  error:   'sounds/error.mp3',
 }
 
 function clamp(v, min, max) {
@@ -43,7 +45,10 @@ export class SoundManager {
 
   async loadAll() {
     await Promise.all(
-      Object.entries(SOUND_URLS).map(([key, url]) => this.load(key, url))
+      Object.entries(SOUND_PATHS).map(async ([key, path]) => {
+        const url = await cloudAsset(path, { fallback: null })
+        if (url) await this.load(key, url)
+      })
     )
   }
 
