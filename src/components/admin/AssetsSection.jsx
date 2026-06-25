@@ -1,20 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { ref, uploadBytes, uploadBytesResumable, listAll } from 'firebase/storage'
+import { ref, uploadBytesResumable, listAll } from 'firebase/storage'
 import { storage } from '../../firebase'
 import { cloudAsset, bustCache } from '../../utils/cloudAsset'
 import { MBTI_TYPES, GAME_ASSET_BY_KEY } from '../../game/assetManifest'
+import { copyStorageObject } from '../../utils/storageOps'
 import StorageBrowser from './StorageBrowser'
 import { useToast } from './Toast'
-
-// Copy an existing Storage object onto a fixed game path (download + re-upload),
-// used when "Browse" picks an existing file to stand in for a fixed asset slot.
-async function copyStorageObject(srcPath, destPath) {
-  const url = await cloudAsset(srcPath, { fallback: null })
-  if (!url) throw new Error('โหลดไฟล์ต้นทางไม่สำเร็จ')
-  const blob = await (await fetch(url)).blob()
-  await uploadBytes(ref(storage, destPath), blob, { contentType: blob.type || 'image/png' })
-  bustCache(destPath)
-}
 
 const FRAME = 48
 const COLS  = 4
