@@ -8,7 +8,7 @@ import { updateSelf } from '../lib/presence'
 import { parseMapMeta } from '../utils/tiledMapMeta'
 import { useFarmStore } from '../stores/useFarmStore'
 import { currentStage } from '../systems/farmLogic'
-import { PLANTS } from '../data/PlantData'
+import { useFarmDataStore } from '../stores/useFarmDataStore'
 
 // 0 = Basic_Charakter (1 ตัว)
 // 1 = MBTI rotation (16 ตัว สลับทุก 1 วิ)
@@ -718,12 +718,13 @@ export class MapScene extends Phaser.Scene {
     if (!this._cropGroup || !this.textures.exists('crops')) return
     this._cropGroup.clear(true, true)
     const plots = useFarmStore.getState().plots || {}
+    const { plants } = useFarmDataStore.getState()
     const now = Date.now()
     for (const [key, plot] of Object.entries(plots)) {
       if (!plot || plot.anchorKey) continue
-      const plant = PLANTS[plot.plantId]
+      const plant = plants[plot.plantId]
       if (!plant) continue
-      const stage = currentStage(plot.plantedAt, plot.plantId, now)
+      const stage = currentStage(plot.plantedAt, plot.plantId, now, plants)
       const frame = plant.spriteFrames?.[stage] ?? 0
       const [tx, ty] = key.split('_').map(Number)
       const img = this.add.image(

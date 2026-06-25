@@ -15,6 +15,7 @@ import { refs, shapes } from '../lib/db'
 import { useUserStore } from '../stores/useUserStore'
 import { useWorldStore } from '../stores/useWorldStore'
 import { hydrateSelectStoreFromFirestore } from '../utils/syncSelectToFirestore'
+import { hydrateFarmDataFromFirestore } from '../lib/farmDataSync.js'
 import {
   hydratePortfolioFromFirestore,
   setPortfolioSyncUser,
@@ -58,6 +59,12 @@ async function ensureUserDoc(firebaseUser) {
  */
 export async function bootstrapSession(firebaseUser) {
   const uid = firebaseUser.uid
+
+  try {
+    await hydrateFarmDataFromFirestore()
+  } catch (e) {
+    console.error('[sessionBootstrap] hydrate farm data failed:', e)
+  }
 
   try {
     await ensureUserDoc(firebaseUser)

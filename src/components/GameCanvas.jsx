@@ -18,8 +18,7 @@ import { isEditableTarget } from '../utils/isEditableTarget'
 import { joinWorld, leaveWorld, subscribeWorldPlayers } from '../lib/presence'
 import { MapScene, loadSceneData } from '../game/worldScenes'
 import { listMapConfigs, pickEntryKey } from '../utils/mapConfig'
-import { ITEMS } from '../data/ItemData'
-import { getShop } from '../data/ShopData'
+import { useFarmDataStore } from '../stores/useFarmDataStore'
 import { tileKey, isReady } from '../systems/farmLogic'
 import { addToSlots, countInSlots } from '../systems/inventoryLogic'
 import { plantSeed, harvestAt } from '../systems/farmActions'
@@ -61,6 +60,10 @@ export default function GameCanvas({ active = true }) {
   const [chestOpen, setChestOpen] = useState(false)
   const plots = useFarmStore((s) => s.plots)
   const isOwner = currentMapOwnerUid && selfUid && currentMapOwnerUid === selfUid
+
+  // Farm data store subscriptions (replaces static ITEMS/getShop imports)
+  const farmItems = useFarmDataStore((s) => s.items)
+  const farmShops = useFarmDataStore((s) => s.shops)
 
   // Inventory subscriptions
   const hotbar  = useInventoryStore((s) => s.hotbar)
@@ -292,46 +295,46 @@ export default function GameCanvas({ active = true }) {
     const byId = {}
     ;[...hotbar, ...storage].forEach(slot => {
       if (!slot) return
-      if (ITEMS[slot.itemId]?.type === 'seed') {
+      if (farmItems[slot.itemId]?.type === 'seed') {
         byId[slot.itemId] = (byId[slot.itemId] ?? 0) + slot.count
       }
     })
     return Object.entries(byId).map(([itemId, count]) => ({
-      itemId, count, name: ITEMS[itemId]?.name ?? itemId, iconIndex: ITEMS[itemId]?.iconIndex ?? 0,
+      itemId, count, name: farmItems[itemId]?.name ?? itemId, iconIndex: farmItems[itemId]?.iconIndex ?? 0,
     }))
-  }, [hotbar, storage])
+  }, [hotbar, storage, farmItems])
 
   const produceList = useMemo(() => {
     const byId = {}
     ;[...hotbar, ...storage].forEach(slot => {
       if (!slot) return
-      if (ITEMS[slot.itemId]?.type === 'produce') {
+      if (farmItems[slot.itemId]?.type === 'produce') {
         byId[slot.itemId] = (byId[slot.itemId] ?? 0) + slot.count
       }
     })
     return Object.entries(byId).map(([itemId, count]) => ({
-      itemId, count, name: ITEMS[itemId]?.name ?? itemId, sellPrice: ITEMS[itemId]?.sellPrice ?? 0,
+      itemId, count, name: farmItems[itemId]?.name ?? itemId, sellPrice: farmItems[itemId]?.sellPrice ?? 0,
     }))
-  }, [hotbar, storage])
+  }, [hotbar, storage, farmItems])
 
   const stockList = useMemo(() => {
     if (!shopState?.shopId) return []
-    const shop = getShop(shopState.shopId)
+    const shop = farmShops[shopState.shopId]
     if (!shop) return []
     return shop.sells.map(s => ({
       itemId: s.itemId,
-      name: ITEMS[s.itemId]?.name ?? s.itemId,
+      name: farmItems[s.itemId]?.name ?? s.itemId,
       price: s.price,
       playerCount: countInSlots(hotbar, s.itemId) + countInSlots(storage, s.itemId),
     }))
-  }, [shopState, hotbar, storage])
+  }, [shopState, hotbar, storage, farmItems, farmShops])
 
   // ---------- Storage move/swap handlers ----------
   const handleMoveToStorage = (fromIndex) => {
     const inv = useInventoryStore.getState()
     const slot = inv.hotbar[fromIndex]
     if (!slot) return
-    const stackMax = ITEMS[slot.itemId]?.stackMax ?? 99
+    const stackMax = useFarmDataStore.getState().items[slot.itemId]?.stackMax ?? 99
     const result = addToSlots(inv.storage, slot.itemId, slot.count, stackMax)
     if (result.remaining === 0) {
       const newHotbar = [...inv.hotbar]
@@ -346,7 +349,7 @@ export default function GameCanvas({ active = true }) {
     const inv = useInventoryStore.getState()
     const slot = inv.storage[fromIndex]
     if (!slot) return
-    const stackMax = ITEMS[slot.itemId]?.stackMax ?? 99
+    const stackMax = useFarmDataStore.getState().items[slot.itemId]?.stackMax ?? 99
     const result = addToSlots(inv.hotbar, slot.itemId, slot.count, stackMax)
     if (result.remaining === 0) {
       const newStorage = [...inv.storage]
@@ -372,7 +375,7 @@ export default function GameCanvas({ active = true }) {
 
   // ---------- Shop buy/sell handlers ----------
   const handleBuy = (itemId, qty) => {
-    const shop = getShop(shopState?.shopId)
+    const shop = farmShops[shopState?.shopId]
     if (!shop) return {}
     const item = shop.sells.find(s => s.itemId === itemId)
     if (!item) return {}
@@ -386,7 +389,7 @@ export default function GameCanvas({ active = true }) {
 
   const handleSell = (itemId, count) => {
     const inv = useInventoryStore.getState()
-    const sellPrice = ITEMS[itemId]?.sellPrice ?? 0
+    const sellPrice = useFarmDataStore.getState().items[itemId]?.sellPrice ?? 0
     const goldEarned = sellPrice * count
     inv.removeItem(itemId, count)
     inv.addGold(goldEarned)
@@ -395,18 +398,19 @@ export default function GameCanvas({ active = true }) {
 
   const handleSellAll = () => {
     const inv = useInventoryStore.getState()
+    const { items } = useFarmDataStore.getState()
     const allSlots = [...inv.hotbar, ...inv.storage]
     let totalEarned = 0
     const sold = {}
     allSlots.forEach(slot => {
       if (!slot) return
-      if (ITEMS[slot.itemId]?.type === 'produce') {
+      if (items[slot.itemId]?.type === 'produce') {
         sold[slot.itemId] = (sold[slot.itemId] ?? 0) + slot.count
       }
     })
     if (Object.keys(sold).length === 0) return { success: false, reason: 'ไม่มีของขาย' }
     Object.entries(sold).forEach(([itemId, count]) => {
-      const sellPrice = ITEMS[itemId]?.sellPrice ?? 0
+      const sellPrice = items[itemId]?.sellPrice ?? 0
       inv.removeItem(itemId, count)
       inv.addGold(sellPrice * count)
       totalEarned += sellPrice * count
@@ -447,7 +451,7 @@ export default function GameCanvas({ active = true }) {
       {active && shopState && (
         <ShopUI
           isOpen
-          shop={getShop(shopState.shopId)}
+          shop={farmShops[shopState.shopId]}
           stockList={stockList}
           produceList={produceList}
           gold={gold}

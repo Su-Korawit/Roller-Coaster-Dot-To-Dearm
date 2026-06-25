@@ -1,12 +1,16 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useInventoryStore } from './useInventoryStore'
+import { useFarmDataStore } from './useFarmDataStore'
+import { ITEMS } from '../data/ItemData'
 
-const reset = () =>
+const reset = () => {
+  useFarmDataStore.setState({ plants: {}, items: ITEMS, shops: {} })
   useInventoryStore.setState({
     hotbar: Array(8).fill(null),
     storage: Array(30).fill(null),
     gold: 100,
   })
+}
 
 describe('useInventoryStore', () => {
   beforeEach(reset)

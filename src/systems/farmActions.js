@@ -3,15 +3,15 @@
 // Pure of React; reads live state via getState() so React handlers can call it.
 import { useInventoryStore } from '../stores/useInventoryStore.js'
 import { useFarmStore } from '../stores/useFarmStore.js'
-import { ITEMS } from '../data/ItemData.js'
-import { PLANTS } from '../data/PlantData.js'
+import { useFarmDataStore } from '../stores/useFarmDataStore.js'
 import { canPlant, resolveAnchor, isReady } from './farmLogic.js'
 import { notify } from './NotificationSystem.js'
 import { sound } from './SoundManager.js'
 
 // Would `count` of itemId fit into the current slots without overflow?
 function fits(inv, itemId, count) {
-  const stackMax = ITEMS[itemId]?.stackMax ?? 99
+  const { items } = useFarmDataStore.getState()
+  const stackMax = items[itemId]?.stackMax ?? 99
   let capacity = 0
   for (const slot of [...inv.hotbar, ...inv.storage]) {
     if (slot === null) capacity += stackMax
@@ -22,17 +22,18 @@ function fits(inv, itemId, count) {
 }
 
 export function plantSeed({ tileX, tileY, seedItemId, farmTiles }) {
-  const inv = useInventoryStore.getState()
-  const item = ITEMS[seedItemId]
+  const { items, plants } = useFarmDataStore.getState()
+  const item = items[seedItemId]
   if (!item || item.type !== 'seed') return { ok: false, reason: 'ไม่ใช่เมล็ด' }
   const plantId = item.plantId
+  const inv = useInventoryStore.getState()
   if (!inv.hasItem(seedItemId, 1)) {
     notify.error?.('ไม่มีเมล็ด')
     return { ok: false, reason: 'ไม่มีเมล็ด' }
   }
 
   const plots = useFarmStore.getState().plots
-  const check = canPlant(plots, tileX, tileY, plantId, farmTiles)
+  const check = canPlant(plots, tileX, tileY, plantId, farmTiles, plants)
   if (!check.ok) {
     notify.error?.(check.reason)
     return check
@@ -46,30 +47,32 @@ export function plantSeed({ tileX, tileY, seedItemId, farmTiles }) {
     useInventoryStore.getState().addItem(seedItemId, 1)
     return { ok: false, reason: 'ปลูกไม่สำเร็จ' }
   }
-  notify.planted?.(PLANTS[plantId]?.name ?? plantId)
-  sound.playPlant()
+  notify.planted?.()
+  sound.playPlant?.()
   return { ok: true }
 }
 
 export function harvestAt({ tileX, tileY }) {
+  const { plants } = useFarmDataStore.getState()
   const farm = useFarmStore.getState()
   const anchorKey = resolveAnchor(farm.plots, tileX, tileY)
   const [ax, ay] = anchorKey.split('_').map(Number)
   const plot = farm.plots[anchorKey]
   if (!plot || plot.anchorKey) return { ok: false, reason: 'ไม่มีพืช' }
-  if (!isReady(plot.plantedAt, plot.plantId, Date.now())) return { ok: false, reason: 'ยังไม่โต' }
+  if (!isReady(plot.plantedAt, plot.plantId, Date.now(), plants)) return { ok: false, reason: 'ยังไม่พร้อม' }
 
   // Block before clearing the plot if produce would not fit.
   const inv = useInventoryStore.getState()
-  if (!fits(inv, plot.plantId, 1)) {
+  const yieldItem = plot.plantId
+  if (!fits(inv, yieldItem, 1)) {
     notify.inventoryFull?.()
     return { ok: false, reason: 'กระเป๋าเต็ม' }
   }
 
-  const produce = useFarmStore.getState().harvest(ax, ay)
-  if (!produce) return { ok: false, reason: 'เก็บไม่สำเร็จ' }
-  useInventoryStore.getState().addItem(produce.itemId, produce.count)
-  notify.harvested?.(ITEMS[produce.itemId]?.name ?? produce.itemId, produce.count)
-  sound.playHarvest()
-  return { ok: true, produce }
+  const result = farm.harvest(ax, ay)
+  if (!result) return { ok: false, reason: 'harvest failed' }
+  inv.addItem(result.itemId, result.count)
+  notify.harvested?.()
+  sound.playHarvest?.()
+  return { ok: true, ...result }
 }

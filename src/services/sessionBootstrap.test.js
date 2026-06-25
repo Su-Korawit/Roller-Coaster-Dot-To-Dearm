@@ -21,11 +21,15 @@ const m = vi.hoisted(() => ({
   setMapOwner: vi.fn(),
   getDoc: vi.fn(),
   setDoc: vi.fn(),
+  hydrateFarmData: vi.fn(),
 }))
 
 vi.mock('firebase/firestore', () => ({
   getDoc: (...a) => m.getDoc(...a),
   setDoc: (...a) => m.setDoc(...a),
+}))
+vi.mock('../lib/farmDataSync', () => ({
+  hydrateFarmDataFromFirestore: (...a) => m.hydrateFarmData(...a),
 }))
 vi.mock('../lib/db', () => ({
   refs: { user: (uid) => ({ _path: `users/${uid}` }) },

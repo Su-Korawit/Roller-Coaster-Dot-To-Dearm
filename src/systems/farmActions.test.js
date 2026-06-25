@@ -2,11 +2,15 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useInventoryStore } from '../stores/useInventoryStore'
 import { useFarmStore } from '../stores/useFarmStore'
+import { useFarmDataStore } from '../stores/useFarmDataStore'
+import { PLANTS } from '../data/PlantData'
+import { ITEMS } from '../data/ItemData'
 import { plantSeed, harvestAt } from './farmActions'
 
 const farm = new Set(['5_3'])
 
 beforeEach(() => {
+  useFarmDataStore.setState({ plants: PLANTS, items: ITEMS, shops: {} })
   useInventoryStore.setState({ hotbar: Array(8).fill(null), storage: Array(30).fill(null), gold: 100 })
   useFarmStore.setState({ plotsByMap: {}, currentMapKey: 'test2', plots: {} })
 })

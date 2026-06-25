@@ -1,8 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useFarmStore } from './useFarmStore'
+import { useFarmDataStore } from './useFarmDataStore'
+import { PLANTS } from '../data/PlantData'
 
-const reset = () =>
+const reset = () => {
+  useFarmDataStore.setState({ plants: PLANTS, items: {}, shops: {} })
   useFarmStore.setState({ plotsByMap: {}, currentMapKey: 'test3', plots: {} })
+}
 
 describe('useFarmStore', () => {
   beforeEach(reset)

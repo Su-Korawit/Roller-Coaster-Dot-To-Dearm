@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { ITEMS } from '../data/ItemData.js'
+import { useFarmDataStore } from './useFarmDataStore.js'
 import { addToSlots, removeFromSlots, countInSlots } from '../systems/inventoryLogic.js'
 
 const HOTBAR_SIZE = 8
@@ -17,7 +17,7 @@ export const useInventoryStore = create((set, get) => ({
 
   // Fill the hotbar first, overflow into storage. Returns true if all placed.
   addItem: (itemId, count = 1) => {
-    const item = ITEMS[itemId]
+    const item = useFarmDataStore.getState().items[itemId] ?? null
     if (!item) return false
     const stackMax = item.stackMax
 
