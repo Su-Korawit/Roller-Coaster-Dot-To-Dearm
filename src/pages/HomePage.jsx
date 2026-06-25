@@ -18,6 +18,9 @@ import { useChatStore } from '../stores/useChatStore'
 import { buildChatId, refs } from '../lib/db'
 import { ADMIN_UID, ADMIN_DISPLAY_NAME } from '../constants/admin'
 import GameCanvas from '../components/GameCanvas'
+import { GoldIcon } from '../components/ui/GoldIcon'
+import { CoinIcon } from '../components/ui/CoinIcon'
+import { useInventoryStore } from '../stores/useInventoryStore'
 import RoadmapPage from './RoadmapPage'
 import { useCloudAsset } from '../hooks/useCloudAsset'
 import { getMusicConfig, DEFAULT_TRACKS } from '../utils/musicConfig'
@@ -49,6 +52,7 @@ function HomePage() {
   const authUser = useAuthStore((s) => s.user)
   const coins = useUserStore((state) => state.coins)
   const totalStacks = useUserStore((s) => s.totalStacks)
+  const gold = useInventoryStore((s) => s.gold)
 
   // Show daily check-in modal on first mount if not yet checked in today
   // useEffect(() => {
@@ -226,12 +230,18 @@ function HomePage() {
           </button>
         </div>
 
-        {/* Streak + Coins */}
+        {/* Streak + Coins + Gold */}
         <div className="pointer-events-auto flex items-center gap-3 bg-white/90 rounded-full px-4 py-1.5 shadow">
-          <span className="pixel-font text-[11px] text-orange-500">🔥 {totalStacks}</span>
-          <span className="pixel-font text-[11px] text-yellow-700">
+          <span className="pixel-font text-[11px] text-orange-500 flex items-center gap-1">
+            🔥 {totalStacks}
+          </span>
+          <span className="pixel-font text-[11px] text-brand flex items-center gap-1">
+            <CoinIcon size={14} />
             {coins}
-            <span className="inline-block ml-1 w-5 h-5 rounded-full border-2 border-yellow-600 text-center text-[9px] leading-4">$</span>
+          </span>
+          <span className="pixel-font text-[11px] text-amber-700 flex items-center gap-1">
+            <GoldIcon size={14} />
+            {gold}g
           </span>
         </div>
       </div>
