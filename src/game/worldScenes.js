@@ -527,6 +527,34 @@ export class MapScene extends Phaser.Scene {
     if (this.preview) return
     this._tickPresence()
 
+    // ── Farm tile detection + interaction zones (runs every frame unconditionally) ──
+    this._farmTick = (this._farmTick ?? 0) + 1
+    if (this._farmTick % 10 === 0) {
+      const tx = Math.floor(this.player.x / this._mapScale / 16)
+      const ty = Math.floor(this.player.y / this._mapScale / 16)
+      const onFarm = this._farmTiles?.has(`${tx}_${ty}`) ?? false
+      const key = onFarm ? `${tx}_${ty}` : null
+      if (key !== this._lastFarmTile) {
+        this._lastFarmTile = key
+        this.game.events.emit('farmTileChanged', onFarm ? { tileX: tx, tileY: ty } : null)
+      }
+      if (this._zoneDefs) {
+        for (const def of this._zoneDefs) {
+          const overlapping = this.physics.world.overlap(this.player, def.zone)
+          const was = this._activeZones.has(def.zone)
+          if (overlapping && !was) {
+            this._activeZones.add(def.zone)
+            if (def.action === 'shop') this.game.events.emit('shopEntered', { shopId: def.shopId })
+            else if (def.action === 'chest') this.game.events.emit('chestOpened')
+          } else if (!overlapping && was) {
+            this._activeZones.delete(def.zone)
+            if (def.action === 'shop') this.game.events.emit('shopExited', { shopId: def.shopId })
+            else if (def.action === 'chest') this.game.events.emit('chestClosed')
+          }
+        }
+      }
+    }
+
     const p1 = this.input.pointer1
     const p2 = this.input.pointer2
     if (p1.isDown && p2.isDown) {
@@ -656,33 +684,6 @@ export class MapScene extends Phaser.Scene {
     const animKey = `${this.currentMbti}-${dir}`
     if (this.player.anims.currentAnim?.key !== animKey) {
       this.player.play(animKey)
-    }
-
-    this._farmTick = (this._farmTick ?? 0) + 1
-    if (this._farmTick % 10 === 0) {
-      const tx = Math.floor(this.player.x / this._mapScale / 16)
-      const ty = Math.floor(this.player.y / this._mapScale / 16)
-      const onFarm = this._farmTiles?.has(`${tx}_${ty}`) ?? false
-      const key = onFarm ? `${tx}_${ty}` : null
-      if (key !== this._lastFarmTile) {
-        this._lastFarmTile = key
-        this.game.events.emit('farmTileChanged', onFarm ? { tileX: tx, tileY: ty } : null)
-      }
-      if (this._zoneDefs) {
-        for (const def of this._zoneDefs) {
-          const overlapping = this.physics.world.overlap(this.player, def.zone)
-          const was = this._activeZones.has(def.zone)
-          if (overlapping && !was) {
-            this._activeZones.add(def.zone)
-            if (def.action === 'shop') this.game.events.emit('shopEntered', { shopId: def.shopId })
-            else if (def.action === 'chest') this.game.events.emit('chestOpened')
-          } else if (!overlapping && was) {
-            this._activeZones.delete(def.zone)
-            if (def.action === 'shop') this.game.events.emit('shopExited')
-            else if (def.action === 'chest') this.game.events.emit('chestClosed')
-          }
-        }
-      }
     }
   }
 
