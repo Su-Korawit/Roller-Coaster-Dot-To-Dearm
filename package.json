@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:rules": "vitest run --config vitest.rules.config.js",
     "test:rules:emu": "firebase emulators:exec --only firestore,database --project demo-rcdtd \"npm run test:rules\"",
-    "upload-assets": "node scripts/uploadAssets.mjs"
+    "upload-assets": "node scripts/uploadAssets.mjs",
+    "reset-farm-data": "node scripts/resetFarmData.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
