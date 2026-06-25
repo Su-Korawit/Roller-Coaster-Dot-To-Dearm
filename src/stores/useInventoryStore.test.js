@@ -16,28 +16,28 @@ describe('useInventoryStore', () => {
   beforeEach(reset)
 
   it('adds items into the hotbar first', () => {
-    const ok = useInventoryStore.getState().addItem('turnip_seed', 5)
+    const ok = useInventoryStore.getState().addItem('rice_seed', 5)
     expect(ok).toBe(true)
-    expect(useInventoryStore.getState().hotbar[0]).toEqual({ itemId: 'turnip_seed', count: 5 })
+    expect(useInventoryStore.getState().hotbar[0]).toEqual({ itemId: 'rice_seed', count: 5 })
   })
 
   it('counts across hotbar and storage', () => {
     const s = useInventoryStore.getState()
-    s.addItem('turnip_seed', 3)
-    expect(useInventoryStore.getState().countItem('turnip_seed')).toBe(3)
-    expect(useInventoryStore.getState().hasItem('turnip_seed', 3)).toBe(true)
-    expect(useInventoryStore.getState().hasItem('turnip_seed', 4)).toBe(false)
+    s.addItem('rice_seed', 3)
+    expect(useInventoryStore.getState().countItem('rice_seed')).toBe(3)
+    expect(useInventoryStore.getState().hasItem('rice_seed', 3)).toBe(true)
+    expect(useInventoryStore.getState().hasItem('rice_seed', 4)).toBe(false)
   })
 
   it('removes items and frees slots', () => {
     const s = useInventoryStore.getState()
-    s.addItem('turnip_seed', 5)
-    expect(useInventoryStore.getState().removeItem('turnip_seed', 5)).toBe(true)
+    s.addItem('rice_seed', 5)
+    expect(useInventoryStore.getState().removeItem('rice_seed', 5)).toBe(true)
     expect(useInventoryStore.getState().hotbar[0]).toBeNull()
   })
 
   it('refuses to remove more than present', () => {
-    expect(useInventoryStore.getState().removeItem('turnip_seed', 1)).toBe(false)
+    expect(useInventoryStore.getState().removeItem('rice_seed', 1)).toBe(false)
   })
 
   it('manages gold separately from coins', () => {
