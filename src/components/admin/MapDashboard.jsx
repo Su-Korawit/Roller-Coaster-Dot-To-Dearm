@@ -9,6 +9,7 @@ import { uniqueSlug } from '../../utils/mapSlug'
 import { parseMapMeta } from '../../utils/tiledMapMeta'
 import { autoMatchTilesets } from '../../utils/resolveTilesets'
 import { validateMap } from '../../utils/validateMap'
+import { listAssetFolders } from '../../utils/assetFolders'
 import MapConfigEditor from './MapConfigEditor'
 import MapInfoScreen from './MapInfoScreen'
 import MapDocsPanel from './MapDocsPanel'
@@ -151,15 +152,12 @@ function UploadPanel({ existingKeys, maxOrder, adminUid, onDone, onCancel }) {
     setWarnings([])
 
     try {
-      // List Storage tileset paths
-      const [tilesetsResult, objectsResult] = await Promise.all([
-        listAll(ref(storage, 'sprites/tilesets')).catch(() => ({ items: [] })),
-        listAll(ref(storage, 'sprites/objects')).catch(() => ({ items: [] })),
-      ])
-      const storagePaths = [
-        ...tilesetsResult.items.map((i) => i.fullPath),
-        ...objectsResult.items.map((i) => i.fullPath),
-      ]
+      const folders = await listAssetFolders()
+      const storagePaths = (
+        await Promise.all(
+          folders.map((f) => listAll(ref(storage, f.path)).catch(() => ({ items: [] }))),
+        )
+      ).flatMap((r) => r.items.map((i) => i.fullPath))
 
       const r = autoMatchTilesets(parsedFile.meta.tilesetNames, storagePaths)
       const { errors: errs, warnings: warns } = validateMap({
