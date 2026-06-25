@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { getItemAbbr, getItemColor } from '../utils/itemHelpers'
+import { ItemSprite } from './ItemSprite'
 
 function SlotGrid({
   slots,
@@ -74,7 +74,7 @@ function SlotGrid({
           >
             {hasItem && (
               <>
-                <div style={styles.itemAbbr}>{getItemAbbr(slot.itemId)}</div>
+                <ItemSprite itemId={slot.itemId} size={slotSize - 12} />
                 <div style={styles.countBadge}>{slot.count}</div>
               </>
             )}

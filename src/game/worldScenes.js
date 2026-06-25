@@ -321,8 +321,8 @@ export class MapScene extends Phaser.Scene {
         rect.strokeRect(p.x * mapScale, p.y * mapScale, p.width * mapScale, p.height * mapScale)
         rect.setDepth(20)
       })
-      // Fit camera to map
-      const fitZoom = Math.min(
+      // Fit camera to map (cover — no black borders)
+      const fitZoom = Math.max(
         this.scale.width / worldW,
         this.scale.height / worldH,
       )

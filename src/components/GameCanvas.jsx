@@ -280,23 +280,29 @@ export default function GameCanvas({ active = true }) {
     }
   }, [])
 
-  // ---------- Action button state ----------
+  // ---------- Growing info indicator ----------
   const activePlot = activeTile ? plots[tileKey(activeTile.tileX, activeTile.tileY)] : null
-  const activeReady = activePlot && !activePlot.anchorKey && isReady(activePlot.plantedAt, activePlot.plantId, Date.now(), farmPlants)
-  const showAction = active && isOwner && activePlot != null
-  const actionLabel = activeReady ? 'เก็บเกี่ยว' : 'กำลังโต…'
+  const showGrowing = active && isOwner && activePlot && !activePlot.anchorKey &&
+    !isReady(activePlot.plantedAt, activePlot.plantId, Date.now(), farmPlants)
 
-  const handleAction = () => {
-    if (!activeTile || !activePlot || !activeReady) return
-    harvestAt({ tileX: activeTile.tileX, tileY: activeTile.tileY })
-  }
-
-  // Auto-plant: when player steps onto an empty farm tile, plant from selected hotbar slot.
+  // Auto-plant / auto-harvest: fires when player walks onto a new farm tile.
   useEffect(() => {
     if (!activeTile || !isOwner) return
     const { plots: currentPlots } = useFarmStore.getState()
     const plot = currentPlots[tileKey(activeTile.tileX, activeTile.tileY)]
-    if (plot) return
+
+    // Auto-harvest ready crops
+    if (plot && !plot.anchorKey) {
+      const { plants } = useFarmDataStore.getState()
+      if (isReady(plot.plantedAt, plot.plantId, Date.now(), plants)) {
+        harvestAt({ tileX: activeTile.tileX, tileY: activeTile.tileY })
+        return
+      }
+    }
+
+    if (plot) return // growing — nothing to do
+
+    // Auto-plant seed from selected hotbar slot
     const { hotbar: currentHotbar } = useInventoryStore.getState()
     const slot = currentHotbar[selectedHotbarIndexRef.current]
     if (!slot) return
@@ -434,8 +440,8 @@ export default function GameCanvas({ active = true }) {
       {active && (
         <Hotbar slots={hotbar} selectedIndex={selectedHotbarIndex} gold={gold} onSelectSlot={setSelectedHotbarIndex} />
       )}
-      {showAction && (
-        <FarmActionButton label={actionLabel} onAction={handleAction} />
+      {showGrowing && (
+        <FarmActionButton label="กำลังโต…" onAction={() => {}} />
       )}
       {active && shopState && (
         <ShopUI

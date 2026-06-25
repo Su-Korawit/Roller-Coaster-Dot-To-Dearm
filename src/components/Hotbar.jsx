@@ -1,5 +1,5 @@
 import React from 'react'
-import { getItemAbbr, getItemColor } from '../utils/itemHelpers'
+import { ItemSprite } from './ItemSprite'
 
 export function Hotbar({ slots = [], selectedIndex = 0, gold = 0, onSelectSlot = () => {} }) {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
@@ -113,9 +113,7 @@ export function Hotbar({ slots = [], selectedIndex = 0, gold = 0, onSelectSlot =
             />
             {slot && (
               <>
-                <span style={{ ...styles.itemAbbr, color: getItemColor?.(slot.itemId) ?? '#3d2b1f' }}>
-                  {getItemAbbr(slot.itemId)}
-                </span>
+                <ItemSprite itemId={slot.itemId} size={slotSize - 8} />
                 <span style={styles.countBadge}>{slot.count}</span>
               </>
             )}
