@@ -6,6 +6,9 @@ import { cloudAsset } from '../utils/cloudAsset'
 import { getMapConfig, DEFAULT_MAP_CONFIGS } from '../utils/mapConfig'
 import { updateSelf } from '../lib/presence'
 import { parseMapMeta } from '../utils/tiledMapMeta'
+import { useFarmStore } from '../stores/useFarmStore'
+import { currentStage } from '../systems/farmLogic'
+import { PLANTS } from '../data/PlantData'
 
 // 0 = Basic_Charakter (1 ตัว)
 // 1 = MBTI rotation (16 ตัว สลับทุก 1 วิ)
@@ -178,6 +181,11 @@ export class MapScene extends Phaser.Scene {
       })
     }
 
+    if (!this.textures.exists('crops')) {
+      const cropsUrl = urlFor(this.registry, 'crops')
+      if (cropsUrl) this.load.spritesheet('crops', cropsUrl, { frameWidth: 16, frameHeight: 16 })
+    }
+
     attachLocalFallback(this, localByKey)
   }
 
@@ -279,7 +287,9 @@ export class MapScene extends Phaser.Scene {
     // back to map center. parseMapMeta needs the raw Tiled JSON, which Phaser
     // caches under the tilemap key.
     const rawJson = this.cache.tilemap.get(this.mapKey)?.data
-    const meta = rawJson ? parseMapMeta(rawJson) : { spawns: [], portals: [], defaultSpawnName: null }
+    const meta = rawJson ? parseMapMeta(rawJson) : { spawns: [], portals: [], defaultSpawnName: null, farmTiles: new Set(), interactions: [] }
+    this._farmTiles = meta.farmTiles ?? new Set()
+    this._interactions = meta.interactions ?? []
     const spawnName = this.spawnName ?? cfg.defaultSpawn ?? meta.defaultSpawnName
     const spawnObj = meta.spawns.find((s) => s.name === spawnName) ?? meta.spawns[0] ?? null
     const spawnX = (spawnObj ? spawnObj.x : (map.width / 2) * 16) * mapScale
@@ -344,6 +354,18 @@ export class MapScene extends Phaser.Scene {
       this.game.events.off('editModeChanged',   onEditModeChanged)
     })
 
+    this._cropGroup = this.add.group()
+    this._renderCrops(mapScale)
+    const onFarmChanged = () => this._renderCrops(this._mapScale)
+    this.game.events.on('farmChanged', onFarmChanged)
+    this.events.once('shutdown', () => this.game.events.off('farmChanged', onFarmChanged))
+
+    // Re-render periodically so deterministic growth advances on screen (1s interval).
+    this._cropTimer = this.time.addEvent({
+      delay: 1000, loop: true, callback: () => this._renderCrops(this._mapScale),
+    })
+    this.events.once('shutdown', () => this._cropTimer?.remove())
+
     this._remoteAvatars = new Map()
     this._currentDir    = 'down'
 
@@ -386,6 +408,22 @@ export class MapScene extends Phaser.Scene {
         this.transitioning = true
         this.game.events.emit('mapChangeRequested', { mapKey: p.target, spawn: p.targetSpawn ?? null })
       })
+    })
+
+    this._activeZones = new Set()
+    this._zoneDefs = []
+    this._interactions.forEach((it) => {
+      if (!it.action) return
+      const zone = this.add.zone(
+        it.x * mapScale + (it.width * mapScale) / 2,
+        it.y * mapScale + (it.height * mapScale) / 2,
+        it.width * mapScale,
+        it.height * mapScale,
+      )
+      this.physics.world.enable(zone)
+      zone.body.setAllowGravity(false)
+      zone.body.moves = false
+      this._zoneDefs.push({ zone, action: it.action, shopId: it.shopId ?? null })
     })
 
     this.marker = this.add.graphics()
@@ -619,6 +657,33 @@ export class MapScene extends Phaser.Scene {
     if (this.player.anims.currentAnim?.key !== animKey) {
       this.player.play(animKey)
     }
+
+    this._farmTick = (this._farmTick ?? 0) + 1
+    if (this._farmTick % 10 === 0) {
+      const tx = Math.floor(this.player.x / this._mapScale / 16)
+      const ty = Math.floor(this.player.y / this._mapScale / 16)
+      const onFarm = this._farmTiles?.has(`${tx}_${ty}`) ?? false
+      const key = onFarm ? `${tx}_${ty}` : null
+      if (key !== this._lastFarmTile) {
+        this._lastFarmTile = key
+        this.game.events.emit('farmTileChanged', onFarm ? { tileX: tx, tileY: ty } : null)
+      }
+      if (this._zoneDefs) {
+        for (const def of this._zoneDefs) {
+          const overlapping = this.physics.world.overlap(this.player, def.zone)
+          const was = this._activeZones.has(def.zone)
+          if (overlapping && !was) {
+            this._activeZones.add(def.zone)
+            if (def.action === 'shop') this.game.events.emit('shopEntered', { shopId: def.shopId })
+            else if (def.action === 'chest') this.game.events.emit('chestOpened')
+          } else if (!overlapping && was) {
+            this._activeZones.delete(def.zone)
+            if (def.action === 'shop') this.game.events.emit('shopExited')
+            else if (def.action === 'chest') this.game.events.emit('chestClosed')
+          }
+        }
+      }
+    }
   }
 
   // Destroy and re-spawn all decoration sprites from the registry's mapObjects.
@@ -644,6 +709,29 @@ export class MapScene extends Phaser.Scene {
       }
       this._decorGroup.add(img)
     })
+  }
+
+  _renderCrops(mapScale) {
+    if (!this._cropGroup || !this.textures.exists('crops')) return
+    this._cropGroup.clear(true, true)
+    const plots = useFarmStore.getState().plots || {}
+    const now = Date.now()
+    for (const [key, plot] of Object.entries(plots)) {
+      if (!plot || plot.anchorKey) continue
+      const plant = PLANTS[plot.plantId]
+      if (!plant) continue
+      const stage = currentStage(plot.plantedAt, plot.plantId, now)
+      const frame = plant.spriteFrames?.[stage] ?? 0
+      const [tx, ty] = key.split('_').map(Number)
+      const img = this.add.image(
+        (tx + 0.5) * 16 * mapScale,
+        (ty + 0.5) * 16 * mapScale,
+        'crops',
+        frame,
+      )
+      img.setScale(mapScale).setDepth(9)
+      this._cropGroup.add(img)
+    }
   }
 
   // Create / update / destroy remote avatar sprites to match the presence snapshot.
