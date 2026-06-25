@@ -21,8 +21,9 @@ import { listMapConfigs, pickEntryKey } from '../utils/mapConfig'
 import { ITEMS } from '../data/ItemData'
 import { getShop } from '../data/ShopData'
 import { tileKey, isReady } from '../systems/farmLogic'
-import { addToSlots } from '../systems/inventoryLogic'
+import { addToSlots, countInSlots } from '../systems/inventoryLogic'
 import { plantSeed, harvestAt } from '../systems/farmActions'
+import { notify } from '../systems/NotificationSystem'
 
 export default function GameCanvas({ active = true }) {
   const containerRef = useRef(null)
@@ -316,7 +317,7 @@ export default function GameCanvas({ active = true }) {
       itemId: s.itemId,
       name: ITEMS[s.itemId]?.name ?? s.itemId,
       price: s.price,
-      playerCount: useInventoryStore.getState().countItem(s.itemId),
+      playerCount: countInSlots(hotbar, s.itemId) + countInSlots(storage, s.itemId),
     }))
   }, [shopState, hotbar, storage])
 
@@ -331,6 +332,8 @@ export default function GameCanvas({ active = true }) {
       const newHotbar = [...inv.hotbar]
       newHotbar[fromIndex] = null
       useInventoryStore.setState({ hotbar: newHotbar, storage: result.slots })
+    } else {
+      notify.inventoryFull()
     }
   }
 
@@ -344,6 +347,8 @@ export default function GameCanvas({ active = true }) {
       const newStorage = [...inv.storage]
       newStorage[fromIndex] = null
       useInventoryStore.setState({ hotbar: result.slots, storage: newStorage })
+    } else {
+      notify.inventoryFull()
     }
   }
 
