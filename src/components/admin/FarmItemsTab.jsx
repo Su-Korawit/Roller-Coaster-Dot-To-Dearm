@@ -1,19 +1,67 @@
 // src/components/admin/FarmItemsTab.jsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { doc, setDoc, deleteDoc } from 'firebase/firestore'
-import { db } from '../../firebase'
+import { ref, getDownloadURL } from 'firebase/storage'
+import { db, storage } from '../../firebase'
 import { useFarmDataStore } from '../../stores/useFarmDataStore'
 import { useToast } from './Toast'
 
 const ITEM_TYPES = ['seed', 'produce']
 const EMPTY = { id: '', name: '', type: 'seed', plantId: '', buyPrice: 0, sellPrice: 0, stackMax: 99, iconIndex: 0 }
 
+const SHEET_COLS = 6
+const SHEET_ROWS = 2
+const FRAME_PX = 16
+const SCALE = 4
+const TOTAL_FRAMES = SHEET_COLS * SHEET_ROWS
+
+function FramePicker({ frameIndex, onChange, imgUrl }) {
+  if (!imgUrl) return <div className="text-xs text-gray-400 py-2">กำลังโหลด sprite sheet...</div>
+  return (
+    <div>
+      <p className="text-xs text-gray-400 mb-1">Seeds อยู่ใน Column แรก (frame 0 และ 6)</p>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${SHEET_COLS}, ${FRAME_PX * SCALE}px)`, gap: 2 }}>
+        {Array.from({ length: TOTAL_FRAMES }, (_, i) => {
+          const col = i % SHEET_COLS
+          const row = Math.floor(i / SHEET_COLS)
+          const selected = frameIndex === i
+          return (
+            <div
+              key={i}
+              onClick={() => onChange(i)}
+              title={`Frame ${i}`}
+              style={{
+                width: FRAME_PX * SCALE,
+                height: FRAME_PX * SCALE,
+                backgroundImage: `url(${imgUrl})`,
+                backgroundPosition: `-${col * FRAME_PX * SCALE}px -${row * FRAME_PX * SCALE}px`,
+                backgroundSize: `${SHEET_COLS * FRAME_PX * SCALE}px ${SHEET_ROWS * FRAME_PX * SCALE}px`,
+                imageRendering: 'pixelated',
+                cursor: 'pointer',
+                border: selected ? '3px solid #7c3aed' : col === 0 ? '3px solid #86efac' : '3px solid transparent',
+                borderRadius: 4,
+              }}
+            />
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 export default function FarmItemsTab() {
   const items = useFarmDataStore((s) => s.items)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(EMPTY)
   const [saving, setSaving] = useState(false)
+  const [imgUrl, setImgUrl] = useState(null)
   const toast = useToast()
+
+  useEffect(() => {
+    getDownloadURL(ref(storage, 'sprites/objects/Basic_Plants.png'))
+      .then(setImgUrl)
+      .catch(() => setImgUrl('/assets/sprites/Objects/Basic_Plants.png'))
+  }, [])
 
   const openNew = () => { setForm(EMPTY); setEditing('new') }
   const openEdit = (item) => { setForm({ ...item }); setEditing(item.id) }
@@ -106,11 +154,20 @@ export default function FarmItemsTab() {
               <span className="text-xs text-gray-500">stackMax</span>
               <input type="number" value={form.stackMax} onChange={e => patch('stackMax', e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand focus:outline-none" />
             </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs text-gray-500">iconIndex</span>
-              <input type="number" value={form.iconIndex} onChange={e => patch('iconIndex', e.target.value)} className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand focus:outline-none" />
-            </label>
           </div>
+
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-gray-500">iconIndex (Basic_Plants.png)</span>
+              <span className="text-xs font-mono text-brand">frame {form.iconIndex}</span>
+            </div>
+            <FramePicker
+              frameIndex={Number(form.iconIndex)}
+              onChange={(i) => patch('iconIndex', i)}
+              imgUrl={imgUrl}
+            />
+          </div>
+
           <div className="flex gap-3 justify-end pt-2">
             <button onClick={close} className="px-4 py-2 rounded-xl bg-gray-100 text-gray-600 text-sm hover:bg-gray-200">ยกเลิก</button>
             <button onClick={handleSave} disabled={saving} className="px-4 py-2 rounded-xl bg-brand text-white text-sm font-semibold hover:bg-brand/90 disabled:opacity-60">{saving ? 'กำลังบันทึก...' : 'บันทึก'}</button>

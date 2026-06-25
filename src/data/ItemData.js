@@ -17,7 +17,7 @@ export const ITEMS = {
     buyPrice: 8,
     sellPrice: 3,
     stackMax: 99,
-    iconIndex: 1,
+    iconIndex: 0,
   },
   potato_seed: {
     id: 'potato_seed',
@@ -27,7 +27,7 @@ export const ITEMS = {
     buyPrice: 6,
     sellPrice: 2,
     stackMax: 99,
-    iconIndex: 2,
+    iconIndex: 0,
   },
   pumpkin_seed: {
     id: 'pumpkin_seed',
@@ -37,7 +37,7 @@ export const ITEMS = {
     buyPrice: 20,
     sellPrice: 8,
     stackMax: 99,
-    iconIndex: 3,
+    iconIndex: 0,
   },
   turnip: {
     id: 'turnip',
