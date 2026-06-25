@@ -8,6 +8,7 @@ export const PLANTS = {
     size: { w: 1, h: 1 },
     yieldMin: 1,
     yieldMax: 3,
+    spriteFrames: [0, 1, 2, 3],
   },
   carrot: {
     id: 'carrot',
@@ -18,6 +19,7 @@ export const PLANTS = {
     size: { w: 1, h: 1 },
     yieldMin: 1,
     yieldMax: 2,
+    spriteFrames: [0, 1, 2, 3],
   },
   potato: {
     id: 'potato',
@@ -28,6 +30,7 @@ export const PLANTS = {
     size: { w: 1, h: 1 },
     yieldMin: 2,
     yieldMax: 4,
+    spriteFrames: [0, 1, 2, 3],
   },
   pumpkin: {
     id: 'pumpkin',
@@ -38,6 +41,7 @@ export const PLANTS = {
     size: { w: 2, h: 2 },
     yieldMin: 1,
     yieldMax: 1,
+    spriteFrames: [0, 1, 2, 5],
   },
 }
 
