@@ -175,7 +175,6 @@ function FileGrid({ folderPath, onFilesChanged }) {
   const [newName, setNewName]       = useState('')
   const [movingPath, setMovingPath] = useState(null)
   const [busy, setBusy]             = useState(false)
-  const uploadRef = useRef(null)
   const toast = useToast()
   const mountedRef = useRef(true)
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false } }, [])
@@ -264,7 +263,6 @@ function FileGrid({ folderPath, onFilesChanged }) {
         <label className="px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-semibold hover:bg-brand-strong cursor-pointer">
           ⬆ Upload
           <input
-            ref={uploadRef}
             type="file"
             accept=".png,.jpg,.jpeg,.gif,.webp,.json"
             className="hidden"
