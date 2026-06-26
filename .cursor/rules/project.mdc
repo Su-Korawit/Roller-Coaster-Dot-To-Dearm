@@ -91,3 +91,10 @@ export default function MySection() {
 
 `src/game/assetManifest.js` is the single source of truth for Phaser asset keys → Storage paths.
 When adding new RC assets, add an entry here. Keep it pure data — no Firebase SDK imports.
+
+---
+
+## Precautions
+
+- **Store mutations auto-sync.** Zustand store writes are debounced (~1 s) to Firestore by `syncManager`. Never add manual `saveToFirestore()` calls, `localStorage`, or `useEffect` save timers — mutate the store and let the writer persist.
+- **Dual backends.** External data → Vercel `/api/*`; payments / business logic → Firebase Cloud Functions (via the Firebase SDK). Don't mix them.
