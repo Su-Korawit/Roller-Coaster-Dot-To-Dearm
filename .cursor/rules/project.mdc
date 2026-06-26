@@ -1,0 +1,93 @@
+---
+description: Roller Coaster Dot To Dearm — project conventions for Cursor IDE
+alwaysApply: true
+---
+
+# Project Context
+
+Read `CONTEXT.md` at the repo root before making any changes. It is the authoritative glossary and architecture reference.
+
+This is a **mobile-first React + Phaser + Firebase** app for Thai students (gamified career planning). No TypeScript.
+
+## Collaboration with Claude Code
+
+Claude Code (terminal) plans and writes ADRs. Cursor implements the plan in JSX/CSS.
+Before adding a new feature, check `docs/adr/` for any relevant decision.
+Next ADR number: the next integer after the highest-numbered file in `docs/adr/` (`docs/adr/NNNN-<kebab>.md`).
+
+---
+
+## Hard Rules
+
+- **No TypeScript** — `.js` and `.jsx` only. No type annotations, no `tsconfig`.
+- **Tailwind v4** — define tokens in `src/index.css` under `@theme { }`. There is no `tailwind.config.js`.
+- **State** — Zustand stores in `src/stores/useXStore.js`. Selector pattern: `useStore((s) => s.field)`.
+- **Firestore** — never inline `doc(db, 'collection', id)`. Use factories from `src/lib/db.js` (`refs.*`, `cols.*`, `shapes.*`).
+- **React Flow nodes** — rotate only the inner element, never the root `<div>` (breaks handle offsets).
+- **`serviceAccountKey.json`** — gitignored. Never reference, read, or log it.
+
+---
+
+## Naming
+
+| Thing | Convention | Example |
+|-------|-----------|---------|
+| Component files | `PascalCase.jsx`, default export | `UpdateAssetsSection.jsx` |
+| Stores | `camelCase.js` | `useRoadmapStore.js` |
+| Utils / hooks / services | `camelCase.js` | `cloudAsset.js` |
+| Constants | `SCREAMING_SNAKE` exports | `ADMIN_EMAILS` |
+| Folders | lowercase | `components/admin/` |
+| Prop handlers | `onVerb` | `onClose`, `onSelect` |
+
+---
+
+## Styling Tokens
+
+Use these Tailwind classes (defined in `@theme`):
+
+| Token | Class |
+|-------|-------|
+| Primary purple | `text-brand`, `bg-brand`, `border-brand` |
+| Strong purple | `bg-brand-strong` |
+| Soft purple bg | `bg-brand-soft` |
+| Accent pink | `text-accent-pink` |
+| Dark ink | `text-ink` |
+| Surface white | `bg-surface` |
+
+Use `style={}` only for dynamic values or gradients. React Flow overrides need `!`-prefix: `!bg-green-400`.
+
+---
+
+## Admin Dashboard Pattern
+
+New admin sections live in `src/components/admin/`. Follow this pattern:
+
+```jsx
+// src/components/admin/MySection.jsx
+import { useToast } from './Toast'
+
+export default function MySection() {
+  const { showToast } = useToast()
+  // ...
+  return <div className="space-y-4">...</div>
+}
+```
+
+---
+
+## Firebase Storage Layout
+
+| Prefix | Contents |
+|--------|----------|
+| `sprites/`, `ui/`, `audio/` | Sprout Lands assets (Cup Nooble) — updated by push script |
+| `rc/` | Roller Coaster custom assets (MBTI sprites, maps, tilesets) |
+| `maps/` | Tiled JSON map files |
+
+`rc/` is NEVER overwritten by asset sync operations.
+
+---
+
+## Asset Manifest
+
+`src/game/assetManifest.js` is the single source of truth for Phaser asset keys → Storage paths.
+When adding new RC assets, add an entry here. Keep it pure data — no Firebase SDK imports.
