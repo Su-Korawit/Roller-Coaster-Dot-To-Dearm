@@ -1,12 +1,45 @@
 import { load } from 'cheerio';
 
+// Whitelist of allowed camphub category slugs. The client only ever sends a
+// slug from this list; the server builds the URL. This keeps the proxy closed
+// (no SSRF — the client cannot point us at an arbitrary host).
+const ALLOWED_CATEGORIES = new Set([
+  // หมอ/ทันตะ/วิทย์สุขภาพ
+  'medical-health/doctor', 'medical-health/dentist', 'medical-health/nurse',
+  'medical-health/pharma', 'medical-health/psychology', 'medical-health/vet',
+  'medical-health/allied-health-sciences', 'medical-health/health-other',
+  // สายวิทย์/วิศวะ
+  'engineer', 'science', 'computer', 'aviation', 'architect-design', 'agri-fishery',
+  // สายศิลป์
+  'law', 'political', 'account-commerce', 'commarts', 'teacher', 'lang-human',
+  'social', 'economic', 'logistics', 'hospitality', 'music',
+  // ตามมหาลัย
+  'tag/chulalongkorn-university', 'tag/thammasat-university', 'tag/mahidol-university',
+  'tag/kasetsart-university', 'tag/kmitl-king-mongkuts-institute-of-technology-ladkrabang',
+  'tag/kmutt-king-mongkuts-university-of-technology-thonburi', 'tag/silpakorn-university',
+  'tag/chiang-mai-university', 'tag/srinakharinwirot-university',
+  'tag/kmutnb-king-mongkuts-university-of-technology-north-bangkok',
+  'tag/khon-kaen-university', 'tag/naresuan-university', 'tag/burapha-university',
+  'tag/prince-of-songkla-university', 'tag/suranaree-university-of-technology',
+  'tag/rajamangala-university-of-technology', 'tag/rajabhat-university',
+  // เอกชน + การแข่งขัน
+  'private-university', 'contest',
+]);
+
+const DEFAULT_CATEGORY = 'computer';
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const category = req.query.category || DEFAULT_CATEGORY;
+  if (!ALLOWED_CATEGORIES.has(category)) {
+    return res.status(400).json({ error: 'Invalid category' });
+  }
+
   try {
-    const response = await fetch('https://www.camphub.in.th/computer/', {
+    const response = await fetch(`https://www.camphub.in.th/${category}/`, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
       }
