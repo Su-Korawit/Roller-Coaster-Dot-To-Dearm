@@ -11,6 +11,24 @@
   --color-surface:      #ffffff;
 }
 
+/* ── Filter sub-category reveal ────────────────────────────────────────────── */
+@keyframes filterReveal {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-filter-reveal {
+  animation: filterReveal 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ── Hide scrollbar (horizontal chip rows) ────────────────────────────────── */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* ── Unified onboarding page background ────────────────────────────────────── */
 .onboarding-bg {
   background: linear-gradient(180deg, #fde4f0 0%, #f3edff 50%, #e3f0ff 100%);
