@@ -4,8 +4,7 @@ import TopBar from '../components/TopBar'
 import CharacterSprite from '../components/ui/CharacterSprite'
 import { mbtiCharacters, mbtiDescriptions } from '../data/onboardingData'
 import { useSelectStore } from '../stores/useSelectStore'
-import { useAuthStore } from '../stores/useAuthStore'
-import { syncSelectToFirestore } from '../utils/syncSelectToFirestore'
+import { useSelectionCommit } from '../hooks/useSelectionCommit'
 
 const mbtiBg = new URL('../../assets/eachPageAssets/mbti/03_Setup_MBTI_Background.png', import.meta.url).href
 
@@ -14,6 +13,7 @@ function MbtiPage() {
   const [index, setIndex] = useState(0)
   const selectedMbti = useSelectStore((state) => state.mbti)
   const setMbti = useSelectStore((state) => state.setMbti)
+  const commitMbti = useSelectionCommit(setMbti)
 
   const current = useMemo(() => mbtiCharacters[index], [index])
   const isSelected = selectedMbti === current.code
@@ -75,8 +75,7 @@ function MbtiPage() {
           </button>
           <button
             onClick={() => {
-              setMbti(current.code)
-              syncSelectToFirestore(useAuthStore.getState().user?.uid)
+              commitMbti(current.code)
               navigate('/select/career')
             }}
             aria-label={`Select ${current.code}`}

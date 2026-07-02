@@ -4,8 +4,7 @@ import StepScreen from '../components/ui/StepScreen'
 import SelectCard from '../components/ui/SelectCard'
 import { careers } from '../data/onboardingData'
 import { useSelectStore } from '../stores/useSelectStore'
-import { useAuthStore } from '../stores/useAuthStore'
-import { syncSelectToFirestore } from '../utils/syncSelectToFirestore'
+import { useSelectionCommit } from '../hooks/useSelectionCommit'
 
 function CareerPage() {
   const navigate = useNavigate()
@@ -13,6 +12,7 @@ function CareerPage() {
   const mbti = useSelectStore((state) => state.mbti)
   const selected = useSelectStore((state) => state.career)
   const setCareer = useSelectStore((state) => state.setCareer)
+  const commitCareer = useSelectionCommit(setCareer)
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase()
@@ -46,10 +46,7 @@ function CareerPage() {
             name={career.name}
             detail={career.detail}
             selected={selected === career.id}
-            onClick={() => {
-              setCareer(career.id)
-              syncSelectToFirestore(useAuthStore.getState().user?.uid)
-            }}
+            onClick={() => commitCareer(career.id)}
           />
         ))}
       </div>

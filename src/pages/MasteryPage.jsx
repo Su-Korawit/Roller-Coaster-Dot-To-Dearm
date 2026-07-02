@@ -4,8 +4,7 @@ import StepScreen from '../components/ui/StepScreen'
 import SelectCard from '../components/ui/SelectCard'
 import { masteries } from '../data/onboardingData'
 import { useSelectStore } from '../stores/useSelectStore'
-import { useAuthStore } from '../stores/useAuthStore'
-import { syncSelectToFirestore } from '../utils/syncSelectToFirestore'
+import { useSelectionCommit } from '../hooks/useSelectionCommit'
 
 function MasteryPage() {
   const navigate = useNavigate()
@@ -13,6 +12,7 @@ function MasteryPage() {
   const career = useSelectStore((state) => state.career)
   const selected = useSelectStore((state) => state.mastery)
   const setMastery = useSelectStore((state) => state.setMastery)
+  const commitMastery = useSelectionCommit(setMastery)
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase()
@@ -40,10 +40,7 @@ function MasteryPage() {
             name={mastery.name}
             detail={mastery.detail}
             selected={selected === mastery.id}
-            onClick={() => {
-              setMastery(mastery.id)
-              syncSelectToFirestore(useAuthStore.getState().user?.uid)
-            }}
+            onClick={() => commitMastery(mastery.id)}
           />
         ))}
       </div>
