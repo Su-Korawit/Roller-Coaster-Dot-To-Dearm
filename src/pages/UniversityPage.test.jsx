@@ -18,13 +18,6 @@ vi.mock('../utils/syncSelectToFirestore', () => ({
   syncSelectToFirestore: (...args) => syncSelectToFirestore(...args),
 }))
 
-vi.mock('../hooks/useSelectionCommit', () => ({
-  useSelectionCommit: (setter) => (value) => {
-    setter(value)
-    syncSelectToFirestore(authState.user?.uid)
-  },
-}))
-
 vi.mock('../hooks/useMytcas', () => ({
   useTcasUniversities: () => ({
     universities: [
