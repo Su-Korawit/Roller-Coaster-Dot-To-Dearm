@@ -4,8 +4,7 @@ import StepScreen from '../components/ui/StepScreen'
 import { universities as legacyUniversities } from '../data/onboardingData'
 import { useTcasUniversities } from '../hooks/useMytcas'
 import { useSelectStore } from '../stores/useSelectStore'
-import { useAuthStore } from '../stores/useAuthStore'
-import { syncSelectToFirestore } from '../utils/syncSelectToFirestore'
+import { useSelectionCommit } from '../hooks/useSelectionCommit'
 import { cloudAsset } from '../utils/cloudAsset'
 
 const legacyByName = new Map(legacyUniversities.map((u) => [u.name, u]))
@@ -69,6 +68,7 @@ function UniversityPage() {
   const { universities, loading, error } = useTcasUniversities()
   const selected = useSelectStore((state) => state.university)
   const setUniversity = useSelectStore((state) => state.setUniversity)
+  const commitUniversity = useSelectionCommit(setUniversity)
 
   const filtered = useMemo(
     () =>
@@ -113,10 +113,7 @@ function UniversityPage() {
             {filtered.map((university) => (
               <button
                 key={university.university_id}
-                onClick={() => {
-                  setUniversity(university.university_id)
-                  syncSelectToFirestore(useAuthStore.getState().user?.uid)
-                }}
+                onClick={() => commitUniversity(university.university_id)}
                 aria-label={university.university_name_th}
                 aria-pressed={selected === university.university_id}
                 className={`relative rounded-2xl bg-white p-3 transition-all hover:shadow-md active:scale-95
