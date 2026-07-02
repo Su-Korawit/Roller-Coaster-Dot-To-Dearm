@@ -1,4 +1,3 @@
-// src/pages/CareerPage.test.jsx
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
@@ -17,6 +16,13 @@ vi.mock('../stores/useAuthStore', () => ({
 const syncSelectToFirestore = vi.fn()
 vi.mock('../utils/syncSelectToFirestore', () => ({
   syncSelectToFirestore: (...args) => syncSelectToFirestore(...args),
+}))
+
+vi.mock('../data/onboardingData', () => ({
+  careers: [
+    { id: 'c1', name: 'Test Career One', detail: 'Detail one', mbti: [], keywords: [] },
+    { id: 'c2', name: 'Test Career Two', detail: 'Detail two', mbti: [], keywords: [] },
+  ],
 }))
 
 const { default: CareerPage } = await import('./CareerPage')
