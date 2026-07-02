@@ -9,9 +9,12 @@ function camphubApiPlugin() {
     name: 'camphub-api-dev',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
-        if (req.url !== '/api/camphub' || req.method !== 'GET') return next()
+        const [path, search = ''] = req.url.split('?')
+        if (path !== '/api/camphub' || req.method !== 'GET') return next()
         try {
           const { default: handler } = await import('./api/camphub.js')
+          // camphub.js reads req.query; vite doesn't populate it in dev.
+          req.query = Object.fromEntries(new URLSearchParams(search))
           const mockRes = {
             _code: 200,
             status(code) { this._code = code; return this },

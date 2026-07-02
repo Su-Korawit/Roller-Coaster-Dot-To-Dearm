@@ -7,6 +7,7 @@ import { useChatStore } from '../stores/useChatStore'
 import { useUserStore } from '../stores/useUserStore'
 import { ADMIN_UID } from '../constants/admin'
 import { STATIC_UPDATES, UPDATE_TYPES } from '../data/appUpdates'
+import { CAMP_GROUPS, DEFAULT_CATEGORY, groupKeyForCategory, labelForCategory } from '../data/campCategories'
 
 // ─── Assets ──────────────────────────────────────────────────────────────────
 const camphubLogo = new URL('../../assets/eachPageAssets/news/camphub_logo.png', import.meta.url).href
@@ -272,14 +273,17 @@ export default function NewsPanel({ onClose }) {
   const [camps, setCamps] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [category, setCategory] = useState(DEFAULT_CATEGORY)
+  const [openGroup, setOpenGroup] = useState(() => groupKeyForCategory(DEFAULT_CATEGORY))
   const [sharingItem, setSharingItem] = useState(null)
   const [fsUpdates, setFsUpdates] = useState([])
   const [showAddForm, setShowAddForm] = useState(false)
   const [detailUpdate, setDetailUpdate] = useState(null)
 
   useEffect(() => {
-    fetchCamps()
-  }, [])
+    fetchCamps(category)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category])
 
   // Real-time subscription to admin-added updates
   useEffect(() => {
@@ -299,11 +303,11 @@ export default function NewsPanel({ onClose }) {
     await deleteDoc(doc(db, 'appUpdates', id))
   }
 
-  async function fetchCamps() {
+  async function fetchCamps(cat = category) {
     try {
       setLoading(true)
       setError(null)
-      const res = await fetch('/api/camphub')
+      const res = await fetch(`/api/camphub?category=${encodeURIComponent(cat)}`)
       if (!res.ok) throw new Error('Failed to fetch camps')
       const data = await res.json()
       setCamps(data)
@@ -364,6 +368,79 @@ export default function NewsPanel({ onClose }) {
           </button>
         ))}
       </div>
+
+      {/* Camphub category filter */}
+      {activeTab === 'camphub' && (
+      <div className="shrink-0 border-b border-gray-100 bg-white">
+        {/* Group selector */}
+        <div className="flex gap-1.5 overflow-x-auto px-4 pt-2.5 pb-2 no-scrollbar">
+          {CAMP_GROUPS.map((group) => {
+            const isOpen = openGroup === group.key
+            const owns = group.items.some((it) => it.slug === category)
+            return (
+              <button
+                key={group.key}
+                onClick={() => setOpenGroup(isOpen ? null : group.key)}
+                className={`relative shrink-0 flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-full transition-all duration-200 active:scale-95 ${
+                  isOpen
+                    ? 'bg-gradient-to-br from-brand to-brand-strong text-white shadow-sm shadow-purple-300/50'
+                    : owns
+                      ? 'bg-brand-soft text-brand-strong ring-1 ring-inset ring-purple-200'
+                      : 'bg-gray-100 text-gray-400'
+                }`}
+              >
+                <span className="text-[13px] leading-none">{group.icon}</span>
+                <span className="pixel-font text-[8px] whitespace-nowrap">{group.label}</span>
+                {owns && !isOpen && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-accent-pink ring-2 ring-white" />
+                )}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Sub-category reveal — visually "drops down" from the open group */}
+        {openGroup && (
+          <div
+            key={openGroup}
+            className="animate-filter-reveal bg-brand-soft/50 border-t border-purple-100/60 px-4 py-2.5"
+            style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
+          >
+            <div className="flex flex-wrap gap-1.5">
+              {CAMP_GROUPS.find((g) => g.key === openGroup)?.items.map((it) => {
+                const selected = category === it.slug
+                return (
+                  <button
+                    key={it.slug}
+                    onClick={() => setCategory(it.slug)}
+                    aria-pressed={selected}
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all duration-150 active:scale-95 ${
+                      selected
+                        ? 'bg-brand-strong text-white shadow-sm shadow-purple-300/50'
+                        : 'bg-white text-gray-500 border border-gray-200 hover:border-brand hover:text-brand-strong'
+                    }`}
+                  >
+                    {selected && <span className="text-[9px] leading-none">✓</span>}
+                    {it.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Currently viewing — persistent orientation, even when groups are collapsed */}
+        <div className="flex items-center gap-1.5 px-4 py-1.5 bg-gray-50/60 border-t border-gray-100">
+          <span className="pixel-font text-[7px] text-gray-400">กำลังดู</span>
+          <span
+            className="text-[11px] font-semibold text-brand-strong"
+            style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
+          >
+            {labelForCategory(category)}
+          </span>
+        </div>
+      </div>
+      )}
 
       {/* Camphub Feed */}
       {activeTab === 'camphub' && (

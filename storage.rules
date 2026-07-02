@@ -51,6 +51,17 @@ service firebase.storage {
       allow read: if true;
       allow write: if isSuperAdmin() || userEmail() == 'itcity9476@gmail.com';
     }
+    // Sprout Lands UI + audio assets — pushed via the Assets repo's
+    // pushToFirebase.mjs (UPLOAD_DIRS: sprites, ui, audio). Owner-only write,
+    // same tier as the sprites/ catch-all below.
+    match /ui/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+    match /audio/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
 
     // Welcome page media — game preview, news covers, testimonial avatars.
     // Public read (download URLs are public tokens); super-admin writes via Dashboard.

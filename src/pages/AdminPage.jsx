@@ -3,6 +3,7 @@ import AnalyticsSection from '../components/admin/AnalyticsSection'
 import { CharactersGrid, MapsPanel } from '../components/admin/AssetsSection'
 import UserManagementSection from '../components/admin/UserManagementSection'
 import AssetsManagerSection from '../components/admin/AssetsManagerSection'
+import UpdateAssetsSection from '../components/admin/UpdateAssetsSection'
 import MusicSection from '../components/admin/MusicSection'
 import ShopSection from '../components/admin/ShopSection'
 import FinanceSection from '../components/admin/FinanceSection'
@@ -71,7 +72,12 @@ export default function AdminPage() {
           {tab === 'users'      && <UserManagementSection />}
           {tab === 'characters' && <CharactersGrid />}
           {tab === 'maps'       && <MapsPanel />}
-          {tab === 'assets'     && <AssetsManagerSection />}
+          {tab === 'assets'     && (
+            <div className="space-y-8">
+              <UpdateAssetsSection />
+              <AssetsManagerSection />
+            </div>
+          )}
           {tab === 'music'      && <MusicSection />}
           {tab === 'shop'       && <ShopSection />}
           {tab === 'finance'    && <FinanceSection />}
