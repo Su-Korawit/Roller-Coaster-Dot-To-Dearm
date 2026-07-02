@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import StepScreen from '../components/ui/StepScreen'
 import { useTcasFaculties, useTcasPrograms, useTcasRounds } from '../hooks/useMytcas'
 import { useSelectStore } from '../stores/useSelectStore'
-import { useAuthStore } from '../stores/useAuthStore'
-import { syncSelectToFirestore } from '../utils/syncSelectToFirestore'
+import { useSelectionCommit } from '../hooks/useSelectionCommit'
 
 function ProgramRoundBadge({ programId }) {
   const { rounds } = useTcasRounds(programId)
@@ -26,6 +25,7 @@ function ProgramPage() {
   const university = useSelectStore((state) => state.university)
   const selected = useSelectStore((state) => state.program)
   const setProgram = useSelectStore((state) => state.setProgram)
+  const commitProgram = useSelectionCommit(setProgram)
 
   const { faculties, loading: facLoading, error: facError } = useTcasFaculties(university)
   const { programs, loading: progLoading, error: progError } = useTcasPrograms(university, selectedFaculty)
@@ -144,10 +144,7 @@ function ProgramPage() {
             {filteredPrograms.map((program) => (
               <button
                 key={program._id}
-                onClick={() => {
-                  setProgram(program.program_id)
-                  syncSelectToFirestore(useAuthStore.getState().user?.uid)
-                }}
+                onClick={() => commitProgram(program.program_id)}
                 aria-pressed={selected === program.program_id}
                 className={`w-full rounded-2xl bg-white px-4 py-3 text-left shadow-sm transition-all
                   hover:shadow-md active:scale-[0.98]
