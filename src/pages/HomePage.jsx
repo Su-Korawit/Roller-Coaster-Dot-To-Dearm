@@ -79,7 +79,7 @@ function HomePage() {
     }
     audio.addEventListener('timeupdate', onTimeUpdate)
     return () => audio.removeEventListener('timeupdate', onTimeUpdate)
-  }, [tracks])
+  }, [tracks, musicSrc])
 
   function handleTabChange(tab) {
     if (tab === APP_VIEWS.MUSIC) {
