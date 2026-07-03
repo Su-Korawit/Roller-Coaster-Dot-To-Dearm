@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { collection, getDocs, limit, query, where } from 'firebase/firestore'
-import { db } from '../../firebase'
+import { getDocs, limit, query, where } from 'firebase/firestore'
+import { cols } from '../../lib/db'
 
 const PURCHASE_LIMIT = 5000
 
 async function getFinanceData() {
   const snap = await getDocs(
-    query(collection(db, 'purchases'), where('status', '==', 'SUCCESS'), limit(PURCHASE_LIMIT)),
+    query(cols.purchases, where('status', '==', 'SUCCESS'), limit(PURCHASE_LIMIT)),
   )
   const purchases = snap.docs.map((d) => d.data())
 
