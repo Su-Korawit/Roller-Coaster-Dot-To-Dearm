@@ -1,7 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
-import { collection, getDocs, limit, query, doc, deleteDoc } from 'firebase/firestore'
-import { db } from '../../firebase'
-import { shapes } from '../../lib/db'
+import { deleteDoc, getDocs, limit, query } from 'firebase/firestore'
+import { cols, refs, shapes } from '../../lib/db'
 import { useTcasUniversities } from '../../hooks/useMytcas'
 import { useToast } from './Toast'
 
@@ -12,7 +11,7 @@ import { useToast } from './Toast'
 const LIST_LIMIT = 2000
 
 async function getUsers() {
-  const snap = await getDocs(query(collection(db, 'users'), limit(LIST_LIMIT)))
+  const snap = await getDocs(query(cols.users, limit(LIST_LIMIT)))
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
 }
 
@@ -47,7 +46,7 @@ export default function UserManagementSection() {
     if (!window.confirm(`ลบผู้ใช้ ${u.displayName || u.email || u.id}? การลบนี้ย้อนกลับไม่ได้`)) return
     setBusyId(u.id)
     try {
-      await deleteDoc(doc(db, 'users', u.id))
+      await deleteDoc(refs.user(u.id))
       setUsers((prev) => prev.filter((x) => x.id !== u.id))
       toast?.success('ลบผู้ใช้แล้ว')
     } catch (err) {
