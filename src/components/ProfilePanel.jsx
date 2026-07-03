@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Settings, Share2, Pencil } from 'lucide-react'
-import { doc, getDoc } from 'firebase/firestore'
-import { db } from '../firebase'
+import { getDoc } from 'firebase/firestore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSelectStore } from '../stores/useSelectStore'
+import { refs } from '../lib/db'
 import SettingsSheet from './SettingsSheet'
 import JourneyManager from './profile/JourneyManager'
 
@@ -22,7 +22,7 @@ export default function ProfilePanel({ onClose }) {
 
   function fetchFirestoreProfile() {
     if (!authUser?.uid) return
-    getDoc(doc(db, 'users', authUser.uid)).then((snap) => {
+    getDoc(refs.user(authUser.uid)).then((snap) => {
       if (snap.exists()) setFirestoreProfile(snap.data())
     })
   }
