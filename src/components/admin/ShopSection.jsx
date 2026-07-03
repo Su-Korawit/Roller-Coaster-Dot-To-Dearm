@@ -1,16 +1,14 @@
 import { useEffect, useState } from 'react'
 import {
   addDoc,
-  collection,
   deleteDoc,
-  doc,
   getDocs,
   orderBy,
   query,
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore'
-import { db } from '../../firebase'
+import { cols, refs } from '../../lib/db'
 import { useToast } from './Toast'
 
 const CATEGORIES = ['coins', 'premium', 'subscription', 'event']
@@ -28,7 +26,7 @@ export default function ShopSection() {
   const load = async () => {
     setLoading(true)
     try {
-      const snap = await getDocs(query(collection(db, 'shopProducts'), orderBy('order', 'asc')))
+      const snap = await getDocs(query(cols.shopProducts, orderBy('order', 'asc')))
       setProducts(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
     } catch (err) {
       toast?.error('โหลดสินค้าไม่สำเร็จ: ' + err.message)
@@ -65,10 +63,10 @@ export default function ShopSection() {
         updatedAt: serverTimestamp(),
       }
       if (editing === 'new') {
-        await addDoc(collection(db, 'shopProducts'), { ...payload, createdAt: serverTimestamp() })
+        await addDoc(cols.shopProducts, { ...payload, createdAt: serverTimestamp() })
         toast?.success('เพิ่มสินค้าแล้ว')
       } else {
-        await updateDoc(doc(db, 'shopProducts', editing), payload)
+        await updateDoc(refs.product(editing), payload)
         toast?.success('บันทึกแล้ว')
       }
       closeForm()
@@ -84,7 +82,7 @@ export default function ShopSection() {
   const handleDelete = async (id) => {
     if (!window.confirm('ลบสินค้านี้?')) return
     try {
-      await deleteDoc(doc(db, 'shopProducts', id))
+      await deleteDoc(refs.product(id))
       toast?.success('ลบแล้ว')
       setProducts((prev) => prev.filter((p) => p.id !== id))
     } catch (err) {
@@ -94,7 +92,7 @@ export default function ShopSection() {
 
   const handleToggleActive = async (product) => {
     try {
-      await updateDoc(doc(db, 'shopProducts', product.id), { active: !product.active, updatedAt: serverTimestamp() })
+      await updateDoc(refs.product(product.id), { active: !product.active, updatedAt: serverTimestamp() })
       setProducts((prev) => prev.map((p) => p.id === product.id ? { ...p, active: !p.active } : p))
     } catch (err) {
       toast?.error('อัปเดตไม่สำเร็จ')
