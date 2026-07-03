@@ -1,8 +1,9 @@
 // src/components/admin/FarmPlantsTab.jsx
 import { useState, useEffect } from 'react'
-import { doc, setDoc, deleteDoc } from 'firebase/firestore'
+import { setDoc, deleteDoc } from 'firebase/firestore'
 import { ref, getDownloadURL } from 'firebase/storage'
-import { db, storage } from '../../firebase'
+import { storage } from '../../firebase'
+import { refs } from '../../lib/db'
 import { useFarmDataStore } from '../../stores/useFarmDataStore'
 import { useToast } from './Toast'
 
@@ -110,7 +111,7 @@ export default function FarmPlantsTab() {
     }
     setSaving(true)
     try {
-      await setDoc(doc(db, 'farmPlants', id), payload)
+      await setDoc(refs.farmPlant(id), payload)
       useFarmDataStore.getState().setPlants({ ...useFarmDataStore.getState().plants, [id]: payload })
       toast?.success('บันทึกแล้ว')
       close()
@@ -124,7 +125,7 @@ export default function FarmPlantsTab() {
   const handleDelete = async (plantId) => {
     if (!window.confirm(`ลบพืช "${plantId}"?`)) return
     try {
-      await deleteDoc(doc(db, 'farmPlants', plantId))
+      await deleteDoc(refs.farmPlant(plantId))
       const next = { ...useFarmDataStore.getState().plants }
       delete next[plantId]
       useFarmDataStore.getState().setPlants(next)
