@@ -1,7 +1,7 @@
 // src/components/admin/FarmShopsTab.jsx
 import { useState } from 'react'
-import { collection, doc, setDoc, deleteDoc } from 'firebase/firestore'
-import { db } from '../../firebase'
+import { setDoc, deleteDoc } from 'firebase/firestore'
+import { refs } from '../../lib/db'
 import { useFarmDataStore } from '../../stores/useFarmDataStore'
 import { useToast } from './Toast'
 
@@ -42,7 +42,7 @@ export default function FarmShopsTab() {
     }
     setSaving(true)
     try {
-      await setDoc(doc(collection(db, 'farmShops'), id), payload)
+      await setDoc(refs.farmShop(id), payload)
       useFarmDataStore.getState().setShops({ ...useFarmDataStore.getState().shops, [id]: payload })
       toast?.success('บันทึกแล้ว')
       close()
@@ -56,7 +56,7 @@ export default function FarmShopsTab() {
   const handleDelete = async (shopId) => {
     if (!window.confirm(`ลบร้าน "${shopId}"?`)) return
     try {
-      await deleteDoc(doc(db, 'farmShops', shopId))
+      await deleteDoc(refs.farmShop(shopId))
       const next = { ...useFarmDataStore.getState().shops }
       delete next[shopId]
       useFarmDataStore.getState().setShops(next)
