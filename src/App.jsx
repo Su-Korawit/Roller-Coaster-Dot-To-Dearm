@@ -1,47 +1,53 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
-import CareerPage from './pages/CareerPage'
-import HomePage from './pages/HomePage'
-import MasteryPage from './pages/MasteryPage'
-import MbtiPage from './pages/MbtiPage'
-import ProgramPage from './pages/ProgramPage'
-import RegisterPage from './pages/RegisterPage'
-import UniversityPage from './pages/UniversityPage'
-import WhyPage from './pages/WhyPage'
-import AdminPage from './pages/AdminPage'
-import AuthPage from './pages/AuthPage'
-import RoadmapPage from './pages/RoadmapPage'
-import WelcomePage from './pages/WelcomePage'
 import { useSelectStore } from './stores/useSelectStore'
 import { useAuthStore } from './stores/useAuthStore'
 import { getAdminSections } from './constants/admin'
+
+// Route-level code splitting: each page loads on first navigation, keeping the
+// entry chunk free of Phaser (HomePage→GameCanvas), React Flow (RoadmapPage),
+// Leaflet, and the admin dashboard.
+const CareerPage = lazy(() => import('./pages/CareerPage'))
+const HomePage = lazy(() => import('./pages/HomePage'))
+const MasteryPage = lazy(() => import('./pages/MasteryPage'))
+const MbtiPage = lazy(() => import('./pages/MbtiPage'))
+const ProgramPage = lazy(() => import('./pages/ProgramPage'))
+const RegisterPage = lazy(() => import('./pages/RegisterPage'))
+const UniversityPage = lazy(() => import('./pages/UniversityPage'))
+const WhyPage = lazy(() => import('./pages/WhyPage'))
+const AdminPage = lazy(() => import('./pages/AdminPage'))
+const AuthPage = lazy(() => import('./pages/AuthPage'))
+const RoadmapPage = lazy(() => import('./pages/RoadmapPage'))
+const WelcomePage = lazy(() => import('./pages/WelcomePage'))
+
+function LoadingScreen() {
+  return (
+    <div
+      className="h-full flex flex-col items-center justify-center"
+      style={{ background: 'linear-gradient(160deg, #0f0824 0%, #1a1035 50%, #0d1f3c 100%)' }}
+    >
+      <span className="text-5xl mb-5" aria-hidden="true">🎢</span>
+      <span className="pixel-font text-[10px] text-purple-300 mb-4">Loading...</span>
+      <div
+        className="w-48 h-1.5 rounded-full overflow-hidden bg-white/10"
+        role="progressbar"
+        aria-label="กำลังโหลด"
+        aria-busy="true"
+      >
+        <div
+          className="h-full w-1/3 rounded-full animate-loading-slide"
+          style={{ background: 'linear-gradient(90deg, transparent, var(--color-brand), var(--color-accent-pink), transparent)' }}
+        />
+      </div>
+    </div>
+  )
+}
 
 function RequireAuth() {
   const user = useAuthStore((s) => s.user)
   const loading = useAuthStore((s) => s.loading)
 
-  if (loading) {
-    return (
-      <div
-        className="h-full flex flex-col items-center justify-center"
-        style={{ background: 'linear-gradient(160deg, #0f0824 0%, #1a1035 50%, #0d1f3c 100%)' }}
-      >
-        <span className="text-5xl mb-5" aria-hidden="true">🎢</span>
-        <span className="pixel-font text-[10px] text-purple-300 mb-4">Loading...</span>
-        <div
-          className="w-48 h-1.5 rounded-full overflow-hidden bg-white/10"
-          role="progressbar"
-          aria-label="กำลังโหลด"
-          aria-busy="true"
-        >
-          <div
-            className="h-full w-1/3 rounded-full animate-loading-slide"
-            style={{ background: 'linear-gradient(90deg, transparent, var(--color-brand), var(--color-accent-pink), transparent)' }}
-          />
-        </div>
-      </div>
-    )
-  }
-
+  if (loading) return <LoadingScreen />
   if (!user) return <Navigate to="/auth" replace />
   return <Outlet />
 }
@@ -74,31 +80,33 @@ function RequireAdmin() {
 
 function App() {
   return (
-    <Routes>
-      {/* Admin — full-width desktop, outside mobile frame */}
-      <Route element={<RequireAdmin />}>
-        <Route path="/admin" element={<AdminPage />} />
-      </Route>
-
-      {/* Public — landing + auth, outside the mobile frame so the page can scroll */}
-      <Route path="/" element={<WelcomePage />} />
-      <Route path="/auth" element={<AuthPage />} />
-
-      <Route element={<MobileLayout />}>
-        <Route element={<RequireAuth />}>
-          <Route path="/start" element={<RootRedirect />} />
-          <Route path="/why" element={<WhyPage />} />
-          <Route path="/select/mbti" element={<MbtiPage />} />
-          <Route path="/select/career" element={<CareerPage />} />
-          <Route path="/select/mastery" element={<MasteryPage />} />
-          <Route path="/select/university" element={<UniversityPage />} />
-          <Route path="/select/program" element={<ProgramPage />} />
-          <Route path="/home" element={<HomePage />} />
-          <Route path="/roadmap" element={<RoadmapPage />} />
+    <Suspense fallback={<LoadingScreen />}>
+      <Routes>
+        {/* Admin — full-width desktop, outside mobile frame */}
+        <Route element={<RequireAdmin />}>
+          <Route path="/admin" element={<AdminPage />} />
         </Route>
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+
+        {/* Public — landing + auth, outside the mobile frame so the page can scroll */}
+        <Route path="/" element={<WelcomePage />} />
+        <Route path="/auth" element={<AuthPage />} />
+
+        <Route element={<MobileLayout />}>
+          <Route element={<RequireAuth />}>
+            <Route path="/start" element={<RootRedirect />} />
+            <Route path="/why" element={<WhyPage />} />
+            <Route path="/select/mbti" element={<MbtiPage />} />
+            <Route path="/select/career" element={<CareerPage />} />
+            <Route path="/select/mastery" element={<MasteryPage />} />
+            <Route path="/select/university" element={<UniversityPage />} />
+            <Route path="/select/program" element={<ProgramPage />} />
+            <Route path="/home" element={<HomePage />} />
+            <Route path="/roadmap" element={<RoadmapPage />} />
+          </Route>
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   )
 }
 
