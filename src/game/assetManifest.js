@@ -18,14 +18,14 @@ export const MBTI_TYPES = [
 const tileset = (name) => ({
   key: name,
   type: 'image',
-  storagePath: `sprites/tilesets/${name}.png`,
+  storagePath: `rc/tilesets/${name}.png`,
   localPath: `/assets/sprites/Tilesets/${name}.png`,
 })
 
 const object = (key, file) => ({
   key,
   type: 'image',
-  storagePath: `sprites/objects/${file}.png`,
+  storagePath: `rc/objects/${file}.png`,
   localPath: `/assets/sprites/Objects/${file}.png`,
 })
 
@@ -57,7 +57,7 @@ export const GAME_ASSETS = [
   {
     key: 'crops',
     type: 'spritesheet',
-    storagePath: 'sprites/objects/Basic_Plants.png',
+    storagePath: 'rc/objects/Basic_Plants.png',
     localPath: '/assets/sprites/Objects/Basic_Plants.png',
     frameConfig: { frameWidth: 16, frameHeight: 16 },
   },
@@ -66,7 +66,7 @@ export const GAME_ASSETS = [
   ...MBTI_TYPES.map((m) => ({
     key: m,
     type: 'spritesheet',
-    storagePath: `sprites/characters/${m}.png`,
+    storagePath: `rc/characters/${m}.png`,
     localPath: `/assets/sprites/Characters/${m}_Charakter_Spritesheet.png`,
     frameConfig: { frameWidth: 48, frameHeight: 48 },
   })),
