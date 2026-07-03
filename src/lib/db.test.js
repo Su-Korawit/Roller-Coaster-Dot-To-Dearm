@@ -11,7 +11,8 @@ vi.mock('firebase/firestore', () => ({
   serverTimestamp: () => ({ _type: 'serverTimestamp' }),
 }))
 
-const { shapes, refs, cols, prefixUpperBound } = await import('./db')
+const { shapes, refs, cols, queries, prefixUpperBound } = await import('./db')
+const { orderBy } = await import('firebase/firestore')
 
 describe('welcome refs/cols', () => {
   it('points doc refs at welcomeConfig singletons', () => {
@@ -99,6 +100,28 @@ describe('cols.farmPlants/farmItems/farmShops/mapConfigs/assetFolders', () => {
     expect(cols.farmShops).toEqual({ _col: 'farmShops' })
     expect(cols.mapConfigs).toEqual({ _col: 'mapConfigs' })
     expect(cols.assetFolders).toEqual({ _col: 'assetFolders' })
+  })
+})
+
+describe('refs.farmItem/farmPlant/farmShop/appUpdate', () => {
+  it('build their respective document refs', () => {
+    expect(refs.farmItem('item-1')).toEqual({ _path: 'farmItems/item-1' })
+    expect(refs.farmPlant('plant-1')).toEqual({ _path: 'farmPlants/plant-1' })
+    expect(refs.farmShop('shop-1')).toEqual({ _path: 'farmShops/shop-1' })
+    expect(refs.appUpdate('update-1')).toEqual({ _path: 'appUpdates/update-1' })
+  })
+})
+
+describe('cols.appUpdates', () => {
+  it('is the appUpdates collection ref', () => {
+    expect(cols.appUpdates).toEqual({ _col: 'appUpdates' })
+  })
+})
+
+describe('queries.appUpdatesByDate', () => {
+  it('queries appUpdates ordered by createdAt desc', () => {
+    queries.appUpdatesByDate()
+    expect(orderBy).toHaveBeenCalledWith('createdAt', 'desc')
   })
 })
 

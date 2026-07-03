@@ -21,6 +21,10 @@ export const refs = {
   mapConfig:   (key)            => doc(db, 'mapConfigs', key),
   musicConfig: (docId)          => doc(db, 'musicConfig', docId),
   assetFolder: (id)             => doc(db, 'assetFolders', id),
+  farmItem:    (id)             => doc(db, 'farmItems', id),
+  farmPlant:   (id)             => doc(db, 'farmPlants', id),
+  farmShop:    (id)             => doc(db, 'farmShops', id),
+  appUpdate:   (id)             => doc(db, 'appUpdates', id),
   welcomeGamePreview: ()        => doc(db, 'welcomeConfig', 'gamePreview'),
   welcomeStats:       ()        => doc(db, 'welcomeConfig', 'stats'),
 }
@@ -38,6 +42,7 @@ export const cols = {
   farmShops:    collection(db, 'farmShops'),
   mapConfigs:   collection(db, 'mapConfigs'),
   assetFolders: collection(db, 'assetFolders'),
+  appUpdates:   collection(db, 'appUpdates'),
   chatMessages: (chatId) => collection(db, 'chats', chatId, 'messages'),
   userMatches:  (uid)    => collection(db, 'users', uid, 'matches'),
   userCredits:  (uid)    => collection(db, 'users', uid, 'receivedCredits'),
@@ -68,6 +73,7 @@ export const queries = {
   matchedUsers:    () => query(cols.users, where('matchScore', '>', 0), limit(20)),
   activeProducts:  () => query(cols.shopProducts, where('active', '==', true)),
   purchasesByUser: (uid) => query(cols.purchases, where('uid', '==', uid)),
+  appUpdatesByDate: () => query(cols.appUpdates, orderBy('createdAt', 'desc')),
 }
 
 // ── Document shapes ───────────────────────────────────────────────────────────
