@@ -35,7 +35,9 @@ const SELECTED_RING = {
 export default function DailyLoginModal({ onClose }) {
   const [selected, setSelected] = useState(null)
   const [saved, setSaved] = useState(false)
-  const { addDailyFeel, feelingNotes, totalStacks } = useUserStore()
+  const addDailyFeel = useUserStore((s) => s.addDailyFeel)
+  const feelingNotes = useUserStore((s) => s.feelingNotes)
+  const totalStacks = useUserStore((s) => s.totalStacks)
 
   function handleSelect(level) {
     if (saved) return

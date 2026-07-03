@@ -30,8 +30,13 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
   const navigate = useNavigate()
   const authUser = useAuthStore((s) => s.user)
   const signOut = useAuthStore((s) => s.signOut)
-  const { aiLanguage, setAiLanguage, controlMode, setControlMode, resetUser, setProfilePhotoURL } = useUserStore()
-  const { resetSelection } = useSelectStore()
+  const aiLanguage = useUserStore((s) => s.aiLanguage)
+  const setAiLanguage = useUserStore((s) => s.setAiLanguage)
+  const controlMode = useUserStore((s) => s.controlMode)
+  const setControlMode = useUserStore((s) => s.setControlMode)
+  const resetUser = useUserStore((s) => s.resetUser)
+  const setProfilePhotoURL = useUserStore((s) => s.setProfilePhotoURL)
+  const resetSelection = useSelectStore((s) => s.resetSelection)
 
   const uid = authUser?.uid
   const fileInputRef = useRef(null)

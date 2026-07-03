@@ -43,7 +43,7 @@ const BLANK = {
  *   onCancel       – called when user dismisses without saving (optional)
  */
 export default function TaskForm({ initialValues = {}, defaultDate = null, onSave, onCancel }) {
-  const { mbti } = useSelectStore()
+  const mbti = useSelectStore((s) => s.mbti)
   const suggestions = MBTI_SUGGESTIONS[mbti] ?? []
 
   const [form, setForm] = useState({ ...BLANK, ...initialValues })

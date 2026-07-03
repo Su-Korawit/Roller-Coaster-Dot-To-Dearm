@@ -212,7 +212,10 @@ function CreditModal({ msg, friendUser, onDone, onClose }) {
 
 // ─── ChatWindowView ───────────────────────────────────────────────────────────
 function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
-  const { activeChat, messages, sendMessage, subscribeMessages } = useChatStore()
+  const activeChat = useChatStore((s) => s.activeChat)
+  const messages = useChatStore((s) => s.messages)
+  const sendMessage = useChatStore((s) => s.sendMessage)
+  const subscribeMessages = useChatStore((s) => s.subscribeMessages)
   const chats = useChatStore((s) => s.chats)
 
   const { chatId, otherUser } = activeChat ?? {}
@@ -738,7 +741,9 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, a
 // ─── ChatPanel (main export) ──────────────────────────────────────────────────
 export default function ChatPanel({ onClose, initialView = 'list', onAdminContacted }) {
   const user = useAuthStore((s) => s.user)
-  const { chats, loadChats, openChat } = useChatStore()
+  const chats = useChatStore((s) => s.chats)
+  const loadChats = useChatStore((s) => s.loadChats)
+  const openChat = useChatStore((s) => s.openChat)
   // Mutual follows = people I follow who also follow me back
   const following = useSocialStore((s) => s.following)
   const followers = useSocialStore((s) => s.followers)

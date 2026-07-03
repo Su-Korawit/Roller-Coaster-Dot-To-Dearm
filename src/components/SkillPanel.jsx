@@ -23,15 +23,14 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
   // Task that has an active skill popup open
   const [activeSkillTask, setActiveSkillTask] = useState(null)
 
-  const {
-    passiveSlots,
-    equipPassiveSkill,
-    clearPassiveSlot,
-    equipActive,
-  } = useSkillStore()
+  const passiveSlots = useSkillStore((s) => s.passiveSlots)
+  const equipPassiveSkill = useSkillStore((s) => s.equipPassiveSkill)
+  const clearPassiveSlot = useSkillStore((s) => s.clearPassiveSlot)
+  const equipActive = useSkillStore((s) => s.equipActive)
 
   const totalStacks = useUserStore((s) => s.totalStacks)
-  const { tasks, applySkillToTask } = useTaskStore()
+  const tasks = useTaskStore((s) => s.tasks)
+  const applySkillToTask = useTaskStore((s) => s.applySkillToTask)
   const pendingTasks = tasks.filter((t) => !t.completed)
 
   function handleDragStart(start) {
@@ -452,7 +451,11 @@ function TabBtn({ active, onClick, children }) {
 // SkillInfoSheet — bottom sheet modal when skill is tapped
 // ─────────────────────────────────────────────────────────────
 function SkillInfoSheet({ skill, onClose }) {
-  const { ownedSkills, equippedPassive, equippedActive, equipPassive, equipActive } = useSkillStore()
+  const ownedSkills = useSkillStore((s) => s.ownedSkills)
+  const equippedPassive = useSkillStore((s) => s.equippedPassive)
+  const equippedActive = useSkillStore((s) => s.equippedActive)
+  const equipPassive = useSkillStore((s) => s.equipPassive)
+  const equipActive = useSkillStore((s) => s.equipActive)
   const coins = useUserStore((s) => s.coins)
   const streak = useUserStore((s) => s.streak)
 

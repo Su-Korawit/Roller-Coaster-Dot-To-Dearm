@@ -30,7 +30,10 @@ export default function CalendarPopup({ onClose }) {
   const [selectedDate, setSelectedDate] = useState(todayStr)
   const [showForm, setShowForm] = useState(false)
 
-  const { tasks, addTask, toggleTask, removeTask } = useTaskStore()
+  const tasks = useTaskStore((s) => s.tasks)
+  const addTask = useTaskStore((s) => s.addTask)
+  const toggleTask = useTaskStore((s) => s.toggleTask)
+  const removeTask = useTaskStore((s) => s.removeTask)
 
   // Calendar grid cells — computed from current view state
   const daysInMonth = getDaysInMonth(viewYear, viewMonth)

@@ -585,23 +585,21 @@ const TABS = [
 
 export default function SocialPanel({ onClose, onOpenChat }) {
   const user = useAuthStore((s) => s.user)
-  const {
-    nearbyUsers,
-    following,
-    sentRequests,
-    pendingRequests,
-    loadNearbyUsers,
-    loadMyProfile,
-    subscribeToRequests,
-    sendFollowRequest,
-    acceptFollowRequest,
-    rejectFollowRequest,
-    computeAndSaveMatchScores,
-    matchResult,
-    clearMatchResult,
-    checkAndAnimateMatch,
-    checkedMatches,
-  } = useSocialStore()
+  const nearbyUsers = useSocialStore((s) => s.nearbyUsers)
+  const following = useSocialStore((s) => s.following)
+  const sentRequests = useSocialStore((s) => s.sentRequests)
+  const pendingRequests = useSocialStore((s) => s.pendingRequests)
+  const loadNearbyUsers = useSocialStore((s) => s.loadNearbyUsers)
+  const loadMyProfile = useSocialStore((s) => s.loadMyProfile)
+  const subscribeToRequests = useSocialStore((s) => s.subscribeToRequests)
+  const sendFollowRequest = useSocialStore((s) => s.sendFollowRequest)
+  const acceptFollowRequest = useSocialStore((s) => s.acceptFollowRequest)
+  const rejectFollowRequest = useSocialStore((s) => s.rejectFollowRequest)
+  const computeAndSaveMatchScores = useSocialStore((s) => s.computeAndSaveMatchScores)
+  const matchResult = useSocialStore((s) => s.matchResult)
+  const clearMatchResult = useSocialStore((s) => s.clearMatchResult)
+  const checkAndAnimateMatch = useSocialStore((s) => s.checkAndAnimateMatch)
+  const checkedMatches = useSocialStore((s) => s.checkedMatches)
 
   const [tab, setTab] = useState('map')
   const [myProfile, setMyProfile] = useState(null)

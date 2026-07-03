@@ -122,8 +122,9 @@ function CapsulePopup({ task, timerEnd, onComplete, onCancel }) {
 //   onClose()   – dismiss popup (no action)
 // ─────────────────────────────────────────────────────────────────────────────
 export default function SkillExecutionPopup({ task, onClose }) {
-  const { clearSkillFromTask, toggleTask } = useTaskStore()
-  const { addCoins } = useUserStore()
+  const clearSkillFromTask = useTaskStore((s) => s.clearSkillFromTask)
+  const toggleTask = useTaskStore((s) => s.toggleTask)
+  const addCoins = useUserStore((s) => s.addCoins)
 
   function handleIgniteDone() {
     // Countdown finished — clear skill slot and close; user can now start the task

@@ -18,20 +18,22 @@ const PORTFOLIO_KEYS = ['mastery', 'career', 'university']
 // single `activeCategory`. Owns journey CRUD + reorder, AI roadmap generation,
 // and the portfolio-edit modal. Reads its data straight from the stores.
 export default function JourneyManager() {
-  const {
-    portfolioData,
-    journeys,
-    activeMasteryBlockId,
-    aiLanguage,
-    setActiveMasteryBlockId,
-    updatePortfolio,
-    setJourneys,
-    addJourneyItem,
-    updateJourneyItem,
-    deleteJourneyItem,
-  } = useUserStore()
+  const portfolioData = useUserStore((s) => s.portfolioData)
+  const journeys = useUserStore((s) => s.journeys)
+  const activeMasteryBlockId = useUserStore((s) => s.activeMasteryBlockId)
+  const aiLanguage = useUserStore((s) => s.aiLanguage)
+  const setActiveMasteryBlockId = useUserStore((s) => s.setActiveMasteryBlockId)
+  const updatePortfolio = useUserStore((s) => s.updatePortfolio)
+  const setJourneys = useUserStore((s) => s.setJourneys)
+  const addJourneyItem = useUserStore((s) => s.addJourneyItem)
+  const updateJourneyItem = useUserStore((s) => s.updateJourneyItem)
+  const deleteJourneyItem = useUserStore((s) => s.deleteJourneyItem)
 
-  const { mbti, career, mastery, university, program } = useSelectStore()
+  const mbti = useSelectStore((s) => s.mbti)
+  const career = useSelectStore((s) => s.career)
+  const mastery = useSelectStore((s) => s.mastery)
+  const university = useSelectStore((s) => s.university)
+  const program = useSelectStore((s) => s.program)
 
   const selectedCareer = careers.find((c) => c.id === career)
   const selectedMastery = masteries.find((m) => m.id === mastery)
