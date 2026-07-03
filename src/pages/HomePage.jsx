@@ -26,11 +26,6 @@ import { getMusicConfig, DEFAULT_TRACKS } from '../utils/musicConfig'
 const GameCanvas = lazy(() => import('../components/GameCanvas'))
 const RoadmapPage = lazy(() => import('./RoadmapPage'))
 
-// Streams from Firebase Storage once uploaded; falls back to the bundled file
-// until then (and if Storage is unreachable). Drop the bundled fallback to
-// reclaim ~6MB from the build once cloud loading is confirmed.
-const musicFallback = new URL('../../assets/eachPageAssets/home/Background_Music_1.mp3', import.meta.url).href
-
 function HomePage() {
   const [activeTab, setActiveTab] = useState('home')
   const [newsRead, setNewsRead] = useState(false)
@@ -47,7 +42,7 @@ function HomePage() {
   const [showRoadmap, setShowRoadmap] = useState(false)
   const [showDailyModal, setShowDailyModal] = useState(false)
   const audioRef = useRef(null)
-  const musicSrc = useCloudAsset('media/audio/Background_Music_1.mp3', musicFallback)
+  const musicSrc = useCloudAsset('media/audio/Background_Music_1.mp3', null)
 
   const profilePhotoURL = useUserStore((s) => s.profilePhotoURL)
   const authUser = useAuthStore((s) => s.user)
@@ -170,19 +165,21 @@ function HomePage() {
   return (
     <section className="relative h-full overflow-hidden">
       {/* ── BACKGROUND MUSIC ── */}
-      <audio
-        ref={audioRef}
-        src={musicSrc}
-        onEnded={() => {
-          // Loop back to first track seamlessly
-          const audio = audioRef.current
-          if (!audio) return
-          audio.currentTime = tracks[0].start
-          setCurrentTrackIdx(0)
-          audio.play()
-          setIsPlaying(true)
-        }}
-      />
+      {musicSrc && (
+        <audio
+          ref={audioRef}
+          src={musicSrc}
+          onEnded={() => {
+            // Loop back to first track seamlessly
+            const audio = audioRef.current
+            if (!audio) return
+            audio.currentTime = tracks[0].start
+            setCurrentTrackIdx(0)
+            audio.play()
+            setIsPlaying(true)
+          }}
+        />
+      )}
 
       {/* ── GAME BACKGROUND ── */}
       <div className="absolute inset-0 z-0">
