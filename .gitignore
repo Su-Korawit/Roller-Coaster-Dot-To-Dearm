@@ -37,3 +37,6 @@ serviceAccountKey.json
 
 .superpowers/
 .claude/worktrees/
+
+coverage/
+*.aseprite
