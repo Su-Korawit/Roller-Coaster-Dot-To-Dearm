@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { addDoc, collection, deleteDoc, doc, getDoc, increment, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore'
+import { addDoc, deleteDoc, getDoc, increment, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { Loader2, MessageCircle, Plus, Trash2 } from 'lucide-react'
-import { db } from '../firebase'
+import { cols, refs, queries } from '../lib/db'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useChatStore } from '../stores/useChatStore'
 import { useUserStore } from '../stores/useUserStore'
@@ -37,7 +37,7 @@ function ShareSheet({ item, onClose }) {
     ].filter((uid) => !participants[uid])
 
     needed.forEach(async (uid) => {
-      const snap = await getDoc(doc(db, 'users', uid))
+      const snap = await getDoc(refs.user(uid))
       if (snap.exists()) setParticipants((p) => ({ ...p, [uid]: snap.data() }))
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -48,7 +48,7 @@ function ShareSheet({ item, onClose }) {
     if (!uid || sending) return
     setSending(chat.id)
     try {
-      await addDoc(collection(db, 'chats', chat.id, 'messages'), {
+      await addDoc(cols.chatMessages(chat.id), {
         senderId: uid,
         text: `📰 ${item.title}`,
         type: 'news',
@@ -56,7 +56,7 @@ function ShareSheet({ item, onClose }) {
         giftItem: null,
         createdAt: serverTimestamp(),
       })
-      await updateDoc(doc(db, 'chats', chat.id), {
+      await updateDoc(refs.chat(chat.id), {
         lastMessage: `📰 ${item.title}`,
         lastMessageAt: serverTimestamp(),
         fireStacks: increment(1),
@@ -150,7 +150,7 @@ function AddUpdateSheet({ onClose }) {
     if (!title.trim() || !description.trim() || saving) return
     setSaving(true)
     try {
-      await addDoc(collection(db, 'appUpdates'), {
+      await addDoc(cols.appUpdates, {
         type,
         title: title.trim(),
         description: description.trim(),
@@ -287,7 +287,7 @@ export default function NewsPanel({ onClose }) {
 
   // Real-time subscription to admin-added updates
   useEffect(() => {
-    const q = query(collection(db, 'appUpdates'), orderBy('createdAt', 'desc'))
+    const q = queries.appUpdatesByDate()
     const unsub = onSnapshot(q, (snap) => {
       setFsUpdates(snap.docs.map((d) => ({ id: d.id, _firestore: true, ...d.data() })))
     })
@@ -300,7 +300,7 @@ export default function NewsPanel({ onClose }) {
     .sort((a, b) => b._ts - a._ts)
 
   async function handleDeleteUpdate(id) {
-    await deleteDoc(doc(db, 'appUpdates', id))
+    await deleteDoc(refs.appUpdate(id))
   }
 
   async function fetchCamps(cat = category) {
