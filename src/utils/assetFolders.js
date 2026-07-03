@@ -1,12 +1,12 @@
-import { collection, doc, getDocs, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '../firebase'
+import { doc, getDocs, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
+import { refs, cols } from '../lib/db'
 
 const SYSTEM_FOLDERS = [
   { path: 'rc/tilesets', displayName: 'Tilesets', isSystem: true, order: 0 },
   { path: 'rc/objects',  displayName: 'Objects',  isSystem: true, order: 1 },
 ]
 
-const col = () => collection(db, 'assetFolders')
+const col = () => cols.assetFolders
 
 export function folderSlug(displayName) {
   return displayName.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
@@ -56,7 +56,7 @@ export async function createFolder(displayName, existingPaths, uid) {
 }
 
 export async function renameFolder(id, newDisplayName, newPath, uid) {
-  await updateDoc(doc(db, 'assetFolders', id), {
+  await updateDoc(refs.assetFolder(id), {
     displayName: newDisplayName.trim(),
     path: newPath,
     updatedAt: serverTimestamp(),
@@ -65,7 +65,7 @@ export async function renameFolder(id, newDisplayName, newPath, uid) {
 }
 
 export async function trashFolder(id, uid) {
-  await updateDoc(doc(db, 'assetFolders', id), {
+  await updateDoc(refs.assetFolder(id), {
     trashedAt: serverTimestamp(),
     trashedBy: uid ?? null,
   })

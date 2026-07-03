@@ -1,5 +1,5 @@
-import { doc, getDoc, setDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore'
-import { db } from '../firebase'
+import { getDoc, setDoc, getDocs, serverTimestamp } from 'firebase/firestore'
+import { refs, cols } from '../lib/db'
 
 // Per-map runtime config the game needs but the Tiled JSON can't carry reliably:
 //   tilesets  — Tiled tileset name → Storage path of its image (the JSON's own
@@ -43,7 +43,7 @@ export const DEFAULT_MAP_CONFIGS = {
   },
 }
 
-const cfgRef = (key) => doc(db, 'mapConfigs', key)
+const cfgRef = (key) => refs.mapConfig(key)
 
 // Shared helper: merge Firestore data with per-key registry defaults so every
 // field is always defined regardless of which Firestore doc fields exist.
@@ -92,7 +92,7 @@ export async function saveMapConfig(key, cfg, uid) {
 
 // List every map in the registry, sorted by order then key.
 export async function listMapConfigs() {
-  const snap = await getDocs(collection(db, 'mapConfigs'))
+  const snap = await getDocs(cols.mapConfigs)
   const maps = snap.docs.map((d) => ({ key: d.id, ...withRegistryDefaults(d.id, d.data()) }))
   maps.sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.key.localeCompare(b.key))
   return maps

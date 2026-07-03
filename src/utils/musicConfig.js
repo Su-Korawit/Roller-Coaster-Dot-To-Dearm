@@ -1,5 +1,5 @@
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '../firebase'
+import { getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { refs } from '../lib/db'
 
 // Background-music chapter list for HomePage. Each track marks a title + the
 // second offset where it starts inside the single streamed audio file
@@ -16,7 +16,7 @@ export const DEFAULT_TRACKS = [
   { title: 'Miitomo Summer Shop Music', start: 282 },
 ]
 
-const cfgRef = () => doc(db, 'musicConfig', MUSIC_DOC_ID)
+const cfgRef = () => refs.musicConfig(MUSIC_DOC_ID)
 
 // Returns the stored track list, or the built-in default. Falls back to the
 // default on a missing doc or any read error so the player always has tracks.

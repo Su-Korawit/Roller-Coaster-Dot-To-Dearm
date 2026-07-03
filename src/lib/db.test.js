@@ -74,6 +74,34 @@ describe('cols.maps', () => {
   })
 })
 
+describe('refs.mapConfig', () => {
+  it('builds a mapConfigs/{key} document ref', () => {
+    expect(refs.mapConfig('test3')).toEqual({ _path: 'mapConfigs/test3' })
+  })
+})
+
+describe('refs.musicConfig', () => {
+  it('builds a musicConfig/{docId} document ref', () => {
+    expect(refs.musicConfig('background')).toEqual({ _path: 'musicConfig/background' })
+  })
+})
+
+describe('refs.assetFolder', () => {
+  it('builds an assetFolders/{id} document ref', () => {
+    expect(refs.assetFolder('folder-1')).toEqual({ _path: 'assetFolders/folder-1' })
+  })
+})
+
+describe('cols.farmPlants/farmItems/farmShops/mapConfigs/assetFolders', () => {
+  it('are their respective collection refs', () => {
+    expect(cols.farmPlants).toEqual({ _col: 'farmPlants' })
+    expect(cols.farmItems).toEqual({ _col: 'farmItems' })
+    expect(cols.farmShops).toEqual({ _col: 'farmShops' })
+    expect(cols.mapConfigs).toEqual({ _col: 'mapConfigs' })
+    expect(cols.assetFolders).toEqual({ _col: 'assetFolders' })
+  })
+})
+
 describe('prefixUpperBound', () => {
   it('appends U+F8FF for Firestore prefix range upper bound', () => {
     expect(prefixUpperBound('test')).toBe('test')
