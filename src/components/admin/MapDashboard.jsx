@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { ref, uploadBytes, listAll, deleteObject } from 'firebase/storage'
-import { doc, deleteDoc } from 'firebase/firestore'
-import { storage, db } from '../../firebase'
+import { deleteDoc } from 'firebase/firestore'
+import { storage } from '../../firebase'
+import { refs } from '../../lib/db'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { cloudAsset } from '../../utils/cloudAsset'
 import { listMapConfigs, saveMapConfig } from '../../utils/mapConfig'
@@ -344,7 +345,7 @@ export default function MapDashboard() {
     try {
       await Promise.all([
         deleteObject(ref(storage, `maps/${deleteKey}.json`)).catch(() => {}), // ok if not in storage
-        deleteDoc(doc(db, 'mapConfigs', deleteKey)),
+        deleteDoc(refs.mapConfig(deleteKey)),
       ])
       toast?.success(`ลบแมพ "${deleteKey}" แล้ว`)
       await loadMaps()
