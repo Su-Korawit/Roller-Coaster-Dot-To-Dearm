@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { doc, getDoc } from 'firebase/firestore'
+import { getDoc } from 'firebase/firestore'
 import { Flame, Lock, Loader2, MessageCircle, UserCheck, UserPlus } from 'lucide-react'
-import { db } from '../firebase'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSocialStore, calculateMatchScore } from '../stores/useSocialStore'
-import { shapes } from '../lib/db'
+import { refs, shapes } from '../lib/db'
 import { mbtiColor } from '../constants/mbtiColors'
 
 // ─── Match score bar — pixel-art segmented style ─────────────────────────────
@@ -97,8 +96,8 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
     setLoading(true)
     setError('')
     Promise.all([
-      getDoc(doc(db, 'users', userId)),
-      currentUser?.uid ? getDoc(doc(db, 'users', currentUser.uid)) : Promise.resolve(null),
+      getDoc(refs.user(userId)),
+      currentUser?.uid ? getDoc(refs.user(currentUser.uid)) : Promise.resolve(null),
     ])
       .then(([snap, mySnap]) => {
         if (snap.exists()) setProfile(snap.data())
