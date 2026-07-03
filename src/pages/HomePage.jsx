@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { Calendar, MessageCircle, Map, Newspaper } from 'lucide-react'
 import { useUserStore } from '../stores/useUserStore'
 import { useAuthStore } from '../stores/useAuthStore'
@@ -17,13 +17,14 @@ import { auth } from '../firebase'
 import { useChatStore } from '../stores/useChatStore'
 import { buildChatId, refs } from '../lib/db'
 import { ADMIN_UID, ADMIN_DISPLAY_NAME } from '../constants/admin'
-import GameCanvas from '../components/GameCanvas'
 import { GoldIcon } from '../components/ui/GoldIcon'
 import { CoinIcon } from '../components/ui/CoinIcon'
 import { useInventoryStore } from '../stores/useInventoryStore'
-import RoadmapPage from './RoadmapPage'
 import { useCloudAsset } from '../hooks/useCloudAsset'
 import { getMusicConfig, DEFAULT_TRACKS } from '../utils/musicConfig'
+
+const GameCanvas = lazy(() => import('../components/GameCanvas'))
+const RoadmapPage = lazy(() => import('./RoadmapPage'))
 
 // Streams from Firebase Storage once uploaded; falls back to the bundled file
 // until then (and if Storage is unreachable). Drop the bundled fallback to
@@ -185,7 +186,16 @@ function HomePage() {
 
       {/* ── GAME BACKGROUND ── */}
       <div className="absolute inset-0 z-0">
-        <GameCanvas active={activeTab === APP_VIEWS.HOME && !showCalendar} />
+        <Suspense
+          fallback={
+            <div
+              className="w-full h-full"
+              style={{ background: 'linear-gradient(160deg, #0f0824 0%, #1a1035 50%, #0d1f3c 100%)' }}
+            />
+          }
+        >
+          <GameCanvas active={activeTab === APP_VIEWS.HOME && !showCalendar} />
+        </Suspense>
       </div>
 
       {/* Gradient scrim — top: keeps header pills readable over pixel art */}
@@ -322,7 +332,9 @@ function HomePage() {
       {/* ── ROADMAP OVERLAY (semi-transparent, game keeps running behind) ── */}
       {showRoadmap && (
         <div className="absolute inset-0 z-40 bg-white/20 backdrop-blur-[2px]">
-          <RoadmapPage onClose={() => setShowRoadmap(false)} />
+          <Suspense fallback={null}>
+            <RoadmapPage onClose={() => setShowRoadmap(false)} />
+          </Suspense>
         </div>
       )}
 
