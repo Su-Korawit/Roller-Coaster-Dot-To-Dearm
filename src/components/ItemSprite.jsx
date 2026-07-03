@@ -14,7 +14,7 @@ export function ItemSprite({ itemId, size = 40 }) {
 
   useEffect(() => {
     if (_cachedUrl) { setImgUrl(_cachedUrl); return }
-    getDownloadURL(ref(storage, 'sprites/objects/Basic_Plants.png'))
+    getDownloadURL(ref(storage, 'rc/objects/Basic_Plants.png'))
       .then((url) => { _cachedUrl = url; setImgUrl(url) })
       .catch(() => {
         _cachedUrl = '/assets/sprites/Objects/Basic_Plants.png'

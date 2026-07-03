@@ -6,7 +6,7 @@ import { getMapConfig, saveMapConfig } from '../../utils/mapConfig'
 import StorageBrowser from './StorageBrowser'
 import { useToast } from './Toast'
 
-const TILESET_FOLDERS = ['sprites/tilesets', 'sprites/objects']
+const TILESET_FOLDERS = ['rc/tilesets', 'rc/objects']
 const MAP_FOLDERS = ['maps'] // module-level so the prop keeps a stable identity
 const sanitize = (name) => name.trim().replace(/\s+/g, '_')
 
@@ -107,7 +107,7 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
 
   function handleTilesetUpload(name, file) {
     if (!file) return
-    const dest = `sprites/tilesets/${sanitize(name)}.png`
+    const dest = `rc/tilesets/${sanitize(name)}.png`
     setUploadingName(name)
     const task = uploadBytesResumable(ref(storage, dest), file, { contentType: file.type || 'image/png' })
     task.on(

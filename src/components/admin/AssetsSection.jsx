@@ -113,7 +113,7 @@ export function CharactersGrid({ onStatus }) {
   const refreshList = useCallback(async () => {
     setLoadingList(true)
     try {
-      const result = await listAll(ref(storage, 'sprites/characters'))
+      const result = await listAll(ref(storage, 'rc/characters'))
       const names  = new Set(result.items.map((i) => i.name))
       setUploaded(names)
       onStatus?.({ cloudCount: names.size, total: MBTI_TYPES.length })
@@ -130,7 +130,7 @@ export function CharactersGrid({ onStatus }) {
   // Resolve cloud URLs for all types.
   useEffect(() => {
     MBTI_TYPES.forEach((code) => {
-      const path = `sprites/characters/${code}.png`
+      const path = `rc/characters/${code}.png`
       cloudAsset(path, { fallback: null }).then((url) => {
         if (url && mountedRef.current) setCloudUrls((prev) => ({ ...prev, [code]: url }))
       })
@@ -138,7 +138,7 @@ export function CharactersGrid({ onStatus }) {
   }, [])
 
   const handleReplaced = useCallback((code) => {
-    const path = `sprites/characters/${code}.png`
+    const path = `rc/characters/${code}.png`
     bustCache(path)
     cloudAsset(path, { fallback: null }).then((url) => {
       if (url && mountedRef.current) setCloudUrls((prev) => ({ ...prev, [code]: url }))
@@ -157,7 +157,7 @@ export function CharactersGrid({ onStatus }) {
     if (!code) return
     setBusyCode(code)
     try {
-      await copyStorageObject(srcPath, `sprites/characters/${code}.png`)
+      await copyStorageObject(srcPath, `rc/characters/${code}.png`)
       handleReplaced(code)
     } catch {
       toast?.error(`คัดลอกไฟล์ไม่สำเร็จ`)
@@ -202,7 +202,7 @@ export function CharactersGrid({ onStatus }) {
                   }
                 </div>
                 <UploadRow
-                  storagePath={`sprites/characters/${code}.png`}
+                  storagePath={`rc/characters/${code}.png`}
                   accept=".png"
                   onSuccess={() => handleReplaced(code)}
                   label={busy ? '...' : '⬆ อัปโหลด'}
@@ -221,7 +221,7 @@ export function CharactersGrid({ onStatus }) {
 
       {browseCode && (
         <StorageBrowser
-          folders={['sprites/characters']}
+          folders={['rc/characters']}
           title={`เลือก sprite สำหรับ ${browseCode}`}
           onPick={handleBrowsePick}
           onClose={() => setBrowseCode(null)}

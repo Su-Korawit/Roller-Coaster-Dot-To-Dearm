@@ -2,8 +2,8 @@ import { collection, doc, getDocs, setDoc, updateDoc, serverTimestamp } from 'fi
 import { db } from '../firebase'
 
 const SYSTEM_FOLDERS = [
-  { path: 'sprites/tilesets', displayName: 'Tilesets', isSystem: true, order: 0 },
-  { path: 'sprites/objects',  displayName: 'Objects',  isSystem: true, order: 1 },
+  { path: 'rc/tilesets', displayName: 'Tilesets', isSystem: true, order: 0 },
+  { path: 'rc/objects',  displayName: 'Objects',  isSystem: true, order: 1 },
 ]
 
 const col = () => collection(db, 'assetFolders')
@@ -40,7 +40,7 @@ export async function seedSystemFolders(uid) {
 export async function createFolder(displayName, existingPaths, uid) {
   const slug = folderSlug(displayName)
   if (!slug) throw new Error('ชื่อ folder ไม่ถูกต้อง')
-  const path = `sprites/${slug}`
+  const path = `rc/${slug}`
   if (existingPaths.includes(path)) throw new Error(`Folder "${path}" มีอยู่แล้ว`)
   const ref = doc(col())
   await setDoc(ref, {

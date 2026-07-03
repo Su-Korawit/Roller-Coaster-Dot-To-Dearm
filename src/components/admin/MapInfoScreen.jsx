@@ -9,7 +9,7 @@ import MapPreview from './MapPreview'
 import StorageBrowser from './StorageBrowser'
 import { useToast } from './Toast'
 
-const TILESET_FOLDERS = ['sprites/tilesets', 'sprites/objects']
+const TILESET_FOLDERS = ['rc/tilesets', 'rc/objects']
 const sanitize = (name) => name.trim().replace(/\s+/g, '_')
 
 // Fetch map JSON from Storage, falling back to local public/ copy.
@@ -129,8 +129,8 @@ export default function MapInfoScreen({ mapKey, adminUid, onClose, onSaved }) {
         let mergedTilesets = { ...(cfg.tilesets || {}) }
         try {
           const [tsResult, objResult] = await Promise.all([
-            listAll(ref(storage, 'sprites/tilesets')).catch(() => ({ items: [] })),
-            listAll(ref(storage, 'sprites/objects')).catch(() => ({ items: [] })),
+            listAll(ref(storage, 'rc/tilesets')).catch(() => ({ items: [] })),
+            listAll(ref(storage, 'rc/objects')).catch(() => ({ items: [] })),
           ])
           const storagePaths = [
             ...tsResult.items.map((i) => i.fullPath),
@@ -177,7 +177,7 @@ export default function MapInfoScreen({ mapKey, adminUid, onClose, onSaved }) {
   }
 
   function handleTilesetUploaded(name) {
-    const dest = `sprites/tilesets/${sanitize(name)}.png`
+    const dest = `rc/tilesets/${sanitize(name)}.png`
     setTilesets((p) => ({ ...p, [name]: dest }))
     toast?.success(`อัปโหลด tileset "${name}" แล้ว`)
   }
@@ -207,8 +207,8 @@ export default function MapInfoScreen({ mapKey, adminUid, onClose, onSaved }) {
       let mergedTilesets = { ...tilesets }
       try {
         const [tsResult, objResult] = await Promise.all([
-          listAll(ref(storage, 'sprites/tilesets')).catch(() => ({ items: [] })),
-          listAll(ref(storage, 'sprites/objects')).catch(() => ({ items: [] })),
+          listAll(ref(storage, 'rc/tilesets')).catch(() => ({ items: [] })),
+          listAll(ref(storage, 'rc/objects')).catch(() => ({ items: [] })),
         ])
         const storagePaths = [
           ...tsResult.items.map((i) => i.fullPath),
@@ -394,7 +394,7 @@ export default function MapInfoScreen({ mapKey, adminUid, onClose, onSaved }) {
                             className="px-2.5 py-1 rounded-lg border border-brand text-brand text-xs font-semibold hover:bg-brand/5 whitespace-nowrap"
                           >Browse</button>
                           <TilesetUploadRow
-                            storagePath={`sprites/tilesets/${sanitize(name)}.png`}
+                            storagePath={`rc/tilesets/${sanitize(name)}.png`}
                             onSuccess={() => handleTilesetUploaded(name)}
                           />
                         </div>
@@ -403,7 +403,7 @@ export default function MapInfoScreen({ mapKey, adminUid, onClose, onSaved }) {
                         type="text"
                         value={tilesets[name] ?? ''}
                         onChange={(e) => setTilesets((p) => ({ ...p, [name]: e.target.value }))}
-                        placeholder="sprites/tilesets/..."
+                        placeholder="rc/tilesets/..."
                         className={`w-full px-2 py-1 rounded border text-[11px] font-mono focus:outline-none focus:ring-1 focus:ring-brand/40 ${
                           tilesets[name]
                             ? 'border-gray-200 text-gray-600 bg-white'

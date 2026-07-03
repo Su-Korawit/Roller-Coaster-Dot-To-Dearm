@@ -58,7 +58,7 @@ export default function FarmItemsTab() {
   const toast = useToast()
 
   useEffect(() => {
-    getDownloadURL(ref(storage, 'sprites/objects/Basic_Plants.png'))
+    getDownloadURL(ref(storage, 'rc/objects/Basic_Plants.png'))
       .then(setImgUrl)
       .catch(() => setImgUrl('/assets/sprites/Objects/Basic_Plants.png'))
   }, [])
