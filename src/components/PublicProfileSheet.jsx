@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
-import { doc, getDoc } from 'firebase/firestore'
+import { getDoc } from 'firebase/firestore'
 import { ArrowLeft, Loader2, Lock, MessageCircle, UserCheck, UserPlus } from 'lucide-react'
-import { db } from '../firebase'
-import { shapes } from '../lib/db'
+import { refs, shapes } from '../lib/db'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSocialStore, calculateMatchScore } from '../stores/useSocialStore'
 import { universities } from '../data/onboardingData'
@@ -106,8 +105,8 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
     setLoading(true)
     setError('')
     Promise.all([
-      getDoc(doc(db, 'users', userId)),
-      currentUser?.uid ? getDoc(doc(db, 'users', currentUser.uid)) : Promise.resolve(null),
+      getDoc(refs.user(userId)),
+      currentUser?.uid ? getDoc(refs.user(currentUser.uid)) : Promise.resolve(null),
     ])
       .then(([snap, mySnap]) => {
         if (snap.exists()) setProfile(snap.data())
