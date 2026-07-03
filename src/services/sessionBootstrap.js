@@ -9,6 +9,13 @@
 //         เพื่อให้ขั้นที่พังไม่ทำให้ขั้นอื่นล้มตาม และ log ด้วย console.error ทุกครั้ง
 //         (ไม่กลืน error เงียบ ๆ) ส่วนการ logout cleanup ย้ายมาที่ teardownSession()
 //   useAuthStore เหลือแค่เรียก bootstrapSession() / teardownSession() เท่านั้น
+//   ล่าสุด (parallelize + dedupe coin read): เดิมสเต็ปทั้งหมดรันแบบ serial (~10
+//         await ต่อกัน) และอ่าน users/{uid} ซ้ำสองครั้ง (ensureUserDoc + coins)
+//         ใหม่: แบ่งเป็น 2 wave ขนาน — wave 1 ทำ ensureUserDoc คู่กับ hydrate
+//         farm data (global, ไม่ผูกกับ user doc), แล้วอ่านค่า coins จากผลลัพธ์
+//         ของ ensureUserDoc เลย (ไม่อ่านซ้ำ) — wave 2 รัน hydrate/arm ต่อ store
+//         ที่เหลือทั้งหมดพร้อมกันด้วย Promise.all แต่ละสเต็ปยังคง isolate ผ่าน
+//         step() helper เหมือนเดิม
 // ============================================================================
 import { getDoc, setDoc } from 'firebase/firestore'
 import { refs, shapes } from '../lib/db'
@@ -47,88 +54,67 @@ function readSelectStore() {
 async function ensureUserDoc(firebaseUser) {
   const ref = refs.user(firebaseUser.uid)
   const snap = await getDoc(ref)
-  if (snap.exists()) return
+  if (snap.exists()) return snap.data()
   const { mbti, program, university, mastery } = readSelectStore()
-  await setDoc(ref, shapes.initialUser(firebaseUser, { mbti, program, university, mastery }))
+  const initial = shapes.initialUser(firebaseUser, { mbti, program, university, mastery })
+  await setDoc(ref, initial)
+  return initial
 }
 
 /**
  * Run the post-login sequence: ensure the user doc, hydrate each store from
- * Firestore, and arm the debounced sync writers. Every step is isolated in its
- * own try/catch so one failure never aborts the rest, and nothing is swallowed.
+ * Firestore, and arm the debounced sync writers. Steps run in two parallel
+ * waves (the user doc must exist before the user-scoped hydrations); every
+ * step is isolated so one failure never aborts the rest, and nothing is
+ * swallowed silently.
  */
 export async function bootstrapSession(firebaseUser) {
   const uid = firebaseUser.uid
+  const step = (name, fn) =>
+    fn().catch((e) => console.error(`[sessionBootstrap] ${name} failed:`, e))
 
-  try {
-    await hydrateFarmDataFromFirestore()
-  } catch (e) {
-    console.error('[sessionBootstrap] hydrate farm data failed:', e)
-  }
+  // Wave 1 — user doc creation gates the user-scoped reads below; the farm
+  // data catalog is global and rides along in parallel.
+  const [userData] = await Promise.all([
+    step('ensureUserDoc', () => ensureUserDoc(firebaseUser)),
+    step('hydrate farm data', () => hydrateFarmDataFromFirestore()),
+  ])
 
-  try {
-    await ensureUserDoc(firebaseUser)
-  } catch (e) {
-    console.error('[sessionBootstrap] ensureUserDoc failed:', e)
-  }
+  // Coins — authoritative value set by Cloud Functions, taken from the doc
+  // ensureUserDoc already read (no second round-trip).
+  const serverCoins = userData?.coins ?? 0
+  if (serverCoins > 0) useUserStore.getState().setCoins(serverCoins)
 
-  // Hydrate coins from Firestore — authoritative value set by Cloud Functions.
-  try {
-    const snap = await getDoc(refs.user(uid))
-    const serverCoins = snap.data()?.coins ?? 0
-    if (serverCoins > 0) useUserStore.getState().setCoins(serverCoins)
-  } catch (e) {
-    console.error('[sessionBootstrap] hydrate coins failed:', e)
-  }
-
-  try {
-    await hydrateSelectStoreFromFirestore(uid)
-  } catch (e) {
-    console.error('[sessionBootstrap] hydrate select failed:', e)
-  }
-
-  try {
-    await hydratePortfolioFromFirestore(uid)
-    setPortfolioSyncUser(uid)
-  } catch (e) {
-    console.error('[sessionBootstrap] hydrate/arm portfolio failed:', e)
-  }
-
-  try {
-    await hydrateTasksFromFirestore(uid)
-    setTaskSyncUser(uid)
-  } catch (e) {
-    console.error('[sessionBootstrap] hydrate/arm tasks failed:', e)
-  }
-
-  try {
-    await hydrateRoadmapFromFirestore(uid)
-    setRoadmapSyncUser(uid)
-  } catch (e) {
-    console.error('[sessionBootstrap] hydrate/arm roadmap failed:', e)
-  }
-
-  try {
-    await hydrateMapFromFirestore(uid)
-    useWorldStore.getState().setMapOwner(uid)
-    armMapSync(uid)
-  } catch (e) {
-    console.error('[sessionBootstrap] hydrate map failed:', e)
-  }
-
-  try {
-    await hydrateInventoryFromFirestore(uid)
-    setInventorySyncUser(uid)
-  } catch (e) {
-    console.error('[sessionBootstrap] hydrate/arm inventory failed:', e)
-  }
-
-  try {
-    await hydrateFarmFromFirestore(uid)
-    armFarmSync(uid)
-  } catch (e) {
-    console.error('[sessionBootstrap] hydrate/arm farm failed:', e)
-  }
+  // Wave 2 — independent per-store hydrations; each arms its debounced
+  // writer only after its own hydrate succeeded.
+  await Promise.all([
+    step('hydrate select', () => hydrateSelectStoreFromFirestore(uid)),
+    step('hydrate/arm portfolio', async () => {
+      await hydratePortfolioFromFirestore(uid)
+      setPortfolioSyncUser(uid)
+    }),
+    step('hydrate/arm tasks', async () => {
+      await hydrateTasksFromFirestore(uid)
+      setTaskSyncUser(uid)
+    }),
+    step('hydrate/arm roadmap', async () => {
+      await hydrateRoadmapFromFirestore(uid)
+      setRoadmapSyncUser(uid)
+    }),
+    step('hydrate map', async () => {
+      await hydrateMapFromFirestore(uid)
+      useWorldStore.getState().setMapOwner(uid)
+      armMapSync(uid)
+    }),
+    step('hydrate/arm inventory', async () => {
+      await hydrateInventoryFromFirestore(uid)
+      setInventorySyncUser(uid)
+    }),
+    step('hydrate/arm farm', async () => {
+      await hydrateFarmFromFirestore(uid)
+      armFarmSync(uid)
+    }),
+  ])
 }
 
 /**

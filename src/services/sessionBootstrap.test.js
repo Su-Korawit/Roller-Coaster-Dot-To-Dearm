@@ -69,6 +69,17 @@ describe('bootstrapSession', () => {
     vi.resetAllMocks()
     vi.spyOn(console, 'error').mockImplementation(() => {})
     m.getDoc.mockResolvedValue({ exists: () => true, data: () => ({ coins: 0 }) })
+    // These are real `async function`s in production (always return a Promise);
+    // give the mocks the same shape so `step()`'s `.catch` has something to call.
+    m.setDoc.mockResolvedValue(undefined)
+    m.hydrateFarmData.mockResolvedValue(undefined)
+    m.hydrateSelect.mockResolvedValue(undefined)
+    m.hydratePortfolio.mockResolvedValue(undefined)
+    m.hydrateTasks.mockResolvedValue(undefined)
+    m.hydrateRoadmap.mockResolvedValue(undefined)
+    m.hydrateMap.mockResolvedValue(undefined)
+    m.hydrateInventory.mockResolvedValue(undefined)
+    m.hydrateFarm.mockResolvedValue(undefined)
   })
 
   it('keeps hydrating later stores when an earlier hydration throws', async () => {
@@ -122,6 +133,24 @@ describe('bootstrapSession', () => {
     await bootstrapSession({ uid: 'u1' })
     expect(m.setMapOwner).toHaveBeenCalledWith('u1')
     expect(m.armMapSync).toHaveBeenCalledWith('u1')
+  })
+
+  it('reads the user doc exactly once (coins come from the ensureUserDoc read)', async () => {
+    m.getDoc.mockResolvedValue({ exists: () => true, data: () => ({ coins: 42 }) })
+
+    await bootstrapSession({ uid: 'u1' })
+
+    expect(m.getDoc).toHaveBeenCalledTimes(1)
+    expect(m.setCoins).toHaveBeenCalledWith(42)
+  })
+
+  it('one failing hydration does not block the others', async () => {
+    m.hydrateTasks.mockRejectedValueOnce(new Error('boom'))
+
+    await bootstrapSession({ uid: 'u1' })
+
+    expect(m.hydrateRoadmap).toHaveBeenCalledWith('u1')
+    expect(m.setTaskSyncUser).not.toHaveBeenCalled() // arm skipped when its hydrate failed
   })
 })
 
