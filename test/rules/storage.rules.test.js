@@ -55,6 +55,25 @@ describe('section-admin write scoping', () => {
     const s = ctx('nobody', 'stranger@gmail.com')
     await assertFails(uploadBytes(ref(s, 'sprites/characters/INTJ.png'), PNG, META))
   })
+
+  it('Characters admin writes rc/characters but NOT rc/tilesets', async () => {
+    const s = ctx('char', 'play198725@gmail.com')
+    await assertSucceeds(uploadBytes(ref(s, 'rc/characters/INTJ.png'), PNG, META))
+    await assertFails(uploadBytes(ref(s, 'rc/tilesets/grass.png'), PNG, META))
+  })
+
+  it('Maps admin writes rc/tilesets, rc/objects, and rc/maps but NOT rc/characters', async () => {
+    const s = ctx('maps', 'takadaoni07@gmail.com')
+    await assertSucceeds(uploadBytes(ref(s, 'rc/tilesets/grass.png'), PNG, META))
+    await assertSucceeds(uploadBytes(ref(s, 'rc/objects/chest.png'), PNG, META))
+    await assertSucceeds(uploadBytes(ref(s, 'rc/maps/test3.json'), PNG, META))
+    await assertFails(uploadBytes(ref(s, 'rc/characters/INTJ.png'), PNG, META))
+  })
+
+  it('BLOCKS a non-admin from writing rc/characters', async () => {
+    const s = ctx('nobody', 'stranger@gmail.com')
+    await assertFails(uploadBytes(ref(s, 'rc/characters/INTJ.png'), PNG, META))
+  })
 })
 
 describe('owner-scoped paths', () => {
@@ -79,6 +98,13 @@ describe('public read', () => {
 
   it('allows an unauthenticated user to read ui/ assets', async () => {
     await assertSucceeds(getBytes(ref(anon(), 'ui/button.png')))
+  })
+
+  it('allows an unauthenticated user to read rc/ assets', async () => {
+    await testEnv.withSecurityRulesDisabled(async (c) => {
+      await uploadBytes(ref(c.storage(), 'rc/characters/ENFJ.png'), PNG, META)
+    })
+    await assertSucceeds(getBytes(ref(anon(), 'rc/characters/ENFJ.png')))
   })
 
   it('BLOCKS a stranger from reading another user’s slip', async () => {

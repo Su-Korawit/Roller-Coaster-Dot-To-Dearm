@@ -46,6 +46,31 @@ service firebase.storage {
       allow read: if true;
       allow write: if canEditMaps();
     }
+    // Roller Coaster custom assets (rc/) — never touched by the Sprout Lands
+    // sync, uploaded directly by artists via the Admin Dashboard (see
+    // docs/adr/0007-rc-assets-folder-separation.md). Same section->role split
+    // as sprites/: characters section, then maps section for tilesets/objects/maps.
+    match /rc/characters/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSuperAdmin() || userEmail() == 'play198725@gmail.com';
+    }
+    match /rc/tilesets/{allPaths=**} {
+      allow read: if true;
+      allow write: if canEditMaps();
+    }
+    match /rc/objects/{allPaths=**} {
+      allow read: if true;
+      allow write: if canEditMaps();
+    }
+    match /rc/maps/{allPaths=**} {
+      allow read: if true;
+      allow write: if canEditMaps();
+    }
+    // Any other rc/ path stays super-admin only.
+    match /rc/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
     // Music section — background audio.
     match /media/{allPaths=**} {
       allow read: if true;
