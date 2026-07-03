@@ -3,14 +3,13 @@ import { useEffect, useRef, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import { Bell, Loader2, MapIcon, MessageCircle, Search, UserCheck, UserPlus, Users, X, Zap } from 'lucide-react'
-import { doc, getDoc, updateDoc } from 'firebase/firestore'
-import { db } from '../firebase'
+import { getDoc, updateDoc } from 'firebase/firestore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSocialStore, calculateMatchScore } from '../stores/useSocialStore'
 import PublicProfileSheet from './PublicProfileSheet'
 import KawaiiMatchOverlay from './KawaiiMatchOverlay'
 import { mbtiColor } from '../constants/mbtiColors'
-import { shapes } from '../lib/db'
+import { refs, shapes } from '../lib/db'
 
 const MATCH_THRESHOLD = 70
 
@@ -96,7 +95,7 @@ function SchoolPicker({ uid, onSaved }) {
           schoolLat: place.geometry.location.lat(),
           schoolLng: place.geometry.location.lng(),
         }
-        await updateDoc(doc(db, 'users', uid), schoolData)
+        await updateDoc(refs.user(uid), schoolData)
         onSavedRef.current(schoolData)
       } catch {
         setError('บันทึกไม่สำเร็จ กรุณาลองใหม่')
@@ -450,7 +449,7 @@ function RequestsTab({ pendingRequests, acceptFollowRequest, rejectFollowRequest
     setResolving(true)
     Promise.all(
       pendingRequests.map(async (uid) => {
-        const snap = await getDoc(doc(db, 'users', uid))
+        const snap = await getDoc(refs.user(uid))
         return snap.exists() ? snap.data() : null
       })
     )
@@ -612,7 +611,7 @@ export default function SocialPanel({ onClose, onOpenChat }) {
 
     async function init() {
       try {
-        const snap = await getDoc(doc(db, 'users', user.uid))
+        const snap = await getDoc(refs.user(user.uid))
         if (!active) return
         if (snap.exists()) {
           const data = snap.data()
