@@ -1,8 +1,7 @@
 import { useState, useCallback, useMemo } from 'react'
-import { collection, getDocs, limit, query } from 'firebase/firestore'
-import { db } from '../../firebase'
+import { getDocs, limit, query } from 'firebase/firestore'
 import { MBTI_TYPES } from '../../game/assetManifest'
-import { shapes } from '../../lib/db'
+import { cols, shapes } from '../../lib/db'
 import { useTcasUniversities } from '../../hooks/useMytcas'
 
 // Reads the `users` collection client-side (admin-only Firestore rule guards
@@ -11,7 +10,7 @@ import { useTcasUniversities } from '../../hooks/useMytcas'
 // a Cloud-Function maintained stats doc — the function signature stays the same.
 const AGG_LIMIT = 2000
 async function getAggregate() {
-  const snap = await getDocs(query(collection(db, 'users'), limit(AGG_LIMIT)))
+  const snap = await getDocs(query(cols.users, limit(AGG_LIMIT)))
   const users = snap.docs.map((d) => d.data())
 
   const total = users.length
