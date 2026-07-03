@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { pickEntryKey } from './mapConfig'
+import { pickEntryKey, DEFAULT_MAP_CONFIGS } from './mapConfig'
 
 const setDoc = vi.fn(() => Promise.resolve())
 const getDocs = vi.fn()
@@ -79,5 +79,16 @@ describe('listMapConfigs — registry defaults', () => {
     expect(entry.displayName).toBe('foo')          // default: the key
     expect(typeof entry.order).toBe('number')       // default: 0
     expect(typeof entry.isEntry).toBe('boolean')   // default: false (not test3)
+  })
+})
+
+describe('DEFAULT_MAP_CONFIGS tileset paths', () => {
+  it('has no tileset value pointing at the legacy sprites/tilesets or sprites/objects prefixes', () => {
+    const legacy = Object.values(DEFAULT_MAP_CONFIGS).flatMap((cfg) =>
+      Object.values(cfg.tilesets).filter(
+        (v) => v.startsWith('sprites/tilesets/') || v.startsWith('sprites/objects/')
+      )
+    )
+    expect(legacy).toEqual([])
   })
 })
