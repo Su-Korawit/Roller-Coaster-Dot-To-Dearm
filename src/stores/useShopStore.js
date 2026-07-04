@@ -1,9 +1,9 @@
 import { create } from 'zustand'
 import { httpsCallable } from 'firebase/functions'
-import { ref as storageRef, uploadBytes } from 'firebase/storage'
-import { auth, functions, storage } from '../firebase'
+import { auth, functions } from '../firebase'
 import { cols, queries } from '../lib/db'
 import { createFirestoreListener } from '../lib/firestoreListener'
+import { uploadAsset } from '../utils/storageOps'
 
 // Shared listener slots — own the detach-before-reattach lifecycle.
 const productsListener = createFirestoreListener()
@@ -42,7 +42,7 @@ export const useShopStore = create((set, get) => ({
   verifyPayment: async (purchaseId, file) => {
     const uid = auth.currentUser?.uid
     if (!uid) throw new Error('not signed in')
-    await uploadBytes(storageRef(storage, `slips/${uid}/${purchaseId}`), file)
+    await uploadAsset(`slips/${uid}/${purchaseId}`, file)
     const fn = httpsCallable(functions, 'verifyPayment')
     const res = await fn({ purchaseId })
     return res.data // { ok, reason?, coins? }
