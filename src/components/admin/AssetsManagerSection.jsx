@@ -1,23 +1,14 @@
 // src/components/admin/AssetsManagerSection.jsx
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ref, listAll, deleteObject, uploadBytesResumable } from 'firebase/storage'
-import { storage } from '../../firebase'
 import { cloudAsset, bustCache } from '../../utils/cloudAsset'
 import {
   listAssetFolders, createFolder, renameFolder, trashFolder,
   seedSystemFolders, folderSlug,
 } from '../../utils/assetFolders'
-import { moveFile, trashFile, restoreFile, fromTrashPath } from '../../utils/storageOps'
+import { moveFile, trashFile, restoreFile, fromTrashPath, listAllRecursive, listFlat, deleteFile, uploadWithProgress } from '../../utils/storageOps'
 import FolderPickerModal from './FolderPickerModal'
 import { useToast } from './Toast'
 import { useAuthStore } from '../../stores/useAuthStore'
-
-async function listAllRecursive(storageRef) {
-  const result = await listAll(storageRef)
-  const files = result.items.map((i) => i.fullPath)
-  const sub = await Promise.all(result.prefixes.map((p) => listAllRecursive(p)))
-  return [...files, ...sub.flat()]
-}
 
 function FolderSidebar({ folders, selectedPath, onSelect, onRenameFolder, onDeleteFolder, trashCount }) {
   const [editingId, setEditingId] = useState(null)
@@ -182,8 +173,8 @@ function FileGrid({ folderPath, onFilesChanged }) {
   const loadFiles = useCallback(async () => {
     setFiles(null)
     try {
-      const result = await listAll(ref(storage, folderPath))
-      if (mountedRef.current) setFiles(result.items.map((i) => i.fullPath))
+      const result = await listFlat(folderPath)
+      if (mountedRef.current) setFiles(result.map((i) => i.path))
     } catch {
       if (mountedRef.current) setFiles([])
     }
@@ -194,13 +185,9 @@ function FileGrid({ folderPath, onFilesChanged }) {
   function handleUpload(file) {
     if (!file) return
     const dest = `${folderPath}/${file.name}`
-    const task = uploadBytesResumable(ref(storage, dest), file)
-    task.on(
-      'state_changed',
-      null,
-      (err) => toast?.error(err.message),
-      () => { bustCache(dest); loadFiles(); onFilesChanged?.() },
-    )
+    uploadWithProgress(dest, file)
+      .then(() => { loadFiles(); onFilesChanged?.() })
+      .catch((err) => toast?.error(err.message))
   }
 
   async function handleRenameConfirm() {
@@ -342,10 +329,11 @@ function TrashView({ onFilesChanged, onTrashCountChange }) {
   const loadTrash = useCallback(async () => {
     setFiles(null)
     try {
-      const all = await listAllRecursive(ref(storage, 'trash'))
+      const all = await listAllRecursive('trash')
+      const paths = all.map((e) => e.path)
       if (mountedRef.current) {
-        setFiles(all)
-        onTrashCountChange?.(all.length)
+        setFiles(paths)
+        onTrashCountChange?.(paths.length)
       }
     } catch {
       if (mountedRef.current) setFiles([])
@@ -368,7 +356,7 @@ function TrashView({ onFilesChanged, onTrashCountChange }) {
 
   async function handlePermanentDelete(trashPath) {
     try {
-      await deleteObject(ref(storage, trashPath))
+      await deleteFile(trashPath)
       toast?.success('ลบถาวรแล้ว')
       loadTrash()
     } catch (err) {
@@ -380,7 +368,7 @@ function TrashView({ onFilesChanged, onTrashCountChange }) {
     setClearing(true)
     setConfirmClear(false)
     try {
-      await Promise.all((files ?? []).map((p) => deleteObject(ref(storage, p)).catch(() => {})))
+      await Promise.all((files ?? []).map((p) => deleteFile(p)))
       toast?.success('ล้าง Trash แล้ว')
       loadTrash()
       onFilesChanged?.()
@@ -502,11 +490,11 @@ export default function AssetsManagerSection() {
       await renameFolder(folder.id, newDisplayName, newPath, uid)
       await loadFolders()
 
-      const result = await listAll(ref(storage, folder.path)).catch(() => ({ items: [] }))
-      const items  = result.items
+      const result = await listFlat(folder.path)
+      const items  = result
       for (let i = 0; i < items.length; i++) {
         setRenameProgress(`กำลังย้ายไฟล์ ${i + 1}/${items.length}...`)
-        const oldFile = items[i].fullPath
+        const oldFile = items[i].path
         const newFile = `${newPath}/${oldFile.split('/').pop()}`
         await moveFile(oldFile, newFile)
         bustCache(oldFile)
@@ -522,8 +510,8 @@ export default function AssetsManagerSection() {
   }
 
   async function initiateDeleteFolder(folder) {
-    const result = await listAll(ref(storage, folder.path)).catch(() => ({ items: [] }))
-    setDeleteFileCount(result.items.length)
+    const result = await listFlat(folder.path)
+    setDeleteFileCount(result.length)
     setDeleteTarget(folder)
   }
 
@@ -532,8 +520,8 @@ export default function AssetsManagerSection() {
     setDeletingId(deleteTarget.id)
     setDeleteTarget(null)
     try {
-      const result = await listAll(ref(storage, deleteTarget.path)).catch(() => ({ items: [] }))
-      await Promise.all(result.items.map((item) => trashFile(item.fullPath).catch(() => {})))
+      const result = await listFlat(deleteTarget.path)
+      await Promise.all(result.map((item) => trashFile(item.path).catch(() => {})))
       await trashFolder(deleteTarget.id, uid)
       toast?.success(`ย้าย folder "${deleteTarget.displayName}" ไป Trash แล้ว`)
       if (selectedPath === deleteTarget.path) setSelectedPath(null)
