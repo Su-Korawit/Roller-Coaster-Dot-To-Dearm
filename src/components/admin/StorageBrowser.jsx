@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
-import { ref, listAll } from 'firebase/storage'
-import { storage } from '../../firebase'
 import { cloudAsset } from '../../utils/cloudAsset'
+import { listFlat } from '../../utils/storageOps'
 
 // Modal that lists files under one or more Storage folders and returns the
 // chosen object's full path via onPick. Used to "Browse" existing assets when
@@ -15,9 +14,7 @@ export default function StorageBrowser({ folders, title = 'เลือกไฟ
     let cancelled = false
     Promise.all(
       folders.map((f) =>
-        listAll(ref(storage, f))
-          .then((res) => res.items.map((i) => i.fullPath))
-          .catch(() => []),
+        listFlat(f).then((entries) => entries.map((e) => e.path)),
       ),
     ).then((lists) => {
       if (cancelled) return
