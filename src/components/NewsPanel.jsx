@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
-import { addDoc, deleteDoc, getDoc, increment, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore'
+import { getDoc } from 'firebase/firestore'
 import { Loader2, MessageCircle, Plus, Trash2 } from 'lucide-react'
-import { cols, refs, queries } from '../lib/db'
+import { refs } from '../lib/db'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useChatStore } from '../stores/useChatStore'
-import { useUserStore } from '../stores/useUserStore'
+import { useNewsStore } from '../stores/useNewsStore'
 import { ADMIN_UID } from '../constants/admin'
-import { STATIC_UPDATES, UPDATE_TYPES } from '../data/appUpdates'
+import { UPDATE_TYPES } from '../data/appUpdates'
 import { CAMP_GROUPS, DEFAULT_CATEGORY, groupKeyForCategory, labelForCategory } from '../data/campCategories'
 
 // ─── Assets ──────────────────────────────────────────────────────────────────
@@ -48,20 +48,7 @@ function ShareSheet({ item, onClose }) {
     if (!uid || sending) return
     setSending(chat.id)
     try {
-      await addDoc(cols.chatMessages(chat.id), {
-        senderId: uid,
-        text: `📰 ${item.title}`,
-        type: 'news',
-        newsItem: { title: item.title, url: item.url, thumbnail: item.poster },
-        giftItem: null,
-        createdAt: serverTimestamp(),
-      })
-      await updateDoc(refs.chat(chat.id), {
-        lastMessage: `📰 ${item.title}`,
-        lastMessageAt: serverTimestamp(),
-        fireStacks: increment(1),
-      })
-      useUserStore.getState().incrementStacks()
+      await useChatStore.getState().sendNewsShare(chat.id, item)
       onClose()
     } finally {
       setSending(null)
@@ -150,13 +137,7 @@ function AddUpdateSheet({ onClose }) {
     if (!title.trim() || !description.trim() || saving) return
     setSaving(true)
     try {
-      await addDoc(cols.appUpdates, {
-        type,
-        title: title.trim(),
-        description: description.trim(),
-        image: image.trim() || null,
-        createdAt: serverTimestamp(),
-      })
+      await useNewsStore.getState().addUpdate({ type, title, description, image })
       onClose()
     } finally {
       setSaving(false)
@@ -276,9 +257,10 @@ export default function NewsPanel({ onClose }) {
   const [category, setCategory] = useState(DEFAULT_CATEGORY)
   const [openGroup, setOpenGroup] = useState(() => groupKeyForCategory(DEFAULT_CATEGORY))
   const [sharingItem, setSharingItem] = useState(null)
-  const [fsUpdates, setFsUpdates] = useState([])
   const [showAddForm, setShowAddForm] = useState(false)
   const [detailUpdate, setDetailUpdate] = useState(null)
+
+  const allUpdates = useNewsStore((s) => s.getAllUpdates())
 
   useEffect(() => {
     fetchCamps(category)
@@ -287,20 +269,12 @@ export default function NewsPanel({ onClose }) {
 
   // Real-time subscription to admin-added updates
   useEffect(() => {
-    const q = queries.appUpdatesByDate()
-    const unsub = onSnapshot(q, (snap) => {
-      setFsUpdates(snap.docs.map((d) => ({ id: d.id, _firestore: true, ...d.data() })))
-    })
-    return () => unsub()
+    const unsub = useNewsStore.getState().subscribeUpdates()
+    return () => unsub?.()
   }, [])
 
-  // Merge static + Firestore updates, sort by date desc
-  const allUpdates = [...STATIC_UPDATES, ...fsUpdates]
-    .map((u) => ({ ...u, _ts: u.createdAt?.toMillis?.() ?? new Date(u.date).getTime() }))
-    .sort((a, b) => b._ts - a._ts)
-
   async function handleDeleteUpdate(id) {
-    await deleteDoc(refs.appUpdate(id))
+    await useNewsStore.getState().deleteUpdate(id)
   }
 
   async function fetchCamps(cat = category) {
