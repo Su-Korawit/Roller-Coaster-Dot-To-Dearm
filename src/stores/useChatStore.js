@@ -83,6 +83,30 @@ export const useChatStore = create((set) => ({
     }
   },
 
+  // Shares a news item into a chat. Always grants a fireStack (unlike
+  // sendMessage's once-per-day rule) — preserves NewsPanel.ShareSheet's
+  // existing behavior exactly; this discrepancy is a known follow-up, not
+  // something this extraction should silently fix.
+  sendNewsShare: async (chatId, newsItem) => {
+    const uid = auth.currentUser?.uid
+    if (!uid) return
+
+    await addDoc(cols.chatMessages(chatId), {
+      senderId: uid,
+      text: `📰 ${newsItem.title}`,
+      type: 'news',
+      newsItem: { title: newsItem.title, url: newsItem.url, thumbnail: newsItem.poster },
+      giftItem: null,
+      createdAt: serverTimestamp(),
+    })
+    await updateDoc(refs.chat(chatId), {
+      lastMessage: `📰 ${newsItem.title}`,
+      lastMessageAt: serverTimestamp(),
+      fireStacks: increment(1),
+    })
+    useUserStore.getState().incrementStacks()
+  },
+
   // Attaches a real-time listener to a chat's messages, ordered oldest-first.
   // Replaces any existing messages listener. Returns the unsubscribe function.
   subscribeMessages: (chatId) =>
