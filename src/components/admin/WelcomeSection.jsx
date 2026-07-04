@@ -2,15 +2,13 @@ import { useEffect, useState } from 'react'
 import {
   getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp,
 } from 'firebase/firestore'
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { storage } from '../../firebase'
 import { refs, cols } from '../../lib/db'
+import { uploadAsset } from '../../utils/storageOps'
 import { useToast } from './Toast'
 
 async function uploadWelcomeMedia(file, kind) {
   const path = `welcome/${kind}/${Date.now()}-${file.name}`
-  await uploadBytes(storageRef(storage, path), file, { contentType: file.type || 'image/png' })
-  return getDownloadURL(storageRef(storage, path))
+  return uploadAsset(path, file, { contentType: file.type || 'image/png' })
 }
 
 export default function WelcomeSection() {
