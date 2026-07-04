@@ -208,6 +208,9 @@ export default function GameCanvas({ active = true }) {
           useWorldStore.getState().setCurrentMapKey(mapKey)
           useFarmStore.getState().setCurrentMapKey(mapKey)
           game.scene.start('MapScene', { mapKey, spawn })
+        } catch (e) {
+          console.error('[GameCanvas] map switch failed:', e)
+          setIsSwitchingMap(false)
         } finally {
           switching = false
         }
@@ -235,6 +238,7 @@ export default function GameCanvas({ active = true }) {
       }
     })().catch((e) => {
       console.error('[GameCanvas] boot failed:', e)
+      setIsBooting(false)
     })
 
     const ro = new ResizeObserver((entries) => {
@@ -371,7 +375,7 @@ export default function GameCanvas({ active = true }) {
           className="absolute inset-0 z-50 flex flex-col items-center justify-center"
           style={{ background: 'linear-gradient(160deg, #0f0824 0%, #1a1035 50%, #0d1f3c 100%)' }}
         >
-          <span className="text-5xl mb-5" aria-hidden="true">🎢</span>
+          <span className="text-5xl mb-5" aria-hidden="true">🚀</span>
           <span className="pixel-font text-[10px] text-purple-300 mb-4">Loading...</span>
           <div
             className="w-48 h-1.5 rounded-full overflow-hidden bg-white/10"
