@@ -19,9 +19,10 @@ import { MapScene, loadSceneData } from '../game/worldScenes'
 import { listMapConfigs, pickEntryKey } from '../utils/mapConfig'
 import { useFarmDataStore } from '../stores/useFarmDataStore'
 import { tileKey, isReady } from '../systems/farmLogic'
-import { addToSlots, countInSlots } from '../systems/inventoryLogic'
+import { countInSlots } from '../systems/inventoryLogic'
 import { plantSeed, harvestAt } from '../systems/farmActions'
-import { notify } from '../systems/NotificationSystem'
+import { moveToStorage, moveToHotbar, swapSlots } from '../systems/inventoryActions'
+import { buyItem, sellItem, sellAllProduce } from '../systems/shopActions'
 
 export default function GameCanvas({ active = true }) {
   const containerRef = useRef(null)
@@ -343,93 +344,14 @@ export default function GameCanvas({ active = true }) {
   }, [shopState, hotbar, storage, farmItems, farmShops])
 
   // ---------- Storage move/swap handlers ----------
-  const handleMoveToStorage = (fromIndex) => {
-    const inv = useInventoryStore.getState()
-    const slot = inv.hotbar[fromIndex]
-    if (!slot) return
-    const stackMax = useFarmDataStore.getState().items[slot.itemId]?.stackMax ?? 99
-    const result = addToSlots(inv.storage, slot.itemId, slot.count, stackMax)
-    if (result.remaining === 0) {
-      const newHotbar = [...inv.hotbar]
-      newHotbar[fromIndex] = null
-      useInventoryStore.setState({ hotbar: newHotbar, storage: result.slots })
-    } else {
-      notify.inventoryFull()
-    }
-  }
-
-  const handleMoveToHotbar = (fromIndex) => {
-    const inv = useInventoryStore.getState()
-    const slot = inv.storage[fromIndex]
-    if (!slot) return
-    const stackMax = useFarmDataStore.getState().items[slot.itemId]?.stackMax ?? 99
-    const result = addToSlots(inv.hotbar, slot.itemId, slot.count, stackMax)
-    if (result.remaining === 0) {
-      const newStorage = [...inv.storage]
-      newStorage[fromIndex] = null
-      useInventoryStore.setState({ hotbar: result.slots, storage: newStorage })
-    } else {
-      notify.inventoryFull()
-    }
-  }
-
-  const handleSwapSlots = (fromIndex, toIndex, isHotbarSwap) => {
-    const inv = useInventoryStore.getState()
-    if (isHotbarSwap) {
-      const newHotbar = [...inv.hotbar]
-      ;[newHotbar[fromIndex], newHotbar[toIndex]] = [newHotbar[toIndex], newHotbar[fromIndex]]
-      useInventoryStore.setState({ hotbar: newHotbar })
-    } else {
-      const newStorage = [...inv.storage]
-      ;[newStorage[fromIndex], newStorage[toIndex]] = [newStorage[toIndex], newStorage[fromIndex]]
-      useInventoryStore.setState({ storage: newStorage })
-    }
-  }
+  const handleMoveToStorage = (fromIndex) => moveToStorage(fromIndex)
+  const handleMoveToHotbar = (fromIndex) => moveToHotbar(fromIndex)
+  const handleSwapSlots = (fromIndex, toIndex, isHotbarSwap) => swapSlots(fromIndex, toIndex, isHotbarSwap)
 
   // ---------- Shop buy/sell handlers ----------
-  const handleBuy = (itemId, qty) => {
-    const shop = farmShops[shopState?.shopId]
-    if (!shop) return {}
-    const item = shop.sells.find(s => s.itemId === itemId)
-    if (!item) return {}
-    const total = item.price * qty
-    const inv = useInventoryStore.getState()
-    if (!inv.hasGold(total)) return { success: false, reason: 'เงินไม่พอ' }
-    inv.removeGold(total)
-    inv.addItem(itemId, qty)
-    return { success: true }
-  }
-
-  const handleSell = (itemId, count) => {
-    const inv = useInventoryStore.getState()
-    const sellPrice = useFarmDataStore.getState().items[itemId]?.sellPrice ?? 0
-    const goldEarned = sellPrice * count
-    inv.removeItem(itemId, count)
-    inv.addGold(goldEarned)
-    return { success: true, goldEarned }
-  }
-
-  const handleSellAll = () => {
-    const inv = useInventoryStore.getState()
-    const { items } = useFarmDataStore.getState()
-    const allSlots = [...inv.hotbar, ...inv.storage]
-    let totalEarned = 0
-    const sold = {}
-    allSlots.forEach(slot => {
-      if (!slot) return
-      if (items[slot.itemId]?.type === 'produce') {
-        sold[slot.itemId] = (sold[slot.itemId] ?? 0) + slot.count
-      }
-    })
-    if (Object.keys(sold).length === 0) return { success: false, reason: 'ไม่มีของขาย' }
-    Object.entries(sold).forEach(([itemId, count]) => {
-      const sellPrice = items[itemId]?.sellPrice ?? 0
-      inv.removeItem(itemId, count)
-      inv.addGold(sellPrice * count)
-      totalEarned += sellPrice * count
-    })
-    return { success: true, totalEarned }
-  }
+  const handleBuy = (itemId, qty) => buyItem(farmShops, shopState?.shopId, itemId, qty)
+  const handleSell = (itemId, count) => sellItem(itemId, count)
+  const handleSellAll = () => sellAllProduce()
 
   return (
     <>
