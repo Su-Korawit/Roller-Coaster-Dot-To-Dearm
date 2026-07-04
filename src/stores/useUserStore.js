@@ -29,6 +29,7 @@ export const useUserStore = create(
       activeMasteryBlockId: null,
       aiLanguage: 'Thai',
       controlMode: 'joystick',
+      uiVisibility: { hotbar: true, shortcuts: true, newsButton: true, musicPill: true, contactFab: true },
       profilePhotoURL: null,
 
       setUser: (user) => set({ user }),
@@ -37,6 +38,8 @@ export const useUserStore = create(
       setActiveMasteryBlockId: (id) => set({ activeMasteryBlockId: id }),
       setAiLanguage: (lang) => set({ aiLanguage: lang }),
       setControlMode: (mode) => set({ controlMode: mode }),
+      setUiVisibility: (key, value) =>
+        set((state) => ({ uiVisibility: { ...state.uiVisibility, [key]: value } })),
       addCoins: (amount) => set((state) => ({ coins: state.coins + amount })),
       setCoins: (amount) => set({ coins: amount }),
       setStreak: (streak) => set({ streak }),
@@ -145,6 +148,7 @@ export const useUserStore = create(
           activeMasteryBlockId: null,
           aiLanguage: 'Thai',
           controlMode: 'joystick',
+          uiVisibility: { hotbar: true, shortcuts: true, newsButton: true, musicPill: true, contactFab: true },
           profilePhotoURL: null,
         }),
     }),

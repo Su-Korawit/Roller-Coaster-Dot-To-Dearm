@@ -21,3 +21,33 @@ describe('useUserStore controlMode', () => {
     expect(useUserStore.getState().controlMode).toBe('joystick')
   })
 })
+
+describe('useUserStore uiVisibility', () => {
+  beforeEach(() => {
+    useUserStore.setState({
+      uiVisibility: { hotbar: true, shortcuts: true, newsButton: true, musicPill: true, contactFab: true },
+    })
+  })
+
+  it('defaults every HUD element to visible', () => {
+    expect(useUserStore.getState().uiVisibility).toEqual({
+      hotbar: true, shortcuts: true, newsButton: true, musicPill: true, contactFab: true,
+    })
+  })
+
+  it('setUiVisibility flips a single key without touching the others', () => {
+    useUserStore.getState().setUiVisibility('hotbar', false)
+    const { uiVisibility } = useUserStore.getState()
+    expect(uiVisibility.hotbar).toBe(false)
+    expect(uiVisibility.shortcuts).toBe(true)
+  })
+
+  it('resetUser restores all uiVisibility keys to true', () => {
+    useUserStore.getState().setUiVisibility('hotbar', false)
+    useUserStore.getState().setUiVisibility('newsButton', false)
+    useUserStore.getState().resetUser()
+    expect(useUserStore.getState().uiVisibility).toEqual({
+      hotbar: true, shortcuts: true, newsButton: true, musicPill: true, contactFab: true,
+    })
+  })
+})
