@@ -54,6 +54,8 @@ export default function GameCanvas({ active = true }) {
   const controlMode        = useUserStore((s) => s.controlMode)
 
   // Farm state
+  const [isBooting, setIsBooting] = useState(true)
+  const [isSwitchingMap, setIsSwitchingMap] = useState(false)
   const [activeTile, setActiveTile] = useState(null)
   const [selectedHotbarIndex, setSelectedHotbarIndex] = useState(0)
   const selectedHotbarIndexRef = useRef(0)
@@ -175,6 +177,10 @@ export default function GameCanvas({ active = true }) {
       game.registry.set('controlMode', useUserStore.getState().controlMode)
       game.scene.start('MapScene', { mapKey: assetUrlsRef.current.mapKey, spawn: null })
       gameRef.current = game
+      game.events.on('mapSceneReady', () => {
+        setIsBooting(false)
+        setIsSwitchingMap(false)
+      })
       game.events.on('zoomChanged', (v) => {
         setZoom(+v.toFixed(1))
         setShowZoom(true)
@@ -187,6 +193,7 @@ export default function GameCanvas({ active = true }) {
       game.events.on('mapChangeRequested', async ({ mapKey, spawn }) => {
         if (switching) return
         switching = true
+        setIsSwitchingMap(true)
         try {
           const data = await loadSceneData(mapKey)
           if (cancelled) return   // component unmounted during await — game is destroyed
@@ -359,6 +366,31 @@ export default function GameCanvas({ active = true }) {
         ref={containerRef}
         style={{ width: '100%', height: '100%', overflow: 'hidden' }}
       />
+      {isBooting && (
+        <div
+          className="absolute inset-0 z-50 flex flex-col items-center justify-center"
+          style={{ background: 'linear-gradient(160deg, #0f0824 0%, #1a1035 50%, #0d1f3c 100%)' }}
+        >
+          <span className="text-5xl mb-5" aria-hidden="true">🎢</span>
+          <span className="pixel-font text-[10px] text-purple-300 mb-4">Loading...</span>
+          <div
+            className="w-48 h-1.5 rounded-full overflow-hidden bg-white/10"
+            role="progressbar"
+            aria-label="กำลังโหลด"
+            aria-busy="true"
+          >
+            <div
+              className="h-full w-1/3 rounded-full animate-loading-slide"
+              style={{ background: 'linear-gradient(90deg, transparent, var(--color-brand), var(--color-accent-pink), transparent)' }}
+            />
+          </div>
+        </div>
+      )}
+      {isSwitchingMap && !isBooting && (
+        <div className="absolute inset-0 z-40 bg-black/40 flex items-end justify-end p-6">
+          <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+        </div>
+      )}
       {active && (
         <Hotbar slots={hotbar} selectedIndex={selectedHotbarIndex} gold={gold} onSelectSlot={setSelectedHotbarIndex} />
       )}

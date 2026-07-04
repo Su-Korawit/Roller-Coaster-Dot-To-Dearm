@@ -536,6 +536,8 @@ export class MapScene extends Phaser.Scene {
     }
     this.scale.on('resize', onResize)
     this.events.once('shutdown', () => this.scale.off('resize', onResize))
+
+    this.game.events.emit('mapSceneReady')
   }
 
   update() {
