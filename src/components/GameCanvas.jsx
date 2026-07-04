@@ -52,6 +52,7 @@ export default function GameCanvas({ active = true }) {
   const currentMapKey      = useWorldStore((s) => s.currentMapKey)
   const remotePlayers      = useWorldStore((s) => s.remotePlayers)
   const controlMode        = useUserStore((s) => s.controlMode)
+  const uiVisibility       = useUserStore((s) => s.uiVisibility)
 
   // Farm state
   const [activeTile, setActiveTile] = useState(null)
@@ -359,7 +360,7 @@ export default function GameCanvas({ active = true }) {
         ref={containerRef}
         style={{ width: '100%', height: '100%', overflow: 'hidden' }}
       />
-      {active && (
+      {active && uiVisibility.hotbar && (
         <Hotbar slots={hotbar} selectedIndex={selectedHotbarIndex} gold={gold} onSelectSlot={setSelectedHotbarIndex} />
       )}
       {showGrowing && (
