@@ -551,7 +551,54 @@ import { addDoc, deleteDoc, getDoc, increment, onSnapshot, serverTimestamp, upda
 
 ---
 
-## Final check (after all 13 tasks)
+### Task 14: `src/components/SettingsSheet.jsx`
+
+**Added post-hoc:** the verification grep after Tasks 1–13 landed found this file was missed when Plan 4 was originally scoped — it has 3 inline `doc(db,'users',...)` sites, same pattern as Task 3/4.
+
+**Files:** Modify `src/components/SettingsSheet.jsx`
+
+- [ ] **Step 1:** Add `import { refs } from '../lib/db'` near the other store/lib imports (after line 5's `import { db, auth } from '../firebase'`, for example).
+
+- [ ] **Step 2 — profile-load effect (currently lines 58–70)**, replace:
+```js
+  useEffect(() => {
+    if (!uid) return
+    getDoc(doc(db, 'users', uid)).then((snap) => {
+```
+with:
+```js
+  useEffect(() => {
+    if (!uid) return
+    getDoc(refs.user(uid)).then((snap) => {
+```
+
+- [ ] **Step 3 — `handleSaveProfile` (currently line 94)**, replace:
+```js
+      await updateDoc(doc(db, 'users', uid), { displayName, bio, photoURL: finalPhotoURL })
+```
+with:
+```js
+      await updateDoc(refs.user(uid), { displayName, bio, photoURL: finalPhotoURL })
+```
+
+- [ ] **Step 4 — `updatePrivacy` (currently line 113)**, replace:
+```js
+      await updateDoc(doc(db, 'users', uid), { [`privacy.${item}.${type}`]: value })
+```
+with:
+```js
+      await updateDoc(refs.user(uid), { [`privacy.${item}.${type}`]: value })
+```
+
+- [ ] **Step 5:** `import { doc, getDoc, updateDoc } from 'firebase/firestore'` → `import { getDoc, updateDoc } from 'firebase/firestore'` (confirm `doc` has no other use in the file before trimming). `import { db, auth } from '../firebase'` → `import { auth } from '../firebase'` (`db` is now unused — `auth` is still used for `auth.currentUser`/`updateProfile`; confirm before trimming).
+
+- [ ] **Step 6:** `npm test` → PASS. Manual: open Settings sheet, confirm displayName/bio/privacy load; save profile edits; toggle a privacy switch.
+
+- [ ] **Step 7: Commit** — `git commit -m "refactor(seam): repoint SettingsSheet Firestore calls through refs.user"`
+
+---
+
+## Final check (after all 14 tasks)
 
 - [ ] Grep the whole `src/components/` tree for any remaining `doc(db,` / `collection(db,` outside `src/lib/db.js` — expect zero hits.
 - [ ] `npm test` → full suite green.
