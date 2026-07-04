@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import {
   addDoc,
+  getDoc,
   increment,
   serverTimestamp,
   setDoc,
@@ -21,6 +22,7 @@ export const useChatStore = create((set) => ({
   chats: [],       // [{ id, members, lastMessage, lastMessageAt, fireStacks }]
   activeChat: null, // { chatId, otherUser }
   messages: [],    // [{ id, senderId, text, type, giftItem, createdAt }]
+  participants: {}, // { [uid]: { displayName, photoURL, ... } } — profile cache
 
   // Attaches a real-time listener to every chat this user is a member of,
   // sorted by most recent message. Replaces any existing listener.
@@ -126,5 +128,35 @@ export const useChatStore = create((set) => ({
       lastStackDate: today,
     })
     useUserStore.getState().incrementStacks()
+  },
+
+  // Fetches every not-yet-cached uid in `uids` and merges the results into
+  // `participants`. Fire-and-forget style — callers don't need the return
+  // value, just the updated cache.
+  resolveParticipants: async (uids) => {
+    const cache = useChatStore.getState().participants
+    const needed = uids.filter((uid) => !cache[uid])
+    if (needed.length === 0) return
+    const entries = await Promise.all(
+      needed.map(async (uid) => {
+        const snap = await getDoc(refs.user(uid))
+        return snap.exists() ? [uid, snap.data()] : null
+      }),
+    )
+    const fresh = Object.fromEntries(entries.filter(Boolean))
+    if (Object.keys(fresh).length === 0) return
+    set((s) => ({ participants: { ...s.participants, ...fresh } }))
+  },
+
+  // Returns a single participant's profile, from cache if present, otherwise
+  // fetches and caches it. Falls back to a placeholder for a missing doc so
+  // callers always get a renderable user object.
+  getOrFetchParticipant: async (uid) => {
+    const cached = useChatStore.getState().participants[uid]
+    if (cached) return cached
+    const snap = await getDoc(refs.user(uid))
+    const data = snap.exists() ? snap.data() : { uid, displayName: 'Unknown', photoURL: null }
+    set((s) => ({ participants: { ...s.participants, [uid]: data } }))
+    return data
   },
 }))

@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 vi.mock('../firebase', () => ({ db: {}, auth: { currentUser: { uid: 'me' } } }))
 vi.mock('firebase/firestore', () => ({
   addDoc: vi.fn(),
+  getDoc: vi.fn(),
   updateDoc: vi.fn(),
   setDoc: vi.fn(),
   increment: (n) => ({ _increment: n }),
@@ -17,7 +18,7 @@ vi.mock('firebase/firestore', () => ({
 
 const { useChatStore } = await import('./useChatStore')
 const { useUserStore } = await import('./useUserStore')
-const { addDoc, updateDoc } = await import('firebase/firestore')
+const { addDoc, getDoc, updateDoc } = await import('firebase/firestore')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -55,5 +56,49 @@ describe('sendNewsShare', () => {
 
     await freshChatStore.getState().sendNewsShare('chat-1', { title: 'x' })
     expect(freshAddDoc).not.toHaveBeenCalled()
+  })
+})
+
+describe('resolveParticipants', () => {
+  it('fetches only uncached uids and merges them into participants', async () => {
+    useChatStore.setState({ participants: { 'already-cached': { displayName: 'Cached' } } })
+    getDoc.mockResolvedValueOnce({ exists: () => true, data: () => ({ displayName: 'Alice' }) })
+    await useChatStore.getState().resolveParticipants(['already-cached', 'uid-2'])
+    expect(getDoc).toHaveBeenCalledTimes(1)
+    expect(useChatStore.getState().participants).toEqual({
+      'already-cached': { displayName: 'Cached' },
+      'uid-2': { displayName: 'Alice' },
+    })
+  })
+
+  it('skips a uid whose doc does not exist', async () => {
+    useChatStore.setState({ participants: {} })
+    getDoc.mockResolvedValueOnce({ exists: () => false })
+    await useChatStore.getState().resolveParticipants(['missing-uid'])
+    expect(useChatStore.getState().participants).toEqual({})
+  })
+})
+
+describe('getOrFetchParticipant', () => {
+  it('returns the cached value without fetching', async () => {
+    useChatStore.setState({ participants: { 'uid-1': { displayName: 'Cached' } } })
+    const result = await useChatStore.getState().getOrFetchParticipant('uid-1')
+    expect(getDoc).not.toHaveBeenCalled()
+    expect(result).toEqual({ displayName: 'Cached' })
+  })
+
+  it('fetches, caches, and returns a fresh value', async () => {
+    useChatStore.setState({ participants: {} })
+    getDoc.mockResolvedValueOnce({ exists: () => true, data: () => ({ displayName: 'Bob' }) })
+    const result = await useChatStore.getState().getOrFetchParticipant('uid-2')
+    expect(result).toEqual({ displayName: 'Bob' })
+    expect(useChatStore.getState().participants['uid-2']).toEqual({ displayName: 'Bob' })
+  })
+
+  it('returns an Unknown-user fallback for a missing doc', async () => {
+    useChatStore.setState({ participants: {} })
+    getDoc.mockResolvedValueOnce({ exists: () => false })
+    const result = await useChatStore.getState().getOrFetchParticipant('uid-3')
+    expect(result).toEqual({ uid: 'uid-3', displayName: 'Unknown', photoURL: null })
   })
 })
