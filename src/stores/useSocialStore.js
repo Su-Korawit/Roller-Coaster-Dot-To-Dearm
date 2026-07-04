@@ -35,6 +35,7 @@ export const useSocialStore = create((set) => ({
   sentRequests: [],
   matchedUsers: [],
   searchResults: [],
+  requestUsers: {},
   // Match feature state
   matchResult: null,        // { matched, score, targetUser } | null
   checkedMatches: {},       // { [targetUid]: { score, status:'checking'|'matched'|'no-match', checkedAt } }
@@ -94,6 +95,18 @@ export const useSocialStore = create((set) => ({
   saveSchool: async (uid, schoolData) => {
     await updateDoc(refs.user(uid), schoolData)
     set((s) => ({ myProfile: s.myProfile ? { ...s.myProfile, ...schoolData } : s.myProfile }))
+  },
+
+  // Resolves each pending-request uid to its full user doc. Extracted
+  // verbatim from SocialPanel.jsx's RequestsTab hydration effect.
+  hydrateRequestUsers: async (uids) => {
+    const entries = await Promise.all(
+      uids.map(async (uid) => {
+        const snap = await getDoc(refs.user(uid))
+        return snap.exists() ? [uid, snap.data()] : null
+      }),
+    )
+    set((s) => ({ requestUsers: { ...s.requestUsers, ...Object.fromEntries(entries.filter(Boolean)) } }))
   },
 
   // Removes fromUid from my followRequests without creating a follow relationship.

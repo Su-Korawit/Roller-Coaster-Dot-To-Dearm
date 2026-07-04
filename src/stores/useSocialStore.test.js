@@ -102,3 +102,15 @@ describe('saveSchool', () => {
     expect(useSocialStore.getState().myProfile).toEqual({ displayName: 'Me', schoolId: 'school-2', schoolName: 'New School', schoolLat: 1, schoolLng: 2 })
   })
 })
+
+describe('hydrateRequestUsers', () => {
+  it('resolves each uid to its user doc and merges into requestUsers', async () => {
+    getDoc
+      .mockResolvedValueOnce({ exists: () => true, data: () => ({ uid: 'uid-1', displayName: 'Alice' }) })
+      .mockResolvedValueOnce({ exists: () => false })
+    await useSocialStore.getState().hydrateRequestUsers(['uid-1', 'uid-2'])
+    expect(useSocialStore.getState().requestUsers).toEqual({
+      'uid-1': { uid: 'uid-1', displayName: 'Alice' },
+    })
+  })
+})
