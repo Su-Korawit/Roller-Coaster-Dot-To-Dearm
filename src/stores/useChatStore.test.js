@@ -123,6 +123,45 @@ describe('getOrFetchParticipant', () => {
   })
 })
 
+describe('sendTaskShare', () => {
+  it('writes a shared_task message and returns its id', async () => {
+    addDoc.mockResolvedValueOnce({ id: 'msg-1' })
+    const task = { id: 'task-1', title: 'Do the dishes', estimatedProgress: 10, completed: false }
+    const msgId = await useChatStore.getState().sendTaskShare('chat-1', 'me', task, 'My Name')
+
+    expect(addDoc).toHaveBeenCalledWith(
+      expect.objectContaining({ _col: 'chats/chat-1/messages' }),
+      expect.objectContaining({
+        senderId: 'me',
+        type: 'shared_task',
+        taskSnapshot: expect.objectContaining({
+          title: 'Do the dishes',
+          taskId: 'task-1',
+          ownerUid: 'me',
+          ownerName: 'My Name',
+          status: 'in_progress',
+        }),
+      }),
+    )
+    expect(updateDoc).toHaveBeenCalledWith(
+      expect.objectContaining({ _path: 'chats/chat-1' }),
+      expect.objectContaining({ fireStacks: { _increment: 1 } }),
+    )
+    expect(useUserStore.getState().incrementStacks).toHaveBeenCalled()
+    expect(msgId).toBe('msg-1')
+  })
+
+  it("marks status 'completed' when the task is already done", async () => {
+    addDoc.mockResolvedValueOnce({ id: 'msg-2' })
+    const task = { id: 'task-2', title: 'Done thing', completed: true }
+    await useChatStore.getState().sendTaskShare('chat-1', 'me', task, 'My Name')
+    expect(addDoc).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ taskSnapshot: expect.objectContaining({ status: 'completed' }) }),
+    )
+  })
+})
+
 describe('giveCredit', () => {
   it('writes a credit doc under cols.userCredits(friendUid)', async () => {
     await useChatStore.getState().giveCredit(

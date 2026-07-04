@@ -145,6 +145,38 @@ export const useChatStore = create((set) => ({
     })
   },
 
+  // Shares a task into a chat as a 'shared_task' message and always grants a
+  // fireStack. Returns the new message's id so the caller can record which
+  // chat message references this task (for later status sync). Extracted
+  // verbatim from TaskPanel.jsx's TaskShareSheet.handleSend.
+  sendTaskShare: async (chatId, myUid, task, ownerDisplayName) => {
+    const msgRef = await addDoc(cols.chatMessages(chatId), {
+      senderId: myUid,
+      text: `📋 ${task.title}`,
+      type: 'shared_task',
+      taskSnapshot: {
+        title: task.title,
+        estimatedProgress: task.estimatedProgress ?? null,
+        linkedJourneyKey: task.linkedJourneyKey ?? null,
+        linkedJourneyId: task.linkedJourneyId ?? null,
+        taskId: task.id,
+        ownerUid: myUid,
+        ownerName: ownerDisplayName ?? '',
+        status: task.completed ? 'completed' : 'in_progress',
+      },
+      giftItem: null,
+      newsItem: null,
+      createdAt: serverTimestamp(),
+    })
+    await updateDoc(refs.chat(chatId), {
+      lastMessage: `📋 ${task.title}`,
+      lastMessageAt: serverTimestamp(),
+      fireStacks: increment(1),
+    })
+    useUserStore.getState().incrementStacks()
+    return msgRef.id
+  },
+
   // Attaches a real-time listener to a chat's messages, ordered oldest-first.
   // Replaces any existing messages listener. Returns the unsubscribe function.
   subscribeMessages: (chatId) =>
