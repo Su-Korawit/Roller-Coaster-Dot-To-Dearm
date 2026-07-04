@@ -34,5 +34,12 @@ describe('HeroSection', () => {
     render(<HeroSection />)
     expect(document.querySelector('video')).toBeFalsy()
     expect(document.querySelector('img[aria-hidden="true"]')).toBeFalsy()
+    expect(screen.queryByTestId('hero-media-skeleton')).toBeFalsy()
+  })
+
+  it('renders media skeleton when loading and gamePreview is null', () => {
+    render(<HeroSection loading gamePreview={null} />)
+    expect(screen.getByTestId('hero-media-skeleton')).toBeTruthy()
+    expect(document.querySelector('video')).toBeFalsy()
   })
 })
