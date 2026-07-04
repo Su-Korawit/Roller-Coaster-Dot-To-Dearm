@@ -20,6 +20,10 @@ describe('welcome refs/cols', () => {
     expect(refs.welcomeStats()).toEqual({ _path: 'welcomeConfig/stats' })
   })
 
+  it('builds a welcomeConfig/news/items/{id} document ref for a single post', () => {
+    expect(refs.welcomeNewsPost('n1')).toEqual({ _path: 'welcomeConfig/news/items/n1' })
+  })
+
   it('points list cols at welcomeConfig/<section>/items subcollections', () => {
     expect(cols.welcomeNews).toEqual({ _col: 'welcomeConfig/news/items' })
     expect(cols.welcomeFaq).toEqual({ _col: 'welcomeConfig/faq/items' })
