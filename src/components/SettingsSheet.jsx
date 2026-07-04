@@ -10,6 +10,7 @@ import { useUserStore } from '../stores/useUserStore'
 import { useSelectStore } from '../stores/useSelectStore'
 import { useNavigate } from 'react-router-dom'
 import Toggle from './ui/Toggle'
+import SegmentedTabs from './ui/SegmentedTabs'
 
 const DEFAULT_PRIVACY = {
   mastery:    { public: false, followers: true },
@@ -25,7 +26,20 @@ const PRIVACY_ITEMS = [
   { key: 'journey',    label: 'Journey of Mastery' },
 ]
 
+const SETTINGS_TABS = [
+  { id: 'profile', label: 'Profile' },
+  { id: 'privacy', label: 'Privacy' },
+  { id: 'interface', label: 'Interface' },
+  { id: 'general', label: 'General' },
+]
 
+const UI_VISIBILITY_ITEMS = [
+  { key: 'hotbar',     label: 'แถบไอเทมด่วน (Hotbar)' },
+  { key: 'shortcuts',  label: 'ปุ่มลัด ปฏิทิน/Roadmap' },
+  { key: 'newsButton', label: 'ปุ่มข่าวสาร' },
+  { key: 'musicPill',  label: 'แถบเพลงด้านบน' },
+  { key: 'contactFab', label: 'ปุ่มติดต่อผู้พัฒนา' },
+]
 
 export default function SettingsSheet({ onClose, onProfileUpdated }) {
   const navigate = useNavigate()
@@ -37,6 +51,8 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
   const setControlMode = useUserStore((s) => s.setControlMode)
   const resetUser = useUserStore((s) => s.resetUser)
   const setProfilePhotoURL = useUserStore((s) => s.setProfilePhotoURL)
+  const uiVisibility = useUserStore((s) => s.uiVisibility)
+  const setUiVisibility = useUserStore((s) => s.setUiVisibility)
   const resetSelection = useSelectStore((s) => s.resetSelection)
 
   const uid = authUser?.uid
@@ -49,6 +65,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
   const [newPhotoPreview, setNewPhotoPreview] = useState(null)
   const [saving, setSaving] = useState(false)
   const [privacy, setPrivacy] = useState(DEFAULT_PRIVACY)
+  const [activeTab, setActiveTab] = useState('profile')
 
   const [visible, setVisible] = useState(false)
   useEffect(() => {
@@ -158,9 +175,11 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
           </button>
         </div>
 
-        <div className="overflow-y-auto flex-1 px-5 pb-10 space-y-5">
+        <SegmentedTabs tabs={SETTINGS_TABS} activeId={activeTab} onChange={setActiveTab} />
 
-          {/* ── [1] Edit Profile ── */}
+        <div className="overflow-y-auto flex-1 px-5 pt-5 pb-10 space-y-5">
+
+          {activeTab === 'profile' && (
           <section className="space-y-3">
             <p className="pixel-font text-[9px] text-purple-500 uppercase tracking-wide">Edit Profile</p>
 
@@ -239,10 +258,9 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
               {saving ? <><Loader2 size={14} className="animate-spin" /> บันทึก...</> : 'บันทึก'}
             </button>
           </section>
+          )}
 
-          <div className="h-px bg-gray-100" />
-
-          {/* ── [2] Privacy Settings ── */}
+          {activeTab === 'privacy' && (
           <section className="space-y-4">
             <p className="thai-font text-xs text-brand font-semibold uppercase tracking-wide">ใครมองเห็นอะไรได้บ้าง</p>
 
@@ -270,10 +288,9 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
               </div>
             ))}
           </section>
+          )}
 
-          <div className="h-px bg-gray-100" />
-
-          {/* ── [3] General Settings ── */}
+          {activeTab === 'general' && (
           <section className="space-y-3">
             <p className="pixel-font text-[9px] text-purple-500 uppercase tracking-wide">General</p>
 
@@ -332,6 +349,24 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
               Sign Out
             </button>
           </section>
+          )}
+
+          {activeTab === 'interface' && (
+          <section className="space-y-4">
+            <p className="pixel-font text-[9px] text-purple-500 uppercase tracking-wide">Interface</p>
+
+            {UI_VISIBILITY_ITEMS.map(({ key, label }) => (
+              <div key={key} className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-gray-700">{label}</span>
+                <Toggle
+                  checked={uiVisibility?.[key] ?? true}
+                  onChange={(v) => setUiVisibility(key, v)}
+                  label={label}
+                />
+              </div>
+            ))}
+          </section>
+          )}
 
         </div>
       </div>
