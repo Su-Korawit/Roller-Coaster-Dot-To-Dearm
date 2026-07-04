@@ -27,6 +27,7 @@ const requestsListener = createFirestoreListener()
 
 export const useSocialStore = create((set) => ({
   nearbyUsers: [],
+  myProfile: null,
   following: [],
   followers: [],
   pendingRequests: [],
@@ -111,13 +112,17 @@ export const useSocialStore = create((set) => ({
     set({ nearbyUsers: users })
   },
 
-  // Fetches the current user's Firestore doc and syncs all social arrays into the store.
+  // Fetches the current user's Firestore doc, syncs all social arrays into
+  // the store, AND captures the full doc as myProfile — the single source
+  // SocialPanel needs (schoolId/schoolName/photoURL/etc.), removing the need
+  // for a separate duplicate read.
   loadMyProfile: async () => {
     const uid = myUid()
     const snap = await getDoc(refs.user(uid))
     if (!snap.exists()) return
     const data = snap.data()
     set({
+      myProfile: data,
       following: data.following ?? [],
       followers: data.followers ?? [],
       pendingRequests: data.followRequests ?? [],

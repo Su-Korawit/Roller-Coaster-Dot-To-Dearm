@@ -18,7 +18,7 @@ vi.mock('firebase/firestore', () => ({
   limit: vi.fn(),
 }))
 
-import { getDocs } from 'firebase/firestore'
+import { getDoc, getDocs } from 'firebase/firestore'
 import { auth } from '../firebase'
 const { calculateMatchScore, useSocialStore } = await import('./useSocialStore')
 
@@ -61,5 +61,33 @@ describe('useSocialStore.searchUsers', () => {
     const results = useSocialStore.getState().searchResults
     expect(results).toHaveLength(2)
     expect(results.map((u) => u.uid).sort()).toEqual(['a', 'b'])
+  })
+})
+
+describe('loadMyProfile', () => {
+  it('populates myProfile with the full doc, plus the social arrays', async () => {
+    auth.currentUser = { uid: 'me' }
+    getDoc.mockResolvedValueOnce({
+      exists: () => true,
+      data: () => ({
+        schoolId: 'school-1', schoolName: 'Test School', photoURL: 'https://x',
+        following: ['a'], followers: ['b'], followRequests: ['c'], sentRequests: ['d'],
+      }),
+    })
+    await useSocialStore.getState().loadMyProfile()
+    const state = useSocialStore.getState()
+    expect(state.myProfile).toMatchObject({ schoolId: 'school-1', schoolName: 'Test School', photoURL: 'https://x' })
+    expect(state.following).toEqual(['a'])
+    expect(state.followers).toEqual(['b'])
+    expect(state.pendingRequests).toEqual(['c'])
+    expect(state.sentRequests).toEqual(['d'])
+  })
+
+  it('does nothing when the doc does not exist', async () => {
+    auth.currentUser = { uid: 'me' }
+    useSocialStore.setState({ myProfile: null })
+    getDoc.mockResolvedValueOnce({ exists: () => false })
+    await useSocialStore.getState().loadMyProfile()
+    expect(useSocialStore.getState().myProfile).toBeNull()
   })
 })
