@@ -32,7 +32,7 @@ describe('welcome refs/cols', () => {
 })
 
 describe('shapes.readProfile', () => {
-  it('reads canonical nested profile.* fields', () => {
+  it('reads canonical nested profile.* fields and backfills arrays from singular fields', () => {
     const userDoc = {
       profile: { mbti: 'INTJ', program: 'CS', career: 'eng', masteryTrack: 'advanced', university: 'CU' },
     }
@@ -42,6 +42,28 @@ describe('shapes.readProfile', () => {
       career: 'eng',
       masteryTrack: 'advanced',
       university: 'CU',
+      programs: [{ programId: 'CS' }],
+      masteryTracks: [{ masteryId: 'advanced' }],
+    })
+  })
+
+  it('reads stored programs[] and masteryTracks[] when present', () => {
+    const userDoc = {
+      profile: {
+        program: 'CS',
+        masteryTrack: 'advanced',
+        programs: [{ programId: 'CS', addedAt: 100 }],
+        masteryTracks: [{ masteryId: 'advanced', milestones: ['a'], progressPct: 50, addedAt: 200 }],
+      },
+    }
+    expect(shapes.readProfile(userDoc)).toEqual({
+      mbti: null,
+      program: 'CS',
+      career: null,
+      masteryTrack: 'advanced',
+      university: null,
+      programs: [{ programId: 'CS', addedAt: 100 }],
+      masteryTracks: [{ masteryId: 'advanced', milestones: ['a'], progressPct: 50, addedAt: 200 }],
     })
   })
 
@@ -52,6 +74,14 @@ describe('shapes.readProfile', () => {
     expect(r.program).toBe('Med')
     expect(r.university).toBe('MU')
     expect(r.masteryTrack).toBe('beginner')
+    expect(r.programs).toEqual([{ programId: 'Med' }])
+    expect(r.masteryTracks).toEqual([{ masteryId: 'beginner' }])
+  })
+
+  it('returns empty arrays when no program or mastery is set', () => {
+    const r = shapes.readProfile({ profile: { mbti: 'INTJ' } })
+    expect(r.programs).toEqual([])
+    expect(r.masteryTracks).toEqual([])
   })
 
   it('prefers nested over legacy when both exist', () => {
@@ -63,7 +93,29 @@ describe('shapes.readProfile', () => {
 describe('shapes.profileFields', () => {
   it('keeps only non-empty fields and maps mastery to masteryTrack', () => {
     expect(shapes.profileFields({ mbti: 'INTJ', career: '', mastery: 'advanced', university: null, program: 'CS' }))
-      .toEqual({ mbti: 'INTJ', masteryTrack: 'advanced', program: 'CS' })
+      .toEqual({
+        mbti: 'INTJ',
+        masteryTrack: 'advanced',
+        program: 'CS',
+        programs: [{ programId: 'CS', addedAt: expect.any(Number) }],
+        masteryTracks: [{ masteryId: 'advanced', milestones: [], progressPct: 0, addedAt: expect.any(Number) }],
+      })
+  })
+
+  it('seeds programs[] and masteryTracks[] additively alongside singular fields', () => {
+    vi.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000)
+    const result = shapes.profileFields({ mastery: 'advanced', program: 'CS' })
+    expect(result).toEqual({
+      masteryTrack: 'advanced',
+      program: 'CS',
+      programs: [{ programId: 'CS', addedAt: 1_700_000_000_000 }],
+      masteryTracks: [{ masteryId: 'advanced', milestones: [], progressPct: 0, addedAt: 1_700_000_000_000 }],
+    })
+    vi.restoreAllMocks()
+  })
+
+  it('does not seed arrays when program or mastery are omitted', () => {
+    expect(shapes.profileFields({ mbti: 'INTJ' })).toEqual({ mbti: 'INTJ' })
   })
 })
 

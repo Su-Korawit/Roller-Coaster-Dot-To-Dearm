@@ -91,6 +91,8 @@ export const shapes = {
     if (mastery)    profile.masteryTrack = mastery
     if (university) profile.university = university
     if (program)    profile.program = program
+    if (program)    profile.programs = [{ programId: program, addedAt: Date.now() }]
+    if (mastery)    profile.masteryTracks = [{ masteryId: mastery, milestones: [], progressPct: 0, addedAt: Date.now() }]
     return profile
   },
 
@@ -98,12 +100,19 @@ export const shapes = {
   // fields (and the legacy `mastery` name) for documents not yet re-synced.
   readProfile: (userDoc = {}) => {
     const p = userDoc.profile ?? {}
+    const masteryTrack = p.masteryTrack ?? userDoc.mastery ?? null
     return {
       mbti:         p.mbti ?? userDoc.mbti ?? null,
       program:      p.program ?? userDoc.program ?? null,
       career:       p.career ?? userDoc.career ?? null,
-      masteryTrack: p.masteryTrack ?? userDoc.mastery ?? null,
+      masteryTrack,
       university:   p.university ?? userDoc.university ?? null,
+      programs: p.programs ?? (p.program ?? userDoc.program
+        ? [{ programId: p.program ?? userDoc.program }]
+        : []),
+      masteryTracks: p.masteryTracks ?? (masteryTrack
+        ? [{ masteryId: masteryTrack }]
+        : []),
     }
   },
 
