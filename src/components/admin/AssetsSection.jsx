@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { ref, uploadBytesResumable, listAll } from 'firebase/storage'
-import { storage } from '../../firebase'
 import { cloudAsset, bustCache } from '../../utils/cloudAsset'
 import { MBTI_TYPES, GAME_ASSET_BY_KEY } from '../../game/assetManifest'
-import { copyStorageObject } from '../../utils/storageOps'
+import { copyStorageObject, uploadWithProgress, listFlat } from '../../utils/storageOps'
 import StorageBrowser from './StorageBrowser'
 import { useToast } from './Toast'
 
@@ -53,17 +51,12 @@ function UploadRow({ storagePath, accept, onSuccess, label, disabled }) {
     if (!file) return
     setError(null)
     setProgress(0)
-    const task = uploadBytesResumable(ref(storage, storagePath), file)
-    task.on(
-      'state_changed',
-      (snap) => setProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
-      (err) => { setError(err.message); setProgress(null) },
-      () => {
-        bustCache(storagePath)
+    uploadWithProgress(storagePath, file, { onProgress: setProgress })
+      .then(() => {
         setProgress(null)
         onSuccess?.()
-      },
-    )
+      })
+      .catch((err) => { setError(err.message); setProgress(null) })
   }, [storagePath, onSuccess])
 
   return (
@@ -113,8 +106,8 @@ export function CharactersGrid({ onStatus }) {
   const refreshList = useCallback(async () => {
     setLoadingList(true)
     try {
-      const result = await listAll(ref(storage, 'rc/characters'))
-      const names  = new Set(result.items.map((i) => i.name))
+      const result = await listFlat('rc/characters')
+      const names  = new Set(result.map((i) => i.ref.name))
       setUploaded(names)
       onStatus?.({ cloudCount: names.size, total: MBTI_TYPES.length })
     } catch {
