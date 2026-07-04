@@ -49,6 +49,7 @@ function HomePage() {
   const coins = useUserStore((state) => state.coins)
   const totalStacks = useUserStore((s) => s.totalStacks)
   const gold = useInventoryStore((s) => s.gold)
+  const uiVisibility = useUserStore((s) => s.uiVisibility)
 
   // Show daily check-in modal on first mount if not yet checked in today
   // useEffect(() => {
@@ -219,6 +220,7 @@ function HomePage() {
           </button>
 
           {/* Music status pill */}
+          {uiVisibility.musicPill && (
           <button
             onClick={() => handleTabChange(APP_VIEWS.MUSIC)}
             aria-label={isPlaying ? `กำลังเล่น: ${tracks[currentTrackIdx].title}` : 'เปิดรายการเพลง'}
@@ -235,6 +237,7 @@ function HomePage() {
               </span>
             </span>
           </button>
+          )}
         </div>
 
         {/* Streak + Coins + Gold */}
@@ -254,6 +257,7 @@ function HomePage() {
       </div>
 
       {/* ── PASSIVE SKILL FAB (Calendar shortcut) + Roadmap FAB ── */}
+      {uiVisibility.shortcuts && (
       <div className="absolute top-20 left-4 z-20 flex flex-col gap-2">
         <button
           onClick={handlePlannerTransition}
@@ -270,8 +274,10 @@ function HomePage() {
           <Map size={22} strokeWidth={1.5} className="text-brand" />
         </button>
       </div>
+      )}
 
       {/* ── NEWS BUTTON (top-right below coins) ── */}
+      {uiVisibility.newsButton && (
       <div className="absolute top-20 right-4 z-20">
         <button
           onClick={() => handleTabChange(APP_VIEWS.NEWS)}
@@ -287,6 +293,7 @@ function HomePage() {
           )}
         </button>
       </div>
+      )}
 
       {/* ── PANELS ── */}
       {activeTab === APP_VIEWS.TASK && <TaskPanel onClose={closePanel} initialView={taskInitialView} />}
@@ -381,7 +388,7 @@ function HomePage() {
       )}
 
       {/* ── CONTACT DEVELOPER FAB ── */}
-      {auth.currentUser && auth.currentUser.uid !== ADMIN_UID && (
+      {uiVisibility.contactFab && auth.currentUser && auth.currentUser.uid !== ADMIN_UID && (
         <div className="absolute bottom-18 right-4 z-55 group">
           {/* Tooltip — left of button */}
           <div className="absolute right-14 top-1/2 -translate-y-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
