@@ -67,31 +67,8 @@ function TaskShareSheet({ task, onClose }) {
     if (!uid || sending) return
     setSending(chat.id)
     try {
-      const msgRef = await addDoc(cols.chatMessages(chat.id), {
-        senderId: uid,
-        text: `📋 ${task.title}`,
-        type: 'shared_task',
-        taskSnapshot: {
-          title: task.title,
-          estimatedProgress: task.estimatedProgress ?? null,
-          linkedJourneyKey: task.linkedJourneyKey ?? null,
-          linkedJourneyId: task.linkedJourneyId ?? null,
-          taskId: task.id,
-          ownerUid: uid,
-          ownerName: user.displayName ?? '',
-          status: task.completed ? 'completed' : 'in_progress',
-        },
-        giftItem: null,
-        newsItem: null,
-        createdAt: serverTimestamp(),
-      })
-      await updateDoc(refs.chat(chat.id), {
-        lastMessage: `📋 ${task.title}`,
-        lastMessageAt: serverTimestamp(),
-        fireStacks: increment(1),
-      })
-      useUserStore.getState().incrementStacks()
-      addSharedRef(task.id, chat.id, msgRef.id)
+      const msgId = await useChatStore.getState().sendTaskShare(chat.id, uid, task, user.displayName)
+      addSharedRef(task.id, chat.id, msgId)
       onClose()
     } catch (e) {
       console.error('[TaskShare] send failed:', e)
