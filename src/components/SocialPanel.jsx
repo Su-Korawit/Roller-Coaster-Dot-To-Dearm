@@ -95,7 +95,7 @@ function SchoolPicker({ uid, onSaved }) {
           schoolLat: place.geometry.location.lat(),
           schoolLng: place.geometry.location.lng(),
         }
-        await updateDoc(refs.user(uid), schoolData)
+        await useSocialStore.getState().saveSchool(uid, schoolData)
         onSavedRef.current(schoolData)
       } catch {
         setError('บันทึกไม่สำเร็จ กรุณาลองใหม่')
