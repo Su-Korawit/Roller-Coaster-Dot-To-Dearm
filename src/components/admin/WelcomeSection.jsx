@@ -18,22 +18,34 @@ export default function WelcomeSection() {
   const [news, setNews] = useState([])
   const [faq, setFaq] = useState([])
   const [testimonials, setTestimonials] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [hasLoaded, setHasLoaded] = useState(false)
 
   async function reload() {
-    const [gp, st, nw, fq, ts] = await Promise.all([
-      getDoc(refs.welcomeGamePreview()),
-      getDoc(refs.welcomeStats()),
-      getDocs(query(cols.welcomeNews, orderBy('createdAt', 'desc'))),
-      getDocs(query(cols.welcomeFaq, orderBy('order', 'asc'))),
-      getDocs(query(cols.welcomeTestimonials, orderBy('order', 'asc'))),
-    ])
-    if (gp.exists()) setGamePreview({ mediaType: 'gif', mediaUrl: '', ...gp.data() })
-    setStats(st.exists() ? (st.data().items ?? []) : [])
-    setNews(nw.docs.map((d) => ({ id: d.id, ...d.data() })))
-    setFaq(fq.docs.map((d) => ({ id: d.id, ...d.data() })))
-    setTestimonials(ts.docs.map((d) => ({ id: d.id, ...d.data() })))
+    setLoading(true)
+    try {
+      const [gp, st, nw, fq, ts] = await Promise.all([
+        getDoc(refs.welcomeGamePreview()),
+        getDoc(refs.welcomeStats()),
+        getDocs(query(cols.welcomeNews, orderBy('createdAt', 'desc'))),
+        getDocs(query(cols.welcomeFaq, orderBy('order', 'asc'))),
+        getDocs(query(cols.welcomeTestimonials, orderBy('order', 'asc'))),
+      ])
+      if (gp.exists()) setGamePreview({ mediaType: 'gif', mediaUrl: '', ...gp.data() })
+      setStats(st.exists() ? (st.data().items ?? []) : [])
+      setNews(nw.docs.map((d) => ({ id: d.id, ...d.data() })))
+      setFaq(fq.docs.map((d) => ({ id: d.id, ...d.data() })))
+      setTestimonials(ts.docs.map((d) => ({ id: d.id, ...d.data() })))
+      setHasLoaded(true)
+    } catch (e) {
+      toast.error?.(String(e))
+    } finally {
+      setLoading(false)
+    }
   }
-  useEffect(() => { reload().catch((e) => toast.error?.(String(e))) }, []) // eslint-disable-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
+  useEffect(() => { reload() }, []) // eslint-disable-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
+
+  const showSkeleton = loading && !hasLoaded
 
   // ── Game preview ──
   async function onUploadPreview(e) {
@@ -92,39 +104,67 @@ export default function WelcomeSection() {
       {/* GAME PREVIEW */}
       <section>
         <h2 className="text-lg font-bold text-ink mb-3">Game Preview</h2>
-        {gamePreview.mediaUrl && (
-          <p className="text-xs text-gray-500 mb-2 break-all">{gamePreview.mediaUrl}</p>
+        {showSkeleton ? (
+          <div className="animate-pulse space-y-2">
+            <div className="h-3 bg-gray-200 rounded w-full max-w-md" />
+            <div className="h-8 bg-gray-200 rounded w-48" />
+          </div>
+        ) : (
+          <>
+            {gamePreview.mediaUrl && (
+              <p className="text-xs text-gray-500 mb-2 break-all">{gamePreview.mediaUrl}</p>
+            )}
+            <input type="file" accept="image/gif,image/png,image/jpeg,video/mp4" onChange={onUploadPreview} />
+          </>
         )}
-        <input type="file" accept="image/gif,image/png,image/jpeg,video/mp4" onChange={onUploadPreview} />
       </section>
 
       {/* STATS */}
       <section>
         <h2 className="text-lg font-bold text-ink mb-3">Stats</h2>
-        {stats.map((s, i) => (
-          <div key={i} className="flex gap-2 mb-2">
-            <input
-              className="border rounded px-2 py-1 text-sm" placeholder="value (1.2k+)"
-              value={s.value}
-              onChange={(e) => setStats(stats.map((x, j) => j === i ? { ...x, value: e.target.value } : x))}
-            />
-            <input
-              className="border rounded px-2 py-1 text-sm" placeholder="label (นักเรียน)"
-              value={s.label}
-              onChange={(e) => setStats(stats.map((x, j) => j === i ? { ...x, label: e.target.value } : x))}
-            />
-            <button className="text-rose-600 text-sm" onClick={() => saveStats(stats.filter((_, j) => j !== i))}>ลบ</button>
+        {showSkeleton ? (
+          <div className="animate-pulse space-y-2">
+            {[1, 2].map((i) => (
+              <div key={i} className="flex gap-2 mb-2">
+                <div className="h-8 bg-gray-200 rounded flex-1" />
+                <div className="h-8 bg-gray-200 rounded flex-1" />
+                <div className="h-8 bg-gray-100 rounded w-8" />
+              </div>
+            ))}
+            <div className="flex gap-2 mt-2">
+              <div className="h-6 bg-gray-100 rounded w-16" />
+              <div className="h-8 bg-gray-200 rounded w-24" />
+            </div>
           </div>
-        ))}
-        <div className="flex gap-2 mt-2">
-          <button className="text-brand text-sm" onClick={() => setStats([...stats, { value: '', label: '' }])}>+ เพิ่มแถว</button>
-          <button className="bg-brand text-white rounded px-3 py-1 text-sm" onClick={() => saveStats(stats)}>บันทึก Stats</button>
-        </div>
+        ) : (
+          <>
+            {stats.map((s, i) => (
+              <div key={i} className="flex gap-2 mb-2">
+                <input
+                  className="border rounded px-2 py-1 text-sm" placeholder="value (1.2k+)"
+                  value={s.value}
+                  onChange={(e) => setStats(stats.map((x, j) => j === i ? { ...x, value: e.target.value } : x))}
+                />
+                <input
+                  className="border rounded px-2 py-1 text-sm" placeholder="label (นักเรียน)"
+                  value={s.label}
+                  onChange={(e) => setStats(stats.map((x, j) => j === i ? { ...x, label: e.target.value } : x))}
+                />
+                <button className="text-rose-600 text-sm" onClick={() => saveStats(stats.filter((_, j) => j !== i))}>ลบ</button>
+              </div>
+            ))}
+            <div className="flex gap-2 mt-2">
+              <button className="text-brand text-sm" onClick={() => setStats([...stats, { value: '', label: '' }])}>+ เพิ่มแถว</button>
+              <button className="bg-brand text-white rounded px-3 py-1 text-sm" onClick={() => saveStats(stats)}>บันทึก Stats</button>
+            </div>
+          </>
+        )}
       </section>
 
       {/* NEWS */}
       <ListEditor
         title="News / Blog"
+        loading={showSkeleton}
         items={news}
         fields={[
           { key: 'titleTh', label: 'หัวข้อ' },
@@ -142,6 +182,7 @@ export default function WelcomeSection() {
       {/* FAQ */}
       <ListEditor
         title="FAQ"
+        loading={showSkeleton}
         items={faq}
         fields={[
           { key: 'q', label: 'คำถาม' },
@@ -156,6 +197,7 @@ export default function WelcomeSection() {
       {/* TESTIMONIALS */}
       <ListEditor
         title="Testimonials"
+        loading={showSkeleton}
         items={testimonials}
         fields={[
           { key: 'name', label: 'ชื่อ' },
@@ -176,7 +218,7 @@ export default function WelcomeSection() {
 }
 
 // Small reusable add/edit/delete editor for a list collection.
-function ListEditor({ title, items, fields, onAdd, onPatch, onRemove, upload, uploadTarget, onError }) {
+function ListEditor({ title, loading, items, fields, onAdd, onPatch, onRemove, upload, uploadTarget, onError }) {
   const blank = Object.fromEntries(fields.map((f) => [f.key, f.number ? 0 : '']))
   const [draft, setDraft] = useState(blank)
   // Local edits for existing items, keyed by id; flushed to Firestore on Save.
@@ -209,6 +251,37 @@ function ListEditor({ title, items, fields, onAdd, onPatch, onRemove, upload, up
     <section>
       <h2 className="text-lg font-bold text-ink mb-3">{title}</h2>
 
+      {loading ? (
+        <>
+          <div className="space-y-3 mb-4 animate-pulse">
+            {[1, 2].map((i) => (
+              <div key={i} className="border rounded-lg p-3 space-y-2">
+                {fields.map((f) => (
+                  <div key={f.key} className="mb-2">
+                    <div className="h-3 bg-gray-100 rounded w-16 mb-1" />
+                    <div className={`w-full bg-gray-200 rounded ${f.textarea ? 'h-16' : 'h-8'}`} />
+                  </div>
+                ))}
+                <div className="flex gap-2 mt-2">
+                  <div className="h-8 bg-gray-200 rounded w-16" />
+                  <div className="h-6 bg-gray-100 rounded w-8" />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="border-2 border-dashed rounded-lg p-3 animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-20 mb-2" />
+            {fields.slice(0, 2).map((f) => (
+              <div key={f.key} className="mb-2">
+                <div className="h-3 bg-gray-100 rounded w-16 mb-1" />
+                <div className="h-8 bg-gray-200 rounded w-full" />
+              </div>
+            ))}
+            <div className="h-8 bg-gray-200 rounded w-16 mt-2" />
+          </div>
+        </>
+      ) : (
+        <>
       {/* Existing items */}
       <div className="space-y-3 mb-4">
         {items.map((it) => (
@@ -285,6 +358,8 @@ function ListEditor({ title, items, fields, onAdd, onPatch, onRemove, upload, up
           เพิ่ม
         </button>
       </div>
+        </>
+      )}
     </section>
   )
 }
