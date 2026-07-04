@@ -599,9 +599,9 @@ export default function SocialPanel({ onClose, onOpenChat }) {
   const clearMatchResult = useSocialStore((s) => s.clearMatchResult)
   const checkAndAnimateMatch = useSocialStore((s) => s.checkAndAnimateMatch)
   const checkedMatches = useSocialStore((s) => s.checkedMatches)
+  const myProfile = useSocialStore((s) => s.myProfile)
 
   const [tab, setTab] = useState('map')
-  const [myProfile, setMyProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [selectedUserId, setSelectedUserId] = useState(null)
 
@@ -611,18 +611,14 @@ export default function SocialPanel({ onClose, onOpenChat }) {
 
     async function init() {
       try {
-        const snap = await getDoc(refs.user(user.uid))
-        if (!active) return
-        if (snap.exists()) {
-          const data = snap.data()
-          setMyProfile(data)
-          if (data.schoolId) {
-            await loadNearbyUsers(data.schoolId)
-            const nearby = useSocialStore.getState().nearbyUsers
-            computeAndSaveMatchScores(data, nearby)
-          }
-        }
         await loadMyProfile()
+        if (!active) return
+        const data = useSocialStore.getState().myProfile
+        if (data?.schoolId) {
+          await loadNearbyUsers(data.schoolId)
+          const nearby = useSocialStore.getState().nearbyUsers
+          computeAndSaveMatchScores(data, nearby)
+        }
       } finally {
         if (active) setLoading(false)
       }
@@ -635,7 +631,6 @@ export default function SocialPanel({ onClose, onOpenChat }) {
   }, [user?.uid])
 
   function handleSchoolSaved(schoolData) {
-    setMyProfile((prev) => ({ ...prev, ...schoolData }))
     loadNearbyUsers(schoolData.schoolId)
   }
 
