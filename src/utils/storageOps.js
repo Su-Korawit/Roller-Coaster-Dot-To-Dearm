@@ -1,5 +1,6 @@
 import { ref, getDownloadURL, deleteObject, uploadBytes, uploadBytesResumable, listAll } from 'firebase/storage'
 import { storage } from '../firebase'
+import { bustCache } from './cloudAsset'
 
 export function toTrashPath(path) {
   return `trash/${path}`
@@ -57,4 +58,32 @@ export async function listAllRecursive(path) {
 // don't need their own try/catch for the common "best-effort cleanup" case.
 export async function deleteFile(path) {
   await deleteObject(ref(storage, path)).catch(() => {})
+}
+
+// Resumable upload with progress reporting — the pattern duplicated across
+// every admin upload UI (tileset/character/map-JSON/audio uploads). Resolves
+// to the final download URL and busts the cloudAsset cache for `path` so the
+// next read reflects the new file.
+export function uploadWithProgress(path, file, { contentType, onProgress } = {}) {
+  return new Promise((resolve, reject) => {
+    const task = uploadBytesResumable(ref(storage, path), file, contentType ? { contentType } : undefined)
+    task.on(
+      'state_changed',
+      (snap) => onProgress?.(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
+      reject,
+      async () => {
+        bustCache(path)
+        resolve(await getDownloadURL(task.snapshot.ref))
+      },
+    )
+  })
+}
+
+// Simple (non-resumable) upload for small files where progress reporting
+// isn't needed — uploads then immediately resolves the download URL, busting
+// the cache.
+export async function uploadAsset(path, file, { contentType } = {}) {
+  await uploadBytes(ref(storage, path), file, contentType ? { contentType } : undefined)
+  bustCache(path)
+  return getDownloadURL(ref(storage, path))
 }
