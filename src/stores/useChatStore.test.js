@@ -25,6 +25,26 @@ beforeEach(() => {
   vi.spyOn(useUserStore.getState(), 'incrementStacks').mockImplementation(() => {})
 })
 
+describe('sendGift', () => {
+  it('writes a gift message and always grants a fireStack', async () => {
+    await useChatStore.getState().sendGift('chat-1', 'me', { emoji: '🌟', name: 'Star', coins: 10 })
+
+    expect(addDoc).toHaveBeenCalledWith(
+      expect.objectContaining({ _col: 'chats/chat-1/messages' }),
+      expect.objectContaining({
+        senderId: 'me',
+        type: 'gift',
+        giftItem: { name: 'Star', emoji: '🌟', coins: 10 },
+      }),
+    )
+    expect(updateDoc).toHaveBeenCalledWith(
+      expect.objectContaining({ _path: 'chats/chat-1' }),
+      expect.objectContaining({ fireStacks: { _increment: 1 } }),
+    )
+    expect(useUserStore.getState().incrementStacks).toHaveBeenCalled()
+  })
+})
+
 describe('sendNewsShare', () => {
   it('writes a news-type message and always grants a fireStack', async () => {
     await useChatStore.getState().sendNewsShare('chat-1', { title: 'Big News', url: 'https://x', poster: 'https://p' })

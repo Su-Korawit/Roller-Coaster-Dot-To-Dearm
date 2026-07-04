@@ -109,6 +109,26 @@ export const useChatStore = create((set) => ({
     useUserStore.getState().incrementStacks()
   },
 
+  // Sends a virtual-gift message and always grants a fireStack (same
+  // always-grant behavior as sendNewsShare, not sendMessage's once-per-day
+  // rule) — extracted verbatim from ChatPanel.jsx's GiftModal.handleGift.
+  // Coin debit/rollback stays in the caller (GiftModal) as optimistic UI.
+  sendGift: async (chatId, myUid, gift) => {
+    await addDoc(cols.chatMessages(chatId), {
+      senderId: myUid,
+      text: `${gift.emoji} ${gift.name}`,
+      type: 'gift',
+      giftItem: { name: gift.name, emoji: gift.emoji, coins: gift.coins },
+      createdAt: serverTimestamp(),
+    })
+    await updateDoc(refs.chat(chatId), {
+      lastMessage: `${gift.emoji} ส่งของขวัญ`,
+      lastMessageAt: serverTimestamp(),
+      fireStacks: increment(1),
+    })
+    useUserStore.getState().incrementStacks()
+  },
+
   // Attaches a real-time listener to a chat's messages, ordered oldest-first.
   // Replaces any existing messages listener. Returns the unsubscribe function.
   subscribeMessages: (chatId) =>
