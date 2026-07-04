@@ -35,7 +35,7 @@ export default function StepScreen({
   attribution,
 }) {
   return (
-    <section className="onboarding-bg flex h-dvh flex-col">
+    <section className="onboarding-bg flex h-full flex-col">
       <TopBar />
 
       <div className={`mx-auto w-full ${maxWidth} shrink-0 px-6 pt-4`}>
