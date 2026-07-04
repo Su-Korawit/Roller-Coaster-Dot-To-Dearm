@@ -10,15 +10,16 @@ vi.mock('firebase/firestore', () => ({
   writeBatch: vi.fn(),
   arrayRemove: vi.fn(),
   arrayUnion: vi.fn(),
+  updateDoc: vi.fn(),
   collection: vi.fn(),
-  doc: vi.fn(),
+  doc: vi.fn((...args) => ({ _path: args.slice(1).join('/') })),
   query: vi.fn(),
   where: vi.fn(),
   orderBy: vi.fn(),
   limit: vi.fn(),
 }))
 
-import { getDoc, getDocs } from 'firebase/firestore'
+import { getDoc, getDocs, updateDoc } from 'firebase/firestore'
 import { auth } from '../firebase'
 const { calculateMatchScore, useSocialStore } = await import('./useSocialStore')
 
@@ -89,5 +90,15 @@ describe('loadMyProfile', () => {
     getDoc.mockResolvedValueOnce({ exists: () => false })
     await useSocialStore.getState().loadMyProfile()
     expect(useSocialStore.getState().myProfile).toBeNull()
+  })
+})
+
+describe('saveSchool', () => {
+  it('writes schoolData to refs.user(uid) and merges it into myProfile', async () => {
+    useSocialStore.setState({ myProfile: { displayName: 'Me', schoolId: null } })
+    const schoolData = { schoolId: 'school-2', schoolName: 'New School', schoolLat: 1, schoolLng: 2 }
+    await useSocialStore.getState().saveSchool('uid-1', schoolData)
+    expect(updateDoc).toHaveBeenCalledWith(expect.objectContaining({ _path: 'users/uid-1' }), schoolData)
+    expect(useSocialStore.getState().myProfile).toEqual({ displayName: 'Me', schoolId: 'school-2', schoolName: 'New School', schoolLat: 1, schoolLng: 2 })
   })
 })

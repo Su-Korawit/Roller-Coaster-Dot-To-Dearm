@@ -7,6 +7,7 @@ import {
   writeBatch,
   arrayRemove,
   arrayUnion,
+  updateDoc,
 } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 import { refs, cols, queries } from '../lib/db'
@@ -85,6 +86,14 @@ export const useSocialStore = create((set) => ({
     batch.update(refs.user(targetUid), { followers: arrayRemove(uid) })
     await batch.commit()
     set((s) => ({ following: s.following.filter((id) => id !== targetUid) }))
+  },
+
+  // Writes school selection (from SchoolPicker's Google Places result) and
+  // merges it into the cached myProfile so the component doesn't need its
+  // own local copy of the just-saved fields.
+  saveSchool: async (uid, schoolData) => {
+    await updateDoc(refs.user(uid), schoolData)
+    set((s) => ({ myProfile: s.myProfile ? { ...s.myProfile, ...schoolData } : s.myProfile }))
   },
 
   // Removes fromUid from my followRequests without creating a follow relationship.
