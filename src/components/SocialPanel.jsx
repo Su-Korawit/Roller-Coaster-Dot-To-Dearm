@@ -3,13 +3,12 @@ import { useEffect, useRef, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import { Bell, Loader2, MapIcon, MessageCircle, Search, UserCheck, UserPlus, Users, X, Zap } from 'lucide-react'
-import { getDoc, updateDoc } from 'firebase/firestore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSocialStore, calculateMatchScore } from '../stores/useSocialStore'
 import PublicProfileSheet from './PublicProfileSheet'
 import KawaiiMatchOverlay from './KawaiiMatchOverlay'
 import { mbtiColor } from '../constants/mbtiColors'
-import { refs, shapes } from '../lib/db'
+import { shapes } from '../lib/db'
 
 const MATCH_THRESHOLD = 70
 
@@ -438,24 +437,17 @@ function RequestCard({ user, onAccept, onDecline }) {
 
 // ─── RequestsTab ─────────────────────────────────────────────────────────────
 function RequestsTab({ pendingRequests, acceptFollowRequest, rejectFollowRequest }) {
-  const [requestUsers, setRequestUsers] = useState([])
+  const requestUsersMap = useSocialStore((s) => s.requestUsers)
+  const hydrateRequestUsers = useSocialStore((s) => s.hydrateRequestUsers)
   const [resolving, setResolving] = useState(false)
 
   useEffect(() => {
-    if (pendingRequests.length === 0) {
-      setRequestUsers([])
-      return
-    }
+    if (pendingRequests.length === 0) return
     setResolving(true)
-    Promise.all(
-      pendingRequests.map(async (uid) => {
-        const snap = await getDoc(refs.user(uid))
-        return snap.exists() ? snap.data() : null
-      })
-    )
-      .then((users) => setRequestUsers(users.filter(Boolean)))
-      .finally(() => setResolving(false))
-  }, [pendingRequests])
+    hydrateRequestUsers(pendingRequests).finally(() => setResolving(false))
+  }, [pendingRequests, hydrateRequestUsers])
+
+  const requestUsers = pendingRequests.map((uid) => requestUsersMap[uid]).filter(Boolean)
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-2">
