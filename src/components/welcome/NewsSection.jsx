@@ -1,18 +1,17 @@
-import { useState } from 'react'
-import BottomSheet from '../ui/BottomSheet'
+import { useNavigate } from 'react-router-dom'
 
 export default function NewsSection({ news }) {
-  const [active, setActive] = useState(null)
+  const navigate = useNavigate()
   if (!news?.length) return null
 
   return (
     <section className="px-6 py-14">
-      <h2 className="pixel-font text-center text-sm md:text-lg text-ink mb-8">NEWS &amp; UPDATES</h2>
+      <h2 className="pixel-font text-center text-sm md:text-lg text-ink mb-8">NEWS & UPDATES</h2>
       <div className="mx-auto grid max-w-5xl gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {news.map((n) => (
           <button
             key={n.id}
-            onClick={() => setActive(n)}
+            onClick={() => navigate(`/news/${n.id}`)}
             className="neo-card overflow-hidden text-left"
           >
             {n.coverUrl && <img src={n.coverUrl} alt="" className="h-36 w-full object-cover" />}
@@ -23,22 +22,6 @@ export default function NewsSection({ news }) {
           </button>
         ))}
       </div>
-
-      {active && (
-        <div className="fixed inset-0 z-[60]">
-          <BottomSheet onClose={() => setActive(null)}>
-            <div className="p-5">
-              {active.coverUrl && (
-                <img src={active.coverUrl} alt="" className="mb-4 w-full rounded-xl object-cover" />
-              )}
-              <h3 className="thai-font text-lg font-bold text-ink">{active.titleTh}</h3>
-              <p className="thai-font mt-3 whitespace-pre-line text-sm leading-relaxed text-ink/80">
-                {active.bodyTh}
-              </p>
-            </div>
-          </BottomSheet>
-        </div>
-      )}
     </section>
   )
 }
