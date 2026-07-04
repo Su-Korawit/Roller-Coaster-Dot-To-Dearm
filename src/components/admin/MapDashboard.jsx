@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { ref, uploadBytes, listAll, deleteObject } from 'firebase/storage'
 import { deleteDoc } from 'firebase/firestore'
-import { storage } from '../../firebase'
 import { refs } from '../../lib/db'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { cloudAsset } from '../../utils/cloudAsset'
+import { listFlat, uploadAsset, deleteFile } from '../../utils/storageOps'
 import { listMapConfigs, saveMapConfig } from '../../utils/mapConfig'
 import { uniqueSlug } from '../../utils/mapSlug'
 import { parseMapMeta } from '../../utils/tiledMapMeta'
@@ -155,10 +154,8 @@ function UploadPanel({ existingKeys, maxOrder, adminUid, onDone, onCancel }) {
     try {
       const folders = await listAssetFolders()
       const storagePaths = (
-        await Promise.all(
-          folders.map((f) => listAll(ref(storage, f.path)).catch(() => ({ items: [] }))),
-        )
-      ).flatMap((r) => r.items.map((i) => i.fullPath))
+        await Promise.all(folders.map((f) => listFlat(f.path)))
+      ).flatMap((entries) => entries.map((e) => e.path))
 
       const r = autoMatchTilesets(parsedFile.meta.tilesetNames, storagePaths)
       const { errors: errs, warnings: warns } = validateMap({
@@ -178,11 +175,7 @@ function UploadPanel({ existingKeys, maxOrder, adminUid, onDone, onCancel }) {
       setUploading(true)
       setPhase('uploading')
 
-      await uploadBytes(
-        ref(storage, `maps/${key}.json`),
-        parsedFile.file,
-        { contentType: 'application/json' },
-      )
+      await uploadAsset(`maps/${key}.json`, parsedFile.file, { contentType: 'application/json' })
 
       await saveMapConfig(
         key,
@@ -344,7 +337,7 @@ export default function MapDashboard() {
     setDeleteKey(null)
     try {
       await Promise.all([
-        deleteObject(ref(storage, `maps/${deleteKey}.json`)).catch(() => {}), // ok if not in storage
+        deleteFile(`maps/${deleteKey}.json`),
         deleteDoc(refs.mapConfig(deleteKey)),
       ])
       toast?.success(`ลบแมพ "${deleteKey}" แล้ว`)
