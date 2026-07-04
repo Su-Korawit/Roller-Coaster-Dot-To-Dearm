@@ -7,20 +7,13 @@
 // Browser support: Chrome 86+, Edge 86+. Firefox and Safari require a polyfill.
 
 import { useState, useCallback } from 'react'
-import { ref, listAll, getDownloadURL } from 'firebase/storage'
-import { storage } from '../../firebase'
+import { getDownloadURL } from 'firebase/storage'
+import { listAllRecursive } from '../../utils/storageOps'
 import { useToast } from './Toast'
 
 // Sprout Lands folders in Firebase Storage — these are safe to replace.
 // rc/ is intentionally excluded (Roller Coaster custom assets).
 const SYNC_PREFIXES = ['sprites', 'ui', 'audio']
-
-async function listAllFiles(storageRef) {
-  const result = await listAll(storageRef)
-  const files  = result.items
-  const nested = await Promise.all(result.prefixes.map((p) => listAllFiles(p)))
-  return [...files, ...nested.flat()]
-}
 
 async function writeToLocal(dirHandle, relativePath, blob) {
   const parts   = relativePath.replace(/^\//, '').split('/')
@@ -66,7 +59,7 @@ export default function UpdateAssetsSection() {
     let allItems
     try {
       const itemLists = await Promise.all(
-        SYNC_PREFIXES.map((prefix) => listAllFiles(ref(storage, prefix)))
+        SYNC_PREFIXES.map((prefix) => listAllRecursive(prefix))
       )
       allItems = itemLists.flat()
     } catch (err) {
@@ -83,14 +76,14 @@ export default function UpdateAssetsSection() {
 
     for (const item of allItems) {
       try {
-        const url  = await getDownloadURL(item)
+        const url  = await getDownloadURL(item.ref)
         const resp = await fetch(url)
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
         const blob = await resp.blob()
-        await writeToLocal(dirHandle, item.fullPath, blob)
+        await writeToLocal(dirHandle, item.path, blob)
       } catch (err) {
-        console.error('Failed:', item.fullPath, err)
-        errors.push(item.fullPath)
+        console.error('Failed:', item.path, err)
+        errors.push(item.path)
       }
       setDone((n) => n + 1)
     }
