@@ -4,6 +4,7 @@ import { useAuthStore } from '../../stores/useAuthStore'
 
 const NAV_LINKS = [
   { label: 'FEATURES', href: '#features' },
+  { label: 'HOW TO PLAY', href: '#how-to-play' },
   { label: 'HOW IT WORKS', href: '#how-it-works' },
   { label: 'STATS', href: '#stats' },
   { label: 'NEWS', href: '#news' },
