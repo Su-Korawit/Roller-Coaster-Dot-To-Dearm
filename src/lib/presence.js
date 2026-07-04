@@ -10,7 +10,7 @@ import { rtdb } from '../firebase'
 
 const UPDATE_INTERVAL_MS = 120
 
-let _lastUpdateMs   = 0
+const _lastUpdateMs = new Map()
 let _playersUnsub   = null
 
 function playerRef(ownerUid, mapKey, selfUid) {
@@ -58,13 +58,16 @@ export function detachWorldPlayers() {
 }
 
 export function _resetThrottleForTest() {
-  _lastUpdateMs = 0
+  _lastUpdateMs.clear()
 }
 
 // Throttled position broadcast. Safe to call from Phaser's update() (60 fps).
+// Throttle is scoped per (ownerUid, mapKey, selfUid) tuple so concurrent rooms
+// / uids never share a clock.
 export function updateSelf(ownerUid, mapKey, selfUid, partial) {
+  const key = `${ownerUid}:${mapKey}:${selfUid}`
   const now = Date.now()
-  if (now - _lastUpdateMs < UPDATE_INTERVAL_MS) return
-  _lastUpdateMs = now
+  if (now - (_lastUpdateMs.get(key) ?? 0) < UPDATE_INTERVAL_MS) return
+  _lastUpdateMs.set(key, now)
   set(playerRef(ownerUid, mapKey, selfUid), partial).catch(() => {})
 }

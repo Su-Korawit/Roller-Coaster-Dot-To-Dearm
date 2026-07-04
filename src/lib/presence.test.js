@@ -151,4 +151,14 @@ describe('presence — updateSelf (throttle)', () => {
 
     expect(setFn).toHaveBeenCalledTimes(2)
   })
+
+  it('throttles each (ownerUid, mapKey, selfUid) tuple independently', () => {
+    updateSelf('owner-1', 'test3', 'self-1', { x: 10 })     // writes (first call for this tuple)
+    updateSelf('owner-2', 'test3', 'self-1', { x: 10 })     // different owner — writes
+    updateSelf('owner-1', 'test4', 'self-1', { x: 10 })     // different map — writes
+    updateSelf('owner-1', 'test3', 'self-2', { x: 10 })     // different selfUid — writes
+    updateSelf('owner-1', 'test3', 'self-1', { x: 20 })     // same tuple as first — throttled
+
+    expect(setFn).toHaveBeenCalledTimes(4)
+  })
 })
