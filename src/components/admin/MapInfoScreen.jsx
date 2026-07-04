@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { ref, uploadBytesResumable, uploadBytes, listAll } from 'firebase/storage'
-import { storage } from '../../firebase'
-import { cloudAsset, bustCache } from '../../utils/cloudAsset'
+import { cloudAsset } from '../../utils/cloudAsset'
+import { listFlat, uploadWithProgress, uploadAsset } from '../../utils/storageOps'
 import { getMapConfig, saveMapConfig } from '../../utils/mapConfig'
 import { parseMapMeta } from '../../utils/tiledMapMeta'
 import { autoMatchTilesets } from '../../utils/resolveTilesets'
@@ -35,19 +34,15 @@ function TilesetUploadRow({ storagePath, onSuccess, disabled }) {
       if (!file) return
       setError(null)
       setProgress(0)
-      const task = uploadBytesResumable(ref(storage, storagePath), file, {
+      uploadWithProgress(storagePath, file, {
         contentType: file.type || 'image/png',
+        onProgress: setProgress,
       })
-      task.on(
-        'state_changed',
-        (snap) => setProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
-        (err) => { setError(err.message); setProgress(null) },
-        () => {
-          bustCache(storagePath)
+        .then(() => {
           setProgress(null)
           onSuccess?.()
-        },
-      )
+        })
+        .catch((err) => { setError(err.message); setProgress(null) })
     },
     [storagePath, onSuccess],
   )
@@ -129,12 +124,12 @@ export default function MapInfoScreen({ mapKey, adminUid, onClose, onSaved }) {
         let mergedTilesets = { ...(cfg.tilesets || {}) }
         try {
           const [tsResult, objResult] = await Promise.all([
-            listAll(ref(storage, 'rc/tilesets')).catch(() => ({ items: [] })),
-            listAll(ref(storage, 'rc/objects')).catch(() => ({ items: [] })),
+            listFlat('rc/tilesets'),
+            listFlat('rc/objects'),
           ])
           const storagePaths = [
-            ...tsResult.items.map((i) => i.fullPath),
-            ...objResult.items.map((i) => i.fullPath),
+            ...tsResult.map((i) => i.path),
+            ...objResult.map((i) => i.path),
           ]
           const { matched } = autoMatchTilesets(parsedMeta.tilesetNames, storagePaths)
           // Prefer existing cfg mapping; fill gaps with auto-match result.
@@ -194,11 +189,7 @@ export default function MapInfoScreen({ mapKey, adminUid, onClose, onSaved }) {
     setReplacing(true)
     try {
       // Upload JSON to Storage, overwriting the existing file
-      await uploadBytes(
-        ref(storage, `maps/${mapKey}.json`),
-        file,
-        { contentType: 'application/json' },
-      )
+      await uploadAsset(`maps/${mapKey}.json`, file, { contentType: 'application/json' })
 
       const parsedMeta = parseMapMeta(json)
       const layers = (json.layers || []).filter((l) => l.type === 'tilelayer')
@@ -207,12 +198,12 @@ export default function MapInfoScreen({ mapKey, adminUid, onClose, onSaved }) {
       let mergedTilesets = { ...tilesets }
       try {
         const [tsResult, objResult] = await Promise.all([
-          listAll(ref(storage, 'rc/tilesets')).catch(() => ({ items: [] })),
-          listAll(ref(storage, 'rc/objects')).catch(() => ({ items: [] })),
+          listFlat('rc/tilesets'),
+          listFlat('rc/objects'),
         ])
         const storagePaths = [
-          ...tsResult.items.map((i) => i.fullPath),
-          ...objResult.items.map((i) => i.fullPath),
+          ...tsResult.map((i) => i.path),
+          ...objResult.map((i) => i.path),
         ]
         const { matched } = autoMatchTilesets(parsedMeta.tilesetNames, storagePaths)
         parsedMeta.tilesetNames.forEach((name) => {
