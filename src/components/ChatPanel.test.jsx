@@ -53,12 +53,19 @@ describe('ChatPanel list loading', () => {
   beforeEach(() => {
     authState = { user: { uid: 'regular-user' } }
     chatStoreState.chats = []
-    chatStoreState.loadChats.mockReturnValue(vi.fn())
+    chatStoreState.participants = {}
+    socialStoreState.following = []
+    socialStoreState.followers = []
+    chatStoreState.loadChats.mockImplementation((_uid, onInitialSnapshot) => {
+      onInitialSnapshot?.()
+      return vi.fn()
+    })
     socialStoreState.loadMyProfile.mockImplementation(() => new Promise(() => {}))
     chatStoreState.resolveParticipants.mockImplementation(() => Promise.resolve())
   })
 
   it('shows skeleton rows while chat list is loading', () => {
+    chatStoreState.loadChats.mockImplementation(() => vi.fn())
     render(<ChatPanel onClose={vi.fn()} />)
     expect(screen.getAllByTestId('chat-list-skeleton')).toHaveLength(3)
     expect(screen.queryByText('ยังไม่มีเพื่อนที่ติดตามกัน')).toBeFalsy()
@@ -72,5 +79,25 @@ describe('ChatPanel list loading', () => {
       expect(screen.queryByTestId('chat-list-skeleton')).toBeFalsy()
     })
     expect(screen.getByText('ยังไม่มีเพื่อนที่ติดตามกัน')).toBeTruthy()
+  })
+
+  it('shows only skeleton rows while loading, not cached chat rows', () => {
+    chatStoreState.chats = [{
+      id: 'chat-1',
+      members: ['regular-user', 'friend-1'],
+      lastMessage: 'สวัสดี',
+    }]
+    chatStoreState.loadChats.mockImplementation(() => vi.fn())
+    socialStoreState.following = ['friend-1']
+    socialStoreState.followers = ['friend-1']
+    chatStoreState.participants = {
+      'friend-1': { uid: 'friend-1', displayName: 'Cached Friend' },
+    }
+
+    render(<ChatPanel onClose={vi.fn()} />)
+
+    expect(screen.getAllByTestId('chat-list-skeleton')).toHaveLength(3)
+    expect(screen.queryByText('Cached Friend')).toBeFalsy()
+    expect(screen.queryByText('สวัสดี')).toBeFalsy()
   })
 })

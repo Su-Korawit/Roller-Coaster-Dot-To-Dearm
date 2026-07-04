@@ -27,8 +27,10 @@ export const useChatStore = create((set) => ({
   // Attaches a real-time listener to every chat this user is a member of,
   // sorted by most recent message. Replaces any existing listener.
   // Returns the unsubscribe function for cleanup.
-  loadChats: (uid) =>
-    chatsListener.attach(queries.chatsByMember(uid), (snap) => {
+  // Optional onInitialSnapshot fires once when the first snapshot arrives.
+  loadChats: (uid, onInitialSnapshot) => {
+    let initialSnapshot = true
+    return chatsListener.attach(queries.chatsByMember(uid), (snap) => {
       const chats = snap.docs
         .map((d) => ({ id: d.id, ...d.data() }))
         .sort((a, b) => {
@@ -37,7 +39,12 @@ export const useChatStore = create((set) => ({
           return tb - ta
         })
       set({ chats })
-    }),
+      if (initialSnapshot) {
+        initialSnapshot = false
+        onInitialSnapshot?.()
+      }
+    })
+  },
 
   // Sets the active chat in state and ensures the chat document exists in
   // Firestore. Only `members` is merged so re-opening never resets fireStacks

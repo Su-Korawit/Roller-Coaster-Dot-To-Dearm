@@ -615,7 +615,7 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, a
               <p className="thai-font text-xs text-gray-400 text-center">ยังไม่มีข้อความจากผู้ใช้</p>
             </div>
           )}
-          {chats.map((chat) => {
+          {!loading && chats.map((chat) => {
             const otherUid = chat.members?.find((uid) => uid !== user.uid)
             if (!otherUid) return null
             const other = participants[otherUid]
@@ -705,7 +705,7 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, a
               </p>
             </div>
           )}
-          {mutualUids.map((uid) => {
+          {!loading && mutualUids.map((uid) => {
             const other = participants[uid]
             const chat = chats.find((c) => c.members?.includes(uid))
             return (
@@ -768,6 +768,7 @@ export default function ChatPanel({ onClose, initialView = 'list', onAdminContac
   const participants = useChatStore((s) => s.participants)
   const [listLoading, setListLoading] = useState(true)
   const [profileReady, setProfileReady] = useState(false)
+  const [chatsSnapshotReady, setChatsSnapshotReady] = useState(false)
 
   // Load chats + social profile in one effect so friends appear without
   // needing to visit SocialPanel first.
@@ -775,15 +776,19 @@ export default function ChatPanel({ onClose, initialView = 'list', onAdminContac
     if (!user?.uid) {
       setListLoading(false)
       setProfileReady(false)
+      setChatsSnapshotReady(false)
       return
     }
     let active = true
     setListLoading(true)
     setProfileReady(false)
+    setChatsSnapshotReady(false)
     loadMyProfile().finally(() => {
       if (active) setProfileReady(true)
     })
-    const unsub = loadChats(user.uid)
+    const unsub = loadChats(user.uid, () => {
+      if (active) setChatsSnapshotReady(true)
+    })
     return () => {
       active = false
       unsub?.()
@@ -794,7 +799,7 @@ export default function ChatPanel({ onClose, initialView = 'list', onAdminContac
   // Resolve profiles for ALL mutual follows + existing chat members so the
   // friends list shows names immediately, even before any chat doc exists.
   useEffect(() => {
-    if (!user?.uid || !profileReady) return
+    if (!user?.uid || !profileReady || !chatsSnapshotReady) return
     let cancelled = false
     const needed = [
       ...new Set([
@@ -807,7 +812,7 @@ export default function ChatPanel({ onClose, initialView = 'list', onAdminContac
     })
     return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profileReady, chats, mutualUids.join(','), user?.uid])
+  }, [profileReady, chatsSnapshotReady, chats, mutualUids.join(','), user?.uid])
 
   const isCurrentUserAdmin = user?.uid === ADMIN_UID
 
