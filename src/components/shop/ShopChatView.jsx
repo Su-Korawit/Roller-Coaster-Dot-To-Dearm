@@ -6,6 +6,7 @@ import { buildShopSystemPrompt } from '../../constants/shopPrompt'
 import { sendShopChat } from '../../services/shopAi'
 import ProductCard from './ProductCard'
 import PaymentCard from './PaymentCard'
+import { useChatComposer } from '../../hooks/useChatComposer'
 
 const WELCOME = 'สวัสดีครับ! 🛒 ฉันคือผู้ช่วยร้านค้า Roller Coaster ต้องการซื้อเหรียญหรือมีคำถามอะไรไหมครับ?'
 
@@ -21,7 +22,6 @@ export default function ShopChatView({ onBack }) {
   const [sending, setSending] = useState(false)
   const [buying, setBuying] = useState(false)
   const bottomRef = useRef(null)
-  const inputRef = useRef(null)
 
   // Load catalogue + live purchases on mount
   useEffect(() => {
@@ -57,9 +57,11 @@ export default function ShopChatView({ onBack }) {
       addText('ai', reply)
     } finally {
       setSending(false)
-      inputRef.current?.focus()
+      textareaRef.current?.focus()
     }
   }
+
+  const { textareaRef, handleKeyDown } = useChatComposer(input, () => handleSend(input))
 
   const handleBuy = async (product) => {
     if (buying) return
@@ -170,15 +172,16 @@ export default function ShopChatView({ onBack }) {
       {/* Chat input */}
       <div className="border-t border-gray-100 px-4 py-3">
         <div className="flex items-center gap-2">
-          <input
-            ref={inputRef}
-            type="text"
+          <textarea
+            ref={textareaRef}
+            rows={1}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(input) } }}
+            onKeyDown={handleKeyDown}
             placeholder="พิมพ์ข้อความ..."
             disabled={sending}
-            className="thai-font flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-ink placeholder-ink/40 focus:border-brand focus:outline-none disabled:opacity-50"
+            className="thai-font flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-ink placeholder-ink/40 focus:border-brand focus:outline-none disabled:opacity-50 resize-none leading-relaxed"
+            style={{ maxHeight: 120, overflowY: 'auto' }}
           />
           <button
             onClick={() => handleSend(input)}

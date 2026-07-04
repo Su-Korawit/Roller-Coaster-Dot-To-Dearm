@@ -9,6 +9,7 @@ import { useUserStore } from '../stores/useUserStore'
 import { mbtiColor } from '../constants/mbtiColors'
 import ShopChatView from './shop/ShopChatView'
 import { visitMap } from '../lib/syncManager'
+import { useChatComposer } from '../hooks/useChatComposer'
 
 const GIFTS = [
   { emoji: '🌟', name: 'Star',   coins: 10 },
@@ -247,9 +248,7 @@ function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
     } finally { setSending(false) }
   }
 
-  function handleKeyDown(e) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
-  }
+  const { textareaRef, handleKeyDown } = useChatComposer(text, handleSend)
 
   if (!activeChat) return null
 
@@ -479,14 +478,15 @@ function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
         >
           📅
         </button>
-        <input
-          type="text"
+        <textarea
+          ref={textareaRef}
+          rows={1}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="พิมพ์ข้อความ..."
-          className="flex-1 bg-gray-50 rounded-xl px-3 py-2 outline-none border border-gray-200 focus:border-brand transition-colors"
-          style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 13 }}
+          className="flex-1 bg-gray-50 rounded-xl px-3 py-2 outline-none border border-gray-200 focus:border-brand transition-colors resize-none leading-relaxed"
+          style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 13, maxHeight: 120, overflowY: 'auto' }}
         />
         <button
           onClick={handleSend}
