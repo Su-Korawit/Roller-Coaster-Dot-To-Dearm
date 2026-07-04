@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { ref, uploadBytesResumable } from 'firebase/storage'
-import { storage } from '../../firebase'
 import { useAuthStore } from '../../stores/useAuthStore'
-import { bustCache } from '../../utils/cloudAsset'
+import { uploadWithProgress } from '../../utils/storageOps'
 import { getMusicConfig, saveMusicConfig } from '../../utils/musicConfig'
 import { useToast } from './Toast'
 
@@ -29,13 +27,9 @@ export default function MusicSection() {
   const handleUpload = useCallback((file) => {
     if (!file) return
     setProgress(0)
-    const task = uploadBytesResumable(ref(storage, AUDIO_PATH), file)
-    task.on(
-      'state_changed',
-      (snap) => setProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
-      (err) => { setProgress(null); toast?.error(err.message) },
-      () => { bustCache(AUDIO_PATH); setProgress(null); toast?.success('อัปโหลดเพลงแล้ว') },
-    )
+    uploadWithProgress(AUDIO_PATH, file, { onProgress: setProgress })
+      .then(() => { setProgress(null); toast?.success('อัปโหลดเพลงแล้ว') })
+      .catch((err) => { setProgress(null); toast?.error(err.message) })
   }, [toast])
 
   const updateRow = (i, patch) =>
