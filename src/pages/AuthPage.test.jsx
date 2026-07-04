@@ -15,7 +15,7 @@ function renderAt(url) {
     <MemoryRouter initialEntries={[url]}>
       <Routes>
         <Route path="/auth" element={<AuthPage />} />
-        <Route path="/start" element={<div>START</div>} />
+        <Route path="/home" element={<div>HOME</div>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -35,9 +35,9 @@ describe('AuthPage', () => {
     expect(screen.getByRole('tab', { name: 'เข้าสู่ระบบ', selected: true })).toBeTruthy()
   })
 
-  it('redirects to /start when already authenticated', () => {
+  it('redirects to /home when already authenticated', () => {
     authState = { user: { uid: 'u1' }, signIn: vi.fn(), loading: false }
     renderAt('/auth')
-    expect(screen.getByText('START')).toBeTruthy()
+    expect(screen.getByText('HOME')).toBeTruthy()
   })
 })

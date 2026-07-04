@@ -8,6 +8,7 @@ import { compressImage } from '../utils/compressImage'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useSelectStore } from '../stores/useSelectStore'
+import { useOnboardingUiStore } from '../stores/useOnboardingUiStore'
 import { useNavigate } from 'react-router-dom'
 import Toggle from './ui/Toggle'
 import SegmentedTabs from './ui/SegmentedTabs'
@@ -54,6 +55,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
   const uiVisibility = useUserStore((s) => s.uiVisibility)
   const setUiVisibility = useUserStore((s) => s.setUiVisibility)
   const resetSelection = useSelectStore((s) => s.resetSelection)
+  const openOnboarding = useOnboardingUiStore((s) => s.open)
 
   const uid = authUser?.uid
   const fileInputRef = useRef(null)
@@ -143,7 +145,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
   }
 
   function handleResetOnboarding() {
-    navigate('/select/mbti')
+    openOnboarding()
     onClose()
   }
 

@@ -1,20 +1,13 @@
 import { lazy, Suspense } from 'react'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
-import { useSelectStore } from './stores/useSelectStore'
 import { useAuthStore } from './stores/useAuthStore'
 import { getAdminSections } from './constants/admin'
+import OnboardingModal from './components/onboarding/OnboardingModal'
 
 // Route-level code splitting: each page loads on first navigation, keeping the
 // entry chunk free of Phaser (HomePage→GameCanvas), React Flow (RoadmapPage),
 // Leaflet, and the admin dashboard.
-const CareerPage = lazy(() => import('./pages/CareerPage'))
 const HomePage = lazy(() => import('./pages/HomePage'))
-const MasteryPage = lazy(() => import('./pages/MasteryPage'))
-const MbtiPage = lazy(() => import('./pages/MbtiPage'))
-const ProgramPage = lazy(() => import('./pages/ProgramPage'))
-const RegisterPage = lazy(() => import('./pages/RegisterPage'))
-const UniversityPage = lazy(() => import('./pages/UniversityPage'))
-const WhyPage = lazy(() => import('./pages/WhyPage'))
 const AdminPage = lazy(() => import('./pages/AdminPage'))
 const AuthPage = lazy(() => import('./pages/AuthPage'))
 const RoadmapPage = lazy(() => import('./pages/RoadmapPage'))
@@ -53,12 +46,8 @@ function RequireAuth() {
   return <Outlet />
 }
 
-function RootRedirect() {
-  const program = useSelectStore((s) => s.program)
-  return program ? <Navigate to="/home" replace /> : <RegisterPage />
-}
-
 function MobileLayout() {
+  const user = useAuthStore((s) => s.user)
   return (
     // Full-viewport flex column — fills the screen on every device (phone → desktop).
     // Pages own their own max-width/centering; the game can now go truly fullscreen.
@@ -67,6 +56,7 @@ function MobileLayout() {
       <main className="flex-1 relative overflow-hidden">
         <Outlet />
       </main>
+      {user && <OnboardingModal />}
     </div>
   )
 }
@@ -95,13 +85,6 @@ function App() {
 
         <Route element={<MobileLayout />}>
           <Route element={<RequireAuth />}>
-            <Route path="/start" element={<RootRedirect />} />
-            <Route path="/why" element={<WhyPage />} />
-            <Route path="/select/mbti" element={<MbtiPage />} />
-            <Route path="/select/career" element={<CareerPage />} />
-            <Route path="/select/mastery" element={<MasteryPage />} />
-            <Route path="/select/university" element={<UniversityPage />} />
-            <Route path="/select/program" element={<ProgramPage />} />
             <Route path="/home" element={<HomePage />} />
             <Route path="/roadmap" element={<RoadmapPage />} />
           </Route>

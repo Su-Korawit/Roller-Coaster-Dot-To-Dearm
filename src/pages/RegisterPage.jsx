@@ -47,7 +47,7 @@ function RegisterPage() {
 
   const handleStart = (provider) => {
     setUser({ name: 'Sakayanagi Arisu', provider })
-    navigate('/select/mbti')
+    navigate('/home')
   }
 
   return (
@@ -108,18 +108,6 @@ function RegisterPage() {
             <span style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>Login with Microsoft</span>
           </Button>
         </div>
-      </div>
-
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-40">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/why')}
-          aria-label="Start With Why page"
-        >
-          <span className="pixel-font text-[9px] text-white text-center">
-            Start With Why?<br />▼
-          </span>
-        </Button>
       </div>
     </section>
   )

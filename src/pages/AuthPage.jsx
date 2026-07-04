@@ -50,7 +50,7 @@ export default function AuthPage() {
 
   // signIn triggers onAuthStateChanged → user populates → leave the auth screen.
   useEffect(() => {
-    if (user) navigate('/start', { replace: true })
+    if (user) navigate('/home', { replace: true })
   }, [user, navigate])
 
   function switchMode(m) {

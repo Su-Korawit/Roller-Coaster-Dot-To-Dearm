@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Settings, Share2, Pencil } from 'lucide-react'
 import { getDoc } from 'firebase/firestore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSelectStore } from '../stores/useSelectStore'
+import { useOnboardingUiStore } from '../stores/useOnboardingUiStore'
 import { refs } from '../lib/db'
 import SettingsSheet from './SettingsSheet'
 import JourneyManager from './profile/JourneyManager'
@@ -12,9 +12,9 @@ import JourneyManager from './profile/JourneyManager'
 // JourneyManager body. The portfolio circles + journey list live in
 // JourneyManager because they share `activeCategory` (circles select the list).
 export default function ProfilePanel({ onClose }) {
-  const navigate = useNavigate()
   const authUser = useAuthStore((s) => s.user)
   const mbti = useSelectStore((s) => s.mbti)
+  const openOnboarding = useOnboardingUiStore((s) => s.open)
 
   // Firestore profile (displayName, bio, photoURL)
   const [firestoreProfile, setFirestoreProfile] = useState(null)
@@ -111,7 +111,7 @@ export default function ProfilePanel({ onClose }) {
 
         {/* Edit path */}
         <button
-          onClick={() => navigate('/select/mbti')}
+          onClick={openOnboarding}
           className="w-full rounded-2xl border-2 border-dashed border-purple-200 py-3 text-sm text-purple-400 hover:border-purple-400 hover:text-purple-500 transition-colors"
         >
           <Pencil size={12} strokeWidth={2} className="inline mr-1" />
