@@ -1,9 +1,8 @@
 // src/components/admin/FarmItemsTab.jsx
 import { useState, useEffect } from 'react'
 import { setDoc, deleteDoc } from 'firebase/firestore'
-import { ref, getDownloadURL } from 'firebase/storage'
-import { storage } from '../../firebase'
 import { refs } from '../../lib/db'
+import { cloudAsset } from '../../utils/cloudAsset'
 import { useFarmDataStore } from '../../stores/useFarmDataStore'
 import { useToast } from './Toast'
 
@@ -59,9 +58,7 @@ export default function FarmItemsTab() {
   const toast = useToast()
 
   useEffect(() => {
-    getDownloadURL(ref(storage, 'rc/objects/Basic_Plants.png'))
-      .then(setImgUrl)
-      .catch(() => setImgUrl('/assets/sprites/Objects/Basic_Plants.png'))
+    cloudAsset('rc/objects/Basic_Plants.png', { fallback: '/assets/sprites/Objects/Basic_Plants.png' }).then(setImgUrl)
   }, [])
 
   const openNew = () => { setForm(EMPTY); setEditing('new') }
