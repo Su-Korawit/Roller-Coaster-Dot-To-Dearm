@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { X, Loader2, Camera } from 'lucide-react'
-import { doc, getDoc, updateDoc } from 'firebase/firestore'
+import { getDoc, updateDoc } from 'firebase/firestore'
 import { updateProfile } from 'firebase/auth'
-import { db, auth } from '../firebase'
+import { auth } from '../firebase'
+import { refs } from '../lib/db'
 import { compressImage } from '../utils/compressImage'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useUserStore } from '../stores/useUserStore'
@@ -57,7 +58,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
 
   useEffect(() => {
     if (!uid) return
-    getDoc(doc(db, 'users', uid)).then((snap) => {
+    getDoc(refs.user(uid)).then((snap) => {
       if (!snap.exists()) return
       const data = snap.data()
       setDisplayName(data.displayName || authUser?.displayName || '')
@@ -91,7 +92,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
         await updateProfile(auth.currentUser, { displayName })
       }
 
-      await updateDoc(doc(db, 'users', uid), { displayName, bio, photoURL: finalPhotoURL })
+      await updateDoc(refs.user(uid), { displayName, bio, photoURL: finalPhotoURL })
       setPhotoURL(finalPhotoURL)
       setNewPhotoFile(null)
       setNewPhotoPreview(null)
@@ -110,7 +111,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
     if (!uid) return
     setPrivacy((prev) => ({ ...prev, [item]: { ...prev[item], [type]: value } }))
     try {
-      await updateDoc(doc(db, 'users', uid), { [`privacy.${item}.${type}`]: value })
+      await updateDoc(refs.user(uid), { [`privacy.${item}.${type}`]: value })
     } catch (err) {
       console.error('Privacy update error:', err)
     }
