@@ -10,7 +10,7 @@ import FolderPickerModal from './FolderPickerModal'
 import { useToast } from './Toast'
 import { useAuthStore } from '../../stores/useAuthStore'
 
-function FolderSidebar({ folders, selectedPath, onSelect, onRenameFolder, onDeleteFolder, trashCount }) {
+function FolderSidebar({ folders, selectedPath, onSelect, onRenameFolder, onDeleteFolder, trashCount, loading }) {
   const [editingId, setEditingId] = useState(null)
   const [editName, setEditName]   = useState('')
 
@@ -28,6 +28,23 @@ function FolderSidebar({ folders, selectedPath, onSelect, onRenameFolder, onDele
 
   return (
     <div className="w-48 shrink-0 border-r border-gray-100 pr-3 space-y-0.5">
+      {loading ? (
+        <>
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex items-center gap-1.5 px-2 py-1.5 animate-pulse">
+              <div className="w-4 h-3 bg-gray-200 rounded shrink-0" />
+              <div className="h-3 bg-gray-200 rounded flex-1" />
+            </div>
+          ))}
+          <div className="border-t border-gray-100 mt-2 pt-2">
+            <div className="flex items-center gap-1.5 px-2 py-1.5 animate-pulse">
+              <div className="w-4 h-3 bg-gray-200 rounded shrink-0" />
+              <div className="h-3 bg-gray-200 rounded flex-1" />
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
       {folders.map((f) => (
         <div
           key={f.id}
@@ -99,6 +116,8 @@ function FolderSidebar({ folders, selectedPath, onSelect, onRenameFolder, onDele
           )}
         </div>
       </div>
+        </>
+      )}
     </div>
   )
 }
@@ -439,6 +458,7 @@ function TrashView({ onFilesChanged, onTrashCountChange }) {
 
 export default function AssetsManagerSection() {
   const [folders, setFolders]           = useState([])
+  const [foldersLoading, setFoldersLoading] = useState(true)
   const [selectedPath, setSelectedPath] = useState(null)
   const [trashCount, setTrashCount]     = useState(0)
   const [showCreate, setShowCreate]     = useState(false)
@@ -453,6 +473,7 @@ export default function AssetsManagerSection() {
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false } }, [])
 
   const loadFolders = useCallback(async () => {
+    setFoldersLoading(true)
     try {
       await seedSystemFolders(uid)
       const list = await listAssetFolders()
@@ -461,6 +482,8 @@ export default function AssetsManagerSection() {
       setSelectedPath((prev) => prev ?? list[0]?.path ?? null)
     } catch {
       toast?.error('โหลด folders ไม่สำเร็จ')
+    } finally {
+      if (mountedRef.current) setFoldersLoading(false)
     }
   }, [uid, toast])
 
@@ -572,6 +595,7 @@ export default function AssetsManagerSection() {
       <div className="flex gap-4">
         <FolderSidebar
           folders={folders}
+          loading={foldersLoading && folders.length === 0}
           selectedPath={selectedPath}
           onSelect={setSelectedPath}
           onRenameFolder={handleRenameFolder}

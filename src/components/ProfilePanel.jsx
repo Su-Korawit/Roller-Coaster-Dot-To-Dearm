@@ -18,19 +18,28 @@ export default function ProfilePanel({ onClose }) {
 
   // Firestore profile (displayName, bio, photoURL)
   const [firestoreProfile, setFirestoreProfile] = useState(null)
+  const [profileLoading, setProfileLoading] = useState(Boolean(authUser?.uid))
   const [showSettingsSheet, setShowSettingsSheet] = useState(false)
 
   function fetchFirestoreProfile() {
     if (!authUser?.uid) return
-    getDoc(refs.user(authUser.uid)).then((snap) => {
-      if (snap.exists()) setFirestoreProfile(snap.data())
-    })
+    setProfileLoading(true)
+    getDoc(refs.user(authUser.uid))
+      .then((snap) => {
+        if (snap.exists()) setFirestoreProfile(snap.data())
+      })
+      .finally(() => setProfileLoading(false))
   }
 
   useEffect(() => {
+    if (!authUser?.uid) {
+      setProfileLoading(false)
+      return
+    }
     fetchFirestoreProfile()
   }, [authUser?.uid])
 
+  const showProfileSkeleton = profileLoading && !firestoreProfile
   const displayName = firestoreProfile?.displayName || authUser?.displayName || 'Player'
   const photoURL = firestoreProfile?.photoURL || authUser?.photoURL
   const bio = firestoreProfile?.bio
@@ -71,20 +80,31 @@ export default function ProfilePanel({ onClose }) {
 
       <div className="flex-1 overflow-y-auto px-5 pb-4 space-y-4">
         {/* Avatar + Name + Bio */}
-        <div className="flex flex-col items-center gap-2 pt-2">
-          <div className="relative">
-            <div className="w-20 h-20 rounded-full overflow-hidden bg-purple-100 flex items-center justify-center shadow-md border-4 border-white">
-              {photoURL
-                ? <img src={photoURL} alt="" className="w-full h-full object-cover" />
-                : <span className="text-3xl font-bold text-purple-400">{initials}</span>}
-            </div>
-            <div className="absolute bottom-1 right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white" />
+        {showProfileSkeleton ? (
+          <div
+            className="flex flex-col items-center gap-2 pt-2 animate-pulse"
+            data-testid="profile-header-skeleton"
+          >
+            <div className="w-20 h-20 rounded-full bg-gray-200" />
+            <div className="h-4 bg-gray-200 rounded w-24" />
+            <div className="h-3 bg-gray-100 rounded w-32" />
           </div>
-          <p className="pixel-font text-[13px] text-gray-800">{displayName}</p>
-          <p className="text-xs text-gray-400 text-center leading-snug max-w-50">
-            {bio || `MBTI: ${mbti || '-'}`}
-          </p>
-        </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2 pt-2">
+            <div className="relative">
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-purple-100 flex items-center justify-center shadow-md border-4 border-white">
+                {photoURL
+                  ? <img src={photoURL} alt="" className="w-full h-full object-cover" />
+                  : <span className="text-3xl font-bold text-purple-400">{initials}</span>}
+              </div>
+              <div className="absolute bottom-1 right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white" />
+            </div>
+            <p className="pixel-font text-[13px] text-gray-800">{displayName}</p>
+            <p className="text-xs text-gray-400 text-center leading-snug max-w-50">
+              {bio || `MBTI: ${mbti || '-'}`}
+            </p>
+          </div>
+        )}
 
         {/* Portfolio circles + Journey list + their modals */}
         <JourneyManager />

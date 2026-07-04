@@ -1,16 +1,26 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 
-export default function HeroSection({ gamePreview }) {
+export default function HeroSection({ gamePreview, loading }) {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const onPlay = () => navigate(user ? '/home' : '/auth?mode=login')
 
   const hasMedia = !!gamePreview?.mediaUrl
   const { mediaUrl, mediaType } = gamePreview ?? {}
+  const showMediaSkeleton = loading && !hasMedia
 
   return (
-    <section className={`relative h-dvh overflow-hidden flex items-center justify-center ${!hasMedia ? 'onboarding-bg' : ''}`}>
+    <section className={`relative h-dvh overflow-hidden flex items-center justify-center ${!hasMedia && !showMediaSkeleton ? 'onboarding-bg' : ''}`}>
+      {/* Preview media skeleton while Firestore resolves */}
+      {showMediaSkeleton && (
+        <div
+          className="absolute inset-0 animate-pulse bg-gray-200"
+          aria-hidden="true"
+          data-testid="hero-media-skeleton"
+        />
+      )}
+
       {/* Video / GIF background */}
       {hasMedia && (
         mediaType === 'video' ? (

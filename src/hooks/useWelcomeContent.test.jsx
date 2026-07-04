@@ -32,6 +32,7 @@ describe('useWelcomeContent', () => {
       .mockResolvedValueOnce(snapList([{ id: 't1', name: 'A', role: 'ม.6', quote: 'ดีมาก' }]))
 
     const { result } = renderHook(() => useWelcomeContent())
+    expect(result.current.loading).toBe(true)
     await waitFor(() => expect(result.current.loading).toBe(false))
 
     expect(result.current.gamePreview).toEqual({ mediaUrl: 'g.gif', mediaType: 'gif' })
