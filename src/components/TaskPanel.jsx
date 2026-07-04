@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { GripVertical, Loader2, Share2, Trash, Trash2 } from 'lucide-react'
-import { addDoc, getDoc, increment, serverTimestamp, updateDoc } from 'firebase/firestore'
-import { refs, cols } from '../lib/db'
+import { updateDoc } from 'firebase/firestore'
+import { refs } from '../lib/db'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useChatStore } from '../stores/useChatStore'
 import { useTaskStore } from '../stores/useTaskStore'
@@ -40,7 +40,7 @@ function TaskShareSheet({ task, onClose }) {
   const user = useAuthStore((s) => s.user)
   const chats = useChatStore((s) => s.chats)
   const loadChats = useChatStore((s) => s.loadChats)
-  const [participants, setParticipants] = useState({})
+  const participants = useChatStore((s) => s.participants)
   const [sending, setSending] = useState(null)
 
   useEffect(() => {
@@ -54,11 +54,8 @@ function TaskShareSheet({ task, onClose }) {
     if (!user?.uid) return
     const needed = [
       ...new Set(chats.flatMap((c) => c.members?.filter((uid) => uid !== user.uid) ?? [])),
-    ].filter((uid) => !participants[uid])
-    needed.forEach(async (uid) => {
-      const snap = await getDoc(refs.user(uid))
-      if (snap.exists()) setParticipants((p) => ({ ...p, [uid]: snap.data() }))
-    })
+    ]
+    useChatStore.getState().resolveParticipants(needed)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chats, user?.uid])
 
