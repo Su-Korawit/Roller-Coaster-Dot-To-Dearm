@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ref, getDownloadURL } from 'firebase/storage'
-import { storage } from '../firebase'
+import { cloudAsset } from '../utils/cloudAsset'
 import { useFarmDataStore } from '../stores/useFarmDataStore'
 
 const SHEET_COLS = 6
@@ -14,12 +13,8 @@ export function ItemSprite({ itemId, size = 40 }) {
 
   useEffect(() => {
     if (_cachedUrl) { setImgUrl(_cachedUrl); return }
-    getDownloadURL(ref(storage, 'rc/objects/Basic_Plants.png'))
+    cloudAsset('rc/objects/Basic_Plants.png', { fallback: '/assets/sprites/Objects/Basic_Plants.png' })
       .then((url) => { _cachedUrl = url; setImgUrl(url) })
-      .catch(() => {
-        _cachedUrl = '/assets/sprites/Objects/Basic_Plants.png'
-        setImgUrl(_cachedUrl)
-      })
   }, [])
 
   if (iconIndex === null || !imgUrl) return <div style={{ width: size, height: size }} />
