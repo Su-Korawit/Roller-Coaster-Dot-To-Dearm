@@ -116,6 +116,23 @@ describe('uploadWithProgress', () => {
     })
     await expect(uploadWithProgress('x.png', new Blob())).rejects.toThrow('upload failed')
   })
+
+  it('rejects (instead of hanging) when getDownloadURL fails after a successful upload', async () => {
+    const fakeSnapshot = { ref: { path: 'rc/tilesets/New.png' } }
+    let successCb
+    uploadBytesResumable.mockReturnValueOnce({
+      on: (_event, _progressCb, _errCb, doneCb) => {
+        successCb = doneCb
+      },
+      snapshot: fakeSnapshot,
+    })
+    getDownloadURL.mockRejectedValueOnce(new Error('storage/unauthorized'))
+
+    const promise = uploadWithProgress('rc/tilesets/New.png', new Blob())
+    successCb()
+
+    await expect(promise).rejects.toThrow('storage/unauthorized')
+  })
 })
 
 describe('uploadAsset', () => {

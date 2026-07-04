@@ -73,7 +73,11 @@ export function uploadWithProgress(path, file, { contentType, onProgress } = {})
       reject,
       async () => {
         bustCache(path)
-        resolve(await getDownloadURL(task.snapshot.ref))
+        try {
+          resolve(await getDownloadURL(task.snapshot.ref))
+        } catch (err) {
+          reject(err)
+        }
       },
     )
   })
