@@ -40,19 +40,7 @@ function GiftModal({ chatId, myUid, onClose }) {
     // Optimistic deduct — roll back on error
     addCoins(-gift.coins)
     try {
-      await addDoc(cols.chatMessages(chatId), {
-        senderId: myUid,
-        text: `${gift.emoji} ${gift.name}`,
-        type: 'gift',
-        giftItem: { name: gift.name, emoji: gift.emoji, coins: gift.coins },
-        createdAt: serverTimestamp(),
-      })
-      await updateDoc(refs.chat(chatId), {
-        lastMessage: `${gift.emoji} ส่งของขวัญ`,
-        lastMessageAt: serverTimestamp(),
-        fireStacks: increment(1),
-      })
-      useUserStore.getState().incrementStacks()
+      await useChatStore.getState().sendGift(chatId, myUid, gift)
       onClose()
     } catch {
       addCoins(gift.coins) // rollback
