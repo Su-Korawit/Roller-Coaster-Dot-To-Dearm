@@ -520,7 +520,7 @@ function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
 // ─── ChatListView ─────────────────────────────────────────────────────────────
 // Receives mutualUids (all friends) + chats (existing docs) separately so it
 // can show every mutual follow even before the first message is sent.
-function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, adminChat, onOpenAdminChat, onOpenShop, isCurrentUserAdmin }) {
+function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, adminChat, onOpenAdminChat, onOpenShop, isCurrentUserAdmin, loading }) {
   const [chatTab, setChatTab] = useState('friends')
   const totalStacks = chats.reduce((sum, c) => sum + (c.fireStacks ?? 0), 0)
 
@@ -592,7 +592,24 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, a
           {isCurrentUserAdmin ? (
         /* ── Admin view: show all user conversations ── */
         <>
-          {chats.length === 0 && (
+          {loading && (
+            <>
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  data-testid="chat-list-skeleton"
+                  className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-gray-50 animate-pulse"
+                >
+                  <div className="w-11 h-11 rounded-full bg-gray-200 shrink-0" />
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="h-3 bg-gray-200 rounded w-1/3" />
+                    <div className="h-3 bg-gray-100 rounded w-2/3" />
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+          {!loading && chats.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 gap-3 opacity-60">
               <span className="text-4xl">📩</span>
               <p className="thai-font text-xs text-gray-400 text-center">ยังไม่มีข้อความจากผู้ใช้</p>
@@ -660,7 +677,24 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, a
           </button>
 
           {/* Mutual friends */}
-          {mutualUids.length === 0 && (
+          {loading && (
+            <>
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  data-testid="chat-list-skeleton"
+                  className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-gray-50 animate-pulse"
+                >
+                  <div className="w-11 h-11 rounded-full bg-gray-200 shrink-0" />
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="h-3 bg-gray-200 rounded w-1/3" />
+                    <div className="h-3 bg-gray-100 rounded w-2/3" />
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+          {!loading && mutualUids.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 gap-3 opacity-60">
               <span className="text-4xl">👥</span>
               <p className="pixel-font text-[8px] text-gray-400 text-center leading-relaxed">
@@ -732,30 +766,48 @@ export default function ChatPanel({ onClose, initialView = 'list', onAdminContac
 
   const [view, setView] = useState(initialView)
   const participants = useChatStore((s) => s.participants)
+  const [listLoading, setListLoading] = useState(true)
+  const [profileReady, setProfileReady] = useState(false)
 
   // Load chats + social profile in one effect so friends appear without
   // needing to visit SocialPanel first.
   useEffect(() => {
-    if (!user?.uid) return
-    loadMyProfile()
+    if (!user?.uid) {
+      setListLoading(false)
+      setProfileReady(false)
+      return
+    }
+    let active = true
+    setListLoading(true)
+    setProfileReady(false)
+    loadMyProfile().finally(() => {
+      if (active) setProfileReady(true)
+    })
     const unsub = loadChats(user.uid)
-    return () => unsub?.()
+    return () => {
+      active = false
+      unsub?.()
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid])
 
   // Resolve profiles for ALL mutual follows + existing chat members so the
   // friends list shows names immediately, even before any chat doc exists.
   useEffect(() => {
-    if (!user?.uid) return
+    if (!user?.uid || !profileReady) return
+    let cancelled = false
     const needed = [
       ...new Set([
         ...mutualUids,
         ...chats.flatMap((c) => c.members?.filter((uid) => uid !== user.uid) ?? []),
       ]),
     ]
-    useChatStore.getState().resolveParticipants(needed)
+    useChatStore.getState().resolveParticipants(needed).finally(() => {
+      if (!cancelled) setListLoading(false)
+    })
+    return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chats, mutualUids.join(','), user?.uid])
+  }, [profileReady, chats, mutualUids.join(','), user?.uid])
 
   const isCurrentUserAdmin = user?.uid === ADMIN_UID
 
@@ -813,6 +865,7 @@ export default function ChatPanel({ onClose, initialView = 'list', onAdminContac
               onOpenAdminChat={handleOpenAdminChat}
               onOpenShop={() => setView('shop')}
               isCurrentUserAdmin={isCurrentUserAdmin}
+              loading={listLoading}
             />
           ) : view === 'shop' ? (
             <ShopChatView onBack={() => setView('list')} />
