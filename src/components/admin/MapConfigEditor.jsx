@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { ref, uploadBytes, uploadBytesResumable } from 'firebase/storage'
-import { storage } from '../../firebase'
-import { cloudAsset, bustCache } from '../../utils/cloudAsset'
+import { cloudAsset } from '../../utils/cloudAsset'
+import { uploadWithProgress, uploadAsset } from '../../utils/storageOps'
 import { getMapConfig, saveMapConfig } from '../../utils/mapConfig'
 import StorageBrowser from './StorageBrowser'
 import { useToast } from './Toast'
@@ -109,17 +108,12 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
     if (!file) return
     const dest = `rc/tilesets/${sanitize(name)}.png`
     setUploadingName(name)
-    const task = uploadBytesResumable(ref(storage, dest), file, { contentType: file.type || 'image/png' })
-    task.on(
-      'state_changed',
-      null,
-      (err) => { toast?.error(err.message); setUploadingName(null) },
-      () => {
-        bustCache(dest)
+    uploadWithProgress(dest, file, { contentType: file.type || 'image/png' })
+      .then(() => {
         setTilesets((p) => ({ ...p, [name]: dest }))
         setUploadingName(null)
-      },
-    )
+      })
+      .catch((err) => { toast?.error(err.message); setUploadingName(null) })
   }
 
   async function handleSave() {
@@ -130,10 +124,7 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
     setSaving(true)
     try {
       if (jsonDirty && jsonText != null) {
-        await uploadBytes(ref(storage, `maps/${mapKey}.json`), new Blob([jsonText], { type: 'application/json' }), {
-          contentType: 'application/json',
-        })
-        bustCache(`maps/${mapKey}.json`)
+        await uploadAsset(`maps/${mapKey}.json`, new Blob([jsonText], { type: 'application/json' }), { contentType: 'application/json' })
         // JSON is now in Storage; clear the dirty flag so a saveMapConfig failure
         // below doesn't force a redundant re-upload on retry.
         setJsonDirty(false)
