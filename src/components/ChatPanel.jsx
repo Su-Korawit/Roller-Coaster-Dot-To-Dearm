@@ -136,14 +136,7 @@ function CreditModal({ msg, friendUser, onDone, onClose }) {
       if (snap.linkedJourneyKey && snap.linkedJourneyId) {
         addCreditToJourney(snap.linkedJourneyKey, snap.linkedJourneyId, creditNote)
       }
-      await addDoc(cols.userCredits(friendUser?.uid), {
-        fromUid: user?.uid ?? '',
-        fromName: user?.displayName ?? '',
-        taskTitle: snap.title,
-        journeyKey: snap.linkedJourneyKey ?? null,
-        message: note.trim(),
-        createdAt: serverTimestamp(),
-      })
+      await useChatStore.getState().giveCredit(friendUser?.uid, user, snap, note)
       markTaskCredited(snap.taskId)
       onDone(snap.taskId)
     } catch (e) {
