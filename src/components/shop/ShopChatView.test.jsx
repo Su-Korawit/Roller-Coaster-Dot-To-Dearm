@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
 
 let authState
 let shopState
@@ -40,12 +40,14 @@ describe('ShopChatView composer', () => {
 
   afterEach(() => setViewportWidth(1024))
 
-  it('desktop: Enter sends the message', () => {
+  it('desktop: Enter sends the message', async () => {
     render(<ShopChatView onBack={() => {}} />)
     const textarea = screen.getByPlaceholderText('พิมพ์ข้อความ...')
     fireEvent.change(textarea, { target: { value: 'สวัสดีครับ' } })
-    fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false })
-    expect(sendShopChat).toHaveBeenCalledTimes(1)
+    await act(async () => {
+      fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false })
+    })
+    await waitFor(() => expect(sendShopChat).toHaveBeenCalledTimes(1))
   })
 
   it('desktop: Shift+Enter does not send', () => {
@@ -56,7 +58,7 @@ describe('ShopChatView composer', () => {
     expect(sendShopChat).not.toHaveBeenCalled()
   })
 
-  it('mobile: Enter does not send, only the send button does', () => {
+  it('mobile: Enter does not send, only the send button does', async () => {
     setViewportWidth(375)
     render(<ShopChatView onBack={() => {}} />)
     const textarea = screen.getByPlaceholderText('พิมพ์ข้อความ...')
@@ -64,7 +66,9 @@ describe('ShopChatView composer', () => {
     fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false })
     expect(sendShopChat).not.toHaveBeenCalled()
 
-    fireEvent.click(screen.getByRole('button', { name: 'ส่ง' }))
-    expect(sendShopChat).toHaveBeenCalledTimes(1)
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'ส่ง' }))
+    })
+    await waitFor(() => expect(sendShopChat).toHaveBeenCalledTimes(1))
   })
 })
