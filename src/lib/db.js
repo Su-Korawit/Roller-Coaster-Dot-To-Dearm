@@ -27,6 +27,7 @@ export const refs = {
   appUpdate:   (id)             => doc(db, 'appUpdates', id),
   welcomeGamePreview: ()        => doc(db, 'welcomeConfig', 'gamePreview'),
   welcomeStats:       ()        => doc(db, 'welcomeConfig', 'stats'),
+  welcomeNewsPost:    (id)     => doc(db, 'welcomeConfig', 'news', 'items', id),
 }
 
 // ── Collection refs ───────────────────────────────────────────────────────────

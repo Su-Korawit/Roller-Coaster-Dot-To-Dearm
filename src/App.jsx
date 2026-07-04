@@ -19,6 +19,7 @@ const AdminPage = lazy(() => import('./pages/AdminPage'))
 const AuthPage = lazy(() => import('./pages/AuthPage'))
 const RoadmapPage = lazy(() => import('./pages/RoadmapPage'))
 const WelcomePage = lazy(() => import('./pages/WelcomePage'))
+const NewsPostPage = lazy(() => import('./pages/NewsPostPage'))
 
 function LoadingScreen() {
   return (
@@ -89,6 +90,7 @@ function App() {
 
         {/* Public — landing + auth, outside the mobile frame so the page can scroll */}
         <Route path="/" element={<WelcomePage />} />
+        <Route path="/news/:id" element={<NewsPostPage />} />
         <Route path="/auth" element={<AuthPage />} />
 
         <Route element={<MobileLayout />}>
