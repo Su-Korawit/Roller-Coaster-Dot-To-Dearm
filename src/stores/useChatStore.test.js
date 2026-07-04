@@ -122,3 +122,24 @@ describe('getOrFetchParticipant', () => {
     expect(result).toEqual({ uid: 'uid-3', displayName: 'Unknown', photoURL: null })
   })
 })
+
+describe('giveCredit', () => {
+  it('writes a credit doc under cols.userCredits(friendUid)', async () => {
+    await useChatStore.getState().giveCredit(
+      'friend-uid',
+      { uid: 'me', displayName: 'Me' },
+      { title: 'Do the dishes', linkedJourneyKey: 'career' },
+      '  nice work  ',
+    )
+    expect(addDoc).toHaveBeenCalledWith(
+      expect.objectContaining({ _col: 'users/friend-uid/receivedCredits' }),
+      expect.objectContaining({
+        fromUid: 'me',
+        fromName: 'Me',
+        taskTitle: 'Do the dishes',
+        journeyKey: 'career',
+        message: 'nice work',
+      }),
+    )
+  })
+})

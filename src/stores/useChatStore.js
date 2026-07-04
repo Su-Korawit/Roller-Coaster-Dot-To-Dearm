@@ -129,6 +129,22 @@ export const useChatStore = create((set) => ({
     useUserStore.getState().incrementStacks()
   },
 
+  // Writes a "friend helped with this task" credit doc to the friend's
+  // receivedCredits subcollection. Extracted verbatim from ChatPanel.jsx's
+  // CreditModal.handleConfirm — addCreditToJourney (local journey update) and
+  // markTaskCredited (localStorage dedup) stay in the caller, since neither
+  // is chat/Firestore data.
+  giveCredit: async (friendUid, fromUser, taskSnapshot, note) => {
+    await addDoc(cols.userCredits(friendUid), {
+      fromUid: fromUser?.uid ?? '',
+      fromName: fromUser?.displayName ?? '',
+      taskTitle: taskSnapshot.title,
+      journeyKey: taskSnapshot.linkedJourneyKey ?? null,
+      message: note.trim(),
+      createdAt: serverTimestamp(),
+    })
+  },
+
   // Attaches a real-time listener to a chat's messages, ordered oldest-first.
   // Replaces any existing messages listener. Returns the unsubscribe function.
   subscribeMessages: (chatId) =>
