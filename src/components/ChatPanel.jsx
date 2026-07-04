@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { addDoc, getDoc, increment, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { ArrowLeft, ClipboardList, Loader2, Send, Wrench } from 'lucide-react'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useChatStore } from '../stores/useChatStore'
-import { buildChatId, shapes, refs, cols } from '../lib/db'
+import { buildChatId, shapes } from '../lib/db'
 import { ADMIN_UID, ADMIN_DISPLAY_NAME, ADMIN_EMAIL } from '../constants/admin'
 import { useSocialStore } from '../stores/useSocialStore'
 import { useUserStore } from '../stores/useUserStore'
@@ -732,7 +731,7 @@ export default function ChatPanel({ onClose, initialView = 'list', onAdminContac
   const mutualUids = following.filter((uid) => followers.includes(uid))
 
   const [view, setView] = useState(initialView)
-  const [participants, setParticipants] = useState({})
+  const participants = useChatStore((s) => s.participants)
 
   // Load chats + social profile in one effect so friends appear without
   // needing to visit SocialPanel first.
@@ -753,12 +752,8 @@ export default function ChatPanel({ onClose, initialView = 'list', onAdminContac
         ...mutualUids,
         ...chats.flatMap((c) => c.members?.filter((uid) => uid !== user.uid) ?? []),
       ]),
-    ].filter((uid) => !participants[uid])
-
-    needed.forEach(async (uid) => {
-      const snap = await getDoc(refs.user(uid))
-      if (snap.exists()) setParticipants((p) => ({ ...p, [uid]: snap.data() }))
-    })
+    ]
+    useChatStore.getState().resolveParticipants(needed)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chats, mutualUids.join(','), user?.uid])
 
@@ -766,12 +761,7 @@ export default function ChatPanel({ onClose, initialView = 'list', onAdminContac
 
   // Open (or create) a chat with any friend — works whether a chat doc exists yet or not.
   async function handleSelectFriend(uid) {
-    let other = participants[uid]
-    if (!other) {
-      const snap = await getDoc(refs.user(uid))
-      other = snap.exists() ? snap.data() : { uid, displayName: 'Unknown', photoURL: null }
-      setParticipants((p) => ({ ...p, [uid]: other }))
-    }
+    const other = await useChatStore.getState().getOrFetchParticipant(uid)
     await openChat(buildChatId(user.uid, uid), other)
     setView('window')
   }
