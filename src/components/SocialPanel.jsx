@@ -725,7 +725,7 @@ export default function SocialPanel({ onClose, onOpenChat }) {
         </div>
       )}
 
-      {/* User profile sheet — rendered inside panel so z-60 stacks above z-50 panel content */}
+      {/* User profile sheet — rendered inside panel so it stacks above panel content */}
       {selectedUserId && (
         <PublicProfileSheet
           userId={selectedUserId}

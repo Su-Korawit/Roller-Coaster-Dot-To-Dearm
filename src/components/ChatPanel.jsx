@@ -7,6 +7,7 @@ import { ADMIN_UID, ADMIN_DISPLAY_NAME, ADMIN_EMAIL } from '../constants/admin'
 import { useSocialStore } from '../stores/useSocialStore'
 import { useUserStore } from '../stores/useUserStore'
 import { mbtiColor } from '../constants/mbtiColors'
+import { Z_SHEET } from '../constants/zIndex'
 import ShopChatView from './shop/ShopChatView'
 import { visitMap } from '../lib/syncManager'
 import { useChatComposer } from '../hooks/useChatComposer'
@@ -50,7 +51,7 @@ function GiftModal({ chatId, myUid, onClose }) {
   }
 
   return (
-    <div className="absolute inset-0 z-[70] flex items-end" onClick={onClose}>
+    <div className="absolute inset-0 flex items-end" style={{ zIndex: Z_SHEET }} onClick={onClose}>
       <div
         className="w-full bg-white rounded-t-3xl shadow-2xl pb-6 md:max-w-lg md:mx-auto"
         onClick={(e) => e.stopPropagation()}
@@ -147,7 +148,7 @@ function CreditModal({ msg, friendUser, onDone, onClose }) {
   }
 
   return (
-    <div className="absolute inset-0 z-70 flex flex-col justify-end" onClick={onClose}>
+    <div className="absolute inset-0 flex flex-col justify-end" style={{ zIndex: Z_SHEET }} onClick={onClose}>
       <div
         className="relative bg-white rounded-t-3xl shadow-2xl px-5 pb-6 pt-4 md:max-w-lg md:mx-auto md:w-full"
         style={{ transform: visible ? 'translateY(0)' : 'translateY(100%)', transition: 'transform 0.3s ease-out' }}

@@ -12,6 +12,7 @@ import { generateAIDailyTask, evaluateAndCompleteTask } from '../services/aiTask
 import TaskForm from './TaskForm'
 import SkillExecutionPopup from './SkillExecutionPopup'
 import Popup from './ui/Popup'
+import { Z_MODAL, Z_TOAST } from '../constants/zIndex'
 
 // ─── Shared-task ref helpers (localStorage) ───────────────────────────────────
 // Track which Firestore message docs contain each task so we can sync status.
@@ -455,7 +456,10 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
 
       {/* ── Undo-delete toast ── */}
       {deletedTask && (
-        <div className="absolute bottom-4 left-4 right-4 z-70 flex items-center justify-between bg-gray-900 text-white rounded-2xl px-4 py-3 shadow-xl">
+        <div
+          className="absolute bottom-4 left-4 right-4 flex items-center justify-between bg-gray-900 text-white rounded-2xl px-4 py-3 shadow-xl"
+          style={{ zIndex: Z_TOAST }}
+        >
           <span className="pixel-font text-[9px] opacity-80 truncate mr-3">
             Deleted: {deletedTask.title}
           </span>
@@ -470,7 +474,10 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
 
       {/* ── AI Eval Result toast ── */}
       {evalResult && (
-        <div className="absolute inset-0 z-60 flex items-center justify-center bg-black/40 p-6">
+        <div
+          className="absolute inset-0 flex items-center justify-center bg-black/40 p-6"
+          style={{ zIndex: Z_MODAL }}
+        >
           <div className="bg-white rounded-2xl p-5 w-full max-w-xs shadow-xl text-center">
             <p className="text-2xl mb-2">🎉</p>
             <p className="pixel-font text-[10px] text-purple-700 mb-3">AI Progress Report</p>

@@ -8,6 +8,7 @@ import { useNewsStore } from '../stores/useNewsStore'
 import { ADMIN_UID } from '../constants/admin'
 import { UPDATE_TYPES } from '../data/appUpdates'
 import { CAMP_GROUPS, DEFAULT_CATEGORY, groupKeyForCategory, labelForCategory } from '../data/campCategories'
+import { Z_SHEET } from '../constants/zIndex'
 
 // ─── Assets ──────────────────────────────────────────────────────────────────
 const camphubLogo = new URL('../../assets/eachPageAssets/news/camphub_logo.png', import.meta.url).href
@@ -56,7 +57,7 @@ function ShareSheet({ item, onClose }) {
   }
 
   return (
-    <div className="absolute inset-0 z-70 flex items-end" onClick={onClose}>
+    <div className="absolute inset-0 flex items-end" style={{ zIndex: Z_SHEET }} onClick={onClose}>
       <div
         className="w-full bg-white rounded-t-3xl shadow-2xl md:max-w-lg md:mx-auto"
         style={{ paddingBottom: '80px' }}
@@ -145,7 +146,7 @@ function AddUpdateSheet({ onClose }) {
   }
 
   return (
-    <div className="absolute inset-0 z-70 flex items-end" onClick={onClose}>
+    <div className="absolute inset-0 flex items-end" style={{ zIndex: Z_SHEET }} onClick={onClose}>
       <div
         className="w-full bg-white rounded-t-3xl shadow-2xl md:max-w-lg md:mx-auto"
         style={{ paddingBottom: '80px' }}
@@ -211,7 +212,7 @@ function AddUpdateSheet({ onClose }) {
 function UpdateDetailSheet({ update, onClose }) {
   const badge = UPDATE_TYPES[update.type] ?? UPDATE_TYPES.update
   return (
-    <div className="absolute inset-0 z-70 flex items-end" onClick={onClose}>
+    <div className="absolute inset-0 flex items-end" style={{ zIndex: Z_SHEET }} onClick={onClose}>
       <div
         className="w-full bg-white rounded-t-3xl shadow-2xl overflow-y-auto md:max-w-lg md:mx-auto"
         style={{ maxHeight: '80vh', paddingBottom: '80px' }}
