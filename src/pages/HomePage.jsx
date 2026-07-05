@@ -24,6 +24,7 @@ import { useInventoryStore } from '../stores/useInventoryStore'
 import { useCloudAsset } from '../hooks/useCloudAsset'
 import { getMusicConfig, DEFAULT_TRACKS } from '../utils/musicConfig'
 import { Z_NAV } from '../constants/zIndex'
+import { usePopupStore } from '../stores/usePopupStore'
 
 const GameCanvas = lazy(() => import('../components/GameCanvas'))
 const RoadmapPage = lazy(() => import('./RoadmapPage'))
@@ -34,18 +35,17 @@ function HomePage() {
   const [taskInitialView, setTaskInitialView] = useState('list')
   const [chatInitialView, setChatInitialView] = useState('list')
   const [contactedAdmin, setContactedAdmin] = useState(() => localStorage.getItem('rc-contacted-admin') === 'true')
-  const [showTrackList, setShowTrackList] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTrackIdx, setCurrentTrackIdx] = useState(0)
   // Track chapter list, admin-editable via Firestore (musicConfig/background).
   // Starts from the built-in default and hydrates from Firestore on mount.
   const [tracks, setTracks] = useState(DEFAULT_TRACKS)
-  const [showCalendar, setShowCalendar] = useState(false)
-  const [showMastery, setShowMastery] = useState(false)
-  const [showRoadmap, setShowRoadmap] = useState(false)
-  const [showDailyModal, setShowDailyModal] = useState(false)
   const audioRef = useRef(null)
   const musicSrc = useCloudAsset('media/audio/Background_Music_1.mp3', null)
+
+  const activePopup = usePopupStore((s) => s.activePopup)
+  const openPopup = usePopupStore((s) => s.open)
+  const closePopup = usePopupStore((s) => s.close)
 
   const profilePhotoURL = useUserStore((s) => s.profilePhotoURL)
   const authUser = useAuthStore((s) => s.user)
@@ -87,10 +87,11 @@ function HomePage() {
 
   function handleTabChange(tab) {
     if (tab === APP_VIEWS.MUSIC) {
-      setShowTrackList((v) => !v)
+      if (activePopup === 'trackList') closePopup()
+      else openPopup('trackList')
       return
     }
-    setShowTrackList(false)
+    if (activePopup === 'trackList') closePopup()
     setActiveTab(tab)
     if (tab === APP_VIEWS.NEWS) setNewsRead(true)
   }
@@ -108,7 +109,7 @@ function HomePage() {
   // Roadmap would render invisibly underneath it.
   function handleOpenRoadmapFromProfile() {
     closePanel()
-    setShowRoadmap(true)
+    openPopup('roadmap')
   }
 
   async function openAdminChat() {
@@ -150,7 +151,7 @@ function HomePage() {
   // are scattered across the component.
   function handlePlannerTransition() {
     setActiveTab(APP_VIEWS.PLANNER_CALENDAR)
-    setShowCalendar(true)
+    openPopup('calendar')
   }
 
   function handleSelectTrack(idx) {
@@ -203,7 +204,7 @@ function HomePage() {
             />
           }
         >
-          <GameCanvas active={activeTab === APP_VIEWS.HOME && !showCalendar} />
+          <GameCanvas active={activeTab === APP_VIEWS.HOME && activePopup !== 'calendar'} />
         </Suspense>
       </div>
 
@@ -278,14 +279,14 @@ function HomePage() {
           <Calendar size={22} strokeWidth={1.5} className="text-brand" />
         </button>
         <button
-          onClick={() => setShowMastery(true)}
+          onClick={() => openPopup('mastery')}
           aria-label="เปิด Mastery"
           className="w-12 h-12 md:w-14 md:h-14 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-gray-100 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
           <Trophy size={22} strokeWidth={1.5} className="text-brand" />
         </button>
         <button
-          onClick={() => setShowRoadmap(true)}
+          onClick={() => openPopup('roadmap')}
           aria-label="เปิด Roadmap"
           className="w-12 h-12 md:w-14 md:h-14 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-gray-100 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
@@ -339,33 +340,33 @@ function HomePage() {
       )}
 
       {/* ── CALENDAR POPUP (PLANNER_CALENDAR view) ── */}
-      {showCalendar && (
+      {activePopup === 'calendar' && (
         <CalendarPopup
           onClose={() => {
-            setShowCalendar(false)
+            closePopup()
             setActiveTab(APP_VIEWS.HOME)
           }}
         />
       )}
 
-      {showMastery && <MasteryPopup onClose={() => setShowMastery(false)} />}
+      {activePopup === 'mastery' && <MasteryPopup onClose={closePopup} />}
 
       {/* ── DAILY MOOD CHECK-IN ── */}
-      {showDailyModal && (
-        <DailyLoginModal onClose={() => setShowDailyModal(false)} />
+      {activePopup === 'dailyLogin' && (
+        <DailyLoginModal onClose={closePopup} />
       )}
 
       {/* ── ROADMAP OVERLAY (semi-transparent, game keeps running behind) ── */}
-      {showRoadmap && (
+      {activePopup === 'roadmap' && (
         <div className="absolute inset-0 z-40 bg-white/20 backdrop-blur-[2px]">
           <Suspense fallback={null}>
-            <RoadmapPage onClose={() => setShowRoadmap(false)} />
+            <RoadmapPage onClose={closePopup} />
           </Suspense>
         </div>
       )}
 
       {/* ── TRACKLIST PANEL ── */}
-      {showTrackList && (
+      {activePopup === 'trackList' && (
         <div
           className="absolute bottom-28 left-1/2 -translate-x-1/2 w-[90%] max-w-sm md:max-w-md bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl flex flex-col overflow-hidden max-h-[55vh]"
           style={{ zIndex: Z_NAV }}
