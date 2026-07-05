@@ -33,10 +33,9 @@ describe('CareerStep', () => {
     syncSelectToFirestore.mockClear()
   })
 
-  it('selecting a career card sets it and syncs to Firestore', () => {
-    render(<CareerStep onNext={vi.fn()} />)
-    const [firstCard] = screen.getAllByRole('option')
-    fireEvent.click(firstCard)
+  it('selecting a career row sets it and syncs to Firestore', () => {
+    render(<CareerStep onNext={vi.fn()} onBack={vi.fn()} />)
+    fireEvent.click(screen.getByText('Test Career One'))
     expect(selectState.setCareer).toHaveBeenCalled()
     expect(syncSelectToFirestore).toHaveBeenCalledWith('u1')
   })

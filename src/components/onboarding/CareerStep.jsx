@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import StepScreen from '../ui/StepScreen'
-import SelectCard from '../ui/SelectCard'
+import SelectableRow from '../ui/SelectableRow'
 import { careers } from '../../data/onboardingData'
 import { useSelectStore } from '../../stores/useSelectStore'
 import { useSelectionCommit } from '../../hooks/useSelectionCommit'
 
-// Step 2 of OnboardingModal — WizardStepper index 0 ("Career").
-function CareerStep({ onNext }) {
+// Step 2 — searchable radio-row career list.
+function CareerStep({ onNext, onBack }) {
   const [query, setQuery] = useState('')
   const mbti = useSelectStore((state) => state.mbti)
   const selected = useSelectStore((state) => state.career)
@@ -27,23 +27,25 @@ function CareerStep({ onNext }) {
   return (
     <StepScreen
       step={0}
-      title="Career"
+      title="อาชีพ"
       subtitle={
-        <h2 className="pixel-font text-sm font-bold text-gray-700">Recommend</h2>
+        <h2 className="pixel-font text-sm font-bold text-gray-700">แนะนำตาม MBTI</h2>
       }
       searchValue={query}
       onSearchChange={(e) => setQuery(e.target.value)}
       searchLabel="ค้นหาอาชีพ"
       onNext={onNext}
+      onBack={onBack}
       nextDisabled={!selected}
+      progress={{ value: 2, total: 5 }}
       attribution="Occupation data: O*NET Web Services · U.S. DOL/ETA · CC BY 4.0"
     >
-      <div className="mx-auto max-w-4xl mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="mx-auto mt-3 max-w-3xl space-y-2">
         {filtered.map((career) => (
-          <SelectCard
+          <SelectableRow
             key={career.id}
-            name={career.name}
-            detail={career.detail}
+            title={career.name}
+            subtitle={career.detail}
             selected={selected === career.id}
             onClick={() => commitCareer(career.id)}
           />

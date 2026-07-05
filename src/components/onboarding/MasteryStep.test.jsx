@@ -17,6 +17,12 @@ vi.mock('../../utils/syncSelectToFirestore', () => ({
   syncSelectToFirestore: (...args) => syncSelectToFirestore(...args),
 }))
 
+vi.mock('../../data/onboardingData', () => ({
+  masteries: [
+    { id: 'm1', name: 'Test Mastery One', detail: 'Detail one', careers: [] },
+  ],
+}))
+
 const { default: MasteryStep } = await import('./MasteryStep')
 
 describe('MasteryStep', () => {
@@ -26,10 +32,9 @@ describe('MasteryStep', () => {
     syncSelectToFirestore.mockClear()
   })
 
-  it('selecting a mastery card sets it and syncs to Firestore', () => {
-    render(<MasteryStep onNext={vi.fn()} />)
-    const [firstCard] = screen.getAllByRole('option')
-    fireEvent.click(firstCard)
+  it('selecting a mastery row sets it and syncs to Firestore', () => {
+    render(<MasteryStep onNext={vi.fn()} onBack={vi.fn()} />)
+    fireEvent.click(screen.getByText('Test Mastery One'))
     expect(selectState.setMastery).toHaveBeenCalled()
     expect(syncSelectToFirestore).toHaveBeenCalledWith('u1')
   })

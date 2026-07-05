@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import StepScreen from '../ui/StepScreen'
-import SelectCard from '../ui/SelectCard'
+import SelectableRow from '../ui/SelectableRow'
 import { masteries } from '../../data/onboardingData'
 import { useSelectStore } from '../../stores/useSelectStore'
 import { useSelectionCommit } from '../../hooks/useSelectionCommit'
 
-// Step 3 of OnboardingModal — WizardStepper index 1 ("Mastery").
-function MasteryStep({ onNext }) {
+// Step 3 — searchable radio-row mastery list.
+function MasteryStep({ onNext, onBack }) {
   const [query, setQuery] = useState('')
   const career = useSelectStore((state) => state.career)
   const selected = useSelectStore((state) => state.mastery)
@@ -24,20 +24,22 @@ function MasteryStep({ onNext }) {
       step={1}
       title="Mastery"
       subtitle={
-        <h2 className="pixel-font text-sm font-bold text-gray-700">Recommend</h2>
+        <h2 className="pixel-font text-sm font-bold text-gray-700">ทักษะที่ต้องพัฒนา</h2>
       }
       searchValue={query}
       onSearchChange={(e) => setQuery(e.target.value)}
       searchLabel="ค้นหาทักษะ"
       onNext={onNext}
+      onBack={onBack}
       nextDisabled={!selected}
+      progress={{ value: 3, total: 5 }}
     >
-      <div className="mx-auto max-w-4xl mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="mx-auto mt-3 max-w-3xl space-y-2">
         {filtered.map((mastery) => (
-          <SelectCard
+          <SelectableRow
             key={mastery.id}
-            name={mastery.name}
-            detail={mastery.detail}
+            title={mastery.name}
+            subtitle={mastery.detail}
             selected={selected === mastery.id}
             onClick={() => commitMastery(mastery.id)}
           />
