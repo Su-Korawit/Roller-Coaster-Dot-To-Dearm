@@ -7,6 +7,7 @@ import { autoMatchTilesets } from '../../utils/resolveTilesets'
 import MapPreview from './MapPreview'
 import StorageBrowser from './StorageBrowser'
 import { useToast } from './Toast'
+import Popup from '../ui/Popup'
 
 const TILESET_FOLDERS = ['rc/tilesets', 'rc/objects']
 const sanitize = (name) => name.trim().replace(/\s+/g, '_')
@@ -257,14 +258,8 @@ export default function MapInfoScreen({ mapKey, adminUid, onClose, onSaved }) {
   const spawns = meta?.spawns ?? []
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Popup variant="center" size="lg" onClose={onClose}>
+      <div className="w-full flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
           <h4 className="font-semibold text-gray-800">ตั้งค่าแมพ</h4>
@@ -498,6 +493,6 @@ export default function MapInfoScreen({ mapKey, adminUid, onClose, onSaved }) {
           onClose={() => setBrowser(null)}
         />
       )}
-    </div>
+    </Popup>
   )
 }
