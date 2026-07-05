@@ -13,11 +13,7 @@ import {
 import '@xyflow/react/dist/style.css'
 import { ArrowLeft, X, MousePointer2, Download, Upload } from 'lucide-react'
 import { useRoadmapStore } from '../stores/useRoadmapStore'
-import ProcessNode from '../components/roadmap/ProcessNode'
-import ConditionNode from '../components/roadmap/ConditionNode'
-import StageLabelNode from '../components/roadmap/StageLabelNode'
-import ImageNode from '../components/roadmap/ImageNode'
-import VideoNode from '../components/roadmap/VideoNode'
+import { nodeTypes } from '../components/roadmap/nodeTypes'
 import TrashZone from '../components/roadmap/TrashZone'
 import SelectionActionBar from '../components/roadmap/SelectionActionBar'
 import { findProximityConnection } from '../utils/findProximityConnection'
@@ -28,8 +24,6 @@ import { toSchema, selectSubset } from '../utils/roadmapExport'
 import { useLongPressDrag } from '../hooks/useLongPressDrag'
 
 const SNAP_THRESHOLD = 40
-
-const nodeTypes = { process: ProcessNode, condition: ConditionNode, stageLabel: StageLabelNode, image: ImageNode, video: VideoNode }
 
 // Blocks snap edge-to-edge, so connection lines are never drawn.
 function InvisibleEdge() {
@@ -393,6 +387,16 @@ export default function RoadmapPage({ onClose }) {
                   <span className="text-[14px]">🎬</span>
                 </div>
                 <span className="pixel-font text-[8px] text-ink">Video</span>
+              </button>
+              <button
+                onClick={() => addAtCenter('start')}
+                className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-emerald-500/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                aria-label="Add Start block"
+              >
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border-2 border-emerald-500/50 flex items-center justify-center">
+                  <span className="text-[14px]">🚩</span>
+                </div>
+                <span className="pixel-font text-[8px] text-ink">Start</span>
               </button>
               {/* Mobile select mode toggle */}
               <button
