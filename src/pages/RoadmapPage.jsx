@@ -22,6 +22,7 @@ import TimelineRuler from '../components/roadmap/TimelineRuler'
 import { findProximityConnection } from '../utils/findProximityConnection'
 import { computeNodeCenter } from '../utils/computeNodeCenter'
 import { computeCenteredPosition } from '../utils/computeCenteredPosition'
+import { computeDropPosition } from '../utils/computeDropPosition'
 import { toSchema, selectSubset } from '../utils/roadmapExport'
 
 const SNAP_THRESHOLD = 40
@@ -170,6 +171,20 @@ export default function RoadmapPage({ onClose }) {
     addNode(type, computeCenteredPosition({ x: center.x + jitter, y: center.y + jitter }, type))
   }, [addNode, nodes.length])
 
+  // Desktop drag-and-drop: a toolbar button is dragged onto the canvas and
+  // dropped at the pointer's position (converted screen -> flow space with
+  // the same math addAtCenter uses). Additive to the existing click-to-add
+  // toolbar behavior, not a replacement for it.
+  const onCanvasDragOver = useCallback((e) => {
+    e.preventDefault()
+  }, [])
+  const onCanvasDrop = useCallback((e) => {
+    e.preventDefault()
+    const type = e.dataTransfer.getData('application/roadmap-node-type')
+    if (!type || !rfRef.current) return
+    addNode(type, computeDropPosition({ clientX: e.clientX, clientY: e.clientY }, rfRef.current.screenToFlowPosition, type))
+  }, [addNode])
+
   // Download a schema envelope as a JSON file.
   const downloadSchema = useCallback((schema, filename) => {
     const blob = new Blob([JSON.stringify(schema, null, 2)], { type: 'application/json' })
@@ -244,7 +259,7 @@ export default function RoadmapPage({ onClose }) {
       </div>
 
       {/* Canvas */}
-      <div ref={canvasRef} className="flex-1 relative">
+      <div ref={canvasRef} className="flex-1 relative" onDragOver={onCanvasDragOver} onDrop={onCanvasDrop}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -284,6 +299,8 @@ export default function RoadmapPage({ onClose }) {
               <span className="pixel-font text-[9px] text-gray-400 mr-1">Add</span>
               <button
                 onClick={() => addAtCenter('process')}
+                draggable="true"
+                onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'process')}
                 className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 aria-label="Add Process block"
               >
@@ -292,6 +309,8 @@ export default function RoadmapPage({ onClose }) {
               </button>
               <button
                 onClick={() => addAtCenter('condition')}
+                draggable="true"
+                onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'condition')}
                 className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-accent-pink/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-pink"
                 aria-label="Add Condition block"
               >
@@ -300,6 +319,8 @@ export default function RoadmapPage({ onClose }) {
               </button>
               <button
                 onClick={() => addAtCenter('stageLabel')}
+                draggable="true"
+                onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'stageLabel')}
                 className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 aria-label="Add Stage Label"
               >
@@ -310,6 +331,8 @@ export default function RoadmapPage({ onClose }) {
               </button>
               <button
                 onClick={() => addAtCenter('image')}
+                draggable="true"
+                onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'image')}
                 className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 aria-label="Add Image block"
               >
