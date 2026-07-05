@@ -16,6 +16,7 @@ import { useRoadmapStore } from '../stores/useRoadmapStore'
 import { nodeTypes } from '../components/roadmap/nodeTypes'
 import TrashZone from '../components/roadmap/TrashZone'
 import SelectionActionBar from '../components/roadmap/SelectionActionBar'
+import SheetSwitcher from '../components/roadmap/SheetSwitcher'
 import { findProximityConnection } from '../utils/findProximityConnection'
 import { computeNodeCenter } from '../utils/computeNodeCenter'
 import { computeCenteredPosition } from '../utils/computeCenteredPosition'
@@ -53,6 +54,9 @@ export default function RoadmapPage({ onClose }) {
   const removeSelection = useRoadmapStore((s) => s.removeSelection)
   const duplicateSelection = useRoadmapStore((s) => s.duplicateSelection)
   const importRoadmap = useRoadmapStore((s) => s.importRoadmap)
+  const sheets = useRoadmapStore((s) => s.sheets)
+  const activeSheetId = useRoadmapStore((s) => s.activeSheetId)
+  const canEdit = (sheets.find((s) => s.id === activeSheetId)?.myRole ?? 'owner') !== 'view'
   const regroupNodes = useRoadmapStore((s) => s.regroupNodes)
   const syncStatus = useRoadmapStore((s) => s.syncStatus)
   const setSyncStatus = useRoadmapStore((s) => s.setSyncStatus)
@@ -271,6 +275,9 @@ export default function RoadmapPage({ onClose }) {
           />
         </div>
       </div>
+      <div className="shrink-0 border-t border-gray-50 bg-white">
+        <SheetSwitcher />
+      </div>
 
       {/* Canvas */}
       <div ref={canvasRef} className="flex-1 relative" onDragOver={onCanvasDragOver} onDrop={onCanvasDrop}>
@@ -290,6 +297,9 @@ export default function RoadmapPage({ onClose }) {
           onNodeDragStop={onNodeDragStop}
           onSelectionChange={onSelectionChange}
           multiSelectionKeyCode="Shift"
+          nodesDraggable={canEdit}
+          nodesConnectable={canEdit}
+          elementsSelectable={canEdit}
           onInit={(instance) => {
             rfRef.current = instance
             const setpointNode = setpoint ? nodes.find((n) => n.id === setpoint) : null
@@ -324,104 +334,106 @@ export default function RoadmapPage({ onClose }) {
           )}
 
           {/* Tool palette */}
-          <Panel position="top-center">
-            <div className="flex items-center gap-2 bg-white rounded-2xl shadow-md px-3 py-2 border border-gray-100 mt-2 max-w-[calc(100vw-1rem)] overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
-              <span className="pixel-font text-[9px] text-gray-400 mr-1">Add</span>
-              <button
-                onClick={() => addAtCenter('process')}
-                draggable="true"
-                onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'process')}
-                {...getHandlers('process')}
-                className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-                aria-label="Add Process block"
-              >
-                <div className="w-8 h-8 rounded-xl bg-brand/20 border-2 border-brand/50" />
-                <span className="pixel-font text-[8px] text-ink">Process</span>
-              </button>
-              <button
-                onClick={() => addAtCenter('condition')}
-                draggable="true"
-                onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'condition')}
-                {...getHandlers('condition')}
-                className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-accent-pink/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-pink"
-                aria-label="Add Condition block"
-              >
-                <div className="w-8 h-8 rotate-45 bg-accent-pink/20 border-2 border-accent-pink/50" style={{ borderRadius: '6px' }} />
-                <span className="pixel-font text-[8px] text-ink">Condition</span>
-              </button>
-              <button
-                onClick={() => addAtCenter('stageLabel')}
-                draggable="true"
-                onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'stageLabel')}
-                {...getHandlers('stageLabel')}
-                className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-                aria-label="Add Stage Label"
-              >
-                <div className="w-8 h-5 rounded-full bg-brand/20 border-2 border-brand/50 flex items-center justify-center">
-                  <span className="pixel-font text-[6px] text-brand">Aa</span>
-                </div>
-                <span className="pixel-font text-[8px] text-ink">Stage</span>
-              </button>
-              <button
-                onClick={() => addAtCenter('image')}
-                draggable="true"
-                onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'image')}
-                {...getHandlers('image')}
-                className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-                aria-label="Add Image block"
-              >
-                <div className="w-8 h-8 rounded-xl bg-brand/10 border-2 border-brand/30 flex items-center justify-center">
-                  <span className="text-[14px]">🖼️</span>
-                </div>
-                <span className="pixel-font text-[8px] text-ink">Image</span>
-              </button>
-              <button
-                onClick={() => addAtCenter('video')}
-                draggable="true"
-                onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'video')}
-                {...getHandlers('video')}
-                className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-                aria-label="Add Video block"
-              >
-                <div className="w-8 h-8 rounded-xl bg-brand/10 border-2 border-brand/30 flex items-center justify-center">
-                  <span className="text-[14px]">🎬</span>
-                </div>
-                <span className="pixel-font text-[8px] text-ink">Video</span>
-              </button>
-              <button
-                onClick={() => addAtCenter('start')}
-                className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-emerald-500/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-                aria-label="Add Start block"
-              >
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border-2 border-emerald-500/50 flex items-center justify-center">
-                  <span className="text-[14px]">🚩</span>
-                </div>
-                <span className="pixel-font text-[8px] text-ink">Start</span>
-              </button>
-              {/* Mobile select mode toggle */}
-              <button
-                onClick={() => {
-                  if (mobileSelectMode) {
-                    setMobileSelectMode(false)
-                    clearSelection()
-                    setNodes(nodes.map((n) => ({ ...n, selected: false })))
-                  } else {
-                    setMobileSelectMode(true)
-                  }
-                }}
-                className={[
-                  'flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl active:scale-95 transition-all',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand md:hidden',
-                  mobileSelectMode ? 'bg-brand/20 hover:bg-brand/30' : 'hover:bg-brand/10',
-                ].join(' ')}
-                aria-label={mobileSelectMode ? 'Exit select mode' : 'Enter select mode'}
-                aria-pressed={mobileSelectMode}
-              >
-                <MousePointer2 size={16} className={mobileSelectMode ? 'text-brand' : 'text-gray-500'} strokeWidth={2} />
-                <span className="pixel-font text-[8px] text-ink">Select</span>
-              </button>
-            </div>
-          </Panel>
+          {canEdit && (
+            <Panel position="top-center">
+              <div className="flex items-center gap-2 bg-white rounded-2xl shadow-md px-3 py-2 border border-gray-100 mt-2 max-w-[calc(100vw-1rem)] overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+                <span className="pixel-font text-[9px] text-gray-400 mr-1">Add</span>
+                <button
+                  onClick={() => addAtCenter('process')}
+                  draggable="true"
+                  onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'process')}
+                  {...getHandlers('process')}
+                  className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  aria-label="Add Process block"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-brand/20 border-2 border-brand/50" />
+                  <span className="pixel-font text-[8px] text-ink">Process</span>
+                </button>
+                <button
+                  onClick={() => addAtCenter('condition')}
+                  draggable="true"
+                  onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'condition')}
+                  {...getHandlers('condition')}
+                  className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-accent-pink/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-pink"
+                  aria-label="Add Condition block"
+                >
+                  <div className="w-8 h-8 rotate-45 bg-accent-pink/20 border-2 border-accent-pink/50" style={{ borderRadius: '6px' }} />
+                  <span className="pixel-font text-[8px] text-ink">Condition</span>
+                </button>
+                <button
+                  onClick={() => addAtCenter('stageLabel')}
+                  draggable="true"
+                  onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'stageLabel')}
+                  {...getHandlers('stageLabel')}
+                  className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  aria-label="Add Stage Label"
+                >
+                  <div className="w-8 h-5 rounded-full bg-brand/20 border-2 border-brand/50 flex items-center justify-center">
+                    <span className="pixel-font text-[6px] text-brand">Aa</span>
+                  </div>
+                  <span className="pixel-font text-[8px] text-ink">Stage</span>
+                </button>
+                <button
+                  onClick={() => addAtCenter('image')}
+                  draggable="true"
+                  onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'image')}
+                  {...getHandlers('image')}
+                  className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  aria-label="Add Image block"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-brand/10 border-2 border-brand/30 flex items-center justify-center">
+                    <span className="text-[14px]">🖼️</span>
+                  </div>
+                  <span className="pixel-font text-[8px] text-ink">Image</span>
+                </button>
+                <button
+                  onClick={() => addAtCenter('video')}
+                  draggable="true"
+                  onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'video')}
+                  {...getHandlers('video')}
+                  className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  aria-label="Add Video block"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-brand/10 border-2 border-brand/30 flex items-center justify-center">
+                    <span className="text-[14px]">🎬</span>
+                  </div>
+                  <span className="pixel-font text-[8px] text-ink">Video</span>
+                </button>
+                <button
+                  onClick={() => addAtCenter('start')}
+                  className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-emerald-500/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                  aria-label="Add Start block"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border-2 border-emerald-500/50 flex items-center justify-center">
+                    <span className="text-[14px]">🚩</span>
+                  </div>
+                  <span className="pixel-font text-[8px] text-ink">Start</span>
+                </button>
+                {/* Mobile select mode toggle */}
+                <button
+                  onClick={() => {
+                    if (mobileSelectMode) {
+                      setMobileSelectMode(false)
+                      clearSelection()
+                      setNodes(nodes.map((n) => ({ ...n, selected: false })))
+                    } else {
+                      setMobileSelectMode(true)
+                    }
+                  }}
+                  className={[
+                    'flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl active:scale-95 transition-all',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand md:hidden',
+                    mobileSelectMode ? 'bg-brand/20 hover:bg-brand/30' : 'hover:bg-brand/10',
+                  ].join(' ')}
+                  aria-label={mobileSelectMode ? 'Exit select mode' : 'Enter select mode'}
+                  aria-pressed={mobileSelectMode}
+                >
+                  <MousePointer2 size={16} className={mobileSelectMode ? 'text-brand' : 'text-gray-500'} strokeWidth={2} />
+                  <span className="pixel-font text-[8px] text-ink">Select</span>
+                </button>
+              </div>
+            </Panel>
+          )}
 
           {/* Selection action bar */}
           <Panel position="bottom-center">
