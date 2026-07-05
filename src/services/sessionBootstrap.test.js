@@ -1,13 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const m = vi.hoisted(() => ({
-  hydrateSelect: vi.fn(),
   hydratePortfolio: vi.fn(),
   setPortfolioSyncUser: vi.fn(),
   hydrateTasks: vi.fn(),
   setTaskSyncUser: vi.fn(),
-  hydrateRoadmap: vi.fn(),
-  setRoadmapSyncUser: vi.fn(),
+  armRoadmapSheetSync: vi.fn(),
+  disarmRoadmapSheetSync: vi.fn(),
   hydrateMap: vi.fn(),
   armMapSync: vi.fn(),
   disarmMapSync: vi.fn(),
@@ -20,26 +19,49 @@ const m = vi.hoisted(() => ({
   setCoins: vi.fn(),
   setMapOwner: vi.fn(),
   getDoc: vi.fn(),
+  getDocs: vi.fn(),
   setDoc: vi.fn(),
   hydrateFarmData: vi.fn(),
+  hydrateSelect: vi.fn(),
+  setRoadmapMyUid: vi.fn(),
+  hydrateSheetsAction: vi.fn(),
+  migrateLegacyRoadmap: vi.fn(),
 }))
 
 vi.mock('firebase/firestore', () => ({
   getDoc: (...a) => m.getDoc(...a),
+  getDocs: (...a) => m.getDocs(...a),
   setDoc: (...a) => m.setDoc(...a),
 }))
 vi.mock('../lib/farmDataSync', () => ({
   hydrateFarmDataFromFirestore: (...a) => m.hydrateFarmData(...a),
 }))
 vi.mock('../lib/db', () => ({
-  refs: { user: (uid) => ({ _path: `users/${uid}` }) },
-  shapes: { initialUser: () => ({}) },
+  refs: {
+    user: (uid) => ({ _path: `users/${uid}` }),
+    roadmapSheet: (id) => ({ _path: `roadmapSheets/${id}` }),
+  },
+  shapes: {
+    initialUser: () => ({}),
+    newRoadmapSheet: ({ ownerUid, name }) => ({
+      ownerUid, name, nodes: [], edges: [], order: 0, collaborators: {}, collaboratorUids: [],
+    }),
+  },
+  queries: {
+    sheetsSharedWithMe: (uid) => ({ _query: `sheetsSharedWithMe(${uid})` }),
+  },
+}))
+vi.mock('../utils/migrateLegacyRoadmap', () => ({
+  migrateLegacyRoadmap: (...a) => m.migrateLegacyRoadmap(...a),
 }))
 vi.mock('../stores/useUserStore', () => ({
   useUserStore: { getState: () => ({ setCoins: m.setCoins }) },
 }))
 vi.mock('../stores/useWorldStore', () => ({
   useWorldStore: { getState: () => ({ setMapOwner: m.setMapOwner }) },
+}))
+vi.mock('../stores/useRoadmapStore', () => ({
+  useRoadmapStore: { getState: () => ({ setRoadmapMyUid: m.setRoadmapMyUid, hydrateSheets: m.hydrateSheetsAction }) },
 }))
 vi.mock('../utils/syncSelectToFirestore', () => ({
   hydrateSelectStoreFromFirestore: (...a) => m.hydrateSelect(...a),
@@ -49,8 +71,8 @@ vi.mock('../lib/syncManager', () => ({
   setPortfolioSyncUser: (...a) => m.setPortfolioSyncUser(...a),
   hydrateTasksFromFirestore: (...a) => m.hydrateTasks(...a),
   setTaskSyncUser: (...a) => m.setTaskSyncUser(...a),
-  hydrateRoadmapFromFirestore: (...a) => m.hydrateRoadmap(...a),
-  setRoadmapSyncUser: (...a) => m.setRoadmapSyncUser(...a),
+  armRoadmapSheetSync: (...a) => m.armRoadmapSheetSync(...a),
+  disarmRoadmapSheetSync: (...a) => m.disarmRoadmapSheetSync(...a),
   hydrateMapFromFirestore: (...a) => m.hydrateMap(...a),
   armMapSync: (...a) => m.armMapSync(...a),
   disarmMapSync: (...a) => m.disarmMapSync(...a),
@@ -68,18 +90,22 @@ describe('bootstrapSession', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     vi.spyOn(console, 'error').mockImplementation(() => {})
-    m.getDoc.mockResolvedValue({ exists: () => true, data: () => ({ coins: 0 }) })
-    // These are real `async function`s in production (always return a Promise);
-    // give the mocks the same shape so `step()`'s `.catch` has something to call.
+    // Default: existing user, already migrated, owns exactly sheet-1, no shares.
+    m.getDoc.mockImplementation((ref) =>
+      ref._path === 'users/u1'
+        ? Promise.resolve({ exists: () => true, data: () => ({ coins: 0, roadmapSheetIds: ['sheet-1'] }) })
+        : Promise.resolve({ exists: () => true, id: 'sheet-1', data: () => ({ ownerUid: 'u1', name: 'Roadmap', nodes: [], edges: [] }) }),
+    )
+    m.getDocs.mockResolvedValue({ docs: [] })
     m.setDoc.mockResolvedValue(undefined)
     m.hydrateFarmData.mockResolvedValue(undefined)
     m.hydrateSelect.mockResolvedValue(undefined)
     m.hydratePortfolio.mockResolvedValue(undefined)
     m.hydrateTasks.mockResolvedValue(undefined)
-    m.hydrateRoadmap.mockResolvedValue(undefined)
     m.hydrateMap.mockResolvedValue(undefined)
     m.hydrateInventory.mockResolvedValue(undefined)
     m.hydrateFarm.mockResolvedValue(undefined)
+    m.migrateLegacyRoadmap.mockReturnValue(null)
   })
 
   it('keeps hydrating later stores when an earlier hydration throws', async () => {
@@ -89,8 +115,7 @@ describe('bootstrapSession', () => {
 
     expect(m.hydrateTasks).toHaveBeenCalledWith('u1')
     expect(m.setTaskSyncUser).toHaveBeenCalledWith('u1')
-    expect(m.hydrateRoadmap).toHaveBeenCalledWith('u1')
-    expect(m.setRoadmapSyncUser).toHaveBeenCalledWith('u1')
+    expect(m.armRoadmapSheetSync).toHaveBeenCalledWith('sheet-1')
   })
 
   it('hydrates the Personal Map on login', async () => {
@@ -101,7 +126,7 @@ describe('bootstrapSession', () => {
   it('keeps hydrating later stores when map hydration throws', async () => {
     m.hydrateMap.mockRejectedValue(new Error('map boom'))
     await bootstrapSession({ uid: 'u1' })
-    expect(m.hydrateRoadmap).toHaveBeenCalledWith('u1')
+    expect(m.armRoadmapSheetSync).toHaveBeenCalledWith('sheet-1')
   })
 
   it('hydrates inventory and arms its sync writer on login', async () => {
@@ -125,8 +150,8 @@ describe('bootstrapSession', () => {
   it('keeps arming inventory sync even when farm hydration throws', async () => {
     m.hydrateFarm.mockRejectedValueOnce(new Error('farm err'))
     await bootstrapSession({ uid: 'u1' })
-    expect(m.setInventorySyncUser).toHaveBeenCalledWith('u1')  // still armed
-    expect(m.armFarmSync).not.toHaveBeenCalled()               // farm sync not armed
+    expect(m.setInventorySyncUser).toHaveBeenCalledWith('u1')
+    expect(m.armFarmSync).not.toHaveBeenCalled()
   })
 
   it('sets the current map owner to own uid and arms the map sync writer', async () => {
@@ -135,12 +160,17 @@ describe('bootstrapSession', () => {
     expect(m.armMapSync).toHaveBeenCalledWith('u1')
   })
 
-  it('reads the user doc exactly once (coins come from the ensureUserDoc read)', async () => {
-    m.getDoc.mockResolvedValue({ exists: () => true, data: () => ({ coins: 42 }) })
+  it('reads the user doc exactly once for ensureUserDoc (coins come from that read)', async () => {
+    m.getDoc.mockImplementation((ref) =>
+      ref._path === 'users/u1'
+        ? Promise.resolve({ exists: () => true, data: () => ({ coins: 42, roadmapSheetIds: ['sheet-1'] }) })
+        : Promise.resolve({ exists: () => true, id: 'sheet-1', data: () => ({ ownerUid: 'u1', name: 'Roadmap', nodes: [], edges: [] }) }),
+    )
 
     await bootstrapSession({ uid: 'u1' })
 
-    expect(m.getDoc).toHaveBeenCalledTimes(1)
+    const userDocReads = m.getDoc.mock.calls.filter(([ref]) => ref._path === 'users/u1')
+    expect(userDocReads).toHaveLength(1)
     expect(m.setCoins).toHaveBeenCalledWith(42)
   })
 
@@ -149,8 +179,68 @@ describe('bootstrapSession', () => {
 
     await bootstrapSession({ uid: 'u1' })
 
-    expect(m.hydrateRoadmap).toHaveBeenCalledWith('u1')
-    expect(m.setTaskSyncUser).not.toHaveBeenCalled() // arm skipped when its hydrate failed
+    expect(m.armRoadmapSheetSync).toHaveBeenCalledWith('sheet-1')
+    expect(m.setTaskSyncUser).not.toHaveBeenCalled()
+  })
+
+  it('migrates the legacy roadmap field into sheet #1 when roadmapSheetIds is missing', async () => {
+    m.getDoc.mockImplementation((ref) =>
+      ref._path === 'users/u1'
+        ? Promise.resolve({ exists: () => true, data: () => ({ coins: 0, roadmap: { nodes: [{ id: 'n1' }], edges: [] } }) })
+        : Promise.resolve({ exists: () => true, id: 'new-sheet', data: () => ({ ownerUid: 'u1', name: 'Roadmap', nodes: [{ id: 'n1' }], edges: [] }) }),
+    )
+    m.migrateLegacyRoadmap.mockReturnValue({
+      sheetId: 'new-sheet',
+      sheetDoc: { ownerUid: 'u1', name: 'Roadmap', nodes: [{ id: 'n1' }], edges: [], order: 0, collaborators: {}, collaboratorUids: [] },
+      userDocPatch: { roadmapSheetIds: ['new-sheet'] },
+    })
+
+    await bootstrapSession({ uid: 'u1' })
+
+    expect(m.setDoc).toHaveBeenCalledWith({ _path: 'roadmapSheets/new-sheet' }, expect.objectContaining({ name: 'Roadmap' }))
+    expect(m.setDoc).toHaveBeenCalledWith({ _path: 'users/u1' }, { roadmapSheetIds: ['new-sheet'] }, { merge: true })
+    expect(m.armRoadmapSheetSync).toHaveBeenCalledWith('new-sheet')
+  })
+
+  it('seeds a fresh empty "Roadmap" sheet for a brand-new user with no legacy data', async () => {
+    m.getDoc.mockImplementation((ref) =>
+      ref._path === 'users/u1'
+        ? Promise.resolve({ exists: () => true, data: () => ({ coins: 0 }) })
+        : Promise.resolve({ exists: () => true, id: 'sheet-x', data: () => ({ ownerUid: 'u1', name: 'Roadmap', nodes: [], edges: [] }) }),
+    )
+    m.migrateLegacyRoadmap.mockReturnValue(null)
+
+    await bootstrapSession({ uid: 'u1' })
+
+    expect(m.setDoc).toHaveBeenCalledWith(
+      expect.objectContaining({ _path: expect.stringMatching(/^roadmapSheets\//) }),
+      expect.objectContaining({ name: 'Roadmap' }),
+    )
+    expect(m.hydrateSheetsAction).toHaveBeenCalled()
+  })
+
+  it('does not attempt migration again when roadmapSheetIds already exists', async () => {
+    await bootstrapSession({ uid: 'u1' })
+
+    const sheetWrites = m.setDoc.mock.calls.filter(([ref]) => ref._path?.startsWith('roadmapSheets/'))
+    expect(sheetWrites).toHaveLength(0)
+    expect(m.migrateLegacyRoadmap).not.toHaveBeenCalled()
+  })
+
+  it('hydrates owned sheets and shared-with-me sheets into the roadmap store, activating sheet #1', async () => {
+    m.getDocs.mockResolvedValue({
+      docs: [{ id: 'shared-1', data: () => ({ ownerUid: 'friend', name: 'Friend Sheet', nodes: [], edges: [], collaborators: { u1: 'edit' } }) }],
+    })
+
+    await bootstrapSession({ uid: 'u1' })
+
+    expect(m.setRoadmapMyUid).toHaveBeenCalledWith('u1')
+    const [sheetsArg, activeArg] = m.hydrateSheetsAction.mock.calls[0]
+    expect(sheetsArg.map((s) => s.id)).toEqual(['sheet-1', 'shared-1'])
+    expect(sheetsArg.find((s) => s.id === 'sheet-1').myRole).toBe('owner')
+    expect(sheetsArg.find((s) => s.id === 'shared-1').myRole).toBe('edit')
+    expect(activeArg).toBe('sheet-1')
+    expect(m.armRoadmapSheetSync).toHaveBeenCalledWith('sheet-1')
   })
 })
 
@@ -163,7 +253,11 @@ describe('teardownSession', () => {
     teardownSession()
     expect(m.setPortfolioSyncUser).toHaveBeenCalledWith(null)
     expect(m.setTaskSyncUser).toHaveBeenCalledWith(null)
-    expect(m.setRoadmapSyncUser).toHaveBeenCalledWith(null)
+  })
+
+  it('disarms the roadmap sheet sync writer on logout', () => {
+    teardownSession()
+    expect(m.disarmRoadmapSheetSync).toHaveBeenCalled()
   })
 
   it('disarms the map sync writer and clears the map owner on logout', () => {

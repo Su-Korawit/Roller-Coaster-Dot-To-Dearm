@@ -14,6 +14,7 @@ vi.mock('./db', () => ({
   refs: {
     user: (uid) => ({ _path: `users/${uid}` }),
     map:  (uid) => ({ _path: `maps/${uid}` }),
+    roadmapSheet: (sheetId) => ({ _path: `roadmapSheets/${sheetId}` }),
   },
 }))
 
@@ -29,8 +30,6 @@ const { useTaskStore } = await import('../stores/useTaskStore')
 const { useUserStore } = await import('../stores/useUserStore')
 const { useWorldStore } = await import('../stores/useWorldStore')
 const {
-  syncRoadmapToFirestore,
-  hydrateRoadmapFromFirestore,
   syncTasksToFirestore,
   hydratePortfolioFromFirestore,
   syncMapToFirestore,
@@ -39,73 +38,124 @@ const {
   disarmMapSync,
   visitMap,
   returnHome,
+  pushRoadmapSheetToFirestore,
+  hydrateRoadmapSheetFromFirestore,
+  armRoadmapSheetSync,
+  disarmRoadmapSheetSync,
 } = await import('./syncManager')
 
-describe('SyncManager (roadmap instance)', () => {
+describe('SyncManager (roadmap sheet instance)', () => {
   beforeEach(() => {
     setDoc.mockReset()
     getDoc.mockReset()
-    useRoadmapStore.setState({ nodes: [], edges: [] })
+    useRoadmapStore.setState({
+      nodes: [], edges: [], setpoint: null, selection: [],
+      sheets: [{ id: 'sheet-a', name: 'Roadmap', nodes: [], edges: [], ownerUid: 'uid-123', myRole: 'owner' }],
+      activeSheetId: 'sheet-a',
+      myUid: 'uid-123',
+    })
+    disarmRoadmapSheetSync()
   })
 
-  // --- success push: writes the slice with merge:true ---
-  it('writes nodes and edges to users/{uid} with merge:true', async () => {
+  it('writes nodes and edges to roadmapSheets/{sheetId} with merge:true', async () => {
     const nodes = [{ id: 'n1', type: 'process', position: { x: 0, y: 0 }, data: { label: 'Step' } }]
     const edges = [{ id: 'e1', source: 'n1', target: 'n2' }]
-    useRoadmapStore.setState({ nodes, edges })
+    useRoadmapStore.setState((s) => ({
+      nodes, edges,
+      sheets: s.sheets.map((sh) => (sh.id === 'sheet-a' ? { ...sh, nodes, edges } : sh)),
+    }))
     setDoc.mockResolvedValue(undefined)
 
-    await syncRoadmapToFirestore('uid-123')
+    await pushRoadmapSheetToFirestore('sheet-a')
 
     expect(setDoc).toHaveBeenCalledWith(
-      expect.anything(),
-      { roadmap: { nodes, edges }, roadmapUpdatedAt: { _type: 'serverTimestamp' } },
+      { _path: 'roadmapSheets/sheet-a' },
+      { nodes, edges, updatedAt: { _type: 'serverTimestamp' } },
       { merge: true },
     )
   })
 
-  // --- null uid: no-op ---
-  it('does nothing when uid is null', async () => {
-    await syncRoadmapToFirestore(null)
-    expect(setDoc).not.toHaveBeenCalled()
-  })
-
-  // --- hydrate: Firestore data loaded into the store ---
-  it('loads Firestore roadmap into the store when cloud data exists', async () => {
+  it('loads a sheet doc\'s nodes/edges into the store when hydrating', async () => {
     const cloudNodes = [{ id: 'cloud-1', type: 'condition', position: { x: 50, y: 50 }, data: {} }]
     getDoc.mockResolvedValue({
       exists: () => true,
-      data: () => ({ roadmap: { nodes: cloudNodes, edges: [] } }),
+      data: () => ({ nodes: cloudNodes, edges: [] }),
     })
 
-    await hydrateRoadmapFromFirestore('uid-123')
+    await hydrateRoadmapSheetFromFirestore('sheet-a')
 
     const { nodes, edges } = useRoadmapStore.getState()
     expect(nodes).toEqual(cloudNodes)
     expect(edges).toEqual([])
   })
 
-  it('sets syncStatus to saving then saved around a successful push', async () => {
-    useRoadmapStore.setState({ nodes: [], edges: [], syncStatus: 'idle' })
-    let resolveSetDoc
-    setDoc.mockReturnValue(new Promise((resolve) => { resolveSetDoc = resolve }))
+  it('debounces a write only for the ACTIVE sheet', async () => {
+    vi.useFakeTimers()
+    setDoc.mockResolvedValue(undefined)
+    armRoadmapSheetSync('sheet-a')
 
-    const pushPromise = syncRoadmapToFirestore('uid-123')
-    expect(useRoadmapStore.getState().syncStatus).toBe('saving')
+    useRoadmapStore.getState().addNode('process')
+    expect(setDoc).not.toHaveBeenCalled()
 
-    resolveSetDoc()
-    await pushPromise
+    await vi.runAllTimersAsync()
 
-    expect(useRoadmapStore.getState().syncStatus).toBe('saved')
+    expect(setDoc).toHaveBeenCalledWith(
+      { _path: 'roadmapSheets/sheet-a' },
+      expect.objectContaining({ nodes: expect.any(Array) }),
+      { merge: true },
+    )
+    vi.useRealTimers()
   })
 
-  it('sets syncStatus to error when the push fails', async () => {
-    useRoadmapStore.setState({ nodes: [], edges: [], syncStatus: 'idle' })
-    setDoc.mockRejectedValue(new Error('network down'))
+  it('does not write when the caller\'s role on the sheet is "view"', async () => {
+    vi.useFakeTimers()
+    useRoadmapStore.setState((s) => ({
+      sheets: s.sheets.map((sh) => (sh.id === 'sheet-a' ? { ...sh, myRole: 'view' } : sh)),
+    }))
+    armRoadmapSheetSync('sheet-a')
 
-    await syncRoadmapToFirestore('uid-123')
+    useRoadmapStore.getState().addNode('process')
+    await vi.runAllTimersAsync()
 
-    expect(useRoadmapStore.getState().syncStatus).toBe('error')
+    expect(setDoc).not.toHaveBeenCalled()
+    vi.useRealTimers()
+  })
+
+  it('stops writing after disarmRoadmapSheetSync is called', async () => {
+    vi.useFakeTimers()
+    setDoc.mockResolvedValue(undefined)
+    armRoadmapSheetSync('sheet-a')
+    disarmRoadmapSheetSync()
+
+    useRoadmapStore.getState().addNode('process')
+    await vi.runAllTimersAsync()
+
+    expect(setDoc).not.toHaveBeenCalled()
+    vi.useRealTimers()
+  })
+
+  it('switching the armed target stops writes to the old sheet and starts writing to the new one', async () => {
+    vi.useFakeTimers()
+    setDoc.mockResolvedValue(undefined)
+    useRoadmapStore.setState((s) => ({
+      sheets: [...s.sheets, { id: 'sheet-b', name: 'Other', nodes: [], edges: [], ownerUid: 'uid-123', myRole: 'owner' }],
+    }))
+    armRoadmapSheetSync('sheet-a')
+
+    useRoadmapStore.getState().switchSheet('sheet-b')
+    useRoadmapStore.getState().addNode('process')
+    await vi.runAllTimersAsync()
+    expect(setDoc).not.toHaveBeenCalled()
+
+    armRoadmapSheetSync('sheet-b')
+    useRoadmapStore.getState().addNode('condition')
+    await vi.runAllTimersAsync()
+    expect(setDoc).toHaveBeenCalledWith(
+      { _path: 'roadmapSheets/sheet-b' },
+      expect.anything(),
+      { merge: true },
+    )
+    vi.useRealTimers()
   })
 })
 

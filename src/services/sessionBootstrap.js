@@ -17,19 +17,21 @@
 //         ที่เหลือทั้งหมดพร้อมกันด้วย Promise.all แต่ละสเต็ปยังคง isolate ผ่าน
 //         step() helper เหมือนเดิม
 // ============================================================================
-import { getDoc, setDoc } from 'firebase/firestore'
-import { refs, shapes } from '../lib/db'
+import { getDoc, getDocs, setDoc } from 'firebase/firestore'
+import { refs, shapes, queries } from '../lib/db'
 import { useUserStore } from '../stores/useUserStore'
 import { useWorldStore } from '../stores/useWorldStore'
+import { useRoadmapStore } from '../stores/useRoadmapStore'
 import { hydrateSelectStoreFromFirestore } from '../utils/syncSelectToFirestore'
 import { hydrateFarmDataFromFirestore } from '../lib/farmDataSync.js'
+import { migrateLegacyRoadmap } from '../utils/migrateLegacyRoadmap'
 import {
   hydratePortfolioFromFirestore,
   setPortfolioSyncUser,
   hydrateTasksFromFirestore,
   setTaskSyncUser,
-  hydrateRoadmapFromFirestore,
-  setRoadmapSyncUser,
+  armRoadmapSheetSync,
+  disarmRoadmapSheetSync,
   hydrateMapFromFirestore,
   armMapSync,
   disarmMapSync,
@@ -59,6 +61,53 @@ async function ensureUserDoc(firebaseUser) {
   const initial = shapes.initialUser(firebaseUser, { mbti, program, university, mastery })
   await setDoc(ref, initial)
   return initial
+}
+
+function roleForSheet(sheet, uid) {
+  if (sheet.ownerUid === uid) return 'owner'
+  return sheet.collaborators?.[uid] ?? 'view'
+}
+
+async function bootstrapRoadmapSheets(uid, userDoc) {
+  useRoadmapStore.getState().setRoadmapMyUid(uid)
+
+  let sheetIds = userDoc?.roadmapSheetIds ?? []
+
+  if (sheetIds.length === 0) {
+    const generatedSheetId = crypto.randomUUID()
+    const migration = migrateLegacyRoadmap(userDoc, generatedSheetId)
+    const sheetId = migration?.sheetId ?? generatedSheetId
+    const sheetDoc = migration ? migration.sheetDoc : shapes.newRoadmapSheet({ ownerUid: uid, name: 'Roadmap' })
+    const userDocPatch = migration ? migration.userDocPatch : { roadmapSheetIds: [sheetId] }
+    await setDoc(refs.roadmapSheet(sheetId), sheetDoc)
+    await setDoc(refs.user(uid), userDocPatch, { merge: true })
+    sheetIds = [sheetId]
+  }
+
+  const [ownedSnaps, sharedSnap] = await Promise.all([
+    Promise.all(sheetIds.map((id) => getDoc(refs.roadmapSheet(id)))),
+    getDocs(queries.sheetsSharedWithMe(uid)),
+  ])
+
+  const ownedSheets = ownedSnaps
+    .filter((snap) => snap.exists())
+    .map((snap) => ({ id: snap.id, ...snap.data() }))
+  const sharedSheets = sharedSnap.docs
+    .filter((d) => d.data().ownerUid !== uid)
+    .map((d) => ({ id: d.id, ...d.data() }))
+
+  const sheets = [...ownedSheets, ...sharedSheets].map((sheet) => ({
+    id: sheet.id,
+    name: sheet.name,
+    nodes: sheet.nodes ?? [],
+    edges: sheet.edges ?? [],
+    ownerUid: sheet.ownerUid,
+    myRole: roleForSheet(sheet, uid),
+  }))
+
+  const activeSheetId = sheetIds[0] ?? sheets[0]?.id ?? null
+  useRoadmapStore.getState().hydrateSheets(sheets, activeSheetId)
+  if (activeSheetId) armRoadmapSheetSync(activeSheetId)
 }
 
 /**
@@ -97,10 +146,7 @@ export async function bootstrapSession(firebaseUser) {
       await hydrateTasksFromFirestore(uid)
       setTaskSyncUser(uid)
     }),
-    step('hydrate/arm roadmap', async () => {
-      await hydrateRoadmapFromFirestore(uid)
-      setRoadmapSyncUser(uid)
-    }),
+    step('bootstrap roadmap sheets', () => bootstrapRoadmapSheets(uid, userData)),
     step('hydrate map', async () => {
       await hydrateMapFromFirestore(uid)
       useWorldStore.getState().setMapOwner(uid)
@@ -123,7 +169,7 @@ export async function bootstrapSession(firebaseUser) {
 export function teardownSession() {
   setPortfolioSyncUser(null)
   setTaskSyncUser(null)
-  setRoadmapSyncUser(null)
+  disarmRoadmapSheetSync()
   disarmMapSync()
   disarmInventorySync()
   disarmFarmSync()

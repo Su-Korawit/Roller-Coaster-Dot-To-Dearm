@@ -111,15 +111,22 @@ const tasksSync = createFirestoreSync({
   needsSeed: (data) => !data.tasks,
 })
 
-// ── Roadmap ──────────────────────────────────────────────────────────────────
-const roadmapSync = createFirestoreSync({
+// ── Roadmap Sheets ───────────────────────────────────────────────────────────
+// Sheets sync to roadmapSheets/{sheetId}; only the active non-viewer sheet is
+// allowed to write through the debounced pipeline.
+const roadmapSheetSync = createFirestoreSync({
   store: useRoadmapStore,
-  logName: 'syncRoadmap',
-  toDoc: ({ nodes, edges }) => ({ roadmap: { nodes, edges }, roadmapUpdatedAt: serverTimestamp() }),
+  logName: 'syncRoadmapSheet',
+  ref: refs.roadmapSheet,
+  toDoc: ({ nodes, edges }) => ({ nodes, edges, updatedAt: serverTimestamp() }),
   fromDoc: (data) =>
-    data.roadmap ? { nodes: data.roadmap.nodes ?? [], edges: data.roadmap.edges ?? [] } : {},
+    ('nodes' in data || 'edges' in data) ? { nodes: data.nodes ?? [], edges: data.edges ?? [] } : {},
   changed: (s, p) => s.nodes !== p.nodes || s.edges !== p.edges,
-  needsSeed: (data) => !data.roadmap,
+  guard: (state, sheetId) => {
+    const sheet = state.sheets.find((sh) => sh.id === sheetId)
+    return state.activeSheetId === sheetId && sheet?.myRole !== 'view'
+  },
+  needsSeed: () => false,
   onStatus: (status) => useRoadmapStore.getState().setSyncStatus(status),
 })
 
@@ -148,9 +155,10 @@ export const syncTasksToFirestore = tasksSync.push
 export const hydrateTasksFromFirestore = tasksSync.hydrate
 export const setTaskSyncUser = tasksSync.setSyncUser
 
-export const syncRoadmapToFirestore = roadmapSync.push
-export const hydrateRoadmapFromFirestore = roadmapSync.hydrate
-export const setRoadmapSyncUser = roadmapSync.setSyncUser
+export const pushRoadmapSheetToFirestore = roadmapSheetSync.push
+export const hydrateRoadmapSheetFromFirestore = roadmapSheetSync.hydrate
+export const armRoadmapSheetSync = (sheetId) => roadmapSheetSync.setSyncUser(sheetId)
+export const disarmRoadmapSheetSync = () => roadmapSheetSync.setSyncUser(null)
 
 export const syncPortfolioToFirestore = portfolioSync.push
 export const hydratePortfolioFromFirestore = portfolioSync.hydrate
