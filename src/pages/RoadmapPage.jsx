@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -19,7 +19,6 @@ import StageLabelNode from '../components/roadmap/StageLabelNode'
 import ImageNode from '../components/roadmap/ImageNode'
 import TrashZone from '../components/roadmap/TrashZone'
 import SelectionActionBar from '../components/roadmap/SelectionActionBar'
-import TimelineRuler from '../components/roadmap/TimelineRuler'
 import { findProximityConnection } from '../utils/findProximityConnection'
 import { computeNodeCenter } from '../utils/computeNodeCenter'
 import { computeCenteredPosition } from '../utils/computeCenteredPosition'
@@ -59,7 +58,17 @@ export default function RoadmapPage({ onClose }) {
   const removeSelection = useRoadmapStore((s) => s.removeSelection)
   const duplicateSelection = useRoadmapStore((s) => s.duplicateSelection)
   const importRoadmap = useRoadmapStore((s) => s.importRoadmap)
+  const syncStatus = useRoadmapStore((s) => s.syncStatus)
+  const setSyncStatus = useRoadmapStore((s) => s.setSyncStatus)
   const fileInputRef = useRef(null)
+
+  // "Saved" is a transient confirmation — auto-revert to idle (hiding the
+  // indicator) after 2s so it doesn't sit on screen forever.
+  useEffect(() => {
+    if (syncStatus !== 'saved') return
+    const timer = setTimeout(() => setSyncStatus('idle'), 2000)
+    return () => clearTimeout(timer)
+  }, [syncStatus, setSyncStatus])
 
   // Mobile select mode — tapping a block toggles its selection membership.
   const [mobileSelectMode, setMobileSelectMode] = useState(false)
@@ -132,15 +141,8 @@ export default function RoadmapPage({ onClose }) {
   const stableNodeTypes = useMemo(() => nodeTypes, [])
   const stableEdgeTypes = useMemo(() => edgeTypes, [])
 
-  // Timeline ruler stays in lockstep with the canvas viewport (pan + zoom).
-  const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 1 })
   const rfRef = useRef(null)
   const canvasRef = useRef(null)
-  const onMove = useCallback((_event, vp) => setViewport(vp), [])
-  // Ruler scrubbed -> pan the canvas horizontally to match.
-  const onScrub = useCallback((x) => {
-    rfRef.current?.setViewport({ ...rfRef.current.getViewport(), x })
-  }, [])
   // Sync React Flow selection → store (fired by marquee/shift-click on desktop)
   const onSelectionChange = useCallback(
     ({ nodes: selected }) => {
@@ -296,12 +298,28 @@ export default function RoadmapPage({ onClose }) {
               instance.fitView({ duration: 0 })
             }
           }}
-          onMove={onMove}
           connectionMode="loose"
           deleteKeyCode={['Backspace', 'Delete']}
         >
           <Background gap={20} color="#e2e8f0" />
           <Controls />
+
+          {/* Save/saved status indicator */}
+          {syncStatus !== 'idle' && (
+            <Panel position="top-right">
+              <div className="mt-2 mr-2 px-3 py-1.5 rounded-xl bg-white shadow-md border border-gray-100">
+                {syncStatus === 'saving' && (
+                  <span className="pixel-font text-[8px] text-gray-400">Saving...</span>
+                )}
+                {syncStatus === 'saved' && (
+                  <span className="pixel-font text-[8px] text-green-500">Saved</span>
+                )}
+                {syncStatus === 'error' && (
+                  <span className="pixel-font text-[8px] text-red-500">Save failed</span>
+                )}
+              </div>
+            </Panel>
+          )}
 
           {/* Tool palette */}
           <Panel position="top-center">
@@ -399,9 +417,6 @@ export default function RoadmapPage({ onClose }) {
           </Panel>
 
         </ReactFlow>
-
-        {/* Full-width time ruler, synced both ways with the viewport */}
-        <TimelineRuler viewport={viewport} onScrub={onScrub} />
 
         {/* Trash zone — appears only while a block is being dragged */}
         <TrashZone ref={trashRef} visible={isDragging} over={isOverTrash} />
