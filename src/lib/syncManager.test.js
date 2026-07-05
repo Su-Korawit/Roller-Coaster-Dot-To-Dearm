@@ -84,6 +84,29 @@ describe('SyncManager (roadmap instance)', () => {
     expect(nodes).toEqual(cloudNodes)
     expect(edges).toEqual([])
   })
+
+  it('sets syncStatus to saving then saved around a successful push', async () => {
+    useRoadmapStore.setState({ nodes: [], edges: [], syncStatus: 'idle' })
+    let resolveSetDoc
+    setDoc.mockReturnValue(new Promise((resolve) => { resolveSetDoc = resolve }))
+
+    const pushPromise = syncRoadmapToFirestore('uid-123')
+    expect(useRoadmapStore.getState().syncStatus).toBe('saving')
+
+    resolveSetDoc()
+    await pushPromise
+
+    expect(useRoadmapStore.getState().syncStatus).toBe('saved')
+  })
+
+  it('sets syncStatus to error when the push fails', async () => {
+    useRoadmapStore.setState({ nodes: [], edges: [], syncStatus: 'idle' })
+    setDoc.mockRejectedValue(new Error('network down'))
+
+    await syncRoadmapToFirestore('uid-123')
+
+    expect(useRoadmapStore.getState().syncStatus).toBe('error')
+  })
 })
 
 describe('SyncManager (tasks instance)', () => {

@@ -34,10 +34,12 @@ import { useFarmStore } from '../stores/useFarmStore'
  * @param {(data) => boolean} opts.needsSeed  whether to push local up on first migration
  * @param {(uid) => DocumentRef} [opts.ref]   doc ref factory — defaults to refs.user
  * @param {(state, uid) => boolean} [opts.guard]  extra condition checked before debouncing
+ * @param {(status: 'saving'|'saved'|'error') => void} [opts.onStatus]  save-status callback, defaults to a no-op — only the roadmap instance passes one today
  * @returns {{ push(uid): Promise<void>, hydrate(uid): Promise<void>, setSyncUser(uid): void }}
  */
-export function createFirestoreSync({ store, logName, toDoc, fromDoc, changed, needsSeed, ref, guard }) {
+export function createFirestoreSync({ store, logName, toDoc, fromDoc, changed, needsSeed, ref, guard, onStatus }) {
   const getRef = ref ?? refs.user
+  const emitStatus = onStatus ?? (() => {})
 
   let currentUid = null   // latest signed-in uid; null when logged out
   let subscribed = false  // store subscription is set up once
@@ -47,10 +49,13 @@ export function createFirestoreSync({ store, logName, toDoc, fromDoc, changed, n
   // Write the store's slice into the target doc; merge keeps other fields.
   async function push(uid) {
     if (!uid) return
+    emitStatus('saving')
     try {
       await setDoc(getRef(uid), toDoc(store.getState()), { merge: true })
+      emitStatus('saved')
     } catch (error) {
       console.error(`[${logName}] push failed:`, error)
+      emitStatus('error')
     }
   }
 
@@ -115,6 +120,7 @@ const roadmapSync = createFirestoreSync({
     data.roadmap ? { nodes: data.roadmap.nodes ?? [], edges: data.roadmap.edges ?? [] } : {},
   changed: (s, p) => s.nodes !== p.nodes || s.edges !== p.edges,
   needsSeed: (data) => !data.roadmap,
+  onStatus: (status) => useRoadmapStore.getState().setSyncStatus(status),
 })
 
 // ── Portfolio (+ journeys, + profilePhotoURL side-effect) ─────────────────────
