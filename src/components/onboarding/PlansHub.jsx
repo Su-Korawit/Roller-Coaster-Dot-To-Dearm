@@ -1,4 +1,5 @@
 import { Trash2 } from 'lucide-react'
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import StepScreen from '../ui/StepScreen'
 import ProgressRing from '../ui/ProgressRing'
 import { programs, universities } from '../../data/onboardingData'
@@ -26,7 +27,7 @@ function ProgramRoundTags({ programId }) {
   )
 }
 
-function PlanCard({ plan, selected, onSelect, onDelete }) {
+function PlanCard({ plan, selected, onSelect, onDelete, dragHandleProps }) {
   const university = universities.find((item) => item.id === plan.university)
   const program = programs.find((item) => item.id === plan.program)
   const uniName = university?.name ?? plan.university ?? 'ยังไม่ได้เลือกมหาวิทยาลัย'
@@ -47,6 +48,7 @@ function PlanCard({ plan, selected, onSelect, onDelete }) {
         selected ? 'border-brand-strong ring-2 ring-brand-strong bg-brand-soft' : 'border-gray-200'
       }`}
       aria-label={`แผน ${plan.id}`}
+      {...dragHandleProps}
     >
       {plan.university ? (
         <img
@@ -87,6 +89,7 @@ export default function PlansHub({ onEditPlan, onNext, onBack }) {
   const activePlanId = usePlansStore((state) => state.activePlanId)
   const addPlan = usePlansStore((state) => state.addPlan)
   const removePlan = usePlansStore((state) => state.removePlan)
+  const reorderPlans = usePlansStore((state) => state.reorderPlans)
   const setActivePlan = usePlansStore((state) => state.setActivePlan)
   const uid = useAuthStore((state) => state.user?.uid)
 
@@ -107,6 +110,12 @@ export default function PlansHub({ onEditPlan, onNext, onBack }) {
     setActivePlan(planId)
     if (uid) await syncSelectToFirestore(uid)
     onEditPlan(planId)
+  }
+
+  function handleDragEnd(result) {
+    if (!result.destination) return
+    reorderPlans(result.source.index, result.destination.index)
+    if (uid) syncSelectToFirestore(uid)
   }
 
   return (
@@ -142,15 +151,33 @@ export default function PlansHub({ onEditPlan, onNext, onBack }) {
               <p className="text-sm text-gray-500">ยังไม่มีแผน กด + เพื่อเพิ่มแผนแรกของคุณ</p>
             </div>
           ) : (
-            plans.map((plan) => (
-              <PlanCard
-                key={plan.id}
-                plan={plan}
-                selected={plan.id === activePlanId}
-                onSelect={() => handleSelectPlan(plan.id)}
-                onDelete={() => removePlan(plan.id)}
-              />
-            ))
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="plans-list">
+                {(provided) => (
+                  <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-3">
+                    {plans.map((plan, index) => (
+                      <Draggable key={plan.id} draggableId={plan.id} index={index}>
+                        {(dragProvided) => (
+                          <div
+                            ref={dragProvided.innerRef}
+                            {...dragProvided.draggableProps}
+                          >
+                            <PlanCard
+                              plan={plan}
+                              selected={plan.id === activePlanId}
+                              onSelect={() => handleSelectPlan(plan.id)}
+                              onDelete={() => removePlan(plan.id)}
+                              dragHandleProps={dragProvided.dragHandleProps}
+                            />
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
           )}
         </div>
       </StepScreen>
