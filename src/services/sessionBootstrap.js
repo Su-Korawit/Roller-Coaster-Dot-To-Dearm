@@ -25,6 +25,7 @@ import { useRoadmapStore } from '../stores/useRoadmapStore'
 import { usePlansStore } from '../stores/usePlansStore'
 import { hydrateSelectStoreFromFirestore } from '../utils/syncSelectToFirestore'
 import { hydrateFarmDataFromFirestore } from '../lib/farmDataSync.js'
+import { hydrateSpotify } from './spotifyConnect'
 import { migrateLegacyRoadmap } from '../utils/migrateLegacyRoadmap'
 import {
   hydratePortfolioFromFirestore,
@@ -164,6 +165,7 @@ export async function bootstrapSession(firebaseUser) {
       await hydrateFarmFromFirestore(uid)
       armFarmSync(uid)
     }),
+    step('hydrate spotify', () => hydrateSpotify(uid)),
   ])
 }
 
