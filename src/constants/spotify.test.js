@@ -1,6 +1,6 @@
 // src/constants/spotify.test.js
 import { describe, it, expect, vi } from 'vitest'
-import { SPOTIFY_SCOPES, SPOTIFY_AUTH_URL, SPOTIFY_TOKEN_URL, SPOTIFY_API_BASE, redirectUri } from './spotify'
+import { SPOTIFY_SCOPES, SPOTIFY_AUTH_URL, SPOTIFY_TOKEN_URL, SPOTIFY_API_BASE, redirectUri, clientId, SpotifyConfigError } from './spotify'
 
 describe('spotify constants', () => {
   it('exposes the exact required scopes', () => {
@@ -22,5 +22,19 @@ describe('spotify constants', () => {
   it('builds redirectUri from the current origin', () => {
     vi.stubGlobal('location', { origin: 'https://example.app' })
     expect(redirectUri()).toBe('https://example.app/music/callback')
+  })
+
+  it('clientId throws SpotifyConfigError when VITE_SPOTIFY_CLIENT_ID is missing', async () => {
+    vi.stubEnv('VITE_SPOTIFY_CLIENT_ID', '')
+    vi.resetModules()
+    const mod = await import('./spotify')
+    expect(() => mod.clientId()).toThrow(mod.SpotifyConfigError)
+  })
+
+  it('clientId returns the env value when set', async () => {
+    vi.stubEnv('VITE_SPOTIFY_CLIENT_ID', 'abc123')
+    vi.resetModules()
+    const mod = await import('./spotify')
+    expect(mod.clientId()).toBe('abc123')
   })
 })

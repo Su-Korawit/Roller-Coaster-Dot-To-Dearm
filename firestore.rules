@@ -140,11 +140,18 @@ service cloud.firestore {
       function isSheetCollaborator() {
         return isSignedIn() && request.auth.uid in resource.data.collaborators;
       }
+      // Read/list must key off collaboratorUids — the same field as
+      // queries.sheetsSharedWithMe (array-contains). Rules cannot prove
+      // collaboratorUids stays in sync with the collaborators map.
+      function canReadSheet() {
+        return isSheetOwner() ||
+          (isSignedIn() && request.auth.uid in resource.data.get('collaboratorUids', []));
+      }
       function isEditCollaborator() {
         return isSheetCollaborator() && resource.data.collaborators[request.auth.uid] == 'edit';
       }
 
-      allow read: if isSheetOwner() || isSheetCollaborator();
+      allow read: if canReadSheet();
       allow create: if isSignedIn() && request.auth.uid == request.resource.data.ownerUid;
       allow update: if isSheetOwner() ||
         (isEditCollaborator() &&

@@ -2,6 +2,12 @@
 // src/services/spotifyConnect.test.js
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+vi.mock('../constants/spotify', () => ({
+  clientId: vi.fn(() => 'CLIENT123'),
+  SpotifyConfigError: class SpotifyConfigError extends Error {
+    reason = 'SPOTIFY_NOT_CONFIGURED'
+  },
+}))
 vi.mock('../lib/spotifyAuth', () => ({
   generateCodeVerifier: () => 'VER',
   generateCodeChallenge: vi.fn().mockResolvedValue('CHAL'),
@@ -18,6 +24,7 @@ vi.mock('../stores/useAuthStore', () => ({ useAuthStore: { getState: () => ({ us
 
 import { startConnect, completeConnect, hydrateSpotify } from './spotifyConnect'
 import { useMusicStore } from '../stores/useMusicStore'
+import { clientId } from '../constants/spotify'
 import { exchangeCodeForTokens, refreshAccessToken } from '../lib/spotifyAuth'
 import { getDoc, setDoc } from 'firebase/firestore'
 
@@ -35,6 +42,16 @@ describe('startConnect', () => {
     expect(sessionStorage.getItem('rc-spotify-state')).toBeTruthy()
     expect(location.assign).toHaveBeenCalledWith('https://auth/url')
     expect(useMusicStore.getState().status).toBe('connecting')
+  })
+
+  it('does not redirect when VITE_SPOTIFY_CLIENT_ID is missing', async () => {
+    const err = new Error('missing')
+    err.reason = 'SPOTIFY_NOT_CONFIGURED'
+    clientId.mockImplementationOnce(() => { throw err })
+    await startConnect()
+    expect(location.assign).not.toHaveBeenCalled()
+    expect(useMusicStore.getState().lastError).toBe('SPOTIFY_NOT_CONFIGURED')
+    expect(useMusicStore.getState().status).toBe('disconnected')
   })
 })
 

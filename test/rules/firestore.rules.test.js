@@ -5,7 +5,7 @@
 import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing'
-import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, deleteDoc, where } from 'firebase/firestore'
 
 // Section admins are gated by token email — authenticate with an email claim.
 const SUPER_UID = 'IaltEhO0mPVfK3ng8npr4CdqnEE3'
@@ -233,5 +233,17 @@ describe('Roadmap Sheets rules (roadmapSheets/{sheetId})', () => {
       ownerUid: 'alice', name: 'Hijack', nodes: [], edges: [], order: 0,
       collaborators: {}, collaboratorUids: [],
     }))
+  })
+
+  it('lets a collaborator run the sheetsSharedWithMe array-contains query', async () => {
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    const q = query(collection(bob, 'roadmapSheets'), where('collaboratorUids', 'array-contains', 'bob'))
+    await assertSucceeds(getDocs(q))
+  })
+
+  it('lets a signed-in user with no shares run the shared-with-me query (empty result)', async () => {
+    const eve = testEnv.authenticatedContext('eve').firestore()
+    const q = query(collection(eve, 'roadmapSheets'), where('collaboratorUids', 'array-contains', 'eve'))
+    await assertSucceeds(getDocs(q))
   })
 })

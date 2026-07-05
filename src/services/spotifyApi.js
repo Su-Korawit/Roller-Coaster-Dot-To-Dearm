@@ -11,9 +11,12 @@ export class SpotifyError extends Error {
   }
 }
 
-function classify(status, bodyText) {
+function classify(status, bodyText, endpoint = '') {
   if (status === 401) return 'UNAUTHORIZED'
-  if (status === 403) return 'PREMIUM_REQUIRED'
+  if (status === 403) {
+    if (endpoint.includes('/playlists/') && endpoint.includes('/items')) return 'PLAYLIST_ACCESS_DENIED'
+    return 'PREMIUM_REQUIRED'
+  }
   if (status === 429) return 'RATE_LIMITED'
   if (status === 404) {
     try {
@@ -34,7 +37,7 @@ export async function spotifyFetch(accessToken, endpoint, { method = 'GET', body
     },
     ...(body ? { body: JSON.stringify(body) } : {}),
   })
-  if (!res.ok) throw new SpotifyError(res.status, classify(res.status, await res.text()))
+  if (!res.ok) throw new SpotifyError(res.status, classify(res.status, await res.text(), endpoint))
   if (res.status === 204) return null
   return res.json()
 }
@@ -57,13 +60,19 @@ export async function searchTracks(accessToken, q) {
 }
 
 export async function getMyPlaylists(accessToken) {
-  const data = await spotifyFetch(accessToken, '/me/playlists?limit=50')
-  return (data?.items ?? []).map((p) => ({ id: p.id, name: p.name, imageUrl: p.images?.[0]?.url ?? null, uri: p.uri }))
+  const [me, data] = await Promise.all([
+    spotifyFetch(accessToken, '/me'),
+    spotifyFetch(accessToken, '/me/playlists?limit=50'),
+  ])
+  const myId = me?.id
+  return (data?.items ?? [])
+    .filter((p) => p.owner?.id === myId || p.collaborative)
+    .map((p) => ({ id: p.id, name: p.name, imageUrl: p.images?.[0]?.url ?? null, uri: p.uri }))
 }
 
 export async function getPlaylistTracks(accessToken, playlistId) {
-  const data = await spotifyFetch(accessToken, `/playlists/${playlistId}/tracks?limit=100`)
-  return (data?.items ?? []).map((i) => i.track).filter(Boolean).map(mapTrack)
+  const data = await spotifyFetch(accessToken, `/playlists/${playlistId}/items?limit=100`)
+  return (data?.items ?? []).map((i) => i.item ?? i.track).filter(Boolean).map(mapTrack)
 }
 
 export async function getDevices(accessToken) {

@@ -85,6 +85,12 @@ export default function PlayerSheet() {
             {lastError === 'PREMIUM_REQUIRED' && (
               <p className="thai-font text-xs text-accent-pink">ต้องใช้ Spotify Premium เพื่อควบคุมการเล่น</p>
             )}
+            {lastError === 'SPOTIFY_NOT_CONFIGURED' && (
+              <p className="thai-font text-xs text-accent-pink">ยังไม่ได้ตั้งค่า Spotify — ติดต่อทีมพัฒนา (VITE_SPOTIFY_CLIENT_ID)</p>
+            )}
+            {lastError === 'PLAYLIST_ACCESS_DENIED' && (
+              <p className="thai-font text-xs text-accent-pink">เปิดได้เฉพาะเพลย์ลิสต์ที่คุณเป็นเจ้าของหรือผู้ร่วมแก้ไข</p>
+            )}
 
             {view === 'search' ? (
               <>

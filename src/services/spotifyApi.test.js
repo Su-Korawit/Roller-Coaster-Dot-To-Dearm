@@ -1,16 +1,22 @@
 // src/services/spotifyApi.test.js
 import { describe, it, expect, vi } from 'vitest'
-import { spotifyFetch, SpotifyError, searchTracks, play, pause } from './spotifyApi'
+import { spotifyFetch, SpotifyError, searchTracks, play, pause, getPlaylistTracks, getMyPlaylists } from './spotifyApi'
 
 function res({ ok = true, status = 200, json = {}, text = '' }) {
   return { ok, status, json: () => Promise.resolve(json), text: () => Promise.resolve(text) }
 }
 
 describe('spotifyFetch error classification', () => {
-  it('403 → PREMIUM_REQUIRED', async () => {
+  it('403 on playback → PREMIUM_REQUIRED', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(res({ ok: false, status: 403, text: 'x' })))
     await expect(spotifyFetch('AT', '/me/player/play', { method: 'PUT' }))
       .rejects.toMatchObject({ status: 403, reason: 'PREMIUM_REQUIRED' })
+  })
+
+  it('403 on playlist items → PLAYLIST_ACCESS_DENIED', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(res({ ok: false, status: 403, text: 'x' })))
+    await expect(spotifyFetch('AT', '/playlists/p1/items?limit=100'))
+      .rejects.toMatchObject({ status: 403, reason: 'PLAYLIST_ACCESS_DENIED' })
   })
 
   it('404 with reason NO_ACTIVE_DEVICE', async () => {
@@ -65,5 +71,31 @@ describe('wrappers', () => {
     await pause('AT')
     expect(fetchMock.mock.calls[0][0]).toContain('/me/player/pause')
     expect(fetchMock.mock.calls[0][1].method).toBe('PUT')
+  })
+
+  it('getPlaylistTracks uses /items and maps item field', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(res({
+      json: { items: [{ item: {
+        id: 't1', name: 'Song', uri: 'spotify:track:t1', duration_ms: 1000,
+        artists: [{ name: 'A' }], album: { images: [{ url: 'IMG' }] },
+      } }] },
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+    const out = await getPlaylistTracks('AT', 'p1')
+    expect(fetchMock.mock.calls[0][0]).toContain('/playlists/p1/items')
+    expect(out).toEqual([{ id: 't1', name: 'Song', artists: 'A', albumArt: 'IMG', uri: 'spotify:track:t1', durationMs: 1000 }])
+  })
+
+  it('getMyPlaylists keeps only owned or collaborative playlists', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(res({ json: { id: 'me1' } }))
+      .mockResolvedValueOnce(res({ json: { items: [
+        { id: 'p1', name: 'Mine', uri: 'u1', images: [], owner: { id: 'me1' }, collaborative: false },
+        { id: 'p2', name: 'Followed', uri: 'u2', images: [], owner: { id: 'other' }, collaborative: false },
+        { id: 'p3', name: 'Collab', uri: 'u3', images: [], owner: { id: 'other' }, collaborative: true },
+      ] } }))
+    vi.stubGlobal('fetch', fetchMock)
+    const out = await getMyPlaylists('AT')
+    expect(out.map((p) => p.id)).toEqual(['p1', 'p3'])
   })
 })

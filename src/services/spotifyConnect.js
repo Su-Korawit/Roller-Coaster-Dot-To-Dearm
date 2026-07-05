@@ -2,6 +2,7 @@
 // refresh token. See docs/adr/0010.
 import { getDoc, setDoc, deleteDoc } from 'firebase/firestore'
 import { refs, shapes } from '../lib/db'
+import { clientId } from '../constants/spotify'
 import {
   generateCodeVerifier, generateCodeChallenge, buildAuthUrl,
   exchangeCodeForTokens, refreshAccessToken,
@@ -17,6 +18,12 @@ function randomState() {
 }
 
 export async function startConnect() {
+  try {
+    clientId()
+  } catch (e) {
+    useMusicStore.getState().setError(e?.reason ?? 'SPOTIFY_NOT_CONFIGURED')
+    return
+  }
   const verifier = generateCodeVerifier()
   const challenge = await generateCodeChallenge(verifier)
   const state = randomState()

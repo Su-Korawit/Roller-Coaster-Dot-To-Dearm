@@ -12,9 +12,17 @@ export const SPOTIFY_SCOPES = [
   'playlist-read-collaborative',
 ]
 
+export class SpotifyConfigError extends Error {
+  constructor() {
+    super('VITE_SPOTIFY_CLIENT_ID is not configured')
+    this.name = 'SpotifyConfigError'
+    this.reason = 'SPOTIFY_NOT_CONFIGURED'
+  }
+}
+
 export function clientId() {
   const id = import.meta.env.VITE_SPOTIFY_CLIENT_ID
-  if (!id) console.error('[spotify] missing VITE_SPOTIFY_CLIENT_ID — ตรวจ .env แล้ว restart dev server')
+  if (!id) throw new SpotifyConfigError()
   return id
 }
 
