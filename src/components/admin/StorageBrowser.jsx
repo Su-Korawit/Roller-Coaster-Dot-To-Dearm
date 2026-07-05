@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { cloudAsset } from '../../utils/cloudAsset'
 import { listFlat } from '../../utils/storageOps'
+import Popup from '../ui/Popup'
 
 // Modal that lists files under one or more Storage folders and returns the
 // chosen object's full path via onPick. Used to "Browse" existing assets when
@@ -33,11 +34,8 @@ export default function StorageBrowser({ folders, title = 'เลือกไฟ
   }, [folders])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div
-        className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Popup variant="center" size="lg" maxHeight="max-h-[80vh]" onClose={onClose}>
+      <div className="w-full flex flex-col">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <h4 className="font-semibold text-gray-800">{title}</h4>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-xl leading-none">×</button>
@@ -75,6 +73,6 @@ export default function StorageBrowser({ folders, title = 'เลือกไฟ
           )}
         </div>
       </div>
-    </div>
+    </Popup>
   )
 }

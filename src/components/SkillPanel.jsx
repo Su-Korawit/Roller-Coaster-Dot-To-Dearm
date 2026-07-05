@@ -6,6 +6,7 @@ import { useUserStore } from '../stores/useUserStore'
 import { useTaskStore } from '../stores/useTaskStore'
 import { PASSIVE_SKILLS, ACTIVE_SKILLS } from '../data/skillData'
 import SkillExecutionPopup from './SkillExecutionPopup'
+import Popup from './ui/Popup'
 
 // ─────────────────────────────────────────────────────────────
 // Unlocked skill ids (mock data — 2 unlocked, 2 locked each type)
@@ -493,20 +494,8 @@ function SkillInfoSheet({ skill, onClose }) {
   ]
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 z-50 bg-black/40"
-        onClick={onClose}
-      />
-
-      {/* Sheet */}
-      <div className="absolute bottom-0 left-0 right-0 z-50 rounded-t-4xl bg-[#fce4ef] px-6 pt-6 pb-8 shadow-2xl md:max-w-lg md:mx-auto">
-        {/* Drag handle */}
-        <div className="flex justify-center mb-4">
-          <div className="w-10 h-1 bg-pink-200 rounded-full" />
-        </div>
-
+    <Popup variant="sheet" size="md" onClose={onClose}>
+      <div className="bg-[#fce4ef] px-6 pt-6 pb-8 h-full overflow-y-auto">
         {/* Tab strip (just shows type) */}
         <div className="flex gap-2 mb-6">
           <div className={`px-4 py-2 rounded-xl pixel-font text-[9px] ${isPassive ? 'bg-white text-gray-800' : 'text-gray-400'}`}>
@@ -581,6 +570,6 @@ function SkillInfoSheet({ skill, onClose }) {
           </button>
         )}
       </div>
-    </>
+    </Popup>
   )
 }

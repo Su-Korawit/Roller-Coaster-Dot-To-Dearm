@@ -1,6 +1,7 @@
 // src/components/admin/FolderPickerModal.jsx
 import { useEffect, useState } from 'react'
 import { listAssetFolders } from '../../utils/assetFolders'
+import Popup from '../ui/Popup'
 
 export default function FolderPickerModal({ excludePath, onPick, onClose }) {
   const [folders, setFolders] = useState(null)
@@ -10,14 +11,8 @@ export default function FolderPickerModal({ excludePath, onPick, onClose }) {
   }, [])
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-2xl shadow-xl w-full max-w-xs max-h-[60vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Popup variant="center" size="sm" maxHeight="max-h-[60vh]" onClose={onClose}>
+      <div className="w-full flex flex-col">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <h4 className="font-semibold text-gray-800 text-sm">ย้ายไป Folder</h4>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-xl leading-none">×</button>
@@ -41,6 +36,6 @@ export default function FolderPickerModal({ excludePath, onPick, onClose }) {
               ))}
         </div>
       </div>
-    </div>
+    </Popup>
   )
 }

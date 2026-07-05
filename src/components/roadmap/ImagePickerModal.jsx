@@ -9,6 +9,7 @@ import { useUserStore } from '../../stores/useUserStore'
 import { useSelectStore } from '../../stores/useSelectStore'
 import { useRoadmapStore } from '../../stores/useRoadmapStore'
 import { normalizeImageNodeData, DEFAULT_IMAGE_OFFSET } from '../../utils/normalizeImageNodeData'
+import Popup from '../ui/Popup'
 
 // Asset picker for an image block: previously uploaded roadmap images, app
 // assets (profile photo + selected university logo), and a fresh upload.
@@ -68,11 +69,8 @@ export default function ImagePickerModal({ nodeId, onClose }) {
   ].filter(Boolean)
 
   return createPortal(
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
-      <div
-        className="w-full max-w-sm aspect-square max-h-[90vh] bg-white rounded-lg shadow-xl flex flex-col overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Popup variant="center" size="sm" onClose={onClose}>
+      <div className="aspect-square max-h-[90vh] flex flex-col overflow-hidden">
         <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between shrink-0">
           <div>
             <p className="pixel-font text-[11px] font-bold text-gray-800">Choose image</p>
@@ -111,7 +109,7 @@ export default function ImagePickerModal({ nodeId, onClose }) {
           <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onFileChange} />
         </div>
       </div>
-    </div>,
+    </Popup>,
     document.body,
   )
 }

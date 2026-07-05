@@ -1,4 +1,5 @@
 import guide from '../../data/mapDocs/tiled-guide.md?raw'
+import Popup from '../ui/Popup'
 
 // ── Minimal inline markdown renderer ─────────────────────────────────────────
 // Handles: # headings, | tables, ``` code blocks, - bullet lists, **bold**, > blockquote, --- hr
@@ -143,14 +144,8 @@ function renderMarkdown(raw) {
 
 export default function MapDocsPanel({ onClose }) {
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Popup variant="center" size="lg" onClose={onClose}>
+      <div className="w-full max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
           <h4 className="font-semibold text-gray-800">คู่มือการสร้างแมพ</h4>
@@ -170,6 +165,6 @@ export default function MapDocsPanel({ onClose }) {
           >ปิด</button>
         </div>
       </div>
-    </div>
+    </Popup>
   )
 }

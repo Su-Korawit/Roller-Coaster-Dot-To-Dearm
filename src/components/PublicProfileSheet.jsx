@@ -7,6 +7,7 @@ import { useSocialStore, calculateMatchScore } from '../stores/useSocialStore'
 import { universities } from '../data/onboardingData'
 import { tcasLogoUrl } from '../hooks/useMytcas'
 import { mbtiColor } from '../constants/mbtiColors'
+import Popup from './ui/Popup'
 
 function MatchScoreBar({ score }) {
   const [filled, setFilled] = useState(false)
@@ -172,22 +173,13 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
   const universityLogo = universities.find((u) => u.id === uniId)?.image || (uniId ? tcasLogoUrl(uniId) : null)
 
   return (
-    <div className="absolute inset-0 z-60 flex flex-col justify-end">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-
+    <Popup variant="sheet" size="md" maxHeight="max-h-[90vh]" onClose={onClose}>
       <div
-        className="relative bg-white rounded-t-4xl shadow-2xl flex flex-col overflow-hidden transition-transform duration-300 ease-out"
+        className="flex flex-col h-full overflow-hidden transition-transform duration-300 ease-out"
         style={{
-          maxHeight: '90%',
           transform: visible ? 'translateY(0)' : 'translateY(100%)',
         }}
-        onClick={(e) => e.stopPropagation()}
       >
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1 shrink-0">
-          <div className="w-10 h-1 bg-gray-300 rounded-full" />
-        </div>
-
         {/* Back header */}
         <div className="flex items-center px-4 pb-2 shrink-0">
           <button
@@ -391,6 +383,6 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
           </div>
         )}
       </div>
-    </div>
+    </Popup>
   )
 }

@@ -11,6 +11,8 @@ import { useSkillStore } from '../stores/useSkillStore'
 import { generateAIDailyTask, evaluateAndCompleteTask } from '../services/aiTasks'
 import TaskForm from './TaskForm'
 import SkillExecutionPopup from './SkillExecutionPopup'
+import Popup from './ui/Popup'
+import { Z_MODAL, Z_TOAST } from '../constants/zIndex'
 
 // ─── Shared-task ref helpers (localStorage) ───────────────────────────────────
 // Track which Firestore message docs contain each task so we can sync status.
@@ -75,15 +77,8 @@ function TaskShareSheet({ task, onClose }) {
   }
 
   return (
-    <div className="absolute inset-0 z-60 flex flex-col justify-end" onClick={onClose}>
-      <div
-        className="relative bg-white rounded-t-3xl shadow-2xl md:max-w-lg md:mx-auto"
-        style={{ paddingBottom: '80px' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex justify-center pt-3 pb-3">
-          <div className="w-10 h-1 bg-gray-300 rounded-full" />
-        </div>
+    <Popup variant="sheet" size="md" onClose={onClose}>
+      <div className="pb-4">
         <p className="pixel-font text-[9px] text-center text-gray-700 mb-1 px-5">ส่ง Task ให้เพื่อน</p>
         <p
           className="text-center text-gray-500 mb-4 px-6 truncate"
@@ -130,7 +125,7 @@ function TaskShareSheet({ task, onClose }) {
           </div>
         )}
       </div>
-    </div>
+    </Popup>
   )
 }
 
@@ -138,12 +133,13 @@ function TaskShareSheet({ task, onClose }) {
 function ReflectionSheet({ task, onSubmit, onClose, isEvaluating }) {
   const [reflection, setReflection] = useState('')
   return (
-    <div className="absolute inset-0 z-60 flex flex-col justify-end">
-      <div className="absolute inset-0 bg-black/50" onClick={!isEvaluating ? onClose : undefined} />
-      <div className="relative bg-white rounded-t-4xl px-6 pt-4 pb-10 shadow-2xl max-h-[75vh] flex flex-col md:max-w-lg md:mx-auto md:w-full">
-        <div className="flex justify-center mb-3 shrink-0">
-          <div className="w-10 h-1 bg-gray-200 rounded-full" />
-        </div>
+    <Popup
+      variant="sheet"
+      size="md"
+      maxHeight="max-h-[75vh]"
+      onClose={!isEvaluating ? onClose : undefined}
+    >
+      <div className="px-6 pt-4 pb-10 flex flex-col h-full">
         <h3 className="text-center font-bold text-gray-800 text-base mb-1 shrink-0">
           📝 Daily Reflection
         </h3>
@@ -173,7 +169,7 @@ function ReflectionSheet({ task, onSubmit, onClose, isEvaluating }) {
           </button>
         )}
       </div>
-    </div>
+    </Popup>
   )
 }
 
@@ -460,7 +456,10 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
 
       {/* ── Undo-delete toast ── */}
       {deletedTask && (
-        <div className="absolute bottom-4 left-4 right-4 z-70 flex items-center justify-between bg-gray-900 text-white rounded-2xl px-4 py-3 shadow-xl">
+        <div
+          className="absolute bottom-4 left-4 right-4 flex items-center justify-between bg-gray-900 text-white rounded-2xl px-4 py-3 shadow-xl"
+          style={{ zIndex: Z_TOAST }}
+        >
           <span className="pixel-font text-[9px] opacity-80 truncate mr-3">
             Deleted: {deletedTask.title}
           </span>
@@ -475,7 +474,10 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
 
       {/* ── AI Eval Result toast ── */}
       {evalResult && (
-        <div className="absolute inset-0 z-60 flex items-center justify-center bg-black/40 p-6">
+        <div
+          className="absolute inset-0 flex items-center justify-center bg-black/40 p-6"
+          style={{ zIndex: Z_MODAL }}
+        >
           <div className="bg-white rounded-2xl p-5 w-full max-w-xs shadow-xl text-center">
             <p className="text-2xl mb-2">🎉</p>
             <p className="pixel-font text-[10px] text-purple-700 mb-3">AI Progress Report</p>

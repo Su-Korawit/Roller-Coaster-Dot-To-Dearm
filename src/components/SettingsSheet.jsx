@@ -8,10 +8,12 @@ import { compressImage } from '../utils/compressImage'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useSelectStore } from '../stores/useSelectStore'
+import { usePlansStore } from '../stores/usePlansStore'
 import { useOnboardingUiStore } from '../stores/useOnboardingUiStore'
 import { useNavigate } from 'react-router-dom'
 import Toggle from './ui/Toggle'
 import SegmentedTabs from './ui/SegmentedTabs'
+import Popup from './ui/Popup'
 
 const DEFAULT_PRIVACY = {
   mastery:    { public: false, followers: true },
@@ -55,6 +57,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
   const uiVisibility = useUserStore((s) => s.uiVisibility)
   const setUiVisibility = useUserStore((s) => s.setUiVisibility)
   const resetSelection = useSelectStore((s) => s.resetSelection)
+  const resetPlans = usePlansStore((s) => s.resetPlans)
   const openOnboarding = useOnboardingUiStore((s) => s.open)
 
   const uid = authUser?.uid
@@ -139,6 +142,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
   async function handleSignOut() {
     resetUser()
     resetSelection()
+    resetPlans()
     await signOut()
     navigate('/')
     onClose()
@@ -153,22 +157,13 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
   const initials = (displayName || authUser?.displayName || '?').charAt(0).toUpperCase()
 
   return (
-    <div className="absolute inset-0 z-[70] flex flex-col justify-end">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-
+    <Popup variant="sheet" size="md" maxHeight="max-h-[92vh]" onClose={onClose}>
       <div
-        className="relative bg-white rounded-t-[32px] shadow-2xl flex flex-col transition-transform duration-300 ease-out md:max-w-lg md:mx-auto md:w-full"
+        className="flex flex-col h-full transition-transform duration-300 ease-out"
         style={{
-          maxHeight: '92%',
           transform: visible ? 'translateY(0)' : 'translateY(100%)',
         }}
-        onClick={(e) => e.stopPropagation()}
       >
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1 shrink-0">
-          <div className="w-10 h-1 bg-gray-200 rounded-full" />
-        </div>
-
         {/* Header */}
         <div className="flex items-center justify-between px-5 pb-3 shrink-0">
           <p className="pixel-font text-[11px] text-gray-700">Settings</p>
@@ -372,6 +367,6 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
 
         </div>
       </div>
-    </div>
+    </Popup>
   )
 }

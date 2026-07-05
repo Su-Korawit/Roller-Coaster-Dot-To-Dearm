@@ -1,15 +1,15 @@
 import { useState, useRef } from 'react'
-import { Loader2, Camera } from 'lucide-react'
+import { Camera } from 'lucide-react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { compressImage } from '../../utils/compressImage'
-import { generateJourney } from '../../services/aiJourney'
 import { useUserStore } from '../../stores/useUserStore'
-import { useSelectStore } from '../../stores/useSelectStore'
-import { careers, masteries, universities, programs } from '../../data/onboardingData'
+import { usePlansStore } from '../../stores/usePlansStore'
+import { universities } from '../../data/onboardingData'
 import { tcasLogoUrl } from '../../hooks/useMytcas'
 import PortfolioCircle from './PortfolioCircle'
 import InlineModal from './InlineModal'
 import JourneySheet from './JourneySheet'
+import MasteryTracks from './MasteryTracks'
 
 const PORTFOLIO_KEYS = ['mastery', 'career', 'university']
 
@@ -20,25 +20,16 @@ const PORTFOLIO_KEYS = ['mastery', 'career', 'university']
 export default function JourneyManager() {
   const portfolioData = useUserStore((s) => s.portfolioData)
   const journeys = useUserStore((s) => s.journeys)
-  const activeMasteryBlockId = useUserStore((s) => s.activeMasteryBlockId)
-  const aiLanguage = useUserStore((s) => s.aiLanguage)
-  const setActiveMasteryBlockId = useUserStore((s) => s.setActiveMasteryBlockId)
   const updatePortfolio = useUserStore((s) => s.updatePortfolio)
   const setJourneys = useUserStore((s) => s.setJourneys)
   const addJourneyItem = useUserStore((s) => s.addJourneyItem)
   const updateJourneyItem = useUserStore((s) => s.updateJourneyItem)
   const deleteJourneyItem = useUserStore((s) => s.deleteJourneyItem)
 
-  const mbti = useSelectStore((s) => s.mbti)
-  const career = useSelectStore((s) => s.career)
-  const mastery = useSelectStore((s) => s.mastery)
-  const university = useSelectStore((s) => s.university)
-  const program = useSelectStore((s) => s.program)
+  const activePlan = usePlansStore((s) => s.plans.find((p) => p.id === s.activePlanId))
+  const university = activePlan?.university ?? null
 
-  const selectedCareer = careers.find((c) => c.id === career)
-  const selectedMastery = masteries.find((m) => m.id === mastery)
   const selectedUniversity = universities.find((u) => u.id === university)
-  const selectedProgram = programs.find((p) => p.id === program)
 
   // Portfolio edit modal state
   const [portfolioModal, setPortfolioModal] = useState(null)
@@ -48,9 +39,6 @@ export default function JourneyManager() {
   // Journey edit modal state
   const [journeyModal, setJourneyModal] = useState(null)
   const [journeyEdit, setJourneyEdit] = useState({ title: '', desc: '' })
-
-  // AI generation state
-  const [isGenerating, setIsGenerating] = useState(false)
 
   // Journey detail view state
   const [viewingJourney, setViewingJourney] = useState(null)
@@ -139,39 +127,6 @@ export default function JourneyManager() {
     setJourneyModal(null)
   }
 
-  async function generateRoadmap() {
-    setIsGenerating(true)
-    try {
-      const steps = await generateJourney({
-        career: selectedCareer?.name,
-        mbti,
-        mastery: selectedMastery?.name,
-        university: selectedUniversity?.name,
-        program: selectedProgram?.name,
-        aiLanguage,
-      })
-
-      const journeyItems = steps.map((step) => ({
-        id: `journey-ai-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        title: step.title,
-        desc: step.desc,
-      }))
-
-      setJourneys('mastery', journeyItems)
-      setActiveCategory('mastery')
-      if (journeyItems.length > 0) setActiveMasteryBlockId(journeyItems[0].id)
-    } catch (err) {
-      if (err.message === 'AI_BAD_FORMAT') {
-        alert('AI returned an unexpected format. Please try again.')
-      } else {
-        console.error('Gemini API error:', err)
-        alert('Failed to connect to AI. Please check your API key or network.')
-      }
-    } finally {
-      setIsGenerating(false)
-    }
-  }
-
   return (
     <>
       {/* Portfolio circles */}
@@ -193,27 +148,14 @@ export default function JourneyManager() {
       </div>
 
       {/* Journey section */}
+      {activeCategory === 'mastery' ? (
+        <MasteryTracks />
+      ) : (
       <div>
         <div className="flex items-center justify-between mb-2">
           <p className="pixel-font text-[9px] text-gray-500">
             Journey of {circleData[activeCategory].label}
           </p>
-          {activeCategory === 'mastery' && (
-            <button
-              onClick={generateRoadmap}
-              disabled={isGenerating}
-              className="flex items-center gap-1.5 bg-linear-to-r from-purple-500 to-pink-500 text-white text-[10px] rounded-xl px-3 py-1.5 font-semibold disabled:opacity-60 disabled:cursor-not-allowed transition-opacity"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 size={11} className="animate-spin" />
-                  AI is thinking...
-                </>
-              ) : (
-                '✨ Generate AI Roadmap'
-              )}
-            </button>
-          )}
         </div>
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="journey-list" direction="horizontal">
@@ -224,53 +166,23 @@ export default function JourneyManager() {
                 className="flex gap-3 overflow-x-auto pb-2"
                 style={{ minHeight: '88px' }}
               >
-                {currentJourneys.map((item, index) => {
-                  const isPinned = activeCategory === 'mastery' && activeMasteryBlockId === item.id
-                  return (
+                {currentJourneys.map((item, index) => (
                     <Draggable key={item.id} draggableId={item.id} index={index}>
                       {(provided, snapshot) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           className={`relative shrink-0 w-20 rounded-xl transition-shadow ${
-                            snapshot.isDragging
-                              ? 'shadow-lg'
-                              : isPinned
-                              ? 'shadow-md shadow-purple-300'
-                              : ''
-                          } ${
-                            isPinned
-                              ? 'bg-purple-100 border-2 border-purple-400 ring-2 ring-purple-300 ring-offset-1'
-                              : 'bg-purple-50 border border-purple-100'
-                          }`}
-                          style={{ height: isPinned ? '96px' : '80px' }}
+                            snapshot.isDragging ? 'shadow-lg' : ''
+                          } bg-purple-50 border border-purple-100`}
+                          style={{ height: '80px' }}
                         >
-                          {/* Pinned badge */}
-                          {isPinned && (
-                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-purple-500 text-white text-[7px] rounded-full px-1.5 py-0.5 whitespace-nowrap z-10 pixel-font">
-                              Focus
-                            </div>
-                          )}
-                          {/* Dedicated drag handle */}
                           <div
                             {...provided.dragHandleProps}
                             className="absolute top-1 right-1 text-gray-300 hover:text-gray-400 cursor-grab active:cursor-grabbing leading-none text-[10px] select-none"
                           >
                             ⠿
                           </div>
-                          {/* Pin button (mastery only) */}
-                          {activeCategory === 'mastery' && (
-                            <button
-                              onClick={() => setActiveMasteryBlockId(isPinned ? null : item.id)}
-                              className={`absolute bottom-1 left-1 text-[11px] leading-none ${
-                                isPinned ? 'text-purple-500' : 'text-gray-300 hover:text-purple-400'
-                              }`}
-                              title={isPinned ? 'Unpin block' : 'Set as active focus'}
-                            >
-                              📌
-                            </button>
-                          )}
-                          {/* Clickable area — opens detail view */}
                           <button
                             onClick={() => setViewingJourney(item)}
                             className="w-full h-full flex flex-col items-center justify-center p-2 pt-3 gap-1"
@@ -278,42 +190,12 @@ export default function JourneyManager() {
                             <span className="text-[9px] font-semibold text-gray-700 text-center leading-tight line-clamp-2">
                               {item.title || '—'}
                             </span>
-                            {/* Credited friends avatar stack */}
-                            {(() => {
-                              const credited = (item.progressNotes || []).filter((n) => n?.creditedFriend)
-                              if (!credited.length) return null
-                              return (
-                                <div className="flex items-center justify-center" title="ทำร่วมกับเพื่อน">
-                                  {credited.slice(0, 3).map((c, i) => (
-                                    <div
-                                      key={i}
-                                      className="w-3.5 h-3.5 rounded-full overflow-hidden border border-white shrink-0 bg-purple-200"
-                                      style={{ marginLeft: i > 0 ? '-5px' : 0, zIndex: credited.length - i }}
-                                    >
-                                      {c.creditedFriend.photoURL
-                                        ? <img src={c.creditedFriend.photoURL} alt="" className="w-full h-full object-cover" />
-                                        : <span className="text-[5px] flex items-center justify-center w-full h-full">👤</span>}
-                                    </div>
-                                  ))}
-                                  {credited.length > 3 && (
-                                    <div
-                                      className="w-3.5 h-3.5 rounded-full bg-gray-300 border border-white flex items-center justify-center shrink-0"
-                                      style={{ marginLeft: '-5px', zIndex: 0 }}
-                                    >
-                                      <span className="text-[4px] text-gray-600">+{credited.length - 3}</span>
-                                    </div>
-                                  )}
-                                </div>
-                              )
-                            })()}
                           </button>
                         </div>
                       )}
                     </Draggable>
-                  )
-                })}
+                ))}
                 {provided.placeholder}
-                {/* Add button */}
                 <button
                   onClick={openAddJourney}
                   className="shrink-0 w-20 h-20 rounded-xl border-2 border-dashed border-purple-200 flex items-center justify-center text-purple-400 hover:border-purple-400 hover:text-purple-500 transition-colors"
@@ -325,6 +207,7 @@ export default function JourneyManager() {
           </Droppable>
         </DragDropContext>
       </div>
+      )}
 
       {/* Journey Detail View Modal */}
       {viewingJourney && (() => {

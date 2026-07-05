@@ -1,9 +1,11 @@
+import Popup from '../ui/Popup'
+
 // Centered modal — absolute positioning avoids backdrop-blur stacking-context
 // issues with fixed. Extracted from ProfilePanel.
 export default function InlineModal({ title, children, onClose }) {
   return (
-    <div className="absolute inset-0 z-60 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl p-5 w-full max-w-xs shadow-xl flex flex-col max-h-[80vh]">
+    <Popup variant="center" size="sm" maxHeight="max-h-[80vh]" onClose={onClose}>
+      <div className="p-5 flex flex-col">
         <p className="pixel-font text-[10px] text-gray-700 mb-3 shrink-0">{title}</p>
         <div className="overflow-y-auto flex-1 space-y-3 pr-1 pb-1">
           {children}
@@ -15,6 +17,6 @@ export default function InlineModal({ title, children, onClose }) {
           Cancel
         </button>
       </div>
-    </div>
+    </Popup>
   )
 }

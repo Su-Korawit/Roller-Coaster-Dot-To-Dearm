@@ -1,6 +1,7 @@
 import { setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
 import { refs, shapes } from '../lib/db'
 import { useSelectStore } from '../stores/useSelectStore'
+import { usePlansStore } from '../stores/usePlansStore'
 
 /**
  * Push current useSelectStore values into Firestore users/{uid}.profile.
@@ -10,7 +11,9 @@ import { useSelectStore } from '../stores/useSelectStore'
 export async function syncSelectToFirestore(uid) {
   if (!uid) return
 
-  const profile = shapes.profileFields(useSelectStore.getState())
+  const { mbti, career, mastery } = useSelectStore.getState()
+  const { plans, activePlanId } = usePlansStore.getState()
+  const profile = shapes.profileFields({ mbti, career, mastery, plans, activePlanId })
 
   if (Object.keys(profile).length === 0) return
 
@@ -22,6 +25,7 @@ export async function syncSelectToFirestore(uid) {
     )
   } catch (error) {
     console.error('[syncSelectToFirestore] failed:', error)
+    throw error
   }
 }
 
@@ -41,8 +45,9 @@ export async function hydrateSelectStoreFromFirestore(uid) {
 
     // Firestore-wins: read through the canonical shape (handles legacy
     // top-level docs) and overwrite local so it stays consistent across devices.
-    const { mbti, career, masteryTrack, university, program } = shapes.readProfile(data)
+    const { mbti, career, masteryTrack, university, program, plans, activePlanId } = shapes.readProfile(data)
     const { setMbti, setCareer, setMastery, setUniversity, setProgram } = useSelectStore.getState()
+    usePlansStore.setState({ plans, activePlanId })
     if (mbti)         setMbti(mbti)
     if (career)       setCareer(career)
     if (masteryTrack) setMastery(masteryTrack)

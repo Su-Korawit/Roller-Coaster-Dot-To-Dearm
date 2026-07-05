@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { buildPromptPayQR } from '../../lib/promptpay'
 import { shopConfig } from '../../constants/shopConfig'
+import Popup from '../ui/Popup'
 
 const SUGGESTED = 100 // default amount; donor can overpay/underpay when scanning
 
@@ -29,14 +30,8 @@ export default function DonateSection() {
       </button>
 
       {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6"
-          onClick={() => setOpen(false)}
-          role="dialog"
-          aria-modal="true"
-          aria-label="บริจาคผ่าน PromptPay"
-        >
-          <div className="neo-card max-w-xs w-full p-6" onClick={(e) => e.stopPropagation()}>
+        <Popup variant="center" size="sm" onClose={() => setOpen(false)}>
+          <div className="neo-card p-6" role="dialog" aria-modal="true" aria-label="บริจาคผ่าน PromptPay">
             <p className="pixel-font text-[10px] text-ink mb-4">PROMPTPAY</p>
             <div className="flex justify-center">
               {qrUrl ? (
@@ -55,7 +50,7 @@ export default function DonateSection() {
               ปิด
             </button>
           </div>
-        </div>
+        </Popup>
       )}
     </section>
   )

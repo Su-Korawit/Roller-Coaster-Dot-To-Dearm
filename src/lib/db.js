@@ -87,15 +87,36 @@ export const queries = {
 export const shapes = {
   // Canonical write shape: maps select-store fields onto profile.*, keeping only
   // non-empty values and renaming mastery → masteryTrack.
-  profileFields: ({ mbti, career, mastery, university, program } = {}) => {
+  profileFields: ({ mbti, career, mastery, university, program, plans, activePlanId } = {}) => {
     const profile = {}
-    if (mbti)       profile.mbti = mbti
-    if (career)     profile.career = career
-    if (mastery)    profile.masteryTrack = mastery
-    if (university) profile.university = university
-    if (program)    profile.program = program
-    if (program)    profile.programs = [{ programId: program, addedAt: Date.now() }]
-    if (mastery)    profile.masteryTracks = [{ masteryId: mastery, milestones: [], progressPct: 0, addedAt: Date.now() }]
+    if (mbti)    profile.mbti = mbti
+    if (career)  profile.career = career
+    if (mastery) profile.masteryTrack = mastery
+    if (mastery) profile.masteryTracks = [{ masteryId: mastery, milestones: [], progressPct: 0, addedAt: Date.now() }]
+
+    if (Array.isArray(plans) && plans.length) {
+      profile.plans = plans.map((pl) => ({
+        id: pl.id,
+        university: pl.university ?? null,
+        program: pl.program ?? null,
+        addedAt: pl.addedAt ?? Date.now(),
+      }))
+      const active = plans.find((pl) => pl.id === activePlanId) ?? plans[0]
+      if (activePlanId) profile.activePlanId = activePlanId
+      // Mirror the active plan into the legacy singular fields for downstream readers.
+      if (active?.university) profile.university = active.university
+      if (active?.program) {
+        profile.program = active.program
+        profile.programs = [{ programId: active.program, addedAt: active.addedAt ?? Date.now() }]
+      }
+    } else {
+      // Fallback: legacy single-select path still works.
+      if (university) profile.university = university
+      if (program) {
+        profile.program = program
+        profile.programs = [{ programId: program, addedAt: Date.now() }]
+      }
+    }
     return profile
   },
 
@@ -104,12 +125,20 @@ export const shapes = {
   readProfile: (userDoc = {}) => {
     const p = userDoc.profile ?? {}
     const masteryTrack = p.masteryTrack ?? userDoc.mastery ?? null
+    const singleUni = p.university ?? userDoc.university ?? null
+    const singleProg = p.program ?? userDoc.program ?? null
+    const plans = p.plans
+      ?? (singleProg || singleUni
+        ? [{ id: 'legacy', university: singleUni, program: singleProg }]
+        : [])
     return {
-      mbti:         p.mbti ?? userDoc.mbti ?? null,
-      program:      p.program ?? userDoc.program ?? null,
-      career:       p.career ?? userDoc.career ?? null,
+      mbti:       p.mbti ?? userDoc.mbti ?? null,
+      program:    singleProg,
+      career:     p.career ?? userDoc.career ?? null,
       masteryTrack,
-      university:   p.university ?? userDoc.university ?? null,
+      university: singleUni,
+      plans,
+      activePlanId: p.activePlanId ?? plans[0]?.id ?? null,
       programs: p.programs ?? (p.program ?? userDoc.program
         ? [{ programId: p.program ?? userDoc.program }]
         : []),

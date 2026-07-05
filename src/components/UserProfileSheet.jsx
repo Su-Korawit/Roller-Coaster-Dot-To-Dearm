@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/useAuthStore'
 import { useSocialStore, calculateMatchScore } from '../stores/useSocialStore'
 import { refs, shapes } from '../lib/db'
 import { mbtiColor } from '../constants/mbtiColors'
+import Popup from './ui/Popup'
 
 // ─── Match score bar — pixel-art segmented style ─────────────────────────────
 function MatchBar({ score }) {
@@ -130,24 +131,13 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
   }
 
   return (
-    <div className="absolute inset-0 z-60 flex flex-col justify-end">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-
-      {/* Sheet */}
+    <Popup variant="sheet" size="md" maxHeight="max-h-[85vh]" onClose={onClose}>
       <div
-        className="relative bg-white rounded-t-4xl shadow-2xl flex flex-col overflow-hidden transition-transform duration-300 ease-out"
+        className="flex flex-col h-full overflow-hidden transition-transform duration-300 ease-out"
         style={{
-          maxHeight: '85%',
           transform: visible ? 'translateY(0)' : 'translateY(100%)',
         }}
-        onClick={(e) => e.stopPropagation()}
       >
-        {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1 shrink-0">
-          <div className="w-10 h-1 bg-gray-300 rounded-full" />
-        </div>
-
         {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center py-16">
@@ -292,6 +282,6 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
           </div>
         )}
       </div>
-    </div>
+    </Popup>
   )
 }

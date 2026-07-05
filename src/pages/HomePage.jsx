@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
-import { Calendar, MessageCircle, Map, Newspaper } from 'lucide-react'
+import { Calendar, MessageCircle, Map, Newspaper, Trophy } from 'lucide-react'
 import { useUserStore } from '../stores/useUserStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { APP_VIEWS, shouldShowNav } from '../constants/appViews'
@@ -11,6 +11,7 @@ import SkillPanel from '../components/SkillPanel'
 import SocialPanel from '../components/SocialPanel'
 import ChatPanel from '../components/ChatPanel'
 import CalendarPopup from '../components/CalendarPopup'
+import MasteryPopup from '../components/MasteryPopup'
 import DailyLoginModal from '../components/DailyLoginModal'
 import { getDoc, setDoc } from 'firebase/firestore'
 import { auth } from '../firebase'
@@ -22,6 +23,7 @@ import { CoinIcon } from '../components/ui/CoinIcon'
 import { useInventoryStore } from '../stores/useInventoryStore'
 import { useCloudAsset } from '../hooks/useCloudAsset'
 import { getMusicConfig, DEFAULT_TRACKS } from '../utils/musicConfig'
+import { Z_NAV } from '../constants/zIndex'
 
 const GameCanvas = lazy(() => import('../components/GameCanvas'))
 const RoadmapPage = lazy(() => import('./RoadmapPage'))
@@ -39,6 +41,7 @@ function HomePage() {
   // Starts from the built-in default and hydrates from Firestore on mount.
   const [tracks, setTracks] = useState(DEFAULT_TRACKS)
   const [showCalendar, setShowCalendar] = useState(false)
+  const [showMastery, setShowMastery] = useState(false)
   const [showRoadmap, setShowRoadmap] = useState(false)
   const [showDailyModal, setShowDailyModal] = useState(false)
   const audioRef = useRef(null)
@@ -275,6 +278,13 @@ function HomePage() {
           <Calendar size={22} strokeWidth={1.5} className="text-brand" />
         </button>
         <button
+          onClick={() => setShowMastery(true)}
+          aria-label="เปิด Mastery"
+          className="w-12 h-12 md:w-14 md:h-14 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-gray-100 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        >
+          <Trophy size={22} strokeWidth={1.5} className="text-brand" />
+        </button>
+        <button
           onClick={() => setShowRoadmap(true)}
           aria-label="เปิด Roadmap"
           className="w-12 h-12 md:w-14 md:h-14 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-gray-100 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
@@ -338,6 +348,8 @@ function HomePage() {
         />
       )}
 
+      {showMastery && <MasteryPopup onClose={() => setShowMastery(false)} />}
+
       {/* ── DAILY MOOD CHECK-IN ── */}
       {showDailyModal && (
         <DailyLoginModal onClose={() => setShowDailyModal(false)} />
@@ -354,7 +366,10 @@ function HomePage() {
 
       {/* ── TRACKLIST PANEL ── */}
       {showTrackList && (
-        <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-30 w-[90%] max-w-sm md:max-w-md bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl flex flex-col overflow-hidden max-h-[55vh]">
+        <div
+          className="absolute bottom-28 left-1/2 -translate-x-1/2 w-[90%] max-w-sm md:max-w-md bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl flex flex-col overflow-hidden max-h-[55vh]"
+          style={{ zIndex: Z_NAV }}
+        >
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between shrink-0">
             <div className="min-w-0 flex-1">

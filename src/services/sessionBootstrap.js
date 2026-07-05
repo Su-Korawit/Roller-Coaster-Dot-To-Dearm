@@ -22,6 +22,7 @@ import { refs, shapes, queries } from '../lib/db'
 import { useUserStore } from '../stores/useUserStore'
 import { useWorldStore } from '../stores/useWorldStore'
 import { useRoadmapStore } from '../stores/useRoadmapStore'
+import { usePlansStore } from '../stores/usePlansStore'
 import { hydrateSelectStoreFromFirestore } from '../utils/syncSelectToFirestore'
 import { hydrateFarmDataFromFirestore } from '../lib/farmDataSync.js'
 import { migrateLegacyRoadmap } from '../utils/migrateLegacyRoadmap'
@@ -177,4 +178,5 @@ export function teardownSession() {
   disarmInventorySync()
   disarmFarmSync()
   useWorldStore.getState().setMapOwner(null)
+  usePlansStore.getState().resetPlans()
 }

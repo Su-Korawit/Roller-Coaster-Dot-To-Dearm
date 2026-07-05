@@ -2,8 +2,9 @@ import { useMemo, useState, useEffect } from 'react'
 import StepScreen from '../ui/StepScreen'
 import { universities as legacyUniversities } from '../../data/onboardingData'
 import { useTcasUniversities } from '../../hooks/useMytcas'
-import { useSelectStore } from '../../stores/useSelectStore'
-import { useSelectionCommit } from '../../hooks/useSelectionCommit'
+import { usePlansStore } from '../../stores/usePlansStore'
+import { useAuthStore } from '../../stores/useAuthStore'
+import { syncSelectToFirestore } from '../../utils/syncSelectToFirestore'
 import { cloudAsset } from '../../utils/cloudAsset'
 
 const legacyByName = new Map(legacyUniversities.map((u) => [u.name, u]))
@@ -65,9 +66,17 @@ function UniversityLogo({ uni }) {
 function UniversityStep({ onNext }) {
   const [query, setQuery] = useState('')
   const { universities, loading, error } = useTcasUniversities()
-  const selected = useSelectStore((state) => state.university)
-  const setUniversity = useSelectStore((state) => state.setUniversity)
-  const commitUniversity = useSelectionCommit(setUniversity)
+  const plans = usePlansStore((state) => state.plans)
+  const activePlanId = usePlansStore((state) => state.activePlanId)
+  const updatePlan = usePlansStore((state) => state.updatePlan)
+  const uid = useAuthStore((state) => state.user?.uid)
+  const selected = plans.find((plan) => plan.id === activePlanId)?.university ?? null
+
+  const commitUniversity = (universityId) => {
+    if (!activePlanId) return
+    updatePlan(activePlanId, { university: universityId })
+    if (uid) syncSelectToFirestore(uid)
+  }
 
   const filtered = useMemo(
     () =>
