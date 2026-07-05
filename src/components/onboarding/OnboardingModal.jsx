@@ -6,14 +6,12 @@ import { usePopupStore } from '../../stores/usePopupStore'
 import { syncSelectToFirestore } from '../../utils/syncSelectToFirestore'
 import OnboardingIntro from './OnboardingIntro'
 import MbtiStep from './MbtiStep'
-import CareerStep from './CareerStep'
-import MasteryStep from './MasteryStep'
 import PlansHub from './PlansHub'
 import UniversityStep from './UniversityStep'
 import ProgramStep from './ProgramStep'
 import Popup from '../ui/Popup'
 
-const LAST_MAIN_STEP = 4
+const LAST_MAIN_STEP = 2
 
 // Full-viewport overlay that walks a signed-in user through onboarding.
 // Visible when forced open (ProfilePanel "Edit your path" / SettingsSheet
@@ -57,8 +55,6 @@ function OnboardingModal() {
   function renderCurrentStep() {
     if (step === 0) return <OnboardingIntro onNext={handleNext} onBack={handleBack} />
     if (step === 1) return <MbtiStep onNext={handleNext} onBack={handleBack} />
-    if (step === 2) return <CareerStep onNext={handleNext} onBack={handleBack} />
-    if (step === 3) return <MasteryStep onNext={handleNext} onBack={handleBack} />
     if (subStep === 'university') {
       return <UniversityStep onNext={() => setSubStep('program')} onBack={() => setSubStep(null)} />
     }

@@ -29,12 +29,6 @@ vi.mock('./OnboardingIntro', () => ({
 vi.mock('./MbtiStep', () => ({
   default: ({ onNext }) => <button onClick={onNext}>MBTI_NEXT</button>,
 }))
-vi.mock('./CareerStep', () => ({
-  default: ({ onNext }) => <button onClick={onNext}>CAREER_NEXT</button>,
-}))
-vi.mock('./MasteryStep', () => ({
-  default: ({ onNext }) => <button onClick={onNext}>MASTERY_NEXT</button>,
-}))
 vi.mock('./PlansHub', () => ({
   default: ({ onEditPlan, onNext, onBack }) => (
     <>
@@ -67,8 +61,6 @@ const { useOnboardingUiStore } = await import('../../stores/useOnboardingUiStore
 function walkToHub() {
   fireEvent.click(screen.getByText('INTRO_NEXT'))
   fireEvent.click(screen.getByText('MBTI_NEXT'))
-  fireEvent.click(screen.getByText('CAREER_NEXT'))
-  fireEvent.click(screen.getByText('MASTERY_NEXT'))
 }
 
 describe('OnboardingModal', () => {
