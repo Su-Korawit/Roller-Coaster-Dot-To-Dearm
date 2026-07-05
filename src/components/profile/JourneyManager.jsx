@@ -5,6 +5,7 @@ import { compressImage } from '../../utils/compressImage'
 import { generateJourney } from '../../services/aiJourney'
 import { useUserStore } from '../../stores/useUserStore'
 import { useSelectStore } from '../../stores/useSelectStore'
+import { usePlansStore } from '../../stores/usePlansStore'
 import { careers, masteries, universities, programs } from '../../data/onboardingData'
 import { tcasLogoUrl } from '../../hooks/useMytcas'
 import PortfolioCircle from './PortfolioCircle'
@@ -32,8 +33,9 @@ export default function JourneyManager() {
   const mbti = useSelectStore((s) => s.mbti)
   const career = useSelectStore((s) => s.career)
   const mastery = useSelectStore((s) => s.mastery)
-  const university = useSelectStore((s) => s.university)
-  const program = useSelectStore((s) => s.program)
+  const activePlan = usePlansStore((s) => s.plans.find((p) => p.id === s.activePlanId))
+  const university = activePlan?.university ?? null
+  const program = activePlan?.program ?? null
 
   const selectedCareer = careers.find((c) => c.id === career)
   const selectedMastery = masteries.find((m) => m.id === mastery)
