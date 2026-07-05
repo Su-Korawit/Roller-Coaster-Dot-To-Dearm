@@ -57,6 +57,7 @@ describe('ProgramStep', () => {
     render(<ProgramStep onNext={vi.fn()} onBack={vi.fn()} />)
     fireEvent.click(screen.getByText('วิศวกรรมศาสตร์'))
     fireEvent.click(screen.getByText('วิศวกรรมคอมพิวเตอร์'))
+    fireEvent.click(screen.getByText('เลือกแล้ว'))
     expect(plansState.updatePlan).toHaveBeenCalledWith('p1', { program: 'PROG1' })
     expect(syncSelectToFirestore).toHaveBeenCalledWith('u1')
   })

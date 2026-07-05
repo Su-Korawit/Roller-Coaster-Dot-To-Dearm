@@ -63,7 +63,7 @@ function UniversityLogo({ uni }) {
 }
 
 // Step 4 of OnboardingModal — WizardStepper index 2 ("University").
-function UniversityStep({ onNext }) {
+function UniversityStep({ onNext, onBack }) {
   const [query, setQuery] = useState('')
   const { universities, loading, error } = useTcasUniversities()
   const plans = usePlansStore((state) => state.plans)
@@ -99,7 +99,9 @@ function UniversityStep({ onNext }) {
       onSearchChange={(e) => setQuery(e.target.value)}
       searchLabel="ค้นหามหาวิทยาลัย"
       onNext={onNext}
+      onBack={onBack}
       nextDisabled={!selected}
+      progress={{ value: 4, total: 5 }}
     >
       <div className="mx-auto max-w-5xl rounded-[20px] bg-white/55 p-4 md:p-6">
         {loading ? (
@@ -126,7 +128,7 @@ function UniversityStep({ onNext }) {
                 aria-pressed={selected === university.university_id}
                 className={`relative rounded-2xl bg-white p-3 transition-all hover:shadow-md active:scale-95
                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1
-                  ${selected === university.university_id ? 'ring-4 ring-pink-400 shadow-md' : 'shadow-sm'}`}
+                  ${selected === university.university_id ? 'ring-2 ring-brand-strong border-2 border-brand-strong shadow-md' : 'shadow-sm border border-gray-100'}`}
               >
                 <UniversityLogo uni={university} />
               </button>

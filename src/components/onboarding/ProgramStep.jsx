@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import StepScreen from '../ui/StepScreen'
+import SelectableRow from '../ui/SelectableRow'
+import ProgramDetail from './ProgramDetail'
 import { useTcasFaculties, useTcasPrograms, useTcasRounds } from '../../hooks/useMytcas'
 import { usePlansStore } from '../../stores/usePlansStore'
 import { useAuthStore } from '../../stores/useAuthStore'
@@ -9,20 +11,16 @@ function ProgramRoundBadge({ programId }) {
   const { rounds } = useTcasRounds(programId)
   if (!rounds.length) return null
   return (
-    <span
-      className="mt-1.5 inline-block rounded-full bg-yellow-300 px-2.5 py-0.5 text-xs text-black font-medium"
-      style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
-    >
-      {rounds.map((r) => `รอบ ${r.round}`).join(' · ')}
+    <span className="inline-block rounded-full bg-yellow-300 px-2 py-0.5 text-[10px] font-medium text-black">
+      {rounds.map((r) => r.name ?? `รอบ ${r.round}`).join(' · ')}
     </span>
   )
 }
 
-// Selecting a program commits it into the active plan via updatePlan and
-// syncSelectToFirestore, mirroring singular profile.program for downstream readers.
 function ProgramStep({ onNext, onBack }) {
   const [query, setQuery] = useState('')
   const [selectedFaculty, setSelectedFaculty] = useState(null)
+  const [detailProgram, setDetailProgram] = useState(null)
   const plans = usePlansStore((state) => state.plans)
   const activePlanId = usePlansStore((state) => state.activePlanId)
   const updatePlan = usePlansStore((state) => state.updatePlan)
@@ -54,19 +52,31 @@ function ProgramStep({ onNext, onBack }) {
     )
   }, [programs, query])
 
+  if (detailProgram) {
+    return (
+      <ProgramDetail
+        programId={detailProgram.program_id}
+        programName={detailProgram.program_name_th}
+        onBack={() => setDetailProgram(null)}
+        onConfirm={() => {
+          commitProgram(detailProgram.program_id)
+          setDetailProgram(null)
+        }}
+      />
+    )
+  }
+
   const subtitle = selectedFaculty ? (
     <button
+      type="button"
       onClick={() => { setSelectedFaculty(null); setQuery('') }}
-      className="text-sm font-semibold text-gray-600 focus-visible:outline-none focus-visible:underline"
+      className="text-sm font-semibold text-gray-600"
       style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
     >
       ← เลือกคณะใหม่
     </button>
   ) : (
-    <h2
-      className="text-sm font-bold text-gray-700"
-      style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
-    >
+    <h2 className="text-sm font-bold text-gray-700" style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
       เลือกคณะ
     </h2>
   )
@@ -74,26 +84,26 @@ function ProgramStep({ onNext, onBack }) {
   return (
     <StepScreen
       step={3}
-      title="Program"
+      title="หลักสูตร"
       subtitle={subtitle}
       maxWidth="max-w-3xl"
       searchValue={query}
       onSearchChange={(e) => setQuery(e.target.value)}
       searchLabel="ค้นหาคณะหรือหลักสูตร"
       onNext={onNext}
+      onBack={onBack}
       nextDisabled={!selected}
+      progress={{ value: 5, total: 5 }}
     >
       {!university ? (
         <div className="mt-10 text-center">
-          <p
-            className="text-sm text-gray-500"
-            style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
-          >
+          <p className="text-sm text-gray-500" style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
             กรุณาเลือกมหาวิทยาลัยก่อน
           </p>
           <button
+            type="button"
             onClick={onBack}
-            className="mt-3 rounded-2xl bg-brand px-4 py-2 text-sm text-white"
+            className="mt-3 rounded-2xl bg-brand-strong px-4 py-2 text-sm text-white"
             style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
           >
             ไปเลือกมหาวิทยาลัย
@@ -101,10 +111,7 @@ function ProgramStep({ onNext, onBack }) {
         </div>
       ) : !selectedFaculty ? (
         facLoading ? (
-          <p
-            className="py-10 text-center text-sm text-gray-500"
-            style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
-          >
+          <p className="py-10 text-center text-sm text-gray-500" style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
             กำลังโหลดคณะ...
           </p>
         ) : facError ? (
@@ -112,37 +119,20 @@ function ProgramStep({ onNext, onBack }) {
             โหลดข้อมูลไม่สำเร็จ
           </p>
         ) : (
-          <div className="mx-auto max-w-3xl mt-3 space-y-3">
+          <div className="mx-auto mt-3 max-w-3xl space-y-2">
             {filteredFaculties.map((faculty) => (
-              <button
+              <SelectableRow
                 key={faculty.faculty_id}
+                title={faculty.faculty_name_th}
+                subtitle={`${faculty.program_count} หลักสูตร`}
                 onClick={() => { setSelectedFaculty(faculty.faculty_id); setQuery('') }}
-                className="flex w-full items-center justify-between rounded-2xl bg-white px-4 py-3 text-left shadow-sm
-                  hover:shadow-md active:scale-[0.98] transition-all
-                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1"
-              >
-                <span
-                  className="text-sm font-bold text-gray-900"
-                  style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
-                >
-                  {faculty.faculty_name_th}
-                </span>
-                <span
-                  className="shrink-0 text-xs text-gray-400 ml-3"
-                  style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
-                >
-                  {faculty.program_count} หลักสูตร
-                </span>
-              </button>
+              />
             ))}
           </div>
         )
       ) : (
         progLoading ? (
-          <p
-            className="py-10 text-center text-sm text-gray-500"
-            style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
-          >
+          <p className="py-10 text-center text-sm text-gray-500" style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
             กำลังโหลดหลักสูตร...
           </p>
         ) : progError ? (
@@ -150,39 +140,16 @@ function ProgramStep({ onNext, onBack }) {
             โหลดข้อมูลไม่สำเร็จ
           </p>
         ) : (
-          <div className="mx-auto max-w-3xl mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="mx-auto mt-3 max-w-3xl space-y-2">
             {filteredPrograms.map((program) => (
-              <button
+              <SelectableRow
                 key={program._id}
-                onClick={() => commitProgram(program.program_id)}
-                aria-pressed={selected === program.program_id}
-                className={`w-full rounded-2xl bg-white px-4 py-3 text-left shadow-sm transition-all
-                  hover:shadow-md active:scale-[0.98]
-                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1
-                  ${selected === program.program_id ? 'ring-4 ring-pink-400 shadow-md' : ''}`}
-              >
-                <p
-                  className="text-sm font-bold text-gray-900"
-                  style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
-                >
-                  {program.program_name_th}
-                </p>
-                {program.field_name_th && (
-                  <p
-                    className="mt-0.5 text-xs leading-tight text-gray-500"
-                    style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
-                  >
-                    {program.field_name_th}
-                  </p>
-                )}
-                <p
-                  className="mt-0.5 text-xs text-gray-400"
-                  style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
-                >
-                  {program.program_type_name_th}
-                </p>
-                <ProgramRoundBadge programId={program.program_id} />
-              </button>
+                title={program.program_name_th}
+                subtitle={program.field_name_th || program.program_type_name_th}
+                leading={<ProgramRoundBadge programId={program.program_id} />}
+                selected={selected === program.program_id}
+                onClick={() => setDetailProgram(program)}
+              />
             ))}
           </div>
         )
