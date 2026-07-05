@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTaskStore } from '../stores/useTaskStore'
 import { useUserStore } from '../stores/useUserStore'
+import Popup from './ui/Popup'
+import { Z_TOAST } from '../constants/zIndex'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Ignite Popup — 5-second launch countdown, then "GO!" for the specific task
@@ -148,29 +150,18 @@ export default function SkillExecutionPopup({ task, onClose }) {
   }
 
   return (
-    <div className="absolute inset-0 z-80 flex flex-col">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/70" onClick={handleCancel} />
-
-      {/* Sheet */}
-      <div className="relative mt-auto bg-white rounded-t-3xl shadow-2xl overflow-hidden md:max-w-lg md:mx-auto md:w-full">
-        {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 bg-gray-200 rounded-full" />
-        </div>
-
-        {task.assignedSkill === 'ignite' && (
-          <IgnitePopup task={task} onDone={handleIgniteDone} onCancel={handleCancel} />
-        )}
-        {task.assignedSkill === 'capsule' && (
-          <CapsulePopup
-            task={task}
-            timerEnd={task.timerEnd}
-            onComplete={handleCapsuleComplete}
-            onCancel={handleCancel}
-          />
-        )}
-      </div>
-    </div>
+    <Popup variant="sheet" size="md" zIndex={Z_TOAST} onClose={handleCancel}>
+      {task.assignedSkill === 'ignite' && (
+        <IgnitePopup task={task} onDone={handleIgniteDone} onCancel={handleCancel} />
+      )}
+      {task.assignedSkill === 'capsule' && (
+        <CapsulePopup
+          task={task}
+          timerEnd={task.timerEnd}
+          onComplete={handleCapsuleComplete}
+          onCancel={handleCancel}
+        />
+      )}
+    </Popup>
   )
 }
