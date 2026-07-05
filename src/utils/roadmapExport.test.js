@@ -80,3 +80,24 @@ describe('selectSubset', () => {
     expect(roundTripped.edges.map((e) => e.id)).toEqual(['ab'])
   })
 })
+
+describe('start node schema round-trip', () => {
+  it('preserves a start node journeyRef through toSchema/fromSchema', () => {
+    const nodes = [
+      { id: 's1', type: 'start', position: { x: 0, y: 0 }, data: { journeyRef: { category: 'mastery', id: 'm1' } } },
+    ]
+    const roundTripped = fromSchema(JSON.parse(JSON.stringify(toSchema(nodes, []))))
+    expect(roundTripped.nodes[0]).toMatchObject({
+      type: 'start',
+      data: { journeyRef: { category: 'mastery', id: 'm1' } },
+    })
+  })
+
+  it('preserves a start node with a null journeyRef (not yet linked)', () => {
+    const nodes = [
+      { id: 's1', type: 'start', position: { x: 0, y: 0 }, data: { journeyRef: null } },
+    ]
+    const roundTripped = fromSchema(JSON.parse(JSON.stringify(toSchema(nodes, []))))
+    expect(roundTripped.nodes[0].data).toEqual({ journeyRef: null })
+  })
+})
