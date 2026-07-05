@@ -13,6 +13,7 @@ const AuthPage = lazy(() => import('./pages/AuthPage'))
 const RoadmapPage = lazy(() => import('./pages/RoadmapPage'))
 const WelcomePage = lazy(() => import('./pages/WelcomePage'))
 const NewsPostPage = lazy(() => import('./pages/NewsPostPage'))
+const MusicCallback = lazy(() => import('./pages/MusicCallback'))
 
 function LoadingScreen() {
   return (
@@ -87,6 +88,7 @@ function App() {
           <Route element={<RequireAuth />}>
             <Route path="/home" element={<HomePage />} />
             <Route path="/roadmap" element={<RoadmapPage />} />
+            <Route path="/music/callback" element={<MusicCallback />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
