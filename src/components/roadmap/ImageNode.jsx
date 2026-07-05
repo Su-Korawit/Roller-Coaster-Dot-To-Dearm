@@ -17,6 +17,7 @@ export default function ImageNode({ id, data, selected }) {
   // Holds the last pointer position + the frame's screen size while panning.
   // Screen size (not the 128 world size) keeps the math correct under zoom.
   const dragRef = useRef(null)
+  const colorInputRef = useRef(null)
 
   const offset = data.offset ?? DEFAULT_OFFSET
   const hasImage = Boolean(data.url)
@@ -43,12 +44,15 @@ export default function ImageNode({ id, data, selected }) {
     e.currentTarget.releasePointerCapture?.(e.pointerId)
   }
 
+  const onColorChange = (e) => updateNodeData(id, { color: e.target.value })
+
   return (
     <div className="relative w-32 h-32">
       <div
         className={`w-full h-full rounded-2xl border-2 bg-white shadow-md overflow-hidden flex items-center justify-center transition-all ${
           panning ? 'nodrag cursor-grab active:cursor-grabbing' : 'cursor-pointer'
         } ${selected ? 'border-brand shadow-brand/30 shadow-lg' : 'border-brand/40'}`}
+        style={data.color ? { borderColor: data.color } : undefined}
         onClick={hasImage ? undefined : () => setPickerOpen(true)}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -71,6 +75,24 @@ export default function ImageNode({ id, data, selected }) {
           </div>
         )}
       </div>
+
+      <button
+        type="button"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={() => colorInputRef.current?.click()}
+        aria-label="Choose block color"
+        className="nodrag absolute top-1 left-1 w-5 h-5 rounded-full border-2 border-white shadow"
+        style={{ backgroundColor: data.color ?? '#94a3b8' }}
+      />
+      <input
+        ref={colorInputRef}
+        type="color"
+        value={data.color ?? '#94a3b8'}
+        onChange={onColorChange}
+        className="sr-only"
+        aria-hidden="true"
+        tabIndex={-1}
+      />
 
       {/* Re-open the picker once an image is set; `nodrag` + stopPropagation keep
           this tap from being swallowed by canvas dragging or image panning. */}
