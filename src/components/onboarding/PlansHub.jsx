@@ -1,36 +1,27 @@
+import { Trash2 } from 'lucide-react'
 import StepScreen from '../ui/StepScreen'
+import ProgressRing from '../ui/ProgressRing'
 import { programs, universities } from '../../data/onboardingData'
-import { tcasLogoUrl } from '../../hooks/useMytcas'
+import { tcasLogoUrl, useTcasRounds } from '../../hooks/useMytcas'
 import { usePlansStore } from '../../stores/usePlansStore'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { syncSelectToFirestore } from '../../utils/syncSelectToFirestore'
 
 const MAX_PLANS = 10
 
-function ProgressRing({ value, max }) {
-  const safeValue = Math.min(value, max)
-  const radius = 32
-  const circumference = 2 * Math.PI * radius
-  const progress = safeValue / max
-  const dash = `${circumference * progress} ${circumference}`
-
+function ProgramRoundTags({ programId }) {
+  const { rounds } = useTcasRounds(programId)
+  if (!rounds.length) return null
   return (
-    <div className="relative h-20 w-20">
-      <svg className="h-20 w-20 -rotate-90" viewBox="0 0 80 80" aria-hidden="true">
-        <circle cx="40" cy="40" r={radius} className="fill-none stroke-brand-soft" strokeWidth="8" />
-        <circle
-          cx="40"
-          cy="40"
-          r={radius}
-          className="fill-none stroke-brand"
-          strokeWidth="8"
-          strokeDasharray={dash}
-          strokeLinecap="round"
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="pixel-font text-xs text-ink">{safeValue}/{max}</span>
-      </div>
+    <div className="mt-1 flex flex-wrap gap-1">
+      {rounds.map((r) => (
+        <span
+          key={r.id ?? r.round}
+          className="rounded-full bg-yellow-300 px-2 py-0.5 text-[10px] font-medium text-black"
+        >
+          {r.name ?? `รอบ ${r.round}`}
+        </span>
+      ))}
     </div>
   )
 }
@@ -52,32 +43,28 @@ function PlanCard({ plan, selected, onSelect, onDelete }) {
           onSelect()
         }
       }}
-      className={`
-        flex w-full items-center gap-3 rounded-2xl bg-white p-4 text-left
-        transition-all hover:shadow-md active:scale-[0.98]
-        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1
-        ${selected ? 'ring-4 ring-pink-400 shadow-md' : 'ring-0 shadow-sm'}
-      `}
-      aria-label={planName(plan)}
+      className={`flex w-full items-start gap-3 rounded-2xl border bg-white p-4 text-left transition-all hover:shadow-md active:scale-[0.98] ${
+        selected ? 'border-brand-strong ring-2 ring-brand-strong bg-brand-soft' : 'border-gray-200'
+      }`}
+      aria-label={`แผน ${plan.id}`}
     >
       {plan.university ? (
         <img
           src={tcasLogoUrl(plan.university)}
           alt={uniName}
-          className="h-12 w-12 rounded-xl bg-brand-soft object-contain p-1"
-          onError={(event) => {
-            event.currentTarget.style.display = 'none'
-          }}
+          className="h-12 w-12 shrink-0 rounded-xl bg-brand-soft object-contain p-1"
+          onError={(event) => { event.currentTarget.style.display = 'none' }}
         />
       ) : (
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-soft text-brand">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand">
           🧭
         </div>
       )}
 
       <div className="min-w-0 flex-1">
-        <p className="pixel-font truncate text-xs text-ink">{uniName}</p>
-        <p className="mt-1 truncate text-xs text-gray-500 thai-font">{programName}</p>
+        <p className="truncate text-sm font-semibold text-ink">{uniName}</p>
+        <p className="mt-0.5 truncate text-xs text-gray-500">{programName}</p>
+        {plan.program && <ProgramRoundTags programId={plan.program} />}
       </div>
 
       <button
@@ -86,17 +73,13 @@ function PlanCard({ plan, selected, onSelect, onDelete }) {
           event.stopPropagation()
           onDelete()
         }}
-        className="rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-100"
-        aria-label={`Delete ${planName(plan)}`}
+        className="shrink-0 rounded-xl p-2 text-red-400 hover:bg-red-50 hover:text-red-600"
+        aria-label={`ลบแผน ${plan.id}`}
       >
-        ลบ
+        <Trash2 size={18} />
       </button>
     </div>
   )
-}
-
-function planName(plan) {
-  return `Plan ${plan.id}`
 }
 
 export default function PlansHub({ onEditPlan, onNext, onBack }) {
@@ -106,6 +89,8 @@ export default function PlansHub({ onEditPlan, onNext, onBack }) {
   const removePlan = usePlansStore((state) => state.removePlan)
   const setActivePlan = usePlansStore((state) => state.setActivePlan)
   const uid = useAuthStore((state) => state.user?.uid)
+
+  const remaining = MAX_PLANS - plans.length
 
   const handleAdd = () => {
     if (plans.length >= MAX_PLANS) return
@@ -125,60 +110,60 @@ export default function PlansHub({ onEditPlan, onNext, onBack }) {
   }
 
   return (
-    <StepScreen
-      step={3}
-      title="Plans Hub"
-      subtitle={
-        <div className="mt-2 flex items-center justify-between rounded-2xl bg-white/70 px-4 py-3">
-          <div>
-            <p className="pixel-font text-xs text-ink">เป้าหมายมหาลัยของฉัน</p>
-            <p className="thai-font mt-1 text-xs text-gray-500">สร้างได้สูงสุด {MAX_PLANS} แผน</p>
-          </div>
-          <ProgressRing value={plans.length} max={MAX_PLANS} />
-        </div>
-      }
-      searchValue=""
-      onSearchChange={() => {}}
-      searchLabel="Plans Hub"
-      onNext={handleFinish}
-      nextDisabled={plans.length === 0}
-    >
-      <div className="mx-auto mt-3 w-full max-w-3xl space-y-4 pb-4">
-        {plans.length === 0 ? (
-          <div className="rounded-2xl bg-white/70 px-4 py-6 text-center shadow-sm">
-            <p className="thai-font text-sm text-gray-500">ยังไม่มีแผน กด + เพื่อเพิ่มแผนแรกของคุณ</p>
-          </div>
-        ) : (
-          plans.map((plan) => (
-            <PlanCard
-              key={plan.id}
-              plan={plan}
-              selected={plan.id === activePlanId}
-              onSelect={() => handleSelectPlan(plan.id)}
-              onDelete={() => removePlan(plan.id)}
+    <div className="relative flex h-full flex-col">
+      <StepScreen
+        step={3}
+        title="เปรียบเทียบแผน"
+        subtitle={
+          <div className="mt-2 flex items-center justify-between rounded-2xl bg-white/80 px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold text-ink">เป้าหมายมหาลัยของฉัน</p>
+              <p className="text-xs text-gray-500">เพิ่มได้อีก {remaining} โปรแกรม</p>
+            </div>
+            <ProgressRing
+              value={plans.length}
+              total={MAX_PLANS}
+              label={remaining > 0 ? `เพิ่มได้อีก ${remaining}` : `${plans.length}/${MAX_PLANS}`}
             />
-          ))
-        )}
-
-        <div className="flex items-center justify-between pt-1">
-          <button
-            type="button"
-            onClick={onBack}
-            className="rounded-2xl border border-white/70 bg-white/70 px-4 py-2 text-xs font-bold text-gray-600 shadow-sm"
-          >
-            Back
-          </button>
-          <button
-            type="button"
-            onClick={handleAdd}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-brand text-2xl font-bold text-white shadow-md transition hover:bg-brand-strong disabled:cursor-not-allowed disabled:bg-brand/50"
-            aria-label="Add plan"
-            disabled={plans.length >= MAX_PLANS}
-          >
-            +
-          </button>
+          </div>
+        }
+        searchValue=""
+        onSearchChange={() => {}}
+        searchLabel="Plans Hub"
+        onNext={handleFinish}
+        onBack={onBack}
+        nextDisabled={plans.length === 0}
+        nextLabel="เสร็จสิ้น"
+        hideSearch
+      >
+        <div className="mx-auto mt-3 w-full max-w-3xl space-y-3 pb-20">
+          {plans.length === 0 ? (
+            <div className="rounded-2xl bg-white/80 px-4 py-8 text-center">
+              <p className="text-sm text-gray-500">ยังไม่มีแผน กด + เพื่อเพิ่มแผนแรกของคุณ</p>
+            </div>
+          ) : (
+            plans.map((plan) => (
+              <PlanCard
+                key={plan.id}
+                plan={plan}
+                selected={plan.id === activePlanId}
+                onSelect={() => handleSelectPlan(plan.id)}
+                onDelete={() => removePlan(plan.id)}
+              />
+            ))
+          )}
         </div>
-      </div>
-    </StepScreen>
+      </StepScreen>
+
+      <button
+        type="button"
+        onClick={handleAdd}
+        disabled={plans.length >= MAX_PLANS}
+        className="absolute bottom-24 right-6 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-brand-strong text-2xl font-bold text-white shadow-lg transition hover:bg-brand disabled:opacity-50"
+        aria-label="Add plan"
+      >
+        +
+      </button>
+    </div>
   )
 }

@@ -11,6 +11,10 @@ vi.mock('../../utils/syncSelectToFirestore', () => ({
 vi.mock('../../stores/useAuthStore', () => ({
   useAuthStore: (sel) => sel({ user: { uid: 'u1' } }),
 }))
+vi.mock('../../hooks/useMytcas', () => ({
+  useTcasRounds: () => ({ rounds: [] }),
+  tcasLogoUrl: () => '',
+}))
 
 describe('PlansHub', () => {
   beforeEach(() => {
@@ -20,14 +24,14 @@ describe('PlansHub', () => {
 
   it('shows an empty state and an add button', () => {
     render(<PlansHub onEditPlan={() => {}} onNext={() => {}} onBack={() => {}} />)
-    expect(screen.getByRole('button', { name: /add|เพิ่ม|\+/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /add plan/i })).toBeTruthy()
     expect(screen.getByText(/ยังไม่มีแผน/i)).toBeTruthy()
   })
 
   it('adds a plan and opens its editor', () => {
     const onEditPlan = vi.fn()
     render(<PlansHub onEditPlan={onEditPlan} onNext={() => {}} onBack={() => {}} />)
-    fireEvent.click(screen.getByRole('button', { name: /add|เพิ่ม|\+/i }))
+    fireEvent.click(screen.getByRole('button', { name: /add plan/i }))
     expect(usePlansStore.getState().plans).toHaveLength(1)
     expect(onEditPlan).toHaveBeenCalledWith(usePlansStore.getState().plans[0].id)
   })
@@ -36,7 +40,7 @@ describe('PlansHub', () => {
     const planId = usePlansStore.getState().addPlan()
     usePlansStore.getState().updatePlan(planId, { university: 'CU', program: 'PROG1' })
     render(<PlansHub onEditPlan={() => {}} onNext={() => {}} onBack={() => {}} />)
-    fireEvent.click(screen.getByRole('button', { name: /delete|ลบ|remove/i }))
+    fireEvent.click(screen.getByRole('button', { name: /ลบแผน/i }))
     expect(usePlansStore.getState().plans).toHaveLength(0)
   })
 
@@ -44,7 +48,7 @@ describe('PlansHub', () => {
     usePlansStore.getState().addPlan()
     const onNext = vi.fn()
     render(<PlansHub onEditPlan={() => {}} onNext={onNext} onBack={() => {}} />)
-    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+    fireEvent.click(screen.getByRole('button', { name: /เสร็จสิ้น/i }))
     await vi.waitFor(() => {
       expect(mockSync).toHaveBeenCalledWith('u1')
     })
