@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import { addEdge } from '@xyflow/react'
 import { computeSnapPosition } from '../utils/computeSnapPosition'
 import { fromSchema } from '../utils/roadmapExport'
+import { computeGroupedLayout } from '../utils/computeGroupedLayout'
 
 const IMPORT_GAP = 80
 
@@ -77,6 +78,8 @@ export const useRoadmapStore = create(
           nodes: state.nodes.filter((n) => n.id !== id),
           edges: state.edges.filter((e) => e.source !== id && e.target !== id),
         })),
+      regroupNodes: () =>
+        set((state) => ({ nodes: computeGroupedLayout(state.nodes) })),
       connect: (connection) =>
         set((state) => {
           // Snap the target block adjacent to the source's exit handle — no edge line is drawn.

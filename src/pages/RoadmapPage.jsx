@@ -59,6 +59,7 @@ export default function RoadmapPage({ onClose }) {
   const removeSelection = useRoadmapStore((s) => s.removeSelection)
   const duplicateSelection = useRoadmapStore((s) => s.duplicateSelection)
   const importRoadmap = useRoadmapStore((s) => s.importRoadmap)
+  const regroupNodes = useRoadmapStore((s) => s.regroupNodes)
   const syncStatus = useRoadmapStore((s) => s.syncStatus)
   const setSyncStatus = useRoadmapStore((s) => s.setSyncStatus)
   const fileInputRef = useRef(null)
@@ -80,8 +81,12 @@ export default function RoadmapPage({ onClose }) {
   const [isOverTrash, setIsOverTrash] = useState(false)
 
   const onNodesChange = useCallback(
-    (changes) => setNodes(applyNodeChanges(changes, nodes)),
-    [nodes, setNodes],
+    (changes) => {
+      setNodes(applyNodeChanges(changes, nodes))
+      const resizeFinished = changes.some((c) => c.type === 'dimensions' && c.resizing === false)
+      if (resizeFinished) regroupNodes()
+    },
+    [nodes, setNodes, regroupNodes],
   )
   const onEdgesChange = useCallback(
     (changes) => setEdges(applyEdgeChanges(changes, edges)),
@@ -132,11 +137,13 @@ export default function RoadmapPage({ onClose }) {
       }
       const others = nodes.filter((n) => n.id !== node.id)
       const match = findProximityConnection(node, others, SNAP_THRESHOLD)
-      if (!match) return
-      setNodes(nodes.map((n) => (n.id === node.id ? { ...n, position: match.position } : n)))
-      setEdges(addEdge(match.connection, edges))
+      if (match) {
+        setNodes(nodes.map((n) => (n.id === node.id ? { ...n, position: match.position } : n)))
+        setEdges(addEdge(match.connection, edges))
+      }
+      regroupNodes()
     },
-    [nodes, edges, setNodes, setEdges, removeNode],
+    [nodes, edges, setNodes, setEdges, removeNode, regroupNodes],
   )
 
   const stableNodeTypes = useMemo(() => nodeTypes, [])
