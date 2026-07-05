@@ -33,7 +33,7 @@ export default function StartNode({ id, data, selected }) {
 
   return (
     <div
-      className={`relative w-40 h-[148px] rounded-2xl border-2 bg-white shadow-md p-2.5 flex flex-col gap-1.5 transition-all ${
+      className={`relative w-32 h-32 rounded-2xl border-2 bg-white shadow-md p-2 flex flex-col gap-1 transition-all ${
         selected ? 'border-emerald-500 shadow-emerald-500/30 shadow-lg' : 'border-emerald-500/40'
       }`}
     >
@@ -64,7 +64,7 @@ export default function StartNode({ id, data, selected }) {
 
       {linked && (
         <div className="flex-1 flex flex-col gap-1.5">
-          <span className="text-[11px] font-semibold text-ink leading-tight line-clamp-2">
+          <span className="text-[11px] font-semibold text-ink leading-tight line-clamp-1">
             {linked.title || '—'}
           </span>
           <div className="flex items-center gap-2">
