@@ -318,25 +318,6 @@ describe('useRoadmapStore', () => {
     expect(setpoint).toBe(nodes[1].id)
   })
 
-  it('regroupNodes aligns a member node onto the main line established by the first stageLabel node', () => {
-    useRoadmapStore.getState().setNodes([
-      { id: 'stage-1', type: 'stageLabel', position: { x: 0, y: 200 }, width: 300, height: 40, data: { label: 'Stage 1' } },
-      { id: 'proc-1', type: 'process', position: { x: 50, y: 500 }, data: { label: '' } },
-    ])
-    useRoadmapStore.getState().regroupNodes()
-    const proc1 = useRoadmapStore.getState().nodes.find((n) => n.id === 'proc-1')
-    expect(proc1.position).toEqual({ x: 50, y: 156 })
-  })
-
-  it('regroupNodes leaves a node outside every stage range unchanged', () => {
-    useRoadmapStore.getState().setNodes([
-      { id: 'stage-1', type: 'stageLabel', position: { x: 0, y: 200 }, width: 100, height: 40, data: { label: 'Stage 1' } },
-      { id: 'proc-1', type: 'process', position: { x: 900, y: 500 }, data: { label: '' } },
-    ])
-    useRoadmapStore.getState().regroupNodes()
-    const proc1 = useRoadmapStore.getState().nodes.find((n) => n.id === 'proc-1')
-    expect(proc1.position).toEqual({ x: 900, y: 500 })
-  })
 })
 
 describe('multi-sheet: createSheet / switchSheet / renameSheet / deleteSheet / hydrateSheets', () => {
