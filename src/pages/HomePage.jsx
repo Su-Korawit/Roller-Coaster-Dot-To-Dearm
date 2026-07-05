@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
-import { Calendar, MessageCircle, Map, Newspaper } from 'lucide-react'
+import { Calendar, MessageCircle, Map, Newspaper, Trophy } from 'lucide-react'
 import { useUserStore } from '../stores/useUserStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { APP_VIEWS, shouldShowNav } from '../constants/appViews'
@@ -11,6 +11,7 @@ import SkillPanel from '../components/SkillPanel'
 import SocialPanel from '../components/SocialPanel'
 import ChatPanel from '../components/ChatPanel'
 import CalendarPopup from '../components/CalendarPopup'
+import MasteryPopup from '../components/MasteryPopup'
 import DailyLoginModal from '../components/DailyLoginModal'
 import { getDoc, setDoc } from 'firebase/firestore'
 import { auth } from '../firebase'
@@ -40,6 +41,7 @@ function HomePage() {
   // Starts from the built-in default and hydrates from Firestore on mount.
   const [tracks, setTracks] = useState(DEFAULT_TRACKS)
   const [showCalendar, setShowCalendar] = useState(false)
+  const [showMastery, setShowMastery] = useState(false)
   const [showRoadmap, setShowRoadmap] = useState(false)
   const [showDailyModal, setShowDailyModal] = useState(false)
   const audioRef = useRef(null)
@@ -268,6 +270,13 @@ function HomePage() {
           <Calendar size={22} strokeWidth={1.5} className="text-brand" />
         </button>
         <button
+          onClick={() => setShowMastery(true)}
+          aria-label="เปิด Mastery"
+          className="w-12 h-12 md:w-14 md:h-14 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-gray-100 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        >
+          <Trophy size={22} strokeWidth={1.5} className="text-brand" />
+        </button>
+        <button
           onClick={() => setShowRoadmap(true)}
           aria-label="เปิด Roadmap"
           className="w-12 h-12 md:w-14 md:h-14 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-gray-100 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
@@ -328,6 +337,8 @@ function HomePage() {
           }}
         />
       )}
+
+      {showMastery && <MasteryPopup onClose={() => setShowMastery(false)} />}
 
       {/* ── DAILY MOOD CHECK-IN ── */}
       {showDailyModal && (
