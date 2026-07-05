@@ -12,27 +12,105 @@ function nextId() {
   return `node-${++_counter}-${Date.now()}`
 }
 
+// Mirrors a { nodes, edges } patch onto both the top-level state (kept for
+// zero call-site churn on existing roadmap UI actions) and the matching entry
+// in `sheets`.
+function applyToActive(state, patch) {
+  const sheetPatch = {}
+  if ('nodes' in patch) sheetPatch.nodes = patch.nodes
+  if ('edges' in patch) sheetPatch.edges = patch.edges
+  return {
+    ...patch,
+    sheets: state.sheets.map((sh) =>
+      sh.id === state.activeSheetId ? { ...sh, ...sheetPatch } : sh,
+    ),
+  }
+}
+
 export const useRoadmapStore = create(
   persist(
     (set) => ({
+      // Multi-sheet state
+      myUid: null,
+      sheets: [{ id: 'local-default', name: 'Roadmap', nodes: [], edges: [], ownerUid: null, myRole: 'owner' }],
+      activeSheetId: 'local-default',
+
+      // Compatibility fields (always mirror active sheet)
       nodes: [],
       edges: [],
       setpoint: null,
       selection: [],
       syncStatus: 'idle',
-      setNodes: (nodes) => set({ nodes }),
-      setEdges: (edges) => set({ edges }),
+
+      setRoadmapMyUid: (uid) => set({ myUid: uid }),
+      hydrateSheets: (sheets, activeSheetId) =>
+        set(() => {
+          const active = sheets.find((sh) => sh.id === activeSheetId) ?? sheets[0]
+          return {
+            sheets,
+            activeSheetId: active?.id ?? null,
+            nodes: active?.nodes ?? [],
+            edges: active?.edges ?? [],
+            setpoint: null,
+            selection: [],
+          }
+        }),
+      createSheet: (name) => {
+        const id = crypto.randomUUID()
+        set((state) => ({
+          sheets: [...state.sheets, { id, name, nodes: [], edges: [], ownerUid: state.myUid, myRole: 'owner' }],
+          activeSheetId: id,
+          nodes: [],
+          edges: [],
+          setpoint: null,
+          selection: [],
+        }))
+        return id
+      },
+      switchSheet: (sheetId) =>
+        set((state) => {
+          if (sheetId === state.activeSheetId) return {}
+          const target = state.sheets.find((sh) => sh.id === sheetId)
+          if (!target) return {}
+          return {
+            activeSheetId: sheetId,
+            nodes: target.nodes,
+            edges: target.edges,
+            setpoint: null,
+            selection: [],
+          }
+        }),
+      renameSheet: (sheetId, name) =>
+        set((state) => ({
+          sheets: state.sheets.map((sh) => (sh.id === sheetId ? { ...sh, name } : sh)),
+        })),
+      deleteSheet: (sheetId) =>
+        set((state) => {
+          if (state.sheets.length <= 1) return {}
+          const remaining = state.sheets.filter((sh) => sh.id !== sheetId)
+          if (state.activeSheetId !== sheetId) return { sheets: remaining }
+          const fallback = remaining[0]
+          return {
+            sheets: remaining,
+            activeSheetId: fallback.id,
+            nodes: fallback.nodes,
+            edges: fallback.edges,
+            setpoint: null,
+            selection: [],
+          }
+        }),
+
+      setNodes: (nodes) => set((state) => applyToActive(state, { nodes })),
+      setEdges: (edges) => set((state) => applyToActive(state, { edges })),
       setSelection: (ids) => set({ selection: ids }),
       setSyncStatus: (status) => set({ syncStatus: status }),
       clearSelection: () => set({ selection: [] }),
       removeSelection: () =>
         set((state) => {
           const ids = new Set(state.selection)
-          return {
-            selection: [],
-            nodes: state.nodes.filter((n) => !ids.has(n.id)),
-            edges: state.edges.filter((e) => !ids.has(e.source) && !ids.has(e.target)),
-          }
+          const nodes = state.nodes.filter((n) => !ids.has(n.id))
+          const edges = state.edges.filter((e) => !ids.has(e.source) && !ids.has(e.target))
+          return { selection: [], ...applyToActive(state, { nodes, edges }) }
         }),
       duplicateSelection: () =>
         set((state) => {
@@ -50,37 +128,32 @@ export const useRoadmapStore = create(
           const newEdges = state.edges
             .filter((e) => selectedIds.has(e.source) && selectedIds.has(e.target))
             .map((e) => ({ ...e, id: nextId(), source: idMap.get(e.source), target: idMap.get(e.target) }))
-          return {
-            nodes: [...state.nodes.map((n) => ({ ...n, selected: false })), ...newNodes],
-            edges: [...state.edges, ...newEdges],
-            selection: newNodes.map((n) => n.id),
-          }
+          const nodes = [...state.nodes.map((n) => ({ ...n, selected: false })), ...newNodes]
+          const edges = [...state.edges, ...newEdges]
+          return { selection: newNodes.map((n) => n.id), ...applyToActive(state, { nodes, edges }) }
         }),
       addNode: (type, position = { x: 100, y: 100 }) =>
         set((state) => {
           const id = nextId()
           const data = type === 'start' ? { journeyRef: null } : { label: '', note: '', color: null }
-          return {
-            setpoint: id,
-            nodes: [
-              ...state.nodes,
-              { id, type, position, data },
-            ],
-          }
+          return { setpoint: id, ...applyToActive(state, { nodes: [...state.nodes, { id, type, position, data }] }) }
         }),
       updateNodeData: (id, patch) =>
-        set((state) => ({
+        set((state) => applyToActive(state, {
           nodes: state.nodes.map((n) =>
             n.id === id ? { ...n, data: { ...n.data, ...patch } } : n,
           ),
         })),
       removeNode: (id) =>
-        set((state) => ({
+        set((state) => applyToActive(state, {
           nodes: state.nodes.filter((n) => n.id !== id),
           edges: state.edges.filter((e) => e.source !== id && e.target !== id),
         })),
       regroupNodes: () =>
-        set((state) => ({ nodes: computeGroupedLayout(state.nodes) })),
+        set((state) => {
+          const nodes = computeGroupedLayout(state.nodes)
+          return applyToActive(state, { nodes })
+        }),
       connect: (connection) =>
         set((state) => {
           // Snap the target block adjacent to the source's exit handle — no edge line is drawn.
@@ -94,12 +167,12 @@ export const useRoadmapStore = create(
                     : n,
                 )
               : state.nodes
-          return { nodes, edges: addEdge(connection, state.edges) }
+          return applyToActive(state, { nodes, edges: addEdge(connection, state.edges) })
         }),
       removeEdge: (id) =>
-        set((state) => ({ edges: state.edges.filter((e) => e.id !== id) })),
+        set((state) => applyToActive(state, { edges: state.edges.filter((e) => e.id !== id) })),
       detachNode: (id) =>
-        set((state) => ({
+        set((state) => applyToActive(state, {
           edges: state.edges.filter((e) => e.source !== id && e.target !== id),
         })),
       // Merge a schema-v1 file into the current board: validate, regenerate ids
@@ -125,10 +198,10 @@ export const useRoadmapStore = create(
             source: idMap.get(e.source),
             target: idMap.get(e.target),
           }))
-          return {
+          return applyToActive(state, {
             nodes: [...state.nodes, ...mappedNodes],
             edges: [...state.edges, ...mappedEdges],
-          }
+          })
         }),
     }),
     { name: 'rc-roadmap-store' },

@@ -11,7 +11,12 @@ const { useRoadmapStore } = await import('./useRoadmapStore')
 
 describe('useRoadmapStore', () => {
   beforeEach(() => {
-    useRoadmapStore.setState({ nodes: [], edges: [], setpoint: null, selection: [], syncStatus: 'idle' })
+    useRoadmapStore.setState({
+      nodes: [], edges: [], setpoint: null, selection: [], syncStatus: 'idle',
+      sheets: [{ id: 'local-default', name: 'Roadmap', nodes: [], edges: [], ownerUid: null, myRole: 'owner' }],
+      activeSheetId: 'local-default',
+      myUid: null,
+    })
   })
 
   it('initializes with empty nodes and edges', () => {
@@ -331,5 +336,113 @@ describe('useRoadmapStore', () => {
     useRoadmapStore.getState().regroupNodes()
     const proc1 = useRoadmapStore.getState().nodes.find((n) => n.id === 'proc-1')
     expect(proc1.position).toEqual({ x: 900, y: 500 })
+  })
+})
+
+describe('multi-sheet: createSheet / switchSheet / renameSheet / deleteSheet / hydrateSheets', () => {
+  beforeEach(() => {
+    useRoadmapStore.setState({
+      nodes: [], edges: [], setpoint: null, selection: [],
+      sheets: [{ id: 'local-default', name: 'Roadmap', nodes: [], edges: [], ownerUid: null, myRole: 'owner' }],
+      activeSheetId: 'local-default',
+      myUid: 'me',
+    })
+  })
+
+  it('createSheet adds a new empty sheet and switches to it', () => {
+    const id = useRoadmapStore.getState().createSheet('Side Project')
+    const { sheets, activeSheetId, nodes, edges } = useRoadmapStore.getState()
+    expect(sheets).toHaveLength(2)
+    expect(activeSheetId).toBe(id)
+    expect(nodes).toEqual([])
+    expect(edges).toEqual([])
+    expect(sheets.find((s) => s.id === id).name).toBe('Side Project')
+    expect(sheets.find((s) => s.id === id).ownerUid).toBe('me')
+  })
+
+  it('switching sheets does not lose the other sheet\'s data', () => {
+    useRoadmapStore.getState().addNode('process')
+    const sheet2Id = useRoadmapStore.getState().createSheet('Sheet 2')
+    useRoadmapStore.getState().addNode('condition')
+
+    useRoadmapStore.getState().switchSheet('local-default')
+    expect(useRoadmapStore.getState().nodes).toHaveLength(1)
+    expect(useRoadmapStore.getState().nodes[0].type).toBe('process')
+
+    useRoadmapStore.getState().switchSheet(sheet2Id)
+    expect(useRoadmapStore.getState().nodes).toHaveLength(1)
+    expect(useRoadmapStore.getState().nodes[0].type).toBe('condition')
+  })
+
+  it('adding a node while on sheet 2 does not touch sheet 1', () => {
+    useRoadmapStore.getState().addNode('process')
+    const sheet2Id = useRoadmapStore.getState().createSheet('Sheet 2')
+    useRoadmapStore.getState().addNode('condition')
+    useRoadmapStore.getState().addNode('image')
+
+    const { sheets } = useRoadmapStore.getState()
+    const sheet1 = sheets.find((s) => s.id === 'local-default')
+    const sheet2 = sheets.find((s) => s.id === sheet2Id)
+    expect(sheet1.nodes).toHaveLength(1)
+    expect(sheet2.nodes).toHaveLength(2)
+  })
+
+  it('renameSheet updates only the target sheet\'s name', () => {
+    const sheet2Id = useRoadmapStore.getState().createSheet('Sheet 2')
+    useRoadmapStore.getState().renameSheet(sheet2Id, 'Renamed')
+    const { sheets } = useRoadmapStore.getState()
+    expect(sheets.find((s) => s.id === sheet2Id).name).toBe('Renamed')
+    expect(sheets.find((s) => s.id === 'local-default').name).toBe('Roadmap')
+  })
+
+  it('deleteSheet refuses to delete the last remaining sheet', () => {
+    useRoadmapStore.getState().deleteSheet('local-default')
+    expect(useRoadmapStore.getState().sheets).toHaveLength(1)
+    expect(useRoadmapStore.getState().activeSheetId).toBe('local-default')
+  })
+
+  it('deleting the active sheet falls back to another sheet sensibly', () => {
+    const sheet2Id = useRoadmapStore.getState().createSheet('Sheet 2')
+    useRoadmapStore.getState().addNode('process')
+
+    useRoadmapStore.getState().deleteSheet(sheet2Id)
+
+    const { sheets, activeSheetId, nodes } = useRoadmapStore.getState()
+    expect(sheets).toHaveLength(1)
+    expect(activeSheetId).toBe('local-default')
+    expect(nodes).toEqual([])
+  })
+
+  it('deleting a non-active sheet leaves the active sheet untouched', () => {
+    useRoadmapStore.getState().addNode('process')
+    const sheet2Id = useRoadmapStore.getState().createSheet('Sheet 2')
+    useRoadmapStore.getState().switchSheet('local-default')
+
+    useRoadmapStore.getState().deleteSheet(sheet2Id)
+
+    const { sheets, activeSheetId, nodes } = useRoadmapStore.getState()
+    expect(sheets).toHaveLength(1)
+    expect(activeSheetId).toBe('local-default')
+    expect(nodes).toHaveLength(1)
+  })
+
+  it('switchSheet resets selection and setpoint (no stale cross-sheet references)', () => {
+    useRoadmapStore.getState().addNode('process')
+    useRoadmapStore.getState().setSelection(['some-id'])
+    useRoadmapStore.getState().createSheet('Sheet 2')
+    expect(useRoadmapStore.getState().selection).toEqual([])
+    expect(useRoadmapStore.getState().setpoint).toBeNull()
+  })
+
+  it('hydrateSheets replaces the sheet list and activates the given sheet', () => {
+    const incoming = [
+      { id: 's1', name: 'Roadmap', nodes: [{ id: 'n1', type: 'process', position: { x: 0, y: 0 }, data: {} }], edges: [], ownerUid: 'me', myRole: 'owner' },
+      { id: 's2', name: 'Extra', nodes: [], edges: [], ownerUid: 'me', myRole: 'owner' },
+    ]
+    useRoadmapStore.getState().hydrateSheets(incoming, 's1')
+    const { sheets, activeSheetId, nodes } = useRoadmapStore.getState()
+    expect(sheets).toEqual(incoming)
+    expect(activeSheetId).toBe('s1')
+    expect(nodes).toHaveLength(1)
   })
 })
