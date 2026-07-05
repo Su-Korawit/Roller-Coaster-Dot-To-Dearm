@@ -190,3 +190,47 @@ describe('prefixUpperBound', () => {
     expect(prefixUpperBound('')).toBe('')
   })
 })
+
+describe('refs.roadmapSheet', () => {
+  it('builds a roadmapSheets/{sheetId} document ref', () => {
+    expect(refs.roadmapSheet('sheet-1')).toEqual({ _path: 'roadmapSheets/sheet-1' })
+  })
+})
+
+describe('cols.roadmapSheets', () => {
+  it('is the roadmapSheets collection ref', () => {
+    expect(cols.roadmapSheets).toEqual({ _col: 'roadmapSheets' })
+  })
+})
+
+describe('queries.sheetsSharedWithMe', () => {
+  it('queries roadmapSheets where collaboratorUids array-contains the uid', async () => {
+    const { where } = await import('firebase/firestore')
+    queries.sheetsSharedWithMe('bob')
+    expect(where).toHaveBeenCalledWith('collaboratorUids', 'array-contains', 'bob')
+  })
+})
+
+describe('shapes.newRoadmapSheet', () => {
+  it('builds a fresh sheet doc with empty collaborators and the given nodes/edges', () => {
+    const result = shapes.newRoadmapSheet({ ownerUid: 'alice', name: 'Roadmap', nodes: [{ id: 'n1' }], edges: [] })
+    expect(result).toEqual({
+      ownerUid: 'alice',
+      name: 'Roadmap',
+      nodes: [{ id: 'n1' }],
+      edges: [],
+      order: 0,
+      collaborators: {},
+      collaboratorUids: [],
+      createdAt: { _type: 'serverTimestamp' },
+      updatedAt: { _type: 'serverTimestamp' },
+    })
+  })
+
+  it('defaults nodes/edges/order when omitted', () => {
+    const result = shapes.newRoadmapSheet({ ownerUid: 'alice', name: 'Empty' })
+    expect(result.nodes).toEqual([])
+    expect(result.edges).toEqual([])
+    expect(result.order).toBe(0)
+  })
+})

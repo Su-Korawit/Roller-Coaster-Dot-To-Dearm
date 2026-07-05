@@ -24,6 +24,7 @@ export const refs = {
   farmItem:    (id)             => doc(db, 'farmItems', id),
   farmPlant:   (id)             => doc(db, 'farmPlants', id),
   farmShop:    (id)             => doc(db, 'farmShops', id),
+  roadmapSheet: (sheetId)       => doc(db, 'roadmapSheets', sheetId),
   appUpdate:   (id)             => doc(db, 'appUpdates', id),
   welcomeGamePreview: ()        => doc(db, 'welcomeConfig', 'gamePreview'),
   welcomeStats:       ()        => doc(db, 'welcomeConfig', 'stats'),
@@ -41,6 +42,7 @@ export const cols = {
   farmPlants:   collection(db, 'farmPlants'),
   farmItems:    collection(db, 'farmItems'),
   farmShops:    collection(db, 'farmShops'),
+  roadmapSheets: collection(db, 'roadmapSheets'),
   mapConfigs:   collection(db, 'mapConfigs'),
   assetFolders: collection(db, 'assetFolders'),
   appUpdates:   collection(db, 'appUpdates'),
@@ -74,6 +76,7 @@ export const queries = {
   matchedUsers:    () => query(cols.users, where('matchScore', '>', 0), limit(20)),
   activeProducts:  () => query(cols.shopProducts, where('active', '==', true)),
   purchasesByUser: (uid) => query(cols.purchases, where('uid', '==', uid)),
+  sheetsSharedWithMe: (uid) => query(cols.roadmapSheets, where('collaboratorUids', 'array-contains', uid)),
   appUpdatesByDate: () => query(cols.appUpdates, orderBy('createdAt', 'desc')),
 }
 
@@ -132,6 +135,20 @@ export const shapes = {
     matchScore:     0,
     fireStacks:     0,
     createdAt:      serverTimestamp(),
+  }),
+
+  // Canonical write shape for a brand-new Roadmap sheet doc — the single seam
+  // used by migration/bootstrap/service codepaths.
+  newRoadmapSheet: ({ ownerUid, name, nodes = [], edges = [], order = 0 }) => ({
+    ownerUid,
+    name,
+    nodes,
+    edges,
+    order,
+    collaborators: {},
+    collaboratorUids: [],
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
   }),
 }
 
