@@ -24,4 +24,11 @@ describe('usePlansStore', () => {
     expect(usePlansStore.getState().plans.map((p) => p.id)).toEqual([a])
     expect(usePlansStore.getState().activePlanId).toBe(a)
   })
+
+  it('reorders by index (rank change)', () => {
+    const a = usePlansStore.getState().addPlan()
+    const b = usePlansStore.getState().addPlan()
+    usePlansStore.getState().reorderPlans(1, 0)
+    expect(usePlansStore.getState().plans.map((p) => p.id)).toEqual([b, a])
+  })
 })

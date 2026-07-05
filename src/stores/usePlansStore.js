@@ -28,6 +28,14 @@ export const usePlansStore = create(
 
       setActivePlan: (id) => set({ activePlanId: id }),
 
+      reorderPlans: (from, to) =>
+        set((s) => {
+          const plans = [...s.plans]
+          const [moved] = plans.splice(from, 1)
+          plans.splice(to, 0, moved)
+          return { plans }
+        }),
+
       resetPlans: () => set({ plans: [], activePlanId: null }),
     }),
     { name: 'rc-plans-store' },
