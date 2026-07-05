@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
 import DragHandle from './DragHandle'
 import { Z_SHEET, Z_MODAL } from '../../constants/zIndex'
+import { usePopupStore } from '../../stores/usePopupStore'
 
 const SIZE_MAXW = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl' }
 const NAV_SAFE_PB = 'calc(env(safe-area-inset-bottom) + 96px)'
@@ -10,6 +12,7 @@ const NAV_SAFE_PB = 'calc(env(safe-area-inset-bottom) + 96px)'
 // size → standardized max-width. navSafe → bottom padding clearing the
 // floating BottomNavBar. z-index comes from the semantic tokens.
 export default function Popup({
+  id,
   variant = 'sheet',
   size = 'md',
   maxHeight = 'max-h-[90vh]',
@@ -23,6 +26,14 @@ export default function Popup({
   const z = zIndex ?? (isSheet ? Z_SHEET : Z_MODAL)
   const clearNav = navSafe ?? isSheet
   const maxW = SIZE_MAXW[size] ?? SIZE_MAXW.md
+
+  useEffect(() => {
+    if (!id) return
+    usePopupStore.getState().open(id)
+    return () => {
+      if (usePopupStore.getState().activePopup === id) usePopupStore.getState().close()
+    }
+  }, [id])
 
   return (
     <div

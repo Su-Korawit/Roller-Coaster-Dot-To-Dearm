@@ -2,6 +2,7 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import Popup from './Popup'
+import { usePopupStore } from '../../stores/usePopupStore'
 
 describe('Popup', () => {
   it('renders children', () => {
@@ -32,5 +33,13 @@ describe('Popup', () => {
     render(<Popup variant="sheet" onClose={() => {}}><p>x</p></Popup>)
     expect(document.querySelector('.rounded-t-3xl')).toBeTruthy()
     expect(document.body.innerHTML).toContain('safe-area-inset-bottom')
+  })
+
+  it('registers its id in usePopupStore while mounted', () => {
+    usePopupStore.getState().close()
+    const { unmount } = render(<Popup id="demo" onClose={() => {}}><p>x</p></Popup>)
+    expect(usePopupStore.getState().activePopup).toBe('demo')
+    unmount()
+    expect(usePopupStore.getState().activePopup).toBeNull()
   })
 })
