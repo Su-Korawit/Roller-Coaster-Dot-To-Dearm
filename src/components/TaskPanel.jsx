@@ -11,6 +11,7 @@ import { useSkillStore } from '../stores/useSkillStore'
 import { generateAIDailyTask, evaluateAndCompleteTask } from '../services/aiTasks'
 import TaskForm from './TaskForm'
 import SkillExecutionPopup from './SkillExecutionPopup'
+import Popup from './ui/Popup'
 
 // ─── Shared-task ref helpers (localStorage) ───────────────────────────────────
 // Track which Firestore message docs contain each task so we can sync status.
@@ -75,12 +76,8 @@ function TaskShareSheet({ task, onClose }) {
   }
 
   return (
-    <div className="absolute inset-0 z-60 flex flex-col justify-end" onClick={onClose}>
-      <div
-        className="relative bg-white rounded-t-3xl shadow-2xl md:max-w-lg md:mx-auto"
-        style={{ paddingBottom: '80px' }}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Popup variant="sheet" size="md" onClose={onClose}>
+      <div className="pb-4">
         <div className="flex justify-center pt-3 pb-3">
           <div className="w-10 h-1 bg-gray-300 rounded-full" />
         </div>
@@ -130,7 +127,7 @@ function TaskShareSheet({ task, onClose }) {
           </div>
         )}
       </div>
-    </div>
+    </Popup>
   )
 }
 
@@ -138,9 +135,13 @@ function TaskShareSheet({ task, onClose }) {
 function ReflectionSheet({ task, onSubmit, onClose, isEvaluating }) {
   const [reflection, setReflection] = useState('')
   return (
-    <div className="absolute inset-0 z-60 flex flex-col justify-end">
-      <div className="absolute inset-0 bg-black/50" onClick={!isEvaluating ? onClose : undefined} />
-      <div className="relative bg-white rounded-t-4xl px-6 pt-4 pb-10 shadow-2xl max-h-[75vh] flex flex-col md:max-w-lg md:mx-auto md:w-full">
+    <Popup
+      variant="sheet"
+      size="md"
+      maxHeight="max-h-[75vh]"
+      onClose={!isEvaluating ? onClose : undefined}
+    >
+      <div className="px-6 pt-4 pb-10 flex flex-col h-full">
         <div className="flex justify-center mb-3 shrink-0">
           <div className="w-10 h-1 bg-gray-200 rounded-full" />
         </div>
@@ -173,7 +174,7 @@ function ReflectionSheet({ task, onSubmit, onClose, isEvaluating }) {
           </button>
         )}
       </div>
-    </div>
+    </Popup>
   )
 }
 
