@@ -141,8 +141,9 @@ service cloud.firestore {
       allow create: if isSignedIn() && request.auth.uid == request.resource.data.ownerUid;
       allow update: if isSheetOwner() ||
         (isEditCollaborator() &&
-          !request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['ownerUid', 'collaborators', 'collaboratorUids']));
+          resource.data.ownerUid == request.resource.data.ownerUid &&
+          resource.data.collaborators == request.resource.data.collaborators &&
+          resource.data.collaboratorUids == request.resource.data.collaboratorUids);
       allow delete: if isSheetOwner();
     }
 

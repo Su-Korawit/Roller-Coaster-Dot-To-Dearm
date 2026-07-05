@@ -157,6 +157,35 @@ describe('SyncManager (roadmap sheet instance)', () => {
     )
     vi.useRealTimers()
   })
+
+  it('flushes a pending debounced write to the original sheet when switching before the timer fires', async () => {
+    vi.useFakeTimers()
+    setDoc.mockResolvedValue(undefined)
+    useRoadmapStore.setState({
+      sheets: [
+        { id: 'sheet-a', name: 'A', nodes: [], edges: [], ownerUid: 'uid-123', myRole: 'owner' },
+        { id: 'sheet-b', name: 'B', nodes: [], edges: [], ownerUid: 'uid-123', myRole: 'owner' },
+      ],
+      activeSheetId: 'sheet-a',
+      nodes: [],
+      edges: [],
+    })
+    armRoadmapSheetSync('sheet-a')
+    useRoadmapStore.getState().addNode('process')
+    expect(setDoc).not.toHaveBeenCalled()
+
+    useRoadmapStore.getState().switchSheet('sheet-b')
+    armRoadmapSheetSync('sheet-b')
+
+    await vi.runAllTimersAsync()
+
+    expect(setDoc).toHaveBeenCalledWith(
+      { _path: 'roadmapSheets/sheet-a' },
+      expect.objectContaining({ nodes: expect.arrayContaining([expect.objectContaining({ type: 'process' })]) }),
+      { merge: true },
+    )
+    vi.useRealTimers()
+  })
 })
 
 describe('SyncManager (tasks instance)', () => {

@@ -187,6 +187,13 @@ describe('Roadmap Sheets rules (roadmapSheets/{sheetId})', () => {
     }))
   })
 
+  it('BLOCKS an edit-collaborator from self-promoting via a dotted collaborators field path', async () => {
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    await assertFails(updateDoc(doc(bob, 'roadmapSheets/sheet-1'), {
+      'collaborators.bob': 'owner',
+    }))
+  })
+
   it('lets a view-collaborator read but BLOCKS any write', async () => {
     const carol = testEnv.authenticatedContext('carol').firestore()
     await assertSucceeds(getDoc(doc(carol, 'roadmapSheets/sheet-1')))

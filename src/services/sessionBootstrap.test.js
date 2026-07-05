@@ -242,6 +242,27 @@ describe('bootstrapSession', () => {
     expect(activeArg).toBe('sheet-1')
     expect(m.armRoadmapSheetSync).toHaveBeenCalledWith('sheet-1')
   })
+
+  it('activates and arms the first existing owned sheet when roadmapSheetIds[0] is stale', async () => {
+    m.getDoc.mockImplementation((ref) => {
+      if (ref._path === 'users/u1') {
+        return Promise.resolve({ exists: () => true, data: () => ({ coins: 0, roadmapSheetIds: ['gone-sheet', 'sheet-2'] }) })
+      }
+      if (ref._path === 'roadmapSheets/gone-sheet') {
+        return Promise.resolve({ exists: () => false })
+      }
+      if (ref._path === 'roadmapSheets/sheet-2') {
+        return Promise.resolve({ exists: () => true, id: 'sheet-2', data: () => ({ ownerUid: 'u1', name: 'Roadmap', nodes: [], edges: [] }) })
+      }
+      return Promise.resolve({ exists: () => false })
+    })
+
+    await bootstrapSession({ uid: 'u1' })
+
+    const [, activeArg] = m.hydrateSheetsAction.mock.calls[0]
+    expect(activeArg).toBe('sheet-2')
+    expect(m.armRoadmapSheetSync).toHaveBeenCalledWith('sheet-2')
+  })
 })
 
 describe('teardownSession', () => {

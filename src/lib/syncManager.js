@@ -41,22 +41,32 @@ export function createFirestoreSync({ store, logName, toDoc, fromDoc, changed, n
   const getRef = ref ?? refs.user
   const emitStatus = onStatus ?? (() => {})
 
-  let currentUid = null   // latest signed-in uid; null when logged out
+  let currentUid = null   // latest signed-in uid/sheetId; null when logged out/disarmed
   let subscribed = false  // store subscription is set up once
   let timer = null        // debounce handle for auto-sync writes
+  let pendingTarget = null // sheet/uid the in-flight debounce was scheduled for
   let suppress = false    // skip auto-sync while hydrating from Firestore
 
   // Write the store's slice into the target doc; merge keeps other fields.
-  async function push(uid) {
-    if (!uid) return
+  async function push(target) {
+    if (!target) return
     emitStatus('saving')
     try {
-      await setDoc(getRef(uid), toDoc(store.getState()), { merge: true })
+      await setDoc(getRef(target), toDoc(store.getState(), target), { merge: true })
       emitStatus('saved')
     } catch (error) {
       console.error(`[${logName}] push failed:`, error)
       emitStatus('error')
     }
+  }
+
+  function flushPending() {
+    if (timer == null) return
+    clearTimeout(timer)
+    timer = null
+    const target = pendingTarget ?? currentUid
+    pendingTarget = null
+    if (target) void push(target)
   }
 
   // Load the slice from Firestore into the store (Firestore wins); seed on first migration.
@@ -84,8 +94,17 @@ export function createFirestoreSync({ store, logName, toDoc, fromDoc, changed, n
   // Set the active uid and (once) subscribe so every mutation is debounced and
   // pushed to Firestore. Pass null on logout to stop syncing.
   function setSyncUser(uid) {
+    if (timer != null) {
+      // Switching sheets/users: flush the pending write for the old target first.
+      // Disarming (uid=null) or re-arming the same target cancels without writing.
+      if (uid != null && uid !== currentUid) flushPending()
+      else {
+        clearTimeout(timer)
+        timer = null
+        pendingTarget = null
+      }
+    }
     currentUid = uid
-    if (!uid) clearTimeout(timer)
 
     if (subscribed) return
     subscribed = true
@@ -94,7 +113,13 @@ export function createFirestoreSync({ store, logName, toDoc, fromDoc, changed, n
       if (!changed(state, prev)) return
       if (guard && !guard(state, currentUid)) return
       clearTimeout(timer)
-      timer = setTimeout(() => push(currentUid), 1000)
+      pendingTarget = currentUid
+      timer = setTimeout(() => {
+        timer = null
+        const target = pendingTarget
+        pendingTarget = null
+        void push(target)
+      }, 1000)
     })
   }
 
@@ -118,7 +143,12 @@ const roadmapSheetSync = createFirestoreSync({
   store: useRoadmapStore,
   logName: 'syncRoadmapSheet',
   ref: refs.roadmapSheet,
-  toDoc: ({ nodes, edges }) => ({ nodes, edges, updatedAt: serverTimestamp() }),
+  toDoc: (state, sheetId) => {
+    const sheet = state.sheets.find((sh) => sh.id === sheetId)
+    const nodes = sheet?.nodes ?? state.nodes
+    const edges = sheet?.edges ?? state.edges
+    return { nodes, edges, updatedAt: serverTimestamp() }
+  },
   fromDoc: (data) =>
     ('nodes' in data || 'edges' in data) ? { nodes: data.nodes ?? [], edges: data.edges ?? [] } : {},
   changed: (s, p) => s.nodes !== p.nodes || s.edges !== p.edges,

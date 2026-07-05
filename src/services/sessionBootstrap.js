@@ -105,7 +105,10 @@ async function bootstrapRoadmapSheets(uid, userDoc) {
     myRole: roleForSheet(sheet, uid),
   }))
 
-  const activeSheetId = sheetIds[0] ?? sheets[0]?.id ?? null
+  const existingOwnedIds = new Set(
+    ownedSnaps.filter((snap) => snap.exists()).map((snap) => snap.id),
+  )
+  const activeSheetId = sheetIds.find((id) => existingOwnedIds.has(id)) ?? sheets[0]?.id ?? null
   useRoadmapStore.getState().hydrateSheets(sheets, activeSheetId)
   if (activeSheetId) armRoadmapSheetSync(activeSheetId)
 }
