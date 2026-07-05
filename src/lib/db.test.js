@@ -42,6 +42,8 @@ describe('shapes.readProfile', () => {
       career: 'eng',
       masteryTrack: 'advanced',
       university: 'CU',
+      plans: [{ id: 'legacy', university: 'CU', program: 'CS' }],
+      activePlanId: 'legacy',
       programs: [{ programId: 'CS' }],
       masteryTracks: [{ masteryId: 'advanced' }],
     })
@@ -62,6 +64,8 @@ describe('shapes.readProfile', () => {
       career: null,
       masteryTrack: 'advanced',
       university: null,
+      plans: [{ id: 'legacy', university: null, program: 'CS' }],
+      activePlanId: 'legacy',
       programs: [{ programId: 'CS', addedAt: 100 }],
       masteryTracks: [{ masteryId: 'advanced', milestones: ['a'], progressPct: 50, addedAt: 200 }],
     })
@@ -116,6 +120,36 @@ describe('shapes.profileFields', () => {
 
   it('does not seed arrays when program or mastery are omitted', () => {
     expect(shapes.profileFields({ mbti: 'INTJ' })).toEqual({ mbti: 'INTJ' })
+  })
+})
+
+describe('shapes.profileFields plans', () => {
+  it('writes plans[] and mirrors active plan into singular fields', () => {
+    const p = shapes.profileFields({
+      mbti: 'INTJ',
+      plans: [
+        { id: 'a', university: 'u1', program: 'p1', addedAt: 1 },
+        { id: 'b', university: 'u2', program: 'p2', addedAt: 2 },
+      ],
+      activePlanId: 'b',
+    })
+    expect(p.plans).toHaveLength(2)
+    expect(p.activePlanId).toBe('b')
+    expect(p.university).toBe('u2') // mirrored from active plan
+    expect(p.program).toBe('p2')
+  })
+})
+
+describe('shapes.readProfile plans', () => {
+  it('reads plans[] when present', () => {
+    const r = shapes.readProfile({ profile: { plans: [{ id: 'a', university: 'u1', program: 'p1' }], activePlanId: 'a' } })
+    expect(r.plans).toHaveLength(1)
+    expect(r.activePlanId).toBe('a')
+  })
+
+  it('synthesizes a single plan from legacy singular fields', () => {
+    const r = shapes.readProfile({ profile: { program: 'p9', university: 'u9' } })
+    expect(r.plans).toEqual([{ id: expect.any(String), university: 'u9', program: 'p9' }])
   })
 })
 
