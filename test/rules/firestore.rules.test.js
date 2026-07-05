@@ -135,3 +135,88 @@ describe('welcomeConfig rules', () => {
     await assertFails(setDoc(doc(alice, 'welcomeConfig/stats'), { items: [] }))
   })
 })
+
+describe('Roadmap Sheets rules (roadmapSheets/{sheetId})', () => {
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore()
+      await setDoc(doc(db, 'roadmapSheets/sheet-1'), {
+        ownerUid: 'alice',
+        name: 'Roadmap',
+        nodes: [],
+        edges: [],
+        order: 0,
+        collaborators: { bob: 'edit', carol: 'view' },
+        collaboratorUids: ['bob', 'carol'],
+      })
+    })
+  })
+
+  it('lets the owner read and write freely, including changing collaborators', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(getDoc(doc(alice, 'roadmapSheets/sheet-1')))
+    await assertSucceeds(updateDoc(doc(alice, 'roadmapSheets/sheet-1'), {
+      nodes: [{ id: 'n1' }],
+      collaborators: { bob: 'view', carol: 'view' },
+    }))
+  })
+
+  it('lets the owner delete their own sheet', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(deleteDoc(doc(alice, 'roadmapSheets/sheet-1')))
+  })
+
+  it('lets an edit-collaborator read and write nodes/edges', async () => {
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    await assertSucceeds(getDoc(doc(bob, 'roadmapSheets/sheet-1')))
+    await assertSucceeds(updateDoc(doc(bob, 'roadmapSheets/sheet-1'), { nodes: [{ id: 'n1' }], edges: [] }))
+  })
+
+  it('BLOCKS an edit-collaborator from changing ownerUid', async () => {
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    await assertFails(updateDoc(doc(bob, 'roadmapSheets/sheet-1'), { ownerUid: 'bob' }))
+  })
+
+  it('BLOCKS an edit-collaborator from adding another collaborator', async () => {
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    await assertFails(updateDoc(doc(bob, 'roadmapSheets/sheet-1'), {
+      collaborators: { bob: 'edit', carol: 'view', dave: 'edit' },
+    }))
+    await assertFails(updateDoc(doc(bob, 'roadmapSheets/sheet-1'), {
+      collaboratorUids: ['bob', 'carol', 'dave'],
+    }))
+  })
+
+  it('lets a view-collaborator read but BLOCKS any write', async () => {
+    const carol = testEnv.authenticatedContext('carol').firestore()
+    await assertSucceeds(getDoc(doc(carol, 'roadmapSheets/sheet-1')))
+    await assertFails(updateDoc(doc(carol, 'roadmapSheets/sheet-1'), { nodes: [{ id: 'n1' }] }))
+  })
+
+  it('BLOCKS a non-collaborator from reading or writing', async () => {
+    const eve = testEnv.authenticatedContext('eve').firestore()
+    await assertFails(getDoc(doc(eve, 'roadmapSheets/sheet-1')))
+    await assertFails(updateDoc(doc(eve, 'roadmapSheets/sheet-1'), { nodes: [] }))
+  })
+
+  it('BLOCKS an unauthenticated user from reading', async () => {
+    const anon = testEnv.unauthenticatedContext().firestore()
+    await assertFails(getDoc(doc(anon, 'roadmapSheets/sheet-1')))
+  })
+
+  it('lets a signed-in user create a new sheet they own', async () => {
+    const dave = testEnv.authenticatedContext('dave').firestore()
+    await assertSucceeds(setDoc(doc(dave, 'roadmapSheets/sheet-2'), {
+      ownerUid: 'dave', name: 'Roadmap', nodes: [], edges: [], order: 0,
+      collaborators: {}, collaboratorUids: [],
+    }))
+  })
+
+  it('BLOCKS creating a sheet owned by someone else', async () => {
+    const dave = testEnv.authenticatedContext('dave').firestore()
+    await assertFails(setDoc(doc(dave, 'roadmapSheets/sheet-3'), {
+      ownerUid: 'alice', name: 'Hijack', nodes: [], edges: [], order: 0,
+      collaborators: {}, collaboratorUids: [],
+    }))
+  })
+})

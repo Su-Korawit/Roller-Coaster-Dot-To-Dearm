@@ -122,6 +122,30 @@ service cloud.firestore {
       allow write: if isSignedIn() && request.auth.uid == ownerUid;
     }
 
+    // Roadmap Sheets — one document per user-created canvas. Owner has full
+    // control; an 'edit' collaborator may write nodes/edges but can never
+    // touch ownerUid/collaborators/collaboratorUids (no self-promotion, no
+    // adding other collaborators); a 'view' collaborator gets read-only.
+    match /roadmapSheets/{sheetId} {
+      function isSheetOwner() {
+        return isSignedIn() && request.auth.uid == resource.data.ownerUid;
+      }
+      function isSheetCollaborator() {
+        return isSignedIn() && request.auth.uid in resource.data.collaborators;
+      }
+      function isEditCollaborator() {
+        return isSheetCollaborator() && resource.data.collaborators[request.auth.uid] == 'edit';
+      }
+
+      allow read: if isSheetOwner() || isSheetCollaborator();
+      allow create: if isSignedIn() && request.auth.uid == request.resource.data.ownerUid;
+      allow update: if isSheetOwner() ||
+        (isEditCollaborator() &&
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['ownerUid', 'collaborators', 'collaboratorUids']));
+      allow delete: if isSheetOwner();
+    }
+
     // Slip dedup ledger: server-only (no client access at all).
     match /usedSlips/{transRef} {
       allow read, write: if false;
