@@ -1,25 +1,11 @@
 import TopBar from '../TopBar'
 import WizardStepper from '../WizardStepper'
 import SearchBar from './SearchBar'
-import Button from './Button'
+import ProgressRing from './ProgressRing'
 
 /**
- * StepScreen — shared layout shell for the 4 wizard select pages.
- * Collapses the duplicated: onboarding-bg section → TopBar → title + stepper
- * + optional subtitle → scrollable content → sticky footer (search + Next).
- *
- * Props:
- *   step         number   - WizardStepper step (0-3)
- *   title        string   - Page heading (pixel-font + title-gradient)
- *   subtitle     node     - Optional element below stepper (h2 text, back btn, etc.)
- *   maxWidth     string   - Tailwind max-w class for content (default 'max-w-4xl')
- *   searchValue  string
- *   onSearchChange fn
- *   searchLabel  string   - aria-label for search input
- *   onNext       fn
- *   nextDisabled bool
- *   children     node     - The scrollable card grid / list
- *   attribution  string   - Optional small print below Next (e.g., O*NET)
+ * StepScreen — shared layout shell for onboarding wizard steps.
+ * Redesigned chrome: optional progress ring, Thai CTAs, sticky footer.
  */
 export default function StepScreen({
   step,
@@ -30,16 +16,25 @@ export default function StepScreen({
   onSearchChange,
   searchLabel,
   onNext,
+  onBack,
   nextDisabled,
+  nextLabel = 'ถัดไป',
+  progress,
   children,
   attribution,
+  hideSearch = false,
 }) {
   return (
     <section className="onboarding-bg flex h-full flex-col">
       <TopBar />
 
       <div className={`mx-auto w-full ${maxWidth} shrink-0 px-6 pt-4`}>
-        <h1 className="title-gradient pixel-font text-xl leading-tight">{title}</h1>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="title-gradient pixel-font text-xl leading-tight">{title}</h1>
+          {progress && (
+            <ProgressRing value={progress.value} total={progress.total} label={progress.label} />
+          )}
+        </div>
         <WizardStepper step={step} />
         {subtitle && <div className="mb-1">{subtitle}</div>}
       </div>
@@ -48,16 +43,34 @@ export default function StepScreen({
         {children}
       </div>
 
-      <div className="shrink-0 border-t border-white/60 bg-white/50 backdrop-blur-md">
-        <div className={`mx-auto w-full ${maxWidth} px-6 py-4 space-y-3`}>
-          <SearchBar
-            value={searchValue}
-            onChange={onSearchChange}
-            label={searchLabel}
-          />
-          <Button onClick={onNext} disabled={nextDisabled}>
-            Next
-          </Button>
+      <div className="sticky bottom-0 bg-white/95 backdrop-blur border-t border-white/60">
+        <div className={`mx-auto w-full ${maxWidth} px-6 py-3 space-y-3`}>
+          {!hideSearch && onSearchChange && (
+            <SearchBar
+              value={searchValue}
+              onChange={onSearchChange}
+              label={searchLabel}
+            />
+          )}
+          <div className="flex gap-3">
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="flex-1 rounded-2xl border border-gray-200 py-3 text-sm text-gray-600"
+              >
+                ย้อนกลับ
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onNext}
+              disabled={nextDisabled}
+              className="flex-1 rounded-2xl bg-brand-strong text-white py-3 text-sm font-semibold disabled:opacity-50"
+            >
+              {nextLabel}
+            </button>
+          </div>
           {attribution && (
             <p
               className="text-center text-[10px] text-gray-400"
