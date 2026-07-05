@@ -99,3 +99,5 @@ Spotify Connect gives **no push channel** → poll `getPlaybackState` every ~5s 
 ## Verified
 
 **2026-07-05** — Implementation complete (Tasks 1–11). All unit/component tests pass (`npm test`, 611 tests). Manual verification with a Spotify Developer app (`VITE_SPOTIFY_CLIENT_ID`), Premium account, and active device is pending operator sign-off (Task 12 checklist).
+
+Playlist browsing + device switching added 2026-07-05 (plan: 2026-07-05-spotify-playlist-and-device.md).
