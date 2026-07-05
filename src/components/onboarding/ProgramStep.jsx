@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import StepScreen from '../ui/StepScreen'
 import { useTcasFaculties, useTcasPrograms, useTcasRounds } from '../../hooks/useMytcas'
-import { useSelectStore } from '../../stores/useSelectStore'
-import { useSelectionCommit } from '../../hooks/useSelectionCommit'
+import { usePlansStore } from '../../stores/usePlansStore'
+import { useAuthStore } from '../../stores/useAuthStore'
+import { syncSelectToFirestore } from '../../utils/syncSelectToFirestore'
 
 function ProgramRoundBadge({ programId }) {
   const { rounds } = useTcasRounds(programId)
@@ -25,10 +26,19 @@ function ProgramRoundBadge({ programId }) {
 function ProgramStep({ onNext, onBack }) {
   const [query, setQuery] = useState('')
   const [selectedFaculty, setSelectedFaculty] = useState(null)
-  const university = useSelectStore((state) => state.university)
-  const selected = useSelectStore((state) => state.program)
-  const setProgram = useSelectStore((state) => state.setProgram)
-  const commitProgram = useSelectionCommit(setProgram)
+  const plans = usePlansStore((state) => state.plans)
+  const activePlanId = usePlansStore((state) => state.activePlanId)
+  const updatePlan = usePlansStore((state) => state.updatePlan)
+  const uid = useAuthStore((state) => state.user?.uid)
+  const activePlan = plans.find((plan) => plan.id === activePlanId)
+  const university = activePlan?.university ?? null
+  const selected = activePlan?.program ?? null
+
+  const commitProgram = (programId) => {
+    if (!activePlanId) return
+    updatePlan(activePlanId, { program: programId })
+    if (uid) syncSelectToFirestore(uid)
+  }
 
   const { faculties, loading: facLoading, error: facError } = useTcasFaculties(university)
   const { programs, loading: progLoading, error: progError } = useTcasPrograms(university, selectedFaculty)
