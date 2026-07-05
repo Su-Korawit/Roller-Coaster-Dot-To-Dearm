@@ -1,5 +1,5 @@
 // src/pages/MusicCallback.jsx
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { completeConnect } from '../services/spotifyConnect'
 
@@ -7,17 +7,22 @@ export default function MusicCallback() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const [failed, setFailed] = useState(false)
+  const startedRef = useRef(false)
 
   useEffect(() => {
+    // Run exactly once. React StrictMode double-invokes effects in dev; without
+    // this guard completeConnect would exchange the single-use authorization
+    // code twice → Spotify 400 invalid_grant.
+    if (startedRef.current) return
+    startedRef.current = true
+
     const error = params.get('error')
     const code = params.get('code')
     const state = params.get('state')
     if (error || !code || !state) { setFailed(true); return }
-    let cancelled = false
     completeConnect({ code, state })
-      .then(() => { if (!cancelled) navigate('/home', { replace: true }) })
-      .catch(() => { if (!cancelled) setFailed(true) })
-    return () => { cancelled = true }
+      .then(() => navigate('/home', { replace: true }))
+      .catch(() => setFailed(true))
   }, [params, navigate])
 
   return (

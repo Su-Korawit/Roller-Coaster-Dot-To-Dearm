@@ -1,5 +1,5 @@
 // test/rules/spotify.rules.test.js
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, beforeAll, afterAll } from 'vitest'
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { readFileSync } from 'node:fs'
