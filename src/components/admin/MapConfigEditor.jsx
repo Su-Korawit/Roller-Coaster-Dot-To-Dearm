@@ -4,6 +4,7 @@ import { uploadWithProgress, uploadAsset } from '../../utils/storageOps'
 import { getMapConfig, saveMapConfig } from '../../utils/mapConfig'
 import StorageBrowser from './StorageBrowser'
 import { useToast } from './Toast'
+import Popup from '../ui/Popup'
 
 const TILESET_FOLDERS = ['rc/tilesets', 'rc/objects']
 const MAP_FOLDERS = ['maps'] // module-level so the prop keeps a stable identity
@@ -140,11 +141,8 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div
-        className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[88vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Popup variant="center" size="lg" maxHeight="max-h-[88vh]" onClose={onClose}>
+      <div className="w-full flex flex-col">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <h4 className="font-semibold text-gray-800">ตั้งค่าแมพ: {mapKey}.json</h4>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-xl leading-none">×</button>
@@ -247,6 +245,6 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
           onClose={() => setBrowser(null)}
         />
       )}
-    </div>
+    </Popup>
   )
 }
