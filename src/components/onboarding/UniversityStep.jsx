@@ -9,8 +9,24 @@ import { cloudAsset } from '../../utils/cloudAsset'
 
 const legacyByName = new Map(legacyUniversities.map((u) => [u.name, u]))
 
+function normalizeName(name) {
+  return (name || '').replace(/\s+/g, ' ').trim()
+}
+
+function legacyForUni(uni) {
+  const exact = legacyByName.get(uni.university_name_th)
+  if (exact) return exact
+  const norm = normalizeName(uni.university_name_th)
+  for (const u of legacyUniversities) {
+    const legacyNorm = normalizeName(u.name)
+    if (legacyNorm === norm) return u
+    if (legacyNorm.startsWith(norm) || norm.startsWith(legacyNorm)) return u
+  }
+  return null
+}
+
 function badgeText(uni) {
-  const legacy = legacyByName.get(uni.university_name_th)
+  const legacy = legacyForUni(uni)
   if (legacy?.shortName) return legacy.shortName
   const en = (uni.university_name_en || '').trim()
   if (en) return en.split(/\s+/).map((w) => w[0]).join('').slice(0, 4).toUpperCase()
@@ -19,30 +35,43 @@ function badgeText(uni) {
 
 // Logo fallback chain: MyTCAS CDN → Firebase Storage → bundled local → badge
 // Stages: 'cdn' → 'cloud' → 'local' → 'badge'
-function UniversityLogo({ uni }) {
-  const legacy = legacyByName.get(uni.university_name_th)
+export function UniversityLogo({ uni }) {
+  const legacy = legacyForUni(uni)
   const localImage = legacy?.image ?? null
 
-  // Derive the Storage path from the bundled image URL's filename segment.
   const [cloudUrl, setCloudUrl] = useState(null)
+  const [cloudResolved, setCloudResolved] = useState(false)
   useEffect(() => {
-    if (!localImage) return
+    if (!localImage) {
+      setCloudResolved(true)
+      return
+    }
     const filename = localImage.split('/').pop()
-    cloudAsset(`media/university/${filename}`, { fallback: null }).then(setCloudUrl)
+    cloudAsset(`media/university/${filename}`, { fallback: null })
+      .then((url) => {
+        setCloudUrl(url)
+        setCloudResolved(true)
+      })
   }, [localImage])
 
   const [stage, setStage] = useState('cdn')
+  const advance = () =>
+    setStage((s) =>
+      s === 'cdn' ? 'cloud' : s === 'cloud' ? 'local' : s === 'local' ? 'badge' : 'badge',
+    )
+
+  useEffect(() => {
+    if (stage === 'cdn' && !uni.logo_url) advance()
+  }, [stage, uni.logo_url])
+
+  useEffect(() => {
+    if (stage === 'cloud' && cloudResolved && !cloudUrl) advance()
+  }, [stage, cloudResolved, cloudUrl])
 
   const src =
     stage === 'cdn'   ? uni.logo_url :
-    stage === 'cloud' ? cloudUrl     :
-    stage === 'local' ? localImage   : null
-
-  function nextStage() {
-    if (stage === 'cdn')   return setStage(cloudUrl ? 'cloud' : localImage ? 'local' : 'badge')
-    if (stage === 'cloud') return setStage(localImage ? 'local' : 'badge')
-    if (stage === 'local') return setStage('badge')
-  }
+    stage === 'cloud' ? cloudUrl :
+    stage === 'local' ? localImage : null
 
   if (src) {
     return (
@@ -50,7 +79,15 @@ function UniversityLogo({ uni }) {
         src={src}
         alt={uni.university_name_th}
         className="mx-auto h-14 w-14 md:h-16 md:w-16 lg:h-20 lg:w-20 object-contain"
-        onError={nextStage}
+        onError={advance}
+      />
+    )
+  }
+  if (stage === 'cloud' && !cloudResolved) {
+    return (
+      <div
+        className="mx-auto h-14 w-14 md:h-16 md:w-16 lg:h-20 lg:w-20 rounded-full bg-gray-100 animate-pulse"
+        aria-hidden="true"
       />
     )
   }
