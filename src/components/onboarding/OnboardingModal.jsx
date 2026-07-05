@@ -8,6 +8,7 @@ import CareerStep from './CareerStep'
 import MasteryStep from './MasteryStep'
 import UniversityStep from './UniversityStep'
 import ProgramStep from './ProgramStep'
+import Popup from '../ui/Popup'
 
 // 0 intro → 1 MBTI → 2 Career → 3 Mastery → 4 University → 5 Program.
 // MBTI stays outside WizardStepper's dots (matching today's behavior); each
@@ -51,9 +52,9 @@ function OnboardingModal() {
   const StepComponent = STEP_COMPONENTS[step]
 
   return (
-    <div className="fixed inset-0 z-50">
+    <Popup variant="center" size="lg" maxHeight="max-h-[100vh]" backdrop={false} navSafe={false} onClose={close}>
       <StepComponent onNext={handleNext} onBack={handleBack} />
-    </div>
+    </Popup>
   )
 }
 
