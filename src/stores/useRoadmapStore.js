@@ -18,9 +18,11 @@ export const useRoadmapStore = create(
       edges: [],
       setpoint: null,
       selection: [],
+      syncStatus: 'idle',
       setNodes: (nodes) => set({ nodes }),
       setEdges: (edges) => set({ edges }),
       setSelection: (ids) => set({ selection: ids }),
+      setSyncStatus: (status) => set({ syncStatus: status }),
       clearSelection: () => set({ selection: [] }),
       removeSelection: () =>
         set((state) => {
@@ -60,7 +62,7 @@ export const useRoadmapStore = create(
             setpoint: id,
             nodes: [
               ...state.nodes,
-              { id, type, position, data: { label: '', note: '' } },
+              { id, type, position, data: { label: '', note: '', color: null } },
             ],
           }
         }),

@@ -11,7 +11,7 @@ const { useRoadmapStore } = await import('./useRoadmapStore')
 
 describe('useRoadmapStore', () => {
   beforeEach(() => {
-    useRoadmapStore.setState({ nodes: [], edges: [], setpoint: null, selection: [] })
+    useRoadmapStore.setState({ nodes: [], edges: [], setpoint: null, selection: [], syncStatus: 'idle' })
   })
 
   it('initializes with empty nodes and edges', () => {
@@ -53,6 +53,22 @@ describe('useRoadmapStore', () => {
     useRoadmapStore.getState().updateNodeData(id, { label: 'My Step' })
     const node = useRoadmapStore.getState().nodes.find((n) => n.id === id)
     expect(node.data.label).toBe('My Step')
+  })
+
+  it('addNode defaults data.color to null', () => {
+    useRoadmapStore.getState().addNode('process')
+    const { nodes } = useRoadmapStore.getState()
+    expect(nodes[0].data.color).toBeNull()
+  })
+
+  it('updateNodeData sets color on the correct node without touching others', () => {
+    useRoadmapStore.getState().addNode('process')
+    useRoadmapStore.getState().addNode('process')
+    const [a, b] = useRoadmapStore.getState().nodes.map((n) => n.id)
+    useRoadmapStore.getState().updateNodeData(a, { color: '#fff' })
+    const { nodes } = useRoadmapStore.getState()
+    expect(nodes.find((n) => n.id === a).data.color).toBe('#fff')
+    expect(nodes.find((n) => n.id === b).data.color).toBeNull()
   })
 
   it('removeNode removes the node from the board', () => {
@@ -123,6 +139,17 @@ describe('useRoadmapStore', () => {
   it('setSelection stores the array of selected ids', () => {
     useRoadmapStore.getState().setSelection(['a', 'b'])
     expect(useRoadmapStore.getState().selection).toEqual(['a', 'b'])
+  })
+
+  it('syncStatus starts idle', () => {
+    expect(useRoadmapStore.getState().syncStatus).toBe('idle')
+  })
+
+  it('setSyncStatus updates syncStatus', () => {
+    useRoadmapStore.getState().setSyncStatus('saving')
+    expect(useRoadmapStore.getState().syncStatus).toBe('saving')
+    useRoadmapStore.getState().setSyncStatus('saved')
+    expect(useRoadmapStore.getState().syncStatus).toBe('saved')
   })
 
   it('clearSelection empties the selection', () => {
