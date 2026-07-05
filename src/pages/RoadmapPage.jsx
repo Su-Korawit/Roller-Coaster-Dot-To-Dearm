@@ -17,6 +17,7 @@ import ProcessNode from '../components/roadmap/ProcessNode'
 import ConditionNode from '../components/roadmap/ConditionNode'
 import StageLabelNode from '../components/roadmap/StageLabelNode'
 import ImageNode from '../components/roadmap/ImageNode'
+import VideoNode from '../components/roadmap/VideoNode'
 import TrashZone from '../components/roadmap/TrashZone'
 import SelectionActionBar from '../components/roadmap/SelectionActionBar'
 import { findProximityConnection } from '../utils/findProximityConnection'
@@ -28,7 +29,7 @@ import { useLongPressDrag } from '../hooks/useLongPressDrag'
 
 const SNAP_THRESHOLD = 40
 
-const nodeTypes = { process: ProcessNode, condition: ConditionNode, stageLabel: StageLabelNode, image: ImageNode }
+const nodeTypes = { process: ProcessNode, condition: ConditionNode, stageLabel: StageLabelNode, image: ImageNode, video: VideoNode }
 
 // Blocks snap edge-to-edge, so connection lines are never drawn.
 function InvisibleEdge() {
@@ -372,6 +373,19 @@ export default function RoadmapPage({ onClose }) {
                   <span className="text-[14px]">🖼️</span>
                 </div>
                 <span className="pixel-font text-[8px] text-ink">Image</span>
+              </button>
+              <button
+                onClick={() => addAtCenter('video')}
+                draggable="true"
+                onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'video')}
+                {...getHandlers('video')}
+                className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                aria-label="Add Video block"
+              >
+                <div className="w-8 h-8 rounded-xl bg-brand/10 border-2 border-brand/30 flex items-center justify-center">
+                  <span className="text-[14px]">🎬</span>
+                </div>
+                <span className="pixel-font text-[8px] text-ink">Video</span>
               </button>
               {/* Mobile select mode toggle */}
               <button
