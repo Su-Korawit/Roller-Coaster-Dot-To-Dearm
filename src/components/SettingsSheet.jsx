@@ -157,7 +157,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
   const initials = (displayName || authUser?.displayName || '?').charAt(0).toUpperCase()
 
   return (
-    <Popup variant="sheet" size="md" maxHeight="max-h-[92vh]" onClose={onClose}>
+    <Popup variant="sheet" size="md" onClose={onClose}>
       <div
         className="flex flex-col h-full transition-transform duration-300 ease-out"
         style={{
