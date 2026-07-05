@@ -57,7 +57,6 @@ export default function RoadmapPage({ onClose }) {
   const sheets = useRoadmapStore((s) => s.sheets)
   const activeSheetId = useRoadmapStore((s) => s.activeSheetId)
   const canEdit = (sheets.find((s) => s.id === activeSheetId)?.myRole ?? 'owner') !== 'view'
-  const regroupNodes = useRoadmapStore((s) => s.regroupNodes)
   const syncStatus = useRoadmapStore((s) => s.syncStatus)
   const setSyncStatus = useRoadmapStore((s) => s.setSyncStatus)
   const fileInputRef = useRef(null)
@@ -79,12 +78,8 @@ export default function RoadmapPage({ onClose }) {
   const [isOverTrash, setIsOverTrash] = useState(false)
 
   const onNodesChange = useCallback(
-    (changes) => {
-      setNodes(applyNodeChanges(changes, nodes))
-      const resizeFinished = changes.some((c) => c.type === 'dimensions' && c.resizing === false)
-      if (resizeFinished) regroupNodes()
-    },
-    [nodes, setNodes, regroupNodes],
+    (changes) => setNodes(applyNodeChanges(changes, nodes)),
+    [nodes, setNodes],
   )
   const onEdgesChange = useCallback(
     (changes) => setEdges(applyEdgeChanges(changes, edges)),
@@ -139,9 +134,8 @@ export default function RoadmapPage({ onClose }) {
         setNodes(nodes.map((n) => (n.id === node.id ? { ...n, position: match.position } : n)))
         setEdges(addEdge(match.connection, edges))
       }
-      regroupNodes()
     },
-    [nodes, edges, setNodes, setEdges, removeNode, regroupNodes],
+    [nodes, edges, setNodes, setEdges, removeNode],
   )
 
   const stableNodeTypes = useMemo(() => nodeTypes, [])
