@@ -92,7 +92,6 @@ function UniversityStep({ onNext, onBack }) {
 
   return (
     <StepScreen
-      step={2}
       title="University"
       maxWidth="max-w-5xl"
       searchValue={query}
@@ -101,7 +100,6 @@ function UniversityStep({ onNext, onBack }) {
       onNext={onNext}
       onBack={onBack}
       nextDisabled={!selected}
-      progress={{ value: 4, total: 5 }}
     >
       <div className="mx-auto max-w-5xl rounded-[20px] bg-white/55 p-4 md:p-6">
         {loading ? (

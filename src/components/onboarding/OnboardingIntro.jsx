@@ -1,11 +1,7 @@
-import TopBar from '../TopBar'
-
 // Step 0 — clean welcome hero before the wizard steps.
 function OnboardingIntro({ onNext }) {
   return (
     <section className="onboarding-bg flex h-full flex-col">
-      <TopBar />
-
       <div className="flex flex-1 flex-col items-center justify-center px-6 pb-24 text-center">
         <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-brand-soft shadow-inner">
           <span className="pixel-font text-3xl text-brand-strong">RC</span>

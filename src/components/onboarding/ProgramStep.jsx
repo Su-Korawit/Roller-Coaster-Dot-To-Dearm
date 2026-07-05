@@ -83,7 +83,6 @@ function ProgramStep({ onNext, onBack }) {
 
   return (
     <StepScreen
-      step={3}
       title="หลักสูตร"
       subtitle={subtitle}
       maxWidth="max-w-3xl"
@@ -93,7 +92,6 @@ function ProgramStep({ onNext, onBack }) {
       onNext={onNext}
       onBack={onBack}
       nextDisabled={!selected}
-      progress={{ value: 5, total: 5 }}
     >
       {!university ? (
         <div className="mt-10 text-center">

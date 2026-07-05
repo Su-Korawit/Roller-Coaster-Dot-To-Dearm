@@ -24,13 +24,11 @@ function MbtiStep({ onNext, onBack }) {
 
   return (
     <StepScreen
-      step={0}
       title="เลือก MBTI"
       onNext={onNext}
       onBack={onBack}
       nextDisabled={!pending}
       hideSearch
-      progress={{ value: 1, total: 5 }}
     >
       <div className="mx-auto mt-3 grid max-w-4xl grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
         {mbtiCharacters.map((item) => {
