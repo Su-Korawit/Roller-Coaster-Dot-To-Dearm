@@ -9,6 +9,8 @@ vi.mock('../../services/spotifyApi', () => ({
   getDevices: vi.fn().mockResolvedValue([]), transferPlayback: vi.fn(),
 }))
 vi.mock('../../services/spotifyConnect', () => ({ startConnect: vi.fn(), disconnectSpotify: vi.fn() }))
+vi.mock('./PlaylistBrowser', () => ({ default: () => <div data-testid="playlist-browser" /> }))
+vi.mock('./DevicePicker', () => ({ default: () => <div data-testid="device-picker" /> }))
 
 import PlayerSheet from './PlayerSheet'
 import { useMusicStore } from '../../stores/useMusicStore'
@@ -39,5 +41,19 @@ describe('PlayerSheet', () => {
     fireEvent.click(item)
     await waitFor(() => expect(play).toHaveBeenCalledWith('AT', { uris: ['spotify:track:t1'] }))
     expect(useMusicStore.getState().isPlaying).toBe(true)
+  })
+
+  it('shows the device picker when connected', () => {
+    useMusicStore.getState().setTokens({ accessToken: 'AT', expiresAt: Date.now() + 1e6, spotifyUserId: 'u' })
+    render(<PlayerSheet />)
+    expect(screen.getByTestId('device-picker')).toBeTruthy()
+  })
+
+  it('switches to the Playlists tab and renders PlaylistBrowser', () => {
+    useMusicStore.getState().setTokens({ accessToken: 'AT', expiresAt: Date.now() + 1e6, spotifyUserId: 'u' })
+    render(<PlayerSheet />)
+    fireEvent.click(screen.getByRole('button', { name: /เพลย์ลิสต์/ }))
+    expect(screen.getByTestId('playlist-browser')).toBeTruthy()
+    expect(screen.queryByPlaceholderText(/ค้นหาเพลง/)).toBeNull()
   })
 })

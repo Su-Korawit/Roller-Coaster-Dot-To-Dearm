@@ -6,6 +6,8 @@ import { useMusicStore } from '../../stores/useMusicStore'
 import { withFreshToken } from '../../hooks/useSpotifyToken'
 import { searchTracks, play, pause, next, previous } from '../../services/spotifyApi'
 import { startConnect } from '../../services/spotifyConnect'
+import PlaylistBrowser from './PlaylistBrowser'
+import DevicePicker from './DevicePicker'
 
 export default function PlayerSheet() {
   const status = useMusicStore((s) => s.status)
@@ -14,6 +16,7 @@ export default function PlayerSheet() {
   const lastError = useMusicStore((s) => s.lastError)
   const closeSheet = useMusicStore((s) => s.closeSheet)
   const [query, setQuery] = useState('')
+  const [view, setView] = useState('search')
   const debounceRef = useRef()
 
   useEffect(() => {
@@ -59,31 +62,56 @@ export default function PlayerSheet() {
           </button>
         ) : (
           <>
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="ค้นหาเพลง…"
-              className="w-full rounded-2xl border border-brand-soft px-4 py-2 thai-font"
-            />
+            <DevicePicker />
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setView('search')}
+                className={`pixel-font text-[9px] rounded-full px-3 py-1.5 ${view === 'search' ? 'bg-brand text-white' : 'text-brand bg-brand-soft'}`}
+              >
+                ค้นหา
+              </button>
+              <button
+                onClick={() => setView('playlists')}
+                className={`pixel-font text-[9px] rounded-full px-3 py-1.5 ${view === 'playlists' ? 'bg-brand text-white' : 'text-brand bg-brand-soft'}`}
+              >
+                เพลย์ลิสต์
+              </button>
+            </div>
+
             {lastError === 'NO_ACTIVE_DEVICE' && (
               <p className="thai-font text-xs text-accent-pink">เปิดแอป Spotify ในเครื่องใดเครื่องหนึ่งก่อน แล้วลองใหม่</p>
             )}
             {lastError === 'PREMIUM_REQUIRED' && (
               <p className="thai-font text-xs text-accent-pink">ต้องใช้ Spotify Premium เพื่อควบคุมการเล่น</p>
             )}
-            <ul className="flex flex-col divide-y divide-brand-soft">
-              {results.map((t) => (
-                <li key={t.id}>
-                  <button onClick={() => onPlayTrack(t)} className="w-full text-left py-2 flex items-center gap-3">
-                    {t.albumArt && <img src={t.albumArt} alt="" className="w-10 h-10 rounded" />}
-                    <span className="flex flex-col">
-                      <span className="thai-font text-sm text-ink">{t.name}</span>
-                      <span className="thai-font text-xs text-gray-400">{t.artists}</span>
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+
+            {view === 'search' ? (
+              <>
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="ค้นหาเพลง…"
+                  className="w-full rounded-2xl border border-brand-soft px-4 py-2 thai-font"
+                />
+                <ul className="flex flex-col divide-y divide-brand-soft">
+                  {results.map((t) => (
+                    <li key={t.id}>
+                      <button onClick={() => onPlayTrack(t)} className="w-full text-left py-2 flex items-center gap-3">
+                        {t.albumArt && <img src={t.albumArt} alt="" className="w-10 h-10 rounded" />}
+                        <span className="flex flex-col min-w-0">
+                          <span className="thai-font text-sm text-ink truncate">{t.name}</span>
+                          <span className="thai-font text-xs text-gray-400 truncate">{t.artists}</span>
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <PlaylistBrowser />
+            )}
+
             <div className="flex items-center justify-center gap-6 pt-2">
               <button onClick={control(previous)} aria-label="Previous"><SkipBack /></button>
               <button onClick={togglePlay} aria-label={isPlaying ? 'Pause' : 'Play'}>{isPlaying ? <Pause /> : <Play />}</button>
