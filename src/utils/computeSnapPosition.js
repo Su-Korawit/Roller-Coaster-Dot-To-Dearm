@@ -4,6 +4,7 @@ export const BLOCK_SIZES = {
   process: { w: 128, h: 128 },
   condition: { w: 128, h: 128 },
   image: { w: 128, h: 128 },
+  video: { w: 128, h: 128 },
   stageLabel: { w: 120, h: 40 },
 }
 

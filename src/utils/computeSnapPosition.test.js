@@ -32,4 +32,11 @@ describe('computeSnapPosition', () => {
     // right exit: x = 100 + 200 = 300 (not 260); y = 100 + 50 - 50 = 100
     expect(computeSnapPosition(measuredSource, measuredTarget, 'right')).toEqual({ x: 300, y: 100 })
   })
+
+  it('uses the video block size (128x128) just like image blocks', () => {
+    const videoSource = { type: 'video', position: { x: 100, y: 100 } }
+    const videoTarget = { type: 'video', position: { x: 0, y: 0 } }
+    // right exit: x = 100 + 128 = 228; y = 100 + 64 - 64 = 100
+    expect(computeSnapPosition(videoSource, videoTarget, 'right')).toEqual({ x: 228, y: 100 })
+  })
 })
