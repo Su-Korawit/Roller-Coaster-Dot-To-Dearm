@@ -43,7 +43,16 @@ describe('computeSnapPosition', () => {
   it('uses the start block size fallback when unmeasured', () => {
     const source = { type: 'start', position: { x: 0, y: 0 } }
     const target = { type: 'process', position: { x: 500, y: 500 } }
-    // right exit: x = 0 + 160 = 160; y = 0 + 148/2 - 128/2 = 74 - 64 = 10
-    expect(computeSnapPosition(source, target, 'right')).toEqual({ x: 160, y: 10 })
+    // right exit: x = 0 + 128 = 128; y = 0 + 128/2 - 128/2 = 0
+    expect(computeSnapPosition(source, target, 'right')).toEqual({ x: 128, y: 0 })
+  })
+
+  it('uses the standard 128x128 default size for an unmeasured start node', () => {
+    const source = { id: 's1', type: 'process', position: { x: 0, y: 0 } }
+    const target = { id: 't1', type: 'start', position: { x: 0, y: 0 } }
+    const result = computeSnapPosition(source, target, 'right')
+    // process default size (128x128) + start default size (128x128):
+    // x = sx + sw = 0 + 128 = 128; y = sy + sh/2 - th/2 = 0 + 64 - 64 = 0
+    expect(result).toEqual({ x: 128, y: 0 })
   })
 })

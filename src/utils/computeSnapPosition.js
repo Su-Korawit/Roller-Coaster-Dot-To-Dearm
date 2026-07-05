@@ -6,7 +6,7 @@ export const BLOCK_SIZES = {
   image: { w: 128, h: 128 },
   video: { w: 128, h: 128 },
   stageLabel: { w: 120, h: 40 },
-  start: { w: 160, h: 148 },
+  start: { w: 128, h: 128 },
 }
 
 // Returns the { x, y } the target block should move to so its entry handle
