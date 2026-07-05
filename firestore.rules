@@ -54,6 +54,13 @@ service cloud.firestore {
       match /matches/{targetUid} {
         allow read, write: if isSignedIn() && request.auth.uid == uid;
       }
+
+      // Private per-user documents (e.g. Spotify refresh token) — owner only.
+      // Must NOT live at the top level: user docs are get/list-readable by any
+      // signed-in user, which would leak the token. See docs/adr/0010.
+      match /private/{docId} {
+        allow read, write: if isSignedIn() && request.auth.uid == uid;
+      }
     }
 
     match /chats/{chatId} {
