@@ -3,8 +3,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 
 let authState
+const useAuthStoreMock = Object.assign((sel) => sel(authState), {
+  getState: () => authState,
+})
 vi.mock('../../stores/useAuthStore', () => ({
-  useAuthStore: (sel) => sel(authState),
+  useAuthStore: useAuthStoreMock,
 }))
 
 let plansState
@@ -101,7 +104,7 @@ describe('OnboardingModal', () => {
     expect(container.firstChild).toBeNull()
   })
 
-  it('shows even with a committed plan when forceOpen is true (edit re-entry)', () => {
+  it('opens plans hub directly when forceOpen is true (edit re-entry)', () => {
     useOnboardingUiStore.getState().open()
     authState = { user: { uid: 'u1' } }
     plansState = {
@@ -109,7 +112,8 @@ describe('OnboardingModal', () => {
       plans: [{ id: 'plan-1', program: 'PROG1' }],
     }
     render(<OnboardingModal />)
-    expect(screen.getByText('INTRO_NEXT')).toBeTruthy()
+    expect(screen.getByText('HUB_NEXT')).toBeTruthy()
+    expect(screen.queryByText('INTRO_NEXT')).toBeNull()
   })
 
   it('walks intro through every main step to plans hub on next()', () => {
@@ -143,8 +147,11 @@ describe('OnboardingModal', () => {
   it('plans hub next closes forceOpen', () => {
     useOnboardingUiStore.getState().open()
     authState = { user: { uid: 'u1' } }
+    plansState = {
+      ...plansState,
+      plans: [{ id: 'plan-1', program: 'PROG1' }],
+    }
     render(<OnboardingModal />)
-    walkToHub()
     fireEvent.click(screen.getByText('HUB_NEXT'))
     expect(useOnboardingUiStore.getState().forceOpen).toBe(false)
   })

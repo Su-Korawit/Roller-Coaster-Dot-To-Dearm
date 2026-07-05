@@ -21,6 +21,7 @@ import { getDoc, setDoc } from 'firebase/firestore'
 import { refs, shapes } from '../lib/db'
 import { useUserStore } from '../stores/useUserStore'
 import { useWorldStore } from '../stores/useWorldStore'
+import { usePlansStore } from '../stores/usePlansStore'
 import { hydrateSelectStoreFromFirestore } from '../utils/syncSelectToFirestore'
 import { hydrateFarmDataFromFirestore } from '../lib/farmDataSync.js'
 import {
@@ -128,4 +129,5 @@ export function teardownSession() {
   disarmInventorySync()
   disarmFarmSync()
   useWorldStore.getState().setMapOwner(null)
+  usePlansStore.getState().resetPlans()
 }

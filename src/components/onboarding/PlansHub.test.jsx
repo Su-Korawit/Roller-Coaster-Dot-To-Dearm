@@ -4,8 +4,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import PlansHub from './PlansHub'
 import { usePlansStore } from '../../stores/usePlansStore'
 
+const mockSync = vi.fn(() => Promise.resolve())
+vi.mock('../../utils/syncSelectToFirestore', () => ({
+  syncSelectToFirestore: (...args) => mockSync(...args),
+}))
+vi.mock('../../stores/useAuthStore', () => ({
+  useAuthStore: (sel) => sel({ user: { uid: 'u1' } }),
+}))
+
 describe('PlansHub', () => {
-  beforeEach(() => usePlansStore.getState().resetPlans())
+  beforeEach(() => {
+    mockSync.mockClear()
+    usePlansStore.getState().resetPlans()
+  })
 
   it('shows an empty state and an add button', () => {
     render(<PlansHub onEditPlan={() => {}} onNext={() => {}} onBack={() => {}} />)
@@ -27,5 +38,16 @@ describe('PlansHub', () => {
     render(<PlansHub onEditPlan={() => {}} onNext={() => {}} onBack={() => {}} />)
     fireEvent.click(screen.getByRole('button', { name: /delete|ลบ|remove/i }))
     expect(usePlansStore.getState().plans).toHaveLength(0)
+  })
+
+  it('syncs active plan to Firestore when finishing the hub', async () => {
+    usePlansStore.getState().addPlan()
+    const onNext = vi.fn()
+    render(<PlansHub onEditPlan={() => {}} onNext={onNext} onBack={() => {}} />)
+    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+    await vi.waitFor(() => {
+      expect(mockSync).toHaveBeenCalledWith('u1')
+    })
+    expect(onNext).toHaveBeenCalledOnce()
   })
 })

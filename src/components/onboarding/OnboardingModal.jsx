@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { usePlansStore } from '../../stores/usePlansStore'
 import { useOnboardingUiStore } from '../../stores/useOnboardingUiStore'
+import { syncSelectToFirestore } from '../../utils/syncSelectToFirestore'
 import OnboardingIntro from './OnboardingIntro'
 import MbtiStep from './MbtiStep'
 import CareerStep from './CareerStep'
@@ -29,11 +30,10 @@ function OnboardingModal() {
   const visible = forceOpen || (!!user && !hasCommittedPlan)
 
   useEffect(() => {
-    if (visible) {
-      setStep(0)
-      setSubStep(null)
-    }
-  }, [visible])
+    if (!visible) return
+    setStep(forceOpen ? LAST_MAIN_STEP : 0)
+    setSubStep(null)
+  }, [visible, forceOpen])
 
   if (!visible) return null
 
@@ -48,6 +48,8 @@ function OnboardingModal() {
   function handleEditPlan(planId) {
     usePlansStore.getState().setActivePlan(planId)
     setSubStep('university')
+    const uid = useAuthStore.getState().user?.uid
+    if (uid) syncSelectToFirestore(uid)
   }
 
   function renderCurrentStep() {

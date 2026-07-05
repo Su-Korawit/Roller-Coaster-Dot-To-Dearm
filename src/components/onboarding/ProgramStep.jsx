@@ -18,11 +18,8 @@ function ProgramRoundBadge({ programId }) {
   )
 }
 
-// Step 5 (final) of OnboardingModal — WizardStepper index 3 ("Program").
-// Selecting a program commits it immediately (see commitProgram below);
-// pressing the sticky "Next" button (onNext) finishes onboarding — the
-// additive profile.programs[] write already happens via useSelectionCommit
-// → syncSelectToFirestore, same as the singular profile.program field.
+// Selecting a program commits it into the active plan via updatePlan and
+// syncSelectToFirestore, mirroring singular profile.program for downstream readers.
 function ProgramStep({ onNext, onBack }) {
   const [query, setQuery] = useState('')
   const [selectedFaculty, setSelectedFaculty] = useState(null)

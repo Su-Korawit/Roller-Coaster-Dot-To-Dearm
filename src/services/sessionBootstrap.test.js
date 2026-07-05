@@ -19,6 +19,7 @@ const m = vi.hoisted(() => ({
   disarmFarmSync: vi.fn(),
   setCoins: vi.fn(),
   setMapOwner: vi.fn(),
+  resetPlans: vi.fn(),
   getDoc: vi.fn(),
   setDoc: vi.fn(),
   hydrateFarmData: vi.fn(),
@@ -40,6 +41,9 @@ vi.mock('../stores/useUserStore', () => ({
 }))
 vi.mock('../stores/useWorldStore', () => ({
   useWorldStore: { getState: () => ({ setMapOwner: m.setMapOwner }) },
+}))
+vi.mock('../stores/usePlansStore', () => ({
+  usePlansStore: { getState: () => ({ resetPlans: m.resetPlans }) },
 }))
 vi.mock('../utils/syncSelectToFirestore', () => ({
   hydrateSelectStoreFromFirestore: (...a) => m.hydrateSelect(...a),
@@ -176,5 +180,10 @@ describe('teardownSession', () => {
     teardownSession()
     expect(m.disarmInventorySync).toHaveBeenCalled()
     expect(m.disarmFarmSync).toHaveBeenCalled()
+  })
+
+  it('clears persisted plans on logout', () => {
+    teardownSession()
+    expect(m.resetPlans).toHaveBeenCalledOnce()
   })
 })

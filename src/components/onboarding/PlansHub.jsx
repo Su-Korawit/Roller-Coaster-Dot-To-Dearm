@@ -2,6 +2,8 @@ import StepScreen from '../ui/StepScreen'
 import { programs, universities } from '../../data/onboardingData'
 import { tcasLogoUrl } from '../../hooks/useMytcas'
 import { usePlansStore } from '../../stores/usePlansStore'
+import { useAuthStore } from '../../stores/useAuthStore'
+import { syncSelectToFirestore } from '../../utils/syncSelectToFirestore'
 
 const MAX_PLANS = 10
 
@@ -103,11 +105,23 @@ export default function PlansHub({ onEditPlan, onNext, onBack }) {
   const addPlan = usePlansStore((state) => state.addPlan)
   const removePlan = usePlansStore((state) => state.removePlan)
   const setActivePlan = usePlansStore((state) => state.setActivePlan)
+  const uid = useAuthStore((state) => state.user?.uid)
 
   const handleAdd = () => {
     if (plans.length >= MAX_PLANS) return
     const newId = addPlan()
     onEditPlan(newId)
+  }
+
+  async function handleFinish() {
+    if (uid) await syncSelectToFirestore(uid)
+    onNext()
+  }
+
+  async function handleSelectPlan(planId) {
+    setActivePlan(planId)
+    if (uid) await syncSelectToFirestore(uid)
+    onEditPlan(planId)
   }
 
   return (
@@ -126,7 +140,7 @@ export default function PlansHub({ onEditPlan, onNext, onBack }) {
       searchValue=""
       onSearchChange={() => {}}
       searchLabel="Plans Hub"
-      onNext={onNext}
+      onNext={handleFinish}
       nextDisabled={plans.length === 0}
     >
       <div className="mx-auto mt-3 w-full max-w-3xl space-y-4 pb-4">
@@ -140,10 +154,7 @@ export default function PlansHub({ onEditPlan, onNext, onBack }) {
               key={plan.id}
               plan={plan}
               selected={plan.id === activePlanId}
-              onSelect={() => {
-                setActivePlan(plan.id)
-                onEditPlan(plan.id)
-              }}
+              onSelect={() => handleSelectPlan(plan.id)}
               onDelete={() => removePlan(plan.id)}
             />
           ))

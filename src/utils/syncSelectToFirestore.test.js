@@ -58,8 +58,14 @@ const { syncSelectToFirestore, hydrateSelectStoreFromFirestore } = await import(
 describe('syncSelectToFirestore', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockSetDoc.mockResolvedValue(undefined)
     mockUsePlansStore.getState.mockReturnValue(mockPlansState)
     mockProfileFields.mockReturnValue({ mbti: 'INTJ', plans: mockPlansState.plans, activePlanId: 'plan-1' })
+  })
+
+  it('rethrows when setDoc fails', async () => {
+    mockSetDoc.mockRejectedValueOnce(new Error('network down'))
+    await expect(syncSelectToFirestore('uid-1')).rejects.toThrow('network down')
   })
 
   it('writes profile from select + plans stores', async () => {

@@ -25,6 +25,7 @@ export async function syncSelectToFirestore(uid) {
     )
   } catch (error) {
     console.error('[syncSelectToFirestore] failed:', error)
+    throw error
   }
 }
 

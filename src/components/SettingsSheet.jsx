@@ -8,6 +8,7 @@ import { compressImage } from '../utils/compressImage'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useSelectStore } from '../stores/useSelectStore'
+import { usePlansStore } from '../stores/usePlansStore'
 import { useOnboardingUiStore } from '../stores/useOnboardingUiStore'
 import { useNavigate } from 'react-router-dom'
 import Toggle from './ui/Toggle'
@@ -56,6 +57,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
   const uiVisibility = useUserStore((s) => s.uiVisibility)
   const setUiVisibility = useUserStore((s) => s.setUiVisibility)
   const resetSelection = useSelectStore((s) => s.resetSelection)
+  const resetPlans = usePlansStore((s) => s.resetPlans)
   const openOnboarding = useOnboardingUiStore((s) => s.open)
 
   const uid = authUser?.uid
@@ -140,6 +142,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
   async function handleSignOut() {
     resetUser()
     resetSelection()
+    resetPlans()
     await signOut()
     navigate('/')
     onClose()
