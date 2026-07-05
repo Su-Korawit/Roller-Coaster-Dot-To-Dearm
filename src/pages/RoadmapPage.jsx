@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import {
   ReactFlow,
@@ -24,6 +25,7 @@ import { computeNodeCenter } from '../utils/computeNodeCenter'
 import { computeCenteredPosition } from '../utils/computeCenteredPosition'
 import { computeDropPosition } from '../utils/computeDropPosition'
 import { toSchema, selectSubset } from '../utils/roadmapExport'
+import { useLongPressDrag } from '../hooks/useLongPressDrag'
 
 const SNAP_THRESHOLD = 40
 
@@ -185,6 +187,14 @@ export default function RoadmapPage({ onClose }) {
     addNode(type, computeDropPosition({ clientX: e.clientX, clientY: e.clientY }, rfRef.current.screenToFlowPosition, type))
   }, [addNode])
 
+  // Touch long-press drag: same drop-position math as the desktop path
+  // (Task 2), triggered by the hook's onPointerUp instead of a native drop.
+  const onTouchDrop = useCallback((type, { clientX, clientY }) => {
+    if (!rfRef.current) return
+    addNode(type, computeDropPosition({ clientX, clientY }, rfRef.current.screenToFlowPosition, type))
+  }, [addNode])
+  const { dragState, getHandlers } = useLongPressDrag(onTouchDrop)
+
   // Download a schema envelope as a JSON file.
   const downloadSchema = useCallback((schema, filename) => {
     const blob = new Blob([JSON.stringify(schema, null, 2)], { type: 'application/json' })
@@ -301,6 +311,7 @@ export default function RoadmapPage({ onClose }) {
                 onClick={() => addAtCenter('process')}
                 draggable="true"
                 onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'process')}
+                {...getHandlers('process')}
                 className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 aria-label="Add Process block"
               >
@@ -311,6 +322,7 @@ export default function RoadmapPage({ onClose }) {
                 onClick={() => addAtCenter('condition')}
                 draggable="true"
                 onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'condition')}
+                {...getHandlers('condition')}
                 className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-accent-pink/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-pink"
                 aria-label="Add Condition block"
               >
@@ -321,6 +333,7 @@ export default function RoadmapPage({ onClose }) {
                 onClick={() => addAtCenter('stageLabel')}
                 draggable="true"
                 onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'stageLabel')}
+                {...getHandlers('stageLabel')}
                 className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 aria-label="Add Stage Label"
               >
@@ -333,6 +346,7 @@ export default function RoadmapPage({ onClose }) {
                 onClick={() => addAtCenter('image')}
                 draggable="true"
                 onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'image')}
+                {...getHandlers('image')}
                 className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 aria-label="Add Image block"
               >
@@ -391,6 +405,22 @@ export default function RoadmapPage({ onClose }) {
 
         {/* Trash zone — appears only while a block is being dragged */}
         <TrashZone ref={trashRef} visible={isDragging} over={isOverTrash} />
+
+        {/* Ghost preview for a touch long-press drag, portalled to
+            document.body: the toolbar lives inside React Flow's transformed
+            viewport, so a `fixed` child positioned via clientX/clientY here
+            would otherwise inherit that transform (scaled/offset) instead of
+            tracking the real screen position (same reasoning as the portal
+            in ImagePickerModal.jsx). */}
+        {dragState && createPortal(
+          <div
+            className="fixed z-50 pointer-events-none flex items-center justify-center rounded-xl border-2 border-brand/60 bg-brand/20 backdrop-blur-sm"
+            style={{ left: dragState.x - 24, top: dragState.y - 24, width: 48, height: 48 }}
+          >
+            <span className="pixel-font text-[7px] text-brand">{dragState.type}</span>
+          </div>,
+          document.body,
+        )}
       </div>
     </div>
   )
