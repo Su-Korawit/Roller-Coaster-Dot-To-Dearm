@@ -8,20 +8,25 @@ import { useAuthStore } from '../../stores/useAuthStore'
 import { useUserStore } from '../../stores/useUserStore'
 import { useSelectStore } from '../../stores/useSelectStore'
 import { useRoadmapStore } from '../../stores/useRoadmapStore'
+import { normalizeImageNodeData, DEFAULT_IMAGE_OFFSET } from '../../utils/normalizeImageNodeData'
 
-// Asset picker for an image block: previously uploaded roadmap images,
-// app assets (profile photo + selected university logo), and a fresh upload.
+// Asset picker for an image block: previously uploaded roadmap images, app
+// assets (profile photo + selected university logo), and a fresh upload.
+// Selecting an image APPENDS it to the block's album (data.images) rather
+// than replacing it — the modal stays open afterwards so the user can add
+// several images in one sitting; they close it explicitly via the X button
+// or a backdrop click when done.
 export default function ImagePickerModal({ nodeId, onClose }) {
   const uid = useAuthStore((s) => s.user?.uid)
   const profilePhotoURL = useUserStore((s) => s.profilePhotoURL)
   const university = useSelectStore((s) => s.university)
+  const nodeData = useRoadmapStore((s) => s.nodes.find((n) => n.id === nodeId)?.data)
   const updateNodeData = useRoadmapStore((s) => s.updateNodeData)
 
   const [uploads, setUploads] = useState([])
   const [uploading, setUploading] = useState(false)
   const inputRef = useRef(null)
 
-  // Load previously uploaded roadmap images.
   useEffect(() => {
     if (!uid) return
     let alive = true
@@ -32,43 +37,47 @@ export default function ImagePickerModal({ nodeId, onClose }) {
     return () => { alive = false }
   }, [uid])
 
+  const appendImage = useCallback((url) => {
+    const { images } = normalizeImageNodeData(nodeData)
+    const nextImages = [...images, { url, offset: DEFAULT_IMAGE_OFFSET }]
+    updateNodeData(nodeId, { images: nextImages, activeIndex: nextImages.length - 1 })
+  }, [nodeData, nodeId, updateNodeData])
+
   const pick = useCallback((url) => {
-    updateNodeData(nodeId, { url })
-    onClose()
-  }, [nodeId, updateNodeData, onClose])
+    appendImage(url)
+  }, [appendImage])
 
   const onFileChange = useCallback(async (e) => {
     const file = e.target.files?.[0]
     if (!file || !uid) return
     setUploading(true)
     try {
-      const url = await uploadAsset(`users/${uid}/roadmap/${nodeId}`, file, { contentType: file.type })
-      updateNodeData(nodeId, { url })
-      onClose()
+      const url = await uploadAsset(`users/${uid}/roadmap/${nodeId}-${Date.now()}`, file, { contentType: file.type })
+      appendImage(url)
     } catch {
+      // swallow — the upload button below returns to its resting state
+    } finally {
       setUploading(false)
       e.target.value = ''
     }
-  }, [uid, nodeId, updateNodeData, onClose])
+  }, [uid, nodeId, appendImage])
 
   const appImages = [
     profilePhotoURL && { url: profilePhotoURL, label: 'Profile' },
     university && { url: tcasLogoUrl(university), label: 'University' },
   ].filter(Boolean)
 
-  // Rendered through a portal to document.body: the Image block lives inside
-  // React Flow's transformed viewport, where a position:fixed child would
-  // anchor to that transform (scaled/offset, unclickable) instead of the
-  // screen. Portalling out lets `fixed inset-0` cover the real viewport.
   return createPortal(
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
       <div
         className="w-full max-w-sm aspect-square max-h-[90vh] bg-white rounded-lg shadow-xl flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between shrink-0">
-          <p className="pixel-font text-[11px] font-bold text-gray-800">Choose image</p>
+          <div>
+            <p className="pixel-font text-[11px] font-bold text-gray-800">Choose image</p>
+            <p className="pixel-font text-[7px] text-gray-400 mt-0.5">Tap to add — close when you're done</p>
+          </div>
           <button
             onClick={onClose}
             aria-label="ปิด"
@@ -79,21 +88,18 @@ export default function ImagePickerModal({ nodeId, onClose }) {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-          {/* My uploads */}
           <Section title="My uploads">
             {uploads.length === 0
               ? <Empty>No uploads yet</Empty>
               : uploads.map((url) => <Thumb key={url} url={url} onClick={() => pick(url)} />)}
           </Section>
 
-          {/* App images */}
           <Section title="App images">
             {appImages.length === 0
               ? <Empty>None available</Empty>
               : appImages.map((img) => <Thumb key={img.url} url={img.url} label={img.label} onClick={() => pick(img.url)} />)}
           </Section>
 
-          {/* Upload new */}
           <button
             onClick={() => !uploading && inputRef.current?.click()}
             className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-brand/40 text-brand hover:bg-brand/5 active:scale-95 transition-all"
