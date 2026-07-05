@@ -39,4 +39,11 @@ describe('computeSnapPosition', () => {
     // right exit: x = 100 + 128 = 228; y = 100 + 64 - 64 = 100
     expect(computeSnapPosition(videoSource, videoTarget, 'right')).toEqual({ x: 228, y: 100 })
   })
+
+  it('uses the start block size fallback when unmeasured', () => {
+    const source = { type: 'start', position: { x: 0, y: 0 } }
+    const target = { type: 'process', position: { x: 500, y: 500 } }
+    // right exit: x = 0 + 160 = 160; y = 0 + 148/2 - 128/2 = 74 - 64 = 10
+    expect(computeSnapPosition(source, target, 'right')).toEqual({ x: 160, y: 10 })
+  })
 })

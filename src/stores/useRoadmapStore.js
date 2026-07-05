@@ -59,11 +59,12 @@ export const useRoadmapStore = create(
       addNode: (type, position = { x: 100, y: 100 }) =>
         set((state) => {
           const id = nextId()
+          const data = type === 'start' ? { journeyRef: null } : { label: '', note: '', color: null }
           return {
             setpoint: id,
             nodes: [
               ...state.nodes,
-              { id, type, position, data: { label: '', note: '', color: null } },
+              { id, type, position, data },
             ],
           }
         }),

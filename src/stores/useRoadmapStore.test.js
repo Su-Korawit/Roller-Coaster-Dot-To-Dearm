@@ -118,6 +118,13 @@ describe('useRoadmapStore', () => {
     expect(nodes[0].type).toBe('image')
   })
 
+  it('addNode creates a start-typed node with a null journeyRef', () => {
+    useRoadmapStore.getState().addNode('start')
+    const { nodes } = useRoadmapStore.getState()
+    expect(nodes[0].type).toBe('start')
+    expect(nodes[0].data).toEqual({ journeyRef: null })
+  })
+
   it('connect snaps the target block adjacent to the source block', () => {
     useRoadmapStore.getState().setNodes([
       { id: 'a', type: 'process', position: { x: 100, y: 100 }, data: { label: '' } },
