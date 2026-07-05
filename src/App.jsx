@@ -14,6 +14,7 @@ const RoadmapPage = lazy(() => import('./pages/RoadmapPage'))
 const WelcomePage = lazy(() => import('./pages/WelcomePage'))
 const NewsPostPage = lazy(() => import('./pages/NewsPostPage'))
 const MusicCallback = lazy(() => import('./pages/MusicCallback'))
+const MiniPlayer = lazy(() => import('./components/music/MiniPlayer'))
 
 function LoadingScreen() {
   return (
@@ -57,6 +58,11 @@ function MobileLayout() {
       <main className="flex-1 relative overflow-hidden">
         <Outlet />
       </main>
+      {user && (
+        <Suspense fallback={null}>
+          <MiniPlayer />
+        </Suspense>
+      )}
       {user && <OnboardingModal />}
     </div>
   )

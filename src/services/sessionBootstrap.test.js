@@ -27,6 +27,7 @@ const m = vi.hoisted(() => ({
   setRoadmapMyUid: vi.fn(),
   hydrateSheetsAction: vi.fn(),
   migrateLegacyRoadmap: vi.fn(),
+  hydrateSpotify: vi.fn(),
 }))
 
 vi.mock('firebase/firestore', () => ({
@@ -51,6 +52,9 @@ vi.mock('../lib/db', () => ({
   queries: {
     sheetsSharedWithMe: (uid) => ({ _query: `sheetsSharedWithMe(${uid})` }),
   },
+}))
+vi.mock('./spotifyConnect', () => ({
+  hydrateSpotify: (...a) => m.hydrateSpotify(...a),
 }))
 vi.mock('../utils/migrateLegacyRoadmap', () => ({
   migrateLegacyRoadmap: (...a) => m.migrateLegacyRoadmap(...a),
@@ -109,6 +113,7 @@ describe('bootstrapSession', () => {
     m.hydrateMap.mockResolvedValue(undefined)
     m.hydrateInventory.mockResolvedValue(undefined)
     m.hydrateFarm.mockResolvedValue(undefined)
+    m.hydrateSpotify.mockResolvedValue(undefined)
     m.migrateLegacyRoadmap.mockReturnValue(null)
   })
 
