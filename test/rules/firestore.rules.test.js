@@ -194,6 +194,14 @@ describe('Roadmap Sheets rules (roadmapSheets/{sheetId})', () => {
     }))
   })
 
+  it('still allows edit-collaborator nodes/edges update after collaborator equality hardening', async () => {
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    await assertSucceeds(updateDoc(doc(bob, 'roadmapSheets/sheet-1'), {
+      nodes: [{ id: 'n1', type: 'process', position: { x: 0, y: 0 }, data: { label: 'Step' } }],
+      edges: [{ id: 'e1', source: 'n1', target: 'n2' }],
+    }))
+  })
+
   it('lets a view-collaborator read but BLOCKS any write', async () => {
     const carol = testEnv.authenticatedContext('carol').firestore()
     await assertSucceeds(getDoc(doc(carol, 'roadmapSheets/sheet-1')))
