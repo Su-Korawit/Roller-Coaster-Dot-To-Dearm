@@ -9,6 +9,7 @@ import { moveFile, trashFile, restoreFile, fromTrashPath, listAllRecursive, list
 import FolderPickerModal from './FolderPickerModal'
 import { useToast } from './Toast'
 import { useAuthStore } from '../../stores/useAuthStore'
+import Popup from '../ui/Popup'
 
 function FolderSidebar({ folders, selectedPath, onSelect, onRenameFolder, onDeleteFolder, trashCount, loading }) {
   const [editingId, setEditingId] = useState(null)
@@ -297,8 +298,8 @@ function FileGrid({ folderPath, onFilesChanged }) {
       )}
 
       {renamingPath && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl shadow-xl p-5 w-full max-w-xs space-y-3">
+        <Popup variant="center" size="sm">
+          <div className="p-5 w-full space-y-3">
             <p className="font-semibold text-gray-800 text-sm">เปลี่ยนชื่อไฟล์</p>
             <input
               autoFocus
@@ -323,7 +324,7 @@ function FileGrid({ folderPath, onFilesChanged }) {
               >ยกเลิก</button>
             </div>
           </div>
-        </div>
+        </Popup>
       )}
 
       {movingPath && (
@@ -622,8 +623,8 @@ export default function AssetsManagerSection() {
       </div>
 
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl shadow-xl p-5 w-full max-w-sm space-y-3">
+        <Popup variant="center" size="sm">
+          <div className="p-5 w-full space-y-3">
             <p className="font-semibold text-gray-800 text-sm">ลบ Folder "{deleteTarget.displayName}"?</p>
             <p className="text-xs text-gray-600">
               {deleteFileCount > 0
@@ -641,7 +642,7 @@ export default function AssetsManagerSection() {
               </button>
             </div>
           </div>
-        </div>
+        </Popup>
       )}
     </div>
   )
