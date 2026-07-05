@@ -124,7 +124,7 @@ describe('shapes.profileFields', () => {
 })
 
 describe('shapes.profileFields plans', () => {
-  it('writes plans[] and mirrors active plan into singular fields', () => {
+  it('writes plans[] and mirrors rank-1 (plans[0]) into singular fields', () => {
     const p = shapes.profileFields({
       mbti: 'INTJ',
       plans: [
@@ -135,8 +135,8 @@ describe('shapes.profileFields plans', () => {
     })
     expect(p.plans).toHaveLength(2)
     expect(p.activePlanId).toBe('b')
-    expect(p.university).toBe('u2') // mirrored from active plan
-    expect(p.program).toBe('p2')
+    expect(p.university).toBe('u1') // mirrored from rank-1 plan
+    expect(p.program).toBe('p1')
   })
 })
 

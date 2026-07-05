@@ -18,6 +18,7 @@ export const refs = {
   purchase:    (purchaseId)     => doc(db, 'purchases', purchaseId),
   product:     (productId)      => doc(db, 'shopProducts', productId),
   map:         (uid)            => doc(db, 'maps', uid),
+  spotifyAuth: (uid)            => doc(db, 'users', uid, 'private', 'spotify'),
   mapConfig:   (key)            => doc(db, 'mapConfigs', key),
   musicConfig: (docId)          => doc(db, 'musicConfig', docId),
   assetFolder: (id)             => doc(db, 'assetFolders', id),
@@ -101,13 +102,13 @@ export const shapes = {
         program: pl.program ?? null,
         addedAt: pl.addedAt ?? Date.now(),
       }))
-      const active = plans.find((pl) => pl.id === activePlanId) ?? plans[0]
       if (activePlanId) profile.activePlanId = activePlanId
-      // Mirror the active plan into the legacy singular fields for downstream readers.
-      if (active?.university) profile.university = active.university
-      if (active?.program) {
-        profile.program = active.program
-        profile.programs = [{ programId: active.program, addedAt: active.addedAt ?? Date.now() }]
+      // Mirror rank-1 (plans[0]) into legacy singular fields for downstream readers.
+      const top = profile.plans[0]
+      if (top?.university) profile.university = top.university
+      if (top?.program) {
+        profile.program = top.program
+        profile.programs = [{ programId: top.program, addedAt: top.addedAt ?? Date.now() }]
       }
     } else {
       // Fallback: legacy single-select path still works.
@@ -178,6 +179,14 @@ export const shapes = {
     collaboratorUids: [],
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
+  }),
+
+  // Private Spotify connection — refresh token lives in users/{uid}/private/*
+  // (owner-only), NEVER the world-readable user doc. See docs/adr/0010.
+  spotifyConnection: ({ refreshToken, spotifyUserId }) => ({
+    refreshToken,
+    spotifyUserId: spotifyUserId ?? null,
+    connectedAt: serverTimestamp(),
   }),
 }
 
