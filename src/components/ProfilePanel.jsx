@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { Settings, Share2, Pencil } from 'lucide-react'
 import { getDoc } from 'firebase/firestore'
 import { useAuthStore } from '../stores/useAuthStore'
@@ -8,10 +8,12 @@ import { refs } from '../lib/db'
 import SettingsSheet from './SettingsSheet'
 import JourneyManager from './profile/JourneyManager'
 
+const RoadmapPreview = lazy(() => import('./profile/RoadmapPreview'))
+
 // Profile shell: header (avatar / name / bio / settings / share) around the
 // JourneyManager body. The portfolio circles + journey list live in
 // JourneyManager because they share `activeCategory` (circles select the list).
-export default function ProfilePanel({ onClose }) {
+export default function ProfilePanel({ onClose, onOpenRoadmap }) {
   const authUser = useAuthStore((s) => s.user)
   const mbti = useSelectStore((s) => s.mbti)
   const openOnboarding = useOnboardingUiStore((s) => s.open)
@@ -108,6 +110,15 @@ export default function ProfilePanel({ onClose }) {
 
         {/* Portfolio circles + Journey list + their modals */}
         <JourneyManager />
+
+        {/* Roadmap preview — live embed of the same useRoadmapStore canvas the
+            Roadmap FAB opens, so Profile and Roadmap are one tap apart */}
+        <div>
+          <p className="pixel-font text-[9px] text-gray-500 mb-2">Your Roadmap</p>
+          <Suspense fallback={<div className="w-full h-40 rounded-2xl bg-gray-100 animate-pulse" />}>
+            <RoadmapPreview onOpen={onOpenRoadmap} />
+          </Suspense>
+        </div>
 
         {/* Edit path */}
         <button

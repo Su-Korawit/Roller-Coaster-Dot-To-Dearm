@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 
 let authState
 let selectState
@@ -30,6 +30,10 @@ vi.mock('./profile/JourneyManager', () => ({
   default: () => <div data-testid="journey-manager" />,
 }))
 
+vi.mock('./profile/RoadmapPreview', () => ({
+  default: ({ onOpen }) => <button onClick={onOpen}>ROADMAP_PREVIEW_STUB</button>,
+}))
+
 vi.mock('./SettingsSheet', () => ({
   default: () => null,
 }))
@@ -57,5 +61,14 @@ describe('ProfilePanel', () => {
       expect(screen.queryByTestId('profile-header-skeleton')).toBeFalsy()
     })
     expect(screen.getByText('Firestore Name')).toBeTruthy()
+  })
+
+  it('renders the Roadmap preview and forwards onOpenRoadmap when tapped', async () => {
+    const onOpenRoadmap = vi.fn()
+    render(<ProfilePanel onClose={vi.fn()} onOpenRoadmap={onOpenRoadmap} />)
+    resolveGetDoc({ exists: () => false, data: () => ({}) })
+    const button = await screen.findByText('ROADMAP_PREVIEW_STUB')
+    fireEvent.click(button)
+    expect(onOpenRoadmap).toHaveBeenCalled()
   })
 })

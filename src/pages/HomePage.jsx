@@ -100,6 +100,14 @@ function HomePage() {
     setChatInitialView('list')
   }
 
+  // Opens the full Roadmap overlay from inside Profile. Profile (z-50) sits
+  // above the Roadmap overlay (z-40), so Profile must close first or the
+  // Roadmap would render invisibly underneath it.
+  function handleOpenRoadmapFromProfile() {
+    closePanel()
+    setShowRoadmap(true)
+  }
+
   async function openAdminChat() {
     const myUid = auth.currentUser?.uid
     if (!myUid) return
@@ -298,7 +306,9 @@ function HomePage() {
       {/* ── PANELS ── */}
       {activeTab === APP_VIEWS.TASK && <TaskPanel onClose={closePanel} initialView={taskInitialView} />}
       {activeTab === APP_VIEWS.NEWS && <NewsPanel onClose={closePanel} />}
-      {activeTab === APP_VIEWS.PROFILE && <ProfilePanel onClose={closePanel} />}
+      {activeTab === APP_VIEWS.PROFILE && (
+        <ProfilePanel onClose={closePanel} onOpenRoadmap={handleOpenRoadmapFromProfile} />
+      )}
       {activeTab === APP_VIEWS.SOCIAL && <SocialPanel onClose={closePanel} onOpenChat={handleOpenChat} />}
       {activeTab === APP_VIEWS.CHAT && (
         <ChatPanel
