@@ -4,6 +4,7 @@ import { getDoc } from 'firebase/firestore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSelectStore } from '../stores/useSelectStore'
 import { useOnboardingUiStore } from '../stores/useOnboardingUiStore'
+import { usePopupStore } from '../stores/usePopupStore'
 import { refs } from '../lib/db'
 import SettingsSheet from './SettingsSheet'
 import JourneyManager from './profile/JourneyManager'
@@ -17,11 +18,13 @@ export default function ProfilePanel({ onClose, onOpenRoadmap }) {
   const authUser = useAuthStore((s) => s.user)
   const mbti = useSelectStore((s) => s.mbti)
   const openOnboarding = useOnboardingUiStore((s) => s.open)
+  const activePopup = usePopupStore((s) => s.activePopup)
+  const openPopup = usePopupStore((s) => s.open)
+  const closePopup = usePopupStore((s) => s.close)
 
   // Firestore profile (displayName, bio, photoURL)
   const [firestoreProfile, setFirestoreProfile] = useState(null)
   const [profileLoading, setProfileLoading] = useState(Boolean(authUser?.uid))
-  const [showSettingsSheet, setShowSettingsSheet] = useState(false)
 
   function fetchFirestoreProfile() {
     if (!authUser?.uid) return
@@ -60,7 +63,7 @@ export default function ProfilePanel({ onClose, onOpenRoadmap }) {
       {/* Top-right icons */}
       <div className="flex justify-end items-center gap-2 px-5 pt-1">
         <button
-          onClick={() => setShowSettingsSheet(true)}
+          onClick={() => openPopup('settings')}
           className="text-gray-400 hover:text-gray-600"
         >
           <Settings size={19} />
@@ -131,9 +134,9 @@ export default function ProfilePanel({ onClose, onOpenRoadmap }) {
       </div>
 
       {/* Settings Sheet */}
-      {showSettingsSheet && (
+      {activePopup === 'settings' && (
         <SettingsSheet
-          onClose={() => setShowSettingsSheet(false)}
+          onClose={closePopup}
           onProfileUpdated={fetchFirestoreProfile}
         />
       )}

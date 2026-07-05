@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { usePlansStore } from '../../stores/usePlansStore'
 import { useOnboardingUiStore } from '../../stores/useOnboardingUiStore'
+import { usePopupStore } from '../../stores/usePopupStore'
 import { syncSelectToFirestore } from '../../utils/syncSelectToFirestore'
 import OnboardingIntro from './OnboardingIntro'
 import MbtiStep from './MbtiStep'
@@ -31,6 +32,7 @@ function OnboardingModal() {
 
   useEffect(() => {
     if (!visible) return
+    usePopupStore.getState().close()
     setStep(forceOpen ? LAST_MAIN_STEP : 0)
     setSubStep(null)
   }, [visible, forceOpen])

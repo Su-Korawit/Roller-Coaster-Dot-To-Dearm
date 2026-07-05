@@ -5,6 +5,7 @@ import L from 'leaflet'
 import { Bell, Loader2, MapIcon, MessageCircle, Search, UserCheck, UserPlus, Users, X, Zap } from 'lucide-react'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSocialStore, calculateMatchScore } from '../stores/useSocialStore'
+import { usePopupStore } from '../stores/usePopupStore'
 import PublicProfileSheet from './PublicProfileSheet'
 import KawaiiMatchOverlay from './KawaiiMatchOverlay'
 import { mbtiColor } from '../constants/mbtiColors'
@@ -595,7 +596,14 @@ export default function SocialPanel({ onClose, onOpenChat }) {
 
   const [tab, setTab] = useState('map')
   const [loading, setLoading] = useState(true)
-  const [selectedUserId, setSelectedUserId] = useState(null)
+  const activePopup = usePopupStore((s) => s.activePopup)
+  const popupPayload = usePopupStore((s) => s.payload)
+  const openPopup = usePopupStore((s) => s.open)
+  const closePopup = usePopupStore((s) => s.close)
+
+  function openPublicProfile(uid) {
+    openPopup('publicProfile', { uid })
+  }
 
   useEffect(() => {
     if (!user?.uid) return
@@ -693,7 +701,7 @@ export default function SocialPanel({ onClose, onOpenChat }) {
               nearbyUsers={nearbyUsers}
               uid={user?.uid}
               onSchoolSaved={handleSchoolSaved}
-              onUserTap={setSelectedUserId}
+              onUserTap={openPublicProfile}
             />
           )}
           {tab === 'discover' && (
@@ -702,7 +710,7 @@ export default function SocialPanel({ onClose, onOpenChat }) {
               following={following}
               sentRequests={sentRequests}
               sendFollowRequest={sendFollowRequest}
-              onUserTap={setSelectedUserId}
+              onUserTap={openPublicProfile}
               myProfile={myProfile}
               onMatchCheck={checkAndAnimateMatch}
               checkedMatches={checkedMatches}
@@ -717,7 +725,7 @@ export default function SocialPanel({ onClose, onOpenChat }) {
           )}
           {tab === 'matched' && (
             <MatchedTab
-              onUserTap={setSelectedUserId}
+              onUserTap={openPublicProfile}
               onOpenChat={onOpenChat}
               following={following}
             />
@@ -726,10 +734,10 @@ export default function SocialPanel({ onClose, onOpenChat }) {
       )}
 
       {/* User profile sheet — rendered inside panel so it stacks above panel content */}
-      {selectedUserId && (
+      {activePopup === 'publicProfile' && popupPayload?.uid && (
         <PublicProfileSheet
-          userId={selectedUserId}
-          onClose={() => setSelectedUserId(null)}
+          userId={popupPayload.uid}
+          onClose={closePopup}
           onOpenChat={onOpenChat}
         />
       )}
@@ -741,7 +749,7 @@ export default function SocialPanel({ onClose, onOpenChat }) {
           myUser={myProfile}
           onClose={clearMatchResult}
           onOpenChat={(uid) => { clearMatchResult(); onOpenChat?.(uid) }}
-          onViewProfile={(uid) => { clearMatchResult(); setSelectedUserId(uid) }}
+          onViewProfile={(uid) => { clearMatchResult(); openPublicProfile(uid) }}
         />
       )}
     </div>
