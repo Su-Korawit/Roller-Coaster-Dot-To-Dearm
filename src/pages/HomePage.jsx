@@ -22,7 +22,6 @@ import { CoinIcon } from '../components/ui/CoinIcon'
 import { useInventoryStore } from '../stores/useInventoryStore'
 import { useCloudAsset } from '../hooks/useCloudAsset'
 import { getMusicConfig, DEFAULT_TRACKS } from '../utils/musicConfig'
-import Popup from '../components/ui/Popup'
 import { Z_NAV } from '../constants/zIndex'
 
 const GameCanvas = lazy(() => import('../components/GameCanvas'))
@@ -346,57 +345,50 @@ function HomePage() {
 
       {/* ── TRACKLIST PANEL ── */}
       {showTrackList && (
-        <Popup
-          variant="sheet"
-          size="sm"
-          maxHeight="max-h-[55vh]"
-          backdrop={false}
-          navSafe={false}
-          zIndex={Z_NAV}
-          onClose={() => setShowTrackList(false)}
+        <div
+          className="absolute bottom-28 left-1/2 -translate-x-1/2 w-[90%] max-w-sm md:max-w-md bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl flex flex-col overflow-hidden max-h-[55vh]"
+          style={{ zIndex: Z_NAV }}
         >
-          <div className="mb-28 bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl flex flex-col overflow-hidden">
-            {/* Header */}
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between shrink-0">
-              <div className="min-w-0 flex-1">
-                <p className="pixel-font text-[10px] font-bold text-gray-800">🎵 Background Music</p>
-                {isPlaying && (
-                  <p className="pixel-font text-[9px] text-blue-600 mt-0.5 truncate">
-                    ▶ {tracks[currentTrackIdx].title}
-                  </p>
-                )}
-              </div>
-              <button
-                onClick={handleTogglePlay}
-                aria-label={isPlaying ? 'หยุดเพลง' : 'เล่นเพลง'}
-                className="ml-3 shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-              >
-                <span aria-hidden="true">{isPlaying ? '⏸' : '▶'}</span>
-              </button>
+          {/* Header */}
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between shrink-0">
+            <div className="min-w-0 flex-1">
+              <p className="pixel-font text-[10px] font-bold text-gray-800">🎵 Background Music</p>
+              {isPlaying && (
+                <p className="pixel-font text-[9px] text-blue-600 mt-0.5 truncate">
+                  ▶ {tracks[currentTrackIdx].title}
+                </p>
+              )}
             </div>
-            {/* Track list */}
-            <div className="overflow-y-auto">
-              {tracks.map((t, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleSelectTrack(i)}
-                  className={`w-full flex items-center gap-2 px-4 py-2.5 text-left border-b border-gray-50 hover:bg-blue-50 transition-colors ${
-                    currentTrackIdx === i && isPlaying ? 'bg-blue-50' : ''
-                  }`}
-                >
-                  <span className={`pixel-font text-[9px] truncate flex-1 ${
-                    currentTrackIdx === i && isPlaying ? 'text-blue-700 font-bold' : 'text-gray-700'
-                  }`}>
-                    {t.title}
-                  </span>
-                  {currentTrackIdx === i && isPlaying && (
-                    <span className="shrink-0 text-[10px] text-blue-500">♪</span>
-                  )}
-                </button>
-              ))}
-            </div>
+            <button
+              onClick={handleTogglePlay}
+              aria-label={isPlaying ? 'หยุดเพลง' : 'เล่นเพลง'}
+              className="ml-3 shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            >
+              <span aria-hidden="true">{isPlaying ? '⏸' : '▶'}</span>
+            </button>
           </div>
-        </Popup>
+          {/* Track list */}
+          <div className="overflow-y-auto">
+            {tracks.map((t, i) => (
+              <button
+                key={i}
+                onClick={() => handleSelectTrack(i)}
+                className={`w-full flex items-center gap-2 px-4 py-2.5 text-left border-b border-gray-50 hover:bg-blue-50 transition-colors ${
+                  currentTrackIdx === i && isPlaying ? 'bg-blue-50' : ''
+                }`}
+              >
+                <span className={`pixel-font text-[9px] truncate flex-1 ${
+                  currentTrackIdx === i && isPlaying ? 'text-blue-700 font-bold' : 'text-gray-700'
+                }`}>
+                  {t.title}
+                </span>
+                {currentTrackIdx === i && isPlaying && (
+                  <span className="shrink-0 text-[10px] text-blue-500">♪</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* ── CONTACT DEVELOPER FAB ── */}

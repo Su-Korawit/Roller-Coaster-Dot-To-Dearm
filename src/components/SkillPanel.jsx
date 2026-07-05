@@ -496,11 +496,6 @@ function SkillInfoSheet({ skill, onClose }) {
   return (
     <Popup variant="sheet" size="md" onClose={onClose}>
       <div className="bg-[#fce4ef] px-6 pt-6 pb-8 h-full overflow-y-auto">
-        {/* Drag handle */}
-        <div className="flex justify-center mb-4">
-          <div className="w-10 h-1 bg-pink-200 rounded-full" />
-        </div>
-
         {/* Tab strip (just shows type) */}
         <div className="flex gap-2 mb-6">
           <div className={`px-4 py-2 rounded-xl pixel-font text-[9px] ${isPassive ? 'bg-white text-gray-800' : 'text-gray-400'}`}>

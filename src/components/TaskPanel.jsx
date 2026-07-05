@@ -78,9 +78,6 @@ function TaskShareSheet({ task, onClose }) {
   return (
     <Popup variant="sheet" size="md" onClose={onClose}>
       <div className="pb-4">
-        <div className="flex justify-center pt-3 pb-3">
-          <div className="w-10 h-1 bg-gray-300 rounded-full" />
-        </div>
         <p className="pixel-font text-[9px] text-center text-gray-700 mb-1 px-5">ส่ง Task ให้เพื่อน</p>
         <p
           className="text-center text-gray-500 mb-4 px-6 truncate"
@@ -142,9 +139,6 @@ function ReflectionSheet({ task, onSubmit, onClose, isEvaluating }) {
       onClose={!isEvaluating ? onClose : undefined}
     >
       <div className="px-6 pt-4 pb-10 flex flex-col h-full">
-        <div className="flex justify-center mb-3 shrink-0">
-          <div className="w-10 h-1 bg-gray-200 rounded-full" />
-        </div>
         <h3 className="text-center font-bold text-gray-800 text-base mb-1 shrink-0">
           📝 Daily Reflection
         </h3>
