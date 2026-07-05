@@ -6,14 +6,13 @@ import { usePopupStore } from '../../stores/usePopupStore'
 import { syncSelectToFirestore } from '../../utils/syncSelectToFirestore'
 import OnboardingIntro from './OnboardingIntro'
 import MbtiStep from './MbtiStep'
-import PlansHub from './PlansHub'
+import PlanList from './PlanList'
 import UniversityStep from './UniversityStep'
 import ProgramStep from './ProgramStep'
-import Popup from '../ui/Popup'
 
 const LAST_MAIN_STEP = 2
 
-// Full-viewport overlay that walks a signed-in user through onboarding.
+// Full-screen overlay that walks a signed-in user through onboarding.
 // Visible when forced open (ProfilePanel "Edit your path" / SettingsSheet
 // reset) or when the user has no committed plan yet (first-visit gate). Never
 // resets useSelectStore — re-entry shows existing selections, not blank ones.
@@ -53,7 +52,7 @@ function OnboardingModal() {
   }
 
   function renderCurrentStep() {
-    if (step === 0) return <OnboardingIntro onNext={handleNext} onBack={handleBack} />
+    if (step === 0) return <OnboardingIntro onNext={handleNext} />
     if (step === 1) return <MbtiStep onNext={handleNext} onBack={handleBack} />
     if (subStep === 'university') {
       return <UniversityStep onNext={() => setSubStep('program')} onBack={() => setSubStep(null)} />
@@ -61,13 +60,13 @@ function OnboardingModal() {
     if (subStep === 'program') {
       return <ProgramStep onNext={() => setSubStep(null)} onBack={() => setSubStep('university')} />
     }
-    return <PlansHub onEditPlan={handleEditPlan} onNext={close} onBack={handleBack} />
+    return <PlanList onEditPlan={handleEditPlan} onNext={close} onBack={handleBack} />
   }
 
   return (
-    <Popup variant="center" size="lg" maxHeight="max-h-[100vh]" backdrop={false} navSafe={false} onClose={close}>
+    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-white">
       {renderCurrentStep()}
-    </Popup>
+    </div>
   )
 }
 

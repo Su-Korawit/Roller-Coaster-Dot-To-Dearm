@@ -26,8 +26,8 @@ export default function JourneyManager() {
   const updateJourneyItem = useUserStore((s) => s.updateJourneyItem)
   const deleteJourneyItem = useUserStore((s) => s.deleteJourneyItem)
 
-  const activePlan = usePlansStore((s) => s.plans.find((p) => p.id === s.activePlanId))
-  const university = activePlan?.university ?? null
+  const rankOnePlan = usePlansStore((s) => s.plans[0])
+  const university = rankOnePlan?.university ?? null
 
   const selectedUniversity = universities.find((u) => u.id === university)
 

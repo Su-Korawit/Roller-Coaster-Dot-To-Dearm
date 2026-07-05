@@ -29,12 +29,12 @@ vi.mock('./OnboardingIntro', () => ({
 vi.mock('./MbtiStep', () => ({
   default: ({ onNext }) => <button onClick={onNext}>MBTI_NEXT</button>,
 }))
-vi.mock('./PlansHub', () => ({
+vi.mock('./PlanList', () => ({
   default: ({ onEditPlan, onNext, onBack }) => (
     <>
-      <button onClick={() => onEditPlan('plan-2')}>HUB_EDIT_PLAN_2</button>
-      <button onClick={onNext}>HUB_NEXT</button>
-      <button onClick={onBack}>HUB_BACK</button>
+      <button onClick={() => onEditPlan('plan-2')}>LIST_EDIT_PLAN_2</button>
+      <button onClick={onNext}>LIST_NEXT</button>
+      <button onClick={onBack}>LIST_BACK</button>
     </>
   ),
 }))
@@ -58,7 +58,7 @@ vi.mock('./ProgramStep', () => ({
 const { default: OnboardingModal } = await import('./OnboardingModal')
 const { useOnboardingUiStore } = await import('../../stores/useOnboardingUiStore')
 
-function walkToHub() {
+function walkToPlanList() {
   fireEvent.click(screen.getByText('INTRO_NEXT'))
   fireEvent.click(screen.getByText('MBTI_NEXT'))
 }
@@ -80,6 +80,12 @@ describe('OnboardingModal', () => {
     expect(container.firstChild).toBeNull()
   })
 
+  it('renders a full-screen overlay when visible', () => {
+    authState = { user: { uid: 'u1' } }
+    const { container } = render(<OnboardingModal />)
+    expect(container.querySelector('.fixed.inset-0')).toBeTruthy()
+  })
+
   it('shows the intro step when a signed-in user has no committed plan', () => {
     authState = { user: { uid: 'u1' } }
     render(<OnboardingModal />)
@@ -96,7 +102,7 @@ describe('OnboardingModal', () => {
     expect(container.firstChild).toBeNull()
   })
 
-  it('opens plans hub directly when forceOpen is true (edit re-entry)', () => {
+  it('opens plan list directly when forceOpen is true (edit re-entry)', () => {
     useOnboardingUiStore.getState().open()
     authState = { user: { uid: 'u1' } }
     plansState = {
@@ -104,39 +110,39 @@ describe('OnboardingModal', () => {
       plans: [{ id: 'plan-1', program: 'PROG1' }],
     }
     render(<OnboardingModal />)
-    expect(screen.getByText('HUB_NEXT')).toBeTruthy()
+    expect(screen.getByText('LIST_NEXT')).toBeTruthy()
     expect(screen.queryByText('INTRO_NEXT')).toBeNull()
   })
 
-  it('walks intro through every main step to plans hub on next()', () => {
+  it('walks intro through every main step to plan list on next()', () => {
     authState = { user: { uid: 'u1' } }
     render(<OnboardingModal />)
-    walkToHub()
-    expect(screen.getByText('HUB_NEXT')).toBeTruthy()
+    walkToPlanList()
+    expect(screen.getByText('LIST_NEXT')).toBeTruthy()
   })
 
-  it('plans hub edit opens university and moves to program sub-flow', () => {
+  it('plan list edit opens university and moves to program sub-flow', () => {
     authState = { user: { uid: 'u1' } }
     render(<OnboardingModal />)
-    walkToHub()
-    fireEvent.click(screen.getByText('HUB_EDIT_PLAN_2'))
+    walkToPlanList()
+    fireEvent.click(screen.getByText('LIST_EDIT_PLAN_2'))
     expect(setActivePlan).toHaveBeenCalledWith('plan-2')
     expect(screen.getByText('UNIVERSITY_NEXT')).toBeTruthy()
     fireEvent.click(screen.getByText('UNIVERSITY_NEXT'))
     expect(screen.getByText('PROGRAM_NEXT')).toBeTruthy()
   })
 
-  it('program onNext returns to plans hub', () => {
+  it('program onNext returns to plan list', () => {
     authState = { user: { uid: 'u1' } }
     render(<OnboardingModal />)
-    walkToHub()
-    fireEvent.click(screen.getByText('HUB_EDIT_PLAN_2'))
+    walkToPlanList()
+    fireEvent.click(screen.getByText('LIST_EDIT_PLAN_2'))
     fireEvent.click(screen.getByText('UNIVERSITY_NEXT'))
     fireEvent.click(screen.getByText('PROGRAM_NEXT'))
-    expect(screen.getByText('HUB_NEXT')).toBeTruthy()
+    expect(screen.getByText('LIST_NEXT')).toBeTruthy()
   })
 
-  it('plans hub next closes forceOpen', () => {
+  it('plan list next closes forceOpen', () => {
     useOnboardingUiStore.getState().open()
     authState = { user: { uid: 'u1' } }
     plansState = {
@@ -144,7 +150,7 @@ describe('OnboardingModal', () => {
       plans: [{ id: 'plan-1', program: 'PROG1' }],
     }
     render(<OnboardingModal />)
-    fireEvent.click(screen.getByText('HUB_NEXT'))
+    fireEvent.click(screen.getByText('LIST_NEXT'))
     expect(useOnboardingUiStore.getState().forceOpen).toBe(false)
   })
 })
