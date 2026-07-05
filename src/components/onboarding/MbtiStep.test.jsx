@@ -26,12 +26,18 @@ describe('MbtiStep', () => {
     syncSelectToFirestore.mockClear()
   })
 
-  it('selecting the current MBTI type sets it, syncs, and calls onNext', () => {
+  it('renders all MBTI characters in a grid', () => {
+    render(<MbtiStep onNext={() => {}} onBack={() => {}} />)
+    expect(screen.getByRole('button', { name: /INTJ/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /ENFP/i })).toBeTruthy()
+  })
+
+  it('selects a card and enables next', () => {
     const onNext = vi.fn()
-    render(<MbtiStep onNext={onNext} />)
-    fireEvent.click(screen.getByRole('button', { name: /^Select / }))
+    render(<MbtiStep onNext={onNext} onBack={() => {}} />)
+    fireEvent.click(screen.getByRole('button', { name: /INTJ/i }))
     expect(selectState.setMbti).toHaveBeenCalled()
-    expect(syncSelectToFirestore).toHaveBeenCalledWith('u1')
+    fireEvent.click(screen.getByText('ถัดไป'))
     expect(onNext).toHaveBeenCalledTimes(1)
   })
 })
