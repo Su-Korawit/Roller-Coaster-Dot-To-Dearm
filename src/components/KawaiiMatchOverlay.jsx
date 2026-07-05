@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { mbtiColor } from '../constants/mbtiColors'
+import { Z_CELEBRATION } from '../constants/zIndex'
 import { shapes } from '../lib/db'
 
 function scoreColor(score) {
@@ -160,7 +161,10 @@ function NoMatchToast({ score, onClose }) {
   const SAD_STARS = ['★', '✦', '✧']
 
   return (
-    <div className="fixed inset-x-0 top-0 z-[9999] flex justify-center pointer-events-none px-4 pt-4">
+    <div
+      className="fixed inset-x-0 top-0 flex justify-center pointer-events-none px-4 pt-4"
+      style={{ zIndex: Z_CELEBRATION }}
+    >
       <style dangerouslySetInnerHTML={{ __html: KEYFRAMES }} />
       <div
         data-rc-anim
@@ -212,7 +216,8 @@ function FullMatchOverlay({ score, targetUser, myUser, onClose, onOpenChat, onVi
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden"
+      className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden"
+      style={{ zIndex: Z_CELEBRATION }}
       onClick={onClose}
     >
       <style dangerouslySetInnerHTML={{ __html: KEYFRAMES }} />
@@ -240,7 +245,7 @@ function FullMatchOverlay({ score, targetUser, myUser, onClose, onOpenChat, onVi
             fontSize: s.size,
             color: s.color,
             animation: `rc-twinkle ${s.dur}s ease-in-out ${s.delay}s infinite`,
-            zIndex: 9998,
+            zIndex: Z_CELEBRATION - 1,
           }}
         >
           {s.char}
@@ -257,7 +262,7 @@ function FullMatchOverlay({ score, targetUser, myUser, onClose, onOpenChat, onVi
             left: `${h.left}%`,
             fontSize: h.size,
             animation: `rc-float-up ${h.dur}s ease-out ${h.delay}s infinite`,
-            zIndex: 9998,
+            zIndex: Z_CELEBRATION - 1,
           }}
         >
           {h.char}
@@ -266,7 +271,8 @@ function FullMatchOverlay({ score, targetUser, myUser, onClose, onOpenChat, onVi
 
       {/* Main content — stopPropagation prevents backdrop close */}
       <div
-        className="relative z-[9999] flex flex-col items-center gap-5 px-6 w-full max-w-sm md:max-w-xl"
+        className="relative flex flex-col items-center gap-5 px-6 w-full max-w-sm md:max-w-xl"
+        style={{ zIndex: Z_CELEBRATION }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Avatars row */}
