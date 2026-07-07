@@ -8,30 +8,30 @@ function SkillsPage() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-bold text-gray-900">Skills</h2>
+      <h2 className="text-xl font-bold text-ink">Skills</h2>
 
       <button
         onClick={() => addOwnedSkill('spark')}
-        className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white"
+        className="neo-btn rounded-lg bg-brand-strong px-4 py-2 text-sm font-semibold text-white"
       >
         Add Spark Skill
       </button>
 
-      <div className="rounded-xl bg-white p-4 shadow-sm">
-        <h3 className="text-sm font-semibold text-gray-700">Owned</h3>
-        <p className="mt-1 text-sm text-gray-600">{ownedSkills.join(', ') || 'ยังไม่มี skill'}</p>
+      <div className="neo-card rounded-xl p-4">
+        <h3 className="text-sm font-semibold text-ink">Owned</h3>
+        <p className="mt-1 text-sm text-ink-soft thai-font">{ownedSkills.join(', ') || 'ยังไม่มี skill'}</p>
       </div>
 
       <button
         onClick={() => equipSkill('spark')}
-        className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white"
+        className="neo-btn rounded-lg bg-good px-4 py-2 text-sm font-semibold text-white"
       >
         Equip Spark
       </button>
 
-      <div className="rounded-xl bg-white p-4 shadow-sm">
-        <h3 className="text-sm font-semibold text-gray-700">Equipped</h3>
-        <p className="mt-1 text-sm text-gray-600">{equippedSkills.join(', ') || 'ยังไม่ได้ใส่ skill'}</p>
+      <div className="neo-card rounded-xl p-4">
+        <h3 className="text-sm font-semibold text-ink">Equipped</h3>
+        <p className="mt-1 text-sm text-ink-soft thai-font">{equippedSkills.join(', ') || 'ยังไม่ได้ใส่ skill'}</p>
       </div>
     </section>
   )

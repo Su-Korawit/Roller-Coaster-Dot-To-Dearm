@@ -57,14 +57,14 @@ export default function SheetSwitcher() {
 
       {activeSheet?.myRole === 'owner' && (
         <>
-          <button onClick={() => handleRename(activeSheet)} aria-label="Rename sheet" className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 active:scale-95 transition-all">
+          <button onClick={() => handleRename(activeSheet)} aria-label="Rename sheet" className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-ink-soft hover:bg-brand-soft active:scale-95 transition-all">
             <Pencil size={13} strokeWidth={2.5} />
           </button>
-          <button onClick={() => setShareTarget(activeSheet.id)} aria-label="Share sheet" className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 active:scale-95 transition-all">
+          <button onClick={() => setShareTarget(activeSheet.id)} aria-label="Share sheet" className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-ink-soft hover:bg-brand-soft active:scale-95 transition-all">
             <Share2 size={13} strokeWidth={2.5} />
           </button>
           {sheets.length > 1 && (
-            <button onClick={() => handleDelete(activeSheet)} aria-label="Delete sheet" className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-red-400 hover:bg-red-50 active:scale-95 transition-all">
+            <button onClick={() => handleDelete(activeSheet)} aria-label="Delete sheet" className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-danger hover:bg-danger/10 active:scale-95 transition-all">
               <Trash2 size={13} strokeWidth={2.5} />
             </button>
           )}
@@ -72,7 +72,7 @@ export default function SheetSwitcher() {
       )}
 
       {shareTarget && <ShareSheetModal sheetId={shareTarget} onClose={() => setShareTarget(null)} />}
-      {!canEdit && <span className="pixel-font text-[8px] text-gray-400 ml-1">View only</span>}
+      {!canEdit && <span className="pixel-font text-[10px] text-ink-soft ml-1">View only</span>}
     </div>
   )
 }

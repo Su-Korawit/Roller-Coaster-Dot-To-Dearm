@@ -133,7 +133,7 @@ export default function MoodHeatmap({ feelingNotes = [] }) {
 
       {/* Legend */}
       <div className="flex items-center gap-1.5 mt-2 justify-end pr-1">
-        <span className="pixel-font text-[6px] text-gray-500">Less</span>
+        <span className="pixel-font text-[10px] text-ink-soft">Less</span>
         {[0, 1, 2, 3, 4, 5].map((l) => (
           <div
             key={l}
@@ -141,7 +141,7 @@ export default function MoodHeatmap({ feelingNotes = [] }) {
             style={{ backgroundColor: LEVEL_COLORS[l] }}
           />
         ))}
-        <span className="pixel-font text-[6px] text-gray-500">More</span>
+        <span className="pixel-font text-[10px] text-ink-soft">More</span>
       </div>
     </div>
   )

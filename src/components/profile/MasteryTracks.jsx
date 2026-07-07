@@ -112,7 +112,7 @@ export default function MasteryTracks() {
     <>
       <div>
         <div className="flex items-center justify-between mb-2">
-          <p className="pixel-font text-[9px] text-gray-500">Journey of Mastery</p>
+          <p className="pixel-font text-[10px] text-ink-soft">Journey of Mastery</p>
           <button
             onClick={generateRoadmap}
             disabled={isGenerating}
@@ -165,14 +165,14 @@ export default function MasteryTracks() {
                           )}
                           <div
                             {...provided.dragHandleProps}
-                            className="absolute top-1 right-1 text-gray-300 hover:text-gray-400 cursor-grab active:cursor-grabbing leading-none text-[10px] select-none"
+                            className="absolute top-1 right-1 text-ink-soft/50 hover:text-ink-soft cursor-grab active:cursor-grabbing leading-none text-[10px] select-none"
                           >
                             ⠿
                           </div>
                           <button
                             onClick={() => setActiveMasteryBlockId(isPinned ? null : item.id)}
                             className={`absolute bottom-1 left-1 text-[11px] leading-none ${
-                              isPinned ? 'text-purple-500' : 'text-gray-300 hover:text-purple-400'
+                              isPinned ? 'text-brand-strong' : 'text-ink-soft/50 hover:text-brand'
                             }`}
                             title={isPinned ? 'Unpin block' : 'Set as active focus'}
                           >
@@ -182,7 +182,7 @@ export default function MasteryTracks() {
                             onClick={() => setViewingJourney(item)}
                             className="w-full h-full flex flex-col items-center justify-center p-2 pt-3 gap-1"
                           >
-                            <span className="text-[9px] font-semibold text-gray-700 text-center leading-tight line-clamp-2">
+                            <span className="thai-font text-xs font-semibold text-ink text-center leading-tight line-clamp-2">
                               {item.title || '—'}
                             </span>
                             {item.progress !== undefined && (
@@ -215,12 +215,12 @@ export default function MasteryTracks() {
             title={liveBlock.title || 'Journey Step'}
             onClose={() => setViewingJourney(null)}
           >
-            <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+            <p className="thai-font text-sm text-ink-soft leading-relaxed whitespace-pre-wrap">
               {liveBlock.desc || liveBlock.description || 'No description available.'}
             </p>
             {liveBlock.progress !== undefined && (
               <div className="flex items-center gap-2">
-                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="flex-1 h-2 bg-brand-soft rounded-full overflow-hidden">
                   <div
                     className="h-full bg-purple-400 rounded-full transition-all"
                     style={{ width: `${Math.min(100, liveBlock.progress || 0)}%` }}
@@ -231,10 +231,10 @@ export default function MasteryTracks() {
             )}
             {notes.length > 0 && (
               <div className="space-y-1.5">
-                <p className="pixel-font text-[8px] text-gray-400 uppercase tracking-wide">Progress History</p>
+                <p className="pixel-font text-[10px] text-ink-soft uppercase tracking-wide">Progress History</p>
                 {notes.map((note, i) => (
                   <div key={i} className="bg-purple-50 rounded-xl px-3 py-2">
-                    <p className="text-[11px] text-gray-600 leading-snug">{note}</p>
+                    <p className="thai-font text-xs text-ink-soft leading-snug">{note}</p>
                   </div>
                 ))}
               </div>
@@ -261,14 +261,14 @@ export default function MasteryTracks() {
             value={journeyEdit.title}
             onChange={(e) => setJourneyEdit({ ...journeyEdit, title: e.target.value })}
             placeholder="Title"
-            className="w-full bg-gray-50 border-0 rounded-2xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-purple-400"
+            className="neo-input thai-font px-4 py-3 text-sm w-full"
           />
           <textarea
             value={journeyEdit.desc}
             onChange={(e) => setJourneyEdit({ ...journeyEdit, desc: e.target.value })}
             placeholder="Description"
             rows={4}
-            className="w-full bg-gray-50 border-0 rounded-2xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+            className="neo-input thai-font px-4 py-3 text-sm w-full resize-none"
           />
           <button
             onClick={handleSaveJourney}
@@ -286,7 +286,7 @@ export default function MasteryTracks() {
           )}
           <button
             onClick={() => setJourneyModal(null)}
-            className="w-full text-gray-400 text-sm py-1 hover:text-gray-500"
+            className="w-full text-ink-soft text-sm py-1 hover:text-ink"
           >
             Cancel
           </button>

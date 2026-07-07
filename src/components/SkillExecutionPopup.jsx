@@ -19,12 +19,12 @@ function IgnitePopup({ task, onDone, onCancel }) {
   return (
     <div className="flex flex-col items-center justify-center gap-6 py-8">
       <p className="pixel-font text-[9px] text-orange-500 tracking-widest">🚀 IGNITE</p>
-      <p className="pixel-font text-[9px] text-gray-500 text-center px-4">{task.title}</p>
+      <p className="pixel-font text-[10px] text-ink-soft text-center px-4">{task.title}</p>
       <p className="pixel-font text-[96px] leading-none text-orange-400">{count}</p>
-      <p className="pixel-font text-[8px] text-gray-400">Get ready to start your task!</p>
+      <p className="pixel-font text-[10px] text-ink-soft">Get ready to start your task!</p>
       <button
         onClick={onCancel}
-        className="pixel-font text-[8px] text-gray-400 border border-gray-300 rounded-full px-4 py-2 active:scale-95 transition-transform"
+        className="neo-btn pixel-font text-[10px] text-ink-soft border-2 border-ink/20 rounded-lg px-4 py-2"
       >
         Cancel
       </button>
@@ -57,7 +57,7 @@ function CapsulePopup({ task, timerEnd, onComplete, onCancel }) {
   return (
     <div className="flex flex-col items-center justify-center gap-5 py-8 px-6">
       <p className="pixel-font text-[9px] text-sky-500 tracking-widest">⏳ CAPSULE</p>
-      <p className="pixel-font text-[9px] text-gray-500 text-center">{task.title}</p>
+      <p className="pixel-font text-[10px] text-ink-soft text-center">{task.title}</p>
 
       {/* Circular-style progress ring (SVG) */}
       <div className="relative w-32 h-32">
@@ -77,7 +77,7 @@ function CapsulePopup({ task, timerEnd, onComplete, onCancel }) {
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           {expired
             ? <span className="text-2xl">✅</span>
-            : <p className="pixel-font text-[16px] text-gray-800">{mins}:{secs}</p>
+            : <p className="pixel-font text-[16px] text-ink">{mins}:{secs}</p>
           }
         </div>
       </div>
@@ -94,7 +94,7 @@ function CapsulePopup({ task, timerEnd, onComplete, onCancel }) {
         </>
       ) : (
         <>
-          <p className="pixel-font text-[8px] text-gray-400 text-center">
+          <p className="pixel-font text-[10px] text-ink-soft text-center">
             Complete within time for +50% coins
           </p>
           <div className="flex gap-3 w-full">
@@ -106,7 +106,7 @@ function CapsulePopup({ task, timerEnd, onComplete, onCancel }) {
             </button>
             <button
               onClick={onCancel}
-              className="px-4 border border-gray-200 rounded-xl text-xs text-gray-400 active:scale-95 transition-transform"
+              className="px-4 border-2 border-ink/10 rounded-xl text-xs text-ink-soft"
             >
               Cancel
             </button>

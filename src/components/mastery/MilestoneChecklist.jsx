@@ -17,7 +17,7 @@ export default function MilestoneChecklist({ trackId }) {
       <ul className="space-y-2">
         {track.milestones.map((m) => (
           <li key={m.id}>
-            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-gray-100 bg-white p-3">
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-ink/10 bg-surface p-3">
               <input
                 type="checkbox"
                 role="checkbox"
@@ -27,7 +27,7 @@ export default function MilestoneChecklist({ trackId }) {
               />
               <div>
                 <p className="pixel-font text-[11px] text-ink">{m.title}</p>
-                {m.desc && <p className="thai-font text-xs text-gray-400">{m.desc}</p>}
+                {m.desc && <p className="thai-font text-xs text-ink-soft">{m.desc}</p>}
               </div>
             </label>
           </li>

@@ -83,21 +83,21 @@ export default function TaskForm({ initialValues = {}, defaultDate = null, onSav
       <div className="space-y-4">
         {/* Title */}
         <label className="block">
-          <span className="pixel-font text-[9px] text-gray-600">Task Name</span>
+          <span className="pixel-font text-[10px] text-ink-soft">Task Name</span>
           <input
             value={form.title}
             onChange={(e) => update('title', e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
             placeholder="#1 | Hackathon"
             autoFocus
-            className="mt-2 w-full rounded-xl border border-gray-200 shadow-sm px-4 py-3 outline-none focus:border-purple-400"
+            className="neo-input thai-font mt-2 w-full px-4 py-3"
           />
         </label>
 
         {/* Type + MBTI suggestion chips */}
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="pixel-font text-[9px] text-gray-600">Type</span>
+            <span className="pixel-font text-[10px] text-ink-soft">Type</span>
             {mbti && (
               <span className="pixel-font text-[7px] text-purple-400 bg-purple-50 rounded-full px-2 py-0.5">
                 ✨ {mbti} picks
@@ -111,10 +111,10 @@ export default function TaskForm({ initialValues = {}, defaultDate = null, onSav
                   key={s}
                   type="button"
                   onClick={() => update('type', s)}
-                  className={`px-3 py-1 rounded-full pixel-font text-[8px] border transition-colors active:scale-95
+                  className={`px-3 py-1 rounded-full pixel-font text-[10px] border transition-colors active:scale-95
                     ${form.type === s
-                      ? 'bg-purple-500 border-purple-500 text-white'
-                      : 'bg-white border-gray-200 text-gray-500 hover:border-purple-300'}`}
+                      ? 'bg-brand-strong border-brand-strong text-white'
+                      : 'bg-surface border-ink/10 text-ink-soft hover:border-brand'}`}
                 >
                   {s}
                 </button>
@@ -125,14 +125,14 @@ export default function TaskForm({ initialValues = {}, defaultDate = null, onSav
             value={form.type}
             onChange={(e) => update('type', e.target.value)}
             placeholder="Competition / Study / Project"
-            className="w-full rounded-xl border border-gray-200 shadow-sm px-4 py-3 outline-none focus:border-purple-400"
+            className="neo-input thai-font w-full px-4 py-3"
           />
         </div>
 
         {/* Time + Deadline */}
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
-            <span className="pixel-font text-[9px] text-gray-600">Time (min)</span>
+            <span className="pixel-font text-[10px] text-ink-soft">Time (min)</span>
             <input
               type="number"
               min="5"
@@ -144,7 +144,7 @@ export default function TaskForm({ initialValues = {}, defaultDate = null, onSav
           </label>
 
           <label className="block">
-            <span className="pixel-font text-[9px] text-gray-600">Deadline</span>
+            <span className="pixel-font text-[10px] text-ink-soft">Deadline</span>
             <input
               type="date"
               value={form.deadline}
@@ -156,24 +156,24 @@ export default function TaskForm({ initialValues = {}, defaultDate = null, onSav
 
         {/* Description */}
         <label className="block">
-          <span className="pixel-font text-[9px] text-gray-600">Detail</span>
+          <span className="pixel-font text-[10px] text-ink-soft">Detail</span>
           <textarea
             rows={4}
             value={form.description}
             onChange={(e) => update('description', e.target.value)}
             placeholder="Additional detail..."
-            className="mt-2 w-full rounded-xl border border-gray-200 shadow-sm px-4 py-3 outline-none focus:border-purple-400 resize-none"
+            className="neo-input thai-font mt-2 w-full px-4 py-3 resize-none"
           />
         </label>
       </div>
       </div>
 
       {/* ── Pinned footer — always visible ── */}
-      <div className="shrink-0 px-5 py-3 border-t border-gray-100 bg-white">
+      <div className="shrink-0 px-5 py-3 border-t-2 border-ink/10 bg-paper">
         <button
           onClick={handleSubmit}
           disabled={!form.title.trim()}
-          className="w-full rounded-xl border border-gray-300 shadow-sm bg-white py-3 pixel-font text-[10px] text-gray-800 disabled:opacity-40 active:scale-95 transition-transform"
+          className="neo-btn w-full rounded-xl bg-surface py-3 pixel-font text-[10px] text-ink disabled:opacity-40"
         >
           Save Task
         </button>
@@ -181,7 +181,7 @@ export default function TaskForm({ initialValues = {}, defaultDate = null, onSav
         {onCancel && (
           <button
             onClick={onCancel}
-            className="mt-2 w-full py-2 pixel-font text-[9px] text-gray-400"
+            className="mt-2 w-full py-2 pixel-font text-[10px] text-ink-soft"
           >
             Cancel
           </button>

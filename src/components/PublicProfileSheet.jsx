@@ -34,10 +34,10 @@ function MatchScoreBar({ score }) {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-1.5">
-        <span className="pixel-font text-[7px] text-gray-500">{label}</span>
-        <span className="pixel-font text-[8px] text-gray-700">{score}%</span>
+        <span className="pixel-font text-[10px] text-ink-soft">{label}</span>
+        <span className="pixel-font text-[10px] text-ink">{score}%</span>
       </div>
-      <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-3 bg-brand-soft rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-700 ease-out"
           style={{ width: filled ? `${score}%` : '0%', background: barGradient }}
@@ -62,11 +62,11 @@ function PortfolioCirclePublic({ label, emoji, image, canSee }) {
         </div>
         {!canSee && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <Lock size={16} className="text-gray-500" />
+            <Lock size={16} className="text-ink-soft" />
           </div>
         )}
       </div>
-      <span className={`pixel-font text-[8px] ${canSee ? 'text-gray-600' : 'text-gray-400'}`}>
+      <span className={`pixel-font text-[10px] ${canSee ? 'text-ink-soft' : 'text-ink-soft/50'}`}>
         {label}
       </span>
     </div>
@@ -184,7 +184,7 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
         <div className="flex items-center px-4 pb-2 shrink-0">
           <button
             onClick={onClose}
-            className="flex items-center gap-1 text-gray-500 hover:text-gray-700 pixel-font text-[8px]"
+            className="flex items-center gap-1 text-ink-soft hover:text-ink pixel-font text-[10px]"
           >
             <ArrowLeft size={14} />
             Back
@@ -200,7 +200,7 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
         {!loading && error && (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <span className="text-3xl">😕</span>
-            <p className="pixel-font text-[8px] text-gray-400">{error}</p>
+            <p className="pixel-font text-[10px] text-ink-soft">{error}</p>
           </div>
         )}
 
@@ -210,7 +210,7 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
             {/* Avatar + Name + Bio */}
             <div className="flex flex-col items-center gap-2">
               <div
-                className="rounded-full overflow-hidden flex items-center justify-center bg-gray-100 shrink-0"
+                className="rounded-full overflow-hidden flex items-center justify-center bg-brand-soft shrink-0"
                 style={{
                   width: 72,
                   height: 72,
@@ -220,17 +220,17 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
               >
                 {profile.photoURL
                   ? <img src={profile.photoURL} alt="" className="w-full h-full object-cover" />
-                  : <span className="text-2xl font-bold text-gray-500">
+                  : <span className="text-2xl font-bold text-ink-soft">
                       {(profile.displayName || '?').charAt(0).toUpperCase()}
                     </span>}
               </div>
 
-              <p className="pixel-font text-[12px] text-gray-800 text-center">
+              <p className="pixel-font text-[12px] text-ink text-center">
                 {profile.displayName || 'ผู้ใช้'}
               </p>
 
               {(profile.bio || profileMbti) && (
-                <p className="text-xs text-gray-400 text-center leading-snug max-w-[220px]">
+                <p className="thai-font text-xs text-ink-soft text-center leading-snug max-w-[220px]">
                   {profile.bio || `MBTI: ${profileMbti}`}
                 </p>
               )}
@@ -244,10 +244,10 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
                   disabled={followBusy || isPending}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl pixel-font text-[8px] transition-all active:scale-95 disabled:opacity-60 ${
                     iFollow
-                      ? 'bg-white border-2 border-gray-200 text-gray-500'
+                      ? 'bg-surface border-2 border-ink/10 text-ink-soft'
                       : isPending
-                        ? 'bg-amber-50 text-amber-600 border border-amber-200'
-                        : 'bg-brand text-white shadow-md'
+                        ? 'bg-warn/10 text-warn border border-warn/30'
+                        : 'bg-brand text-white shadow-hard-sm'
                   }`}
                 >
                   {followBusy
@@ -278,11 +278,11 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
             {/* Unfollow confirmation */}
             {showUnfollowConfirm && (
               <div className="bg-red-50 rounded-2xl p-4 border border-red-100 space-y-3">
-                <p className="text-sm text-gray-700 text-center">ยกเลิกการติดตาม?</p>
+                <p className="thai-font text-sm text-ink text-center">ยกเลิกการติดตาม?</p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowUnfollowConfirm(false)}
-                    className="flex-1 py-2 rounded-xl border border-gray-200 text-gray-500 text-sm"
+                    className="flex-1 py-2 rounded-xl border border-ink/10 text-ink-soft text-sm thai-font"
                   >
                     ยกเลิก
                   </button>
@@ -306,7 +306,7 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
 
             {/* Portfolio */}
             <div>
-              <p className="pixel-font text-[9px] text-gray-500 mb-3">Portfolio</p>
+              <p className="pixel-font text-[10px] text-ink-soft mb-3">Portfolio</p>
               <div className="flex justify-around">
                 {PORTFOLIO_ITEMS.map(({ key, label, emoji }) => {
                   const visible = canSeeItem(key)
@@ -327,16 +327,16 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
 
             {/* Journey of Mastery */}
             <div>
-              <p className="pixel-font text-[9px] text-gray-500 mb-2">Journey of Mastery</p>
+              <p className="pixel-font text-[10px] text-ink-soft mb-2">Journey of Mastery</p>
 
               {!canSeeItem('journey') ? (
-                <div className="bg-gray-50 rounded-2xl py-6 flex flex-col items-center gap-2 border border-gray-100">
-                  <Lock size={20} className="text-gray-300" />
-                  <p className="thai-font text-xs text-gray-400">🔒 Journey เป็น private</p>
+                <div className="bg-brand-soft rounded-2xl py-6 flex flex-col items-center gap-2 border border-ink/10">
+                  <Lock size={20} className="text-ink-soft/50" />
+                  <p className="thai-font text-xs text-ink-soft">🔒 Journey เป็น private</p>
                 </div>
               ) : journeys.length === 0 ? (
-                <div className="bg-gray-50 rounded-2xl py-5 flex items-center justify-center border border-gray-100">
-                  <p className="thai-font text-xs text-gray-400">ยังไม่มีข้อมูล Journey</p>
+                <div className="bg-brand-soft rounded-2xl py-5 flex items-center justify-center border border-ink/10">
+                  <p className="thai-font text-xs text-ink-soft">ยังไม่มีข้อมูล Journey</p>
                 </div>
               ) : (
                 <div className="flex gap-3 overflow-x-auto pb-2">
@@ -347,7 +347,7 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
                         key={item.id}
                         className="flex-shrink-0 w-20 h-20 rounded-xl bg-purple-50 border border-purple-100 flex flex-col items-center justify-center p-2 gap-1"
                       >
-                        <span className="text-[9px] font-semibold text-gray-700 text-center leading-tight line-clamp-2">
+                        <span className="thai-font text-xs font-semibold text-ink text-center leading-tight line-clamp-2">
                           {item.title || '—'}
                         </span>
                         {credited.length > 0 && (
@@ -365,10 +365,10 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
                             ))}
                             {credited.length > 3 && (
                               <div
-                                className="w-3.5 h-3.5 rounded-full bg-gray-300 border border-white flex items-center justify-center shrink-0"
+                                className="w-3.5 h-3.5 rounded-full bg-ink/20 border border-surface flex items-center justify-center shrink-0"
                                 style={{ marginLeft: '-5px', zIndex: 0 }}
                               >
-                                <span className="text-[4px] text-gray-600">+{credited.length - 3}</span>
+                                <span className="text-[4px] text-ink-soft">+{credited.length - 3}</span>
                               </div>
                             )}
                           </div>

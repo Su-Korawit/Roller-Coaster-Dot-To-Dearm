@@ -53,14 +53,14 @@ function MatchBar({ score }) {
 function StatCell({ value, label }) {
   return (
     <div className="flex flex-col items-center gap-0.5">
-      <span className="pixel-font text-[11px] text-gray-800">{value}</span>
-      <span className="pixel-font text-[6px] text-gray-400">{label}</span>
+      <span className="pixel-font text-[11px] text-ink">{value}</span>
+      <span className="pixel-font text-[10px] text-ink-soft">{label}</span>
     </div>
   )
 }
 
 // ─── Tag pill ─────────────────────────────────────────────────────────────────
-function Tag({ label, color = 'bg-gray-100 text-gray-600', blurred }) {
+function Tag({ label, color = 'bg-brand-soft text-ink-soft', blurred }) {
   return (
     <span
       className={`inline-flex items-center gap-1 pixel-font text-[7px] px-2 py-1 rounded-lg ${color} ${blurred ? 'select-none' : ''}`}
@@ -149,7 +149,7 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
         {!loading && error && (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <span className="text-3xl">😕</span>
-            <p className="pixel-font text-[8px] text-gray-400">{error}</p>
+            <p className="pixel-font text-[10px] text-ink-soft">{error}</p>
           </div>
         )}
 
@@ -161,7 +161,7 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
             <div className="flex flex-col items-center gap-2.5 mb-5">
               {/* Avatar */}
               <div
-                className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 shrink-0"
+                className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center bg-brand-soft shrink-0"
                 style={{
                   border: `4px solid ${mbtiColor(pMbti)}`,
                   boxShadow: `0 0 0 3px ${mbtiColor(pMbti)}22`,
@@ -173,7 +173,7 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
               </div>
 
               {/* Name */}
-              <p className="pixel-font text-[12px] text-gray-800 text-center">
+              <p className="pixel-font text-[12px] text-ink text-center">
                 {profile.displayName || 'ผู้ใช้'}
               </p>
 
@@ -189,17 +189,17 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
             </div>
 
             {/* ── Stats row ── */}
-            <div className="flex items-center justify-around bg-gray-50 rounded-2xl px-4 py-3 mb-4 border border-gray-100">
+            <div className="flex items-center justify-around bg-brand-soft rounded-2xl px-4 py-3 mb-4 border border-ink/10">
               <StatCell value={(profile.followers ?? []).length} label="Followers" />
-              <div className="w-px h-6 bg-gray-200" />
+              <div className="w-px h-6 bg-ink/10" />
               <StatCell value={(profile.following ?? []).length} label="Following" />
-              <div className="w-px h-6 bg-gray-200" />
+              <div className="w-px h-6 bg-ink/10" />
               <div className="flex flex-col items-center gap-0.5">
-                <span className="pixel-font text-[11px] text-orange-500 flex items-center gap-1">
+                <span className="pixel-font text-[11px] text-warn flex items-center gap-1">
                   <Flame size={12} />
                   {profile.fireStacks ?? 0}
                 </span>
-                <span className="pixel-font text-[6px] text-gray-400">Stacks</span>
+                <span className="pixel-font text-[10px] text-ink-soft">Stacks</span>
               </div>
             </div>
 
@@ -208,7 +208,7 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
               {pProgram && (
                 <Tag
                   label={canSeeDetails ? pProgram : '████████'}
-                  color="bg-blue-50 text-blue-700"
+                  color="bg-brand-soft text-brand-strong"
                   blurred={!canSeeDetails}
                 />
               )}
@@ -227,7 +227,7 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
                 />
               )}
               {!canSeeDetails && (
-                <span className="inline-flex items-center gap-1 pixel-font text-[7px] px-2 py-1 rounded-lg bg-gray-100 text-gray-500">
+                <span className="inline-flex items-center gap-1 pixel-font text-[10px] px-2 py-1 rounded-lg bg-brand-soft text-ink-soft">
                   <Lock size={9} /> Private
                 </span>
               )}
@@ -249,10 +249,10 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
                   disabled={followBusy || iFollow || isPending}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl pixel-font text-[8px] transition-all active:scale-95 disabled:opacity-60 ${
                     iFollow
-                      ? 'bg-gray-100 text-gray-500'
+                      ? 'bg-brand-soft text-ink-soft'
                       : isPending
-                        ? 'bg-amber-50 text-amber-600 border border-amber-200'
-                        : 'bg-brand text-white shadow-md'
+                        ? 'bg-warn/10 text-warn border border-warn/30'
+                        : 'bg-brand text-white shadow-hard-sm'
                   }`}
                 >
                   {followBusy
@@ -270,8 +270,8 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
                   disabled={!isMutual}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl pixel-font text-[8px] transition-all active:scale-95 ${
                     isMutual
-                      ? 'bg-white border-2 border-brand text-brand shadow-sm'
-                      : 'bg-gray-50 border border-gray-200 text-gray-300 cursor-not-allowed'
+                      ? 'bg-surface border-2 border-brand text-brand shadow-hard-sm'
+                      : 'bg-brand-soft border border-ink/10 text-ink-soft/50 cursor-not-allowed'
                   }`}
                 >
                   <MessageCircle size={12} />

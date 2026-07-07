@@ -46,7 +46,7 @@ export default function PortfolioCircle({ label, image, progress, isActive, onPr
           />
         )}
         <div
-          className={`relative z-10 w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border-2 ${isActive ? 'border-white' : 'border-gray-200'}`}
+          className={`relative z-10 w-16 h-16 rounded-full bg-brand-soft flex items-center justify-center overflow-hidden border-2 ${isActive ? 'border-surface' : 'border-ink/10'}`}
         >
           {image ? (
             <img src={image} alt={label} className="w-full h-full object-cover" />
@@ -61,7 +61,7 @@ export default function PortfolioCircle({ label, image, progress, isActive, onPr
           </div>
         )}
       </div>
-      <span className="pixel-font text-[8px] text-gray-600">{label}</span>
+      <span className="pixel-font text-[10px] text-ink-soft">{label}</span>
     </button>
   )
 }

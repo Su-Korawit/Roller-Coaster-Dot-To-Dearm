@@ -1,9 +1,9 @@
 const STYLES = {
-  WAITING_PAYMENT: { label: 'WAITING', className: 'bg-amber-100 text-amber-800 border-amber-500' },
-  VERIFYING: { label: 'VERIFYING', className: 'bg-blue-100 text-blue-800 border-blue-500' },
-  SUCCESS: { label: 'SUCCESS', className: 'bg-emerald-100 text-emerald-800 border-emerald-600' },
-  FAILED: { label: 'FAILED', className: 'bg-rose-100 text-rose-800 border-rose-500' },
-  EXPIRED: { label: 'EXPIRED', className: 'bg-gray-200 text-gray-700 border-gray-500' },
+  WAITING_PAYMENT: { label: 'WAITING', className: 'bg-warn/10 text-warn border-warn' },
+  VERIFYING: { label: 'VERIFYING', className: 'bg-brand-soft text-brand-strong border-brand' },
+  SUCCESS: { label: 'SUCCESS', className: 'bg-good/10 text-good border-good' },
+  FAILED: { label: 'FAILED', className: 'bg-danger/10 text-danger border-danger' },
+  EXPIRED: { label: 'EXPIRED', className: 'bg-paper text-ink-soft border-ink/30' },
 }
 
 export default function PaymentStatusBadge({ status }) {

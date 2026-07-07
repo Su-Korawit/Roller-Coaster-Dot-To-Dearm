@@ -40,7 +40,7 @@ export default function DevicePicker() {
       {open && (
         <ul className="flex flex-col gap-1 rounded-xl bg-brand-soft p-2">
           {devices.length === 0 && (
-            <li className="thai-font text-xs text-gray-500 px-1 py-1">ไม่พบอุปกรณ์ — เปิดแอป Spotify ในเครื่องก่อน</li>
+            <li className="thai-font text-xs text-ink-soft px-1 py-1">ไม่พบอุปกรณ์ — เปิดแอป Spotify ในเครื่องก่อน</li>
           )}
           {devices.map((d) => (
             <li key={d.id}>

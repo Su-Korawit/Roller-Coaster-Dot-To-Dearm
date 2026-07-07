@@ -1,9 +1,9 @@
 // Stat pill for 🔥 streak / 💰 coins used in the HomePage HUD and Chat.
 // icon: emoji or node; count: number; tone: "fire" | "coin" | "neutral"
 const TONES = {
-  fire:    'bg-orange-50 text-orange-600',
-  coin:    'bg-yellow-50 text-yellow-600',
-  neutral: 'bg-white/80 text-gray-600',
+  fire:    'bg-warn/10 text-warn',
+  coin:    'bg-warn/10 text-warn',
+  neutral: 'bg-surface/80 text-ink-soft',
 }
 
 export default function StatBadge({ icon, count, tone = 'neutral' }) {

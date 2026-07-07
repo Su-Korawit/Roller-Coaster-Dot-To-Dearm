@@ -55,12 +55,12 @@ export default function VideoPickerModal({ nodeId, onClose }) {
         className="w-full max-w-sm aspect-square max-h-[90vh] bg-white rounded-lg shadow-xl flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between shrink-0">
-          <p className="pixel-font text-[11px] font-bold text-gray-800">Choose video</p>
+        <div className="px-4 py-3 border-b-2 border-ink/10 flex items-center justify-between shrink-0">
+          <p className="pixel-font text-[11px] font-bold text-ink">Choose video</p>
           <button
             onClick={onClose}
             aria-label="ปิด"
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-700 active:scale-95 transition-all"
+            className="neo-btn w-9 h-9 rounded-lg flex items-center justify-center text-ink-soft hover:bg-brand-soft hover:text-ink"
           >
             <X size={20} strokeWidth={2.5} />
           </button>
@@ -92,7 +92,7 @@ export default function VideoPickerModal({ nodeId, onClose }) {
 function Section({ title, children }) {
   return (
     <div className="flex flex-col gap-2">
-      <p className="pixel-font text-[9px] text-gray-400">{title}</p>
+      <p className="pixel-font text-[10px] text-ink-soft">{title}</p>
       <div className="flex flex-wrap gap-2">{children}</div>
     </div>
   )
@@ -103,7 +103,7 @@ function Thumb({ url, onClick }) {
     <button
       onClick={onClick}
       aria-label="เลือกวิดีโอนี้"
-      className="w-16 h-16 rounded-xl border-2 border-gray-100 overflow-hidden hover:border-brand active:scale-95 transition-all relative bg-black"
+      className="w-16 h-16 rounded-xl border-2 border-ink/10 overflow-hidden hover:border-brand active:scale-95 transition-all relative bg-black"
     >
       <video src={url} className="w-full h-full object-cover pointer-events-none" muted />
     </button>
@@ -111,5 +111,5 @@ function Thumb({ url, onClick }) {
 }
 
 function Empty({ children }) {
-  return <span className="pixel-font text-[8px] text-gray-300">{children}</span>
+  return <span className="pixel-font text-[10px] text-ink-soft/50">{children}</span>
 }

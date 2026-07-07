@@ -30,7 +30,7 @@ export default function MasteryPopup({ onClose }) {
         ) : (
           <div className="space-y-6 py-2">
             {tracks.length === 0 ? (
-              <p className="thai-font text-center text-sm text-gray-400">
+              <p className="thai-font text-center text-sm text-ink-soft">
                 ยังไม่มีแทร็ก — เพิ่มจากโปรไฟล์หรือ AI เร็วๆ นี้
               </p>
             ) : (

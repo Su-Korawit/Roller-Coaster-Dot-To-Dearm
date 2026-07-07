@@ -171,14 +171,14 @@ function NoMatchToast({ score, onClose }) {
         className="bg-gray-800/90 backdrop-blur-sm rounded-2xl px-5 py-3 flex flex-col items-center gap-1 shadow-xl relative overflow-hidden"
         style={{ animation: 'rc-toast-in 2s ease-in-out forwards' }}
       >
-        <p className="pixel-font text-[9px] text-gray-300">Match Score: {score}%</p>
-        <p className="thai-font text-xs text-gray-400">ยังไม่ Match — ลองใหม่ในอีก 24 ชม.</p>
+        <p className="pixel-font text-[10px] text-white/70">Match Score: {score}%</p>
+        <p className="thai-font text-xs text-white/50">ยังไม่ Match — ลองใหม่ในอีก 24 ชม.</p>
         {/* 3 sad gray stars drifting down */}
         {SAD_STARS.map((s, i) => (
           <span
             key={i}
             data-rc-anim
-            className="absolute text-gray-500"
+            className="absolute text-white/40"
             style={{
               top: '30%',
               left: `${25 + i * 25}%`,

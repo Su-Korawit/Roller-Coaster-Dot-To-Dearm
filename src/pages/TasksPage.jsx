@@ -16,30 +16,30 @@ function TasksPage() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-bold text-gray-900">Tasks</h2>
+      <h2 className="text-xl font-bold text-ink">Tasks</h2>
 
       <form onSubmit={handleSubmit} className="flex gap-2">
         <input
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           placeholder="เพิ่มงานใหม่"
-          className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-400"
+          className="neo-input thai-font flex-1 px-3 py-2 text-sm"
         />
-        <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">
+        <button type="submit" className="neo-btn rounded-lg bg-brand-strong px-4 py-2 text-sm font-semibold text-white">
           Add
         </button>
       </form>
 
       <ul className="space-y-2">
         {tasks.map((task) => (
-          <li key={task.id} className="rounded-lg bg-white p-3 shadow-sm">
-            <label className="flex items-center gap-2 text-sm text-gray-700">
+          <li key={task.id} className="neo-card rounded-lg p-3">
+            <label className="flex items-center gap-2 text-sm text-ink thai-font">
               <input
                 type="checkbox"
                 checked={task.completed}
                 onChange={() => toggleTask(task.id)}
               />
-              <span className={task.completed ? 'line-through text-gray-400' : ''}>{task.title}</span>
+              <span className={task.completed ? 'line-through text-ink-soft' : ''}>{task.title}</span>
             </label>
           </li>
         ))}

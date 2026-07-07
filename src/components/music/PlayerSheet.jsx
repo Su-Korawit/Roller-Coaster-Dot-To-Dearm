@@ -107,7 +107,7 @@ export default function PlayerSheet() {
                         {t.albumArt && <img src={t.albumArt} alt="" className="w-10 h-10 rounded" />}
                         <span className="flex flex-col min-w-0">
                           <span className="thai-font text-sm text-ink truncate">{t.name}</span>
-                          <span className="thai-font text-xs text-gray-400 truncate">{t.artists}</span>
+                          <span className="thai-font text-xs text-ink-soft truncate">{t.artists}</span>
                         </span>
                       </button>
                     </li>

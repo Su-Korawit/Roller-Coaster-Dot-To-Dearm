@@ -63,7 +63,7 @@ export default function PaymentCard({ purchaseId }) {
 
       <div className="flex flex-col gap-3 px-4 py-4">
         {/* Coin + price summary */}
-        <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-3 py-2">
+        <div className="flex items-center justify-between rounded-xl border border-ink/10 bg-brand-soft px-3 py-2">
           <span className="thai-font text-sm text-ink/70">
             🪙 {coins} เหรียญ
           </span>
@@ -74,7 +74,7 @@ export default function PaymentCard({ purchaseId }) {
         {status === 'WAITING_PAYMENT' && !uploading && (
           <>
             <QRPaymentCard amount={amount} expiresAt={expiresAt} />
-            <div className="border-t border-gray-100 pt-3">
+            <div className="border-t border-ink/10 pt-3">
               <p className="thai-font mb-2 text-xs text-ink/60">
                 ชำระเงินแล้ว? อัปโหลดสลิปเพื่อยืนยัน
               </p>
@@ -111,8 +111,8 @@ export default function PaymentCard({ purchaseId }) {
 
         {/* EXPIRED */}
         {status === 'EXPIRED' && (
-          <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2">
-            <p className="thai-font text-xs text-gray-600">⏰ คำสั่งซื้อหมดอายุแล้ว</p>
+          <div className="rounded-xl border border-ink/10 bg-brand-soft px-3 py-2">
+            <p className="thai-font text-xs text-ink-soft">⏰ คำสั่งซื้อหมดอายุแล้ว</p>
           </div>
         )}
 
