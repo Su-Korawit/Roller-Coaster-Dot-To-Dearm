@@ -2,7 +2,7 @@
 
 > **For agentic workers (Cursor):** Read `design.md` at the repo root FIRST — it is the
 > binding spec this plan implements. Execute tasks in order, step by step. Steps use
-> checkbox (`- [ ]`) syntax for tracking. Claude Code will verify with `npm test` +
+> checkbox (`- [x]`) syntax for tracking. Claude Code will verify with `npm test` +
 > visual review after each task lands.
 
 **Goal:** Replace the generic "AI-template" chrome (white glass pills, purple gradients,
@@ -43,7 +43,7 @@ lucide-react, plain JS/JSX (NO TypeScript).
 - All later tasks consume these. Do NOT delete `.title-gradient` / `.title-soft-gradient`
   yet (still referenced — removed in Task 10).
 
-- [ ] **Step 1: Extend the `@theme` block**
+- [x] **Step 1: Extend the `@theme` block**
 
 Replace the current `@theme { ... }` in `src/index.css` with:
 
@@ -66,7 +66,7 @@ Replace the current `@theme { ... }` in `src/index.css` with:
 }
 ```
 
-- [ ] **Step 2: Add the new utilities directly below the existing `.neo-btn` rules**
+- [x] **Step 2: Add the new utilities directly below the existing `.neo-btn` rules**
 
 ```css
 /* ── Cartridge HUD surface system (see design.md §4) ───────────────────────── */
@@ -127,12 +127,12 @@ Replace the current `@theme { ... }` in `src/index.css` with:
 }
 ```
 
-- [ ] **Step 3: Verify**
+- [x] **Step 3: Verify**
 
 Run: `npm test` → expected: all pass (CSS-only change).
 Run: `npm run dev` → app renders unchanged (nothing consumes the new classes yet).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/index.css
@@ -150,7 +150,7 @@ git commit -m "feat(design): add cartridge-HUD tokens and neo-* utilities"
 - Props unchanged: `variant ('primary'|'secondary'|'ghost')`, `size ('md'|'lg')`,
   `disabled`, `onClick`, `type`, `aria-label`. No caller changes needed.
 
-- [ ] **Step 1: Replace the class/style logic**
+- [x] **Step 1: Replace the class/style logic**
 
 Replace the `base`, `variants` constants and delete `primaryStyle` (and its usage on
 `style=`) so the component body becomes:
@@ -190,12 +190,12 @@ Note: `active:scale-95`, `transition-all`, `shadow-lg`, the gradient `style` and
 `rounded-2xl` are all gone — `.neo-btn` supplies border, hard shadow, and the stepped
 press mechanic.
 
-- [ ] **Step 2: Verify**
+- [x] **Step 2: Verify**
 
 Run: `npm test` → expected pass. Visual: auth/onboarding CTAs now flat purple with ink
 border + hard shadow; press physically sinks the button.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/components/ui/Button.jsx
@@ -214,7 +214,7 @@ git commit -m "feat(design): Button uses neo press mechanic, drops gradient"
 **Interfaces:**
 - All props unchanged. Every sheet/modal/panel in the app inherits this look for free.
 
-- [ ] **Step 1: DragHandle — chunky ink bar**
+- [x] **Step 1: DragHandle — chunky ink bar**
 
 Full new file body:
 
@@ -228,7 +228,7 @@ export default function DragHandle() {
 }
 ```
 
-- [ ] **Step 2: Popup — neo-sheet / neo-card shells**
+- [x] **Step 2: Popup — neo-sheet / neo-card shells**
 
 In `Popup.jsx`, replace the inner container `className` (the `div` currently using
 `bg-white ... rounded-t-3xl / rounded-3xl`) with:
@@ -243,7 +243,7 @@ In `Popup.jsx`, replace the inner container `className` (the `div` currently usi
       >
 ```
 
-- [ ] **Step 3: PanelHeader — pixel title + square X tile**
+- [x] **Step 3: PanelHeader — pixel title + square X tile**
 
 Full new file body (adds a lucide import):
 
@@ -279,7 +279,7 @@ must be switched to a Latin title (e.g. `TASKS`, `CHAT`) with any Thai subtitle 
 by the caller in `thai-font`. Grep call sites: `grep -rn "PanelHeader" src/` and fix
 titles that contain Thai characters.
 
-- [ ] **Step 4: Verify + commit**
+- [x] **Step 4: Verify + commit**
 
 Run: `npm test` → pass (update any test asserting the old `✕` text to lucide `X` / aria-label "ปิด").
 
@@ -295,7 +295,7 @@ git commit -m "feat(design): sheets and panel headers become game dialog boxes"
 **Files:**
 - Modify: `src/components/ui/SegmentedTabs.jsx`
 
-- [ ] **Step 1: Restyle (props/roles/aria unchanged)**
+- [x] **Step 1: Restyle (props/roles/aria unchanged)**
 
 ```jsx
 export default function SegmentedTabs({ tabs, activeId, onChange }) {
@@ -332,7 +332,7 @@ export default function SegmentedTabs({ tabs, activeId, onChange }) {
 }
 ```
 
-- [ ] **Step 2: Verify + commit**
+- [x] **Step 2: Verify + commit**
 
 ```bash
 git add src/components/ui/SegmentedTabs.jsx
@@ -346,7 +346,7 @@ git commit -m "feat(design): SegmentedTabs ink baseline + square indicator"
 **Files:**
 - Modify: `src/components/BottomNavBar.jsx`
 
-- [ ] **Step 1: Replace the dock container and tab classes**
+- [x] **Step 1: Replace the dock container and tab classes**
 
 Keep the `tabs` array (icons stay). Replace the returned JSX with:
 
@@ -387,7 +387,7 @@ Keep the `tabs` array (icons stay). Replace the returned JSX with:
   )
 ```
 
-- [ ] **Step 2: Verify + commit**
+- [x] **Step 2: Verify + commit**
 
 Visual: dock is a warm slab with ink border + hard shadow; the current tab looks
 physically pressed in.
@@ -410,13 +410,13 @@ git commit -m "feat(design): bottom nav becomes HUD dock with pressed active tab
   the 4th tile of the quick rail (same `handleTabChange(APP_VIEWS.NEWS)` handler,
   same `uiVisibility.newsButton` flag, badge preserved).
 
-- [ ] **Step 1: Update lucide imports**
+- [x] **Step 1: Update lucide imports**
 
 ```jsx
 import { Calendar, MessageCircle, Map, Newspaper, Trophy, Flame, Play, Pause, Music, Gamepad2 } from 'lucide-react'
 ```
 
-- [ ] **Step 2: Avatar button** — replace its className with:
+- [x] **Step 2: Avatar button** — replace its className with:
 
 ```jsx
 className="pointer-events-auto neo-btn w-10 h-10 md:w-12 md:h-12 rounded-full bg-hud flex items-center justify-center shrink-0 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
@@ -424,7 +424,7 @@ className="pointer-events-auto neo-btn w-10 h-10 md:w-12 md:h-12 rounded-full bg
 
 and replace the `🎮` fallback span with `<Gamepad2 size={18} strokeWidth={2.5} className="text-ink" />`.
 
-- [ ] **Step 3: Music pill → neo-slab** — replace its className with:
+- [x] **Step 3: Music pill → neo-slab** — replace its className with:
 
 ```jsx
 className="pointer-events-auto neo-btn neo-slab flex items-center gap-1.5 h-10 px-3 overflow-hidden min-w-0 flex-1 max-w-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
@@ -433,7 +433,7 @@ className="pointer-events-auto neo-btn neo-slab flex items-center gap-1.5 h-10 p
 Replace the `🎵/🎶` span with `<Music size={14} strokeWidth={2.5} className="shrink-0 text-brand-strong" />`
 and change the title span classes `text-[8px] text-blue-700` → `text-[10px] text-brand-strong`.
 
-- [ ] **Step 4: Stat pill → HUD statboard** — replace the whole streak/coins/gold block with:
+- [x] **Step 4: Stat pill → HUD statboard** — replace the whole streak/coins/gold block with:
 
 ```jsx
         <div className="pointer-events-auto neo-slab flex items-center gap-3 px-4 py-1.5">
@@ -452,7 +452,7 @@ and change the title span classes `text-[8px] text-blue-700` → `text-[10px] te
         </div>
 ```
 
-- [ ] **Step 5: Quick rail — square tiles + News joins the rail**
+- [x] **Step 5: Quick rail — square tiles + News joins the rail**
 
 Replace the shortcuts block AND delete the standalone News button block. New rail:
 
@@ -499,7 +499,7 @@ Replace the shortcuts block AND delete the standalone News button block. New rai
       )}
 ```
 
-- [ ] **Step 6: Tracklist panel — de-blue, neo-card**
+- [x] **Step 6: Tracklist panel — de-blue, neo-card**
 
 Container div: `bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl` → `neo-card`.
 Header: `border-b border-gray-100` → `border-b-2 border-ink`; title
@@ -515,7 +515,7 @@ active row `bg-blue-50` → `bg-brand-soft`; row text
 `thai-font text-xs font-semibold ... text-brand-strong / text-ink` (track titles can be Thai);
 the `♪` indicator span → `<Music size={12} className="shrink-0 text-brand-strong" />`.
 
-- [ ] **Step 7: Contact-developer FAB — flat neo tile**
+- [x] **Step 7: Contact-developer FAB — flat neo tile**
 
 Replace the button's `className`/`style` with:
 
@@ -532,7 +532,7 @@ static dot:
             )}
 ```
 
-- [ ] **Step 8: Verify + commit**
+- [x] **Step 8: Verify + commit**
 
 Run: `npm test` → pass. Visual checklist: exactly 2 HUD zones + rail + dock + MiniPlayer;
 no white glass pills; no blue anywhere; no emoji in controls.
@@ -549,7 +549,7 @@ git commit -m "feat(design): home screen becomes 2-zone game HUD"
 **Files:**
 - Modify: `src/components/music/MiniPlayer.jsx`
 
-- [ ] **Step 1: Restyle both states (logic untouched)**
+- [x] **Step 1: Restyle both states (logic untouched)**
 
 Disconnected button className →
 `"w-full neo-btn neo-slab px-4 py-2.5 flex items-center gap-2 pixel-font text-[10px] text-brand-strong"`.
@@ -560,7 +560,7 @@ Album art `rounded` → `rounded-lg border-2 border-ink`; placeholder div
 Artist line `text-gray-400` → `text-ink-soft`. Play/pause button `text-brand` →
 `text-ink` and add `aria-label` (already present) — keep as icon-only.
 
-- [ ] **Step 2: Verify + commit**
+- [x] **Step 2: Verify + commit**
 
 ```bash
 git add src/components/music/MiniPlayer.jsx
@@ -575,7 +575,7 @@ git commit -m "feat(design): MiniPlayer as HUD slab"
 - Modify: `src/components/onboarding/OnboardingModal.jsx`
 - Modify: `src/components/ui/SelectCard.jsx`
 
-- [ ] **Step 1: OnboardingModal — paper surface + STEP indicator**
+- [x] **Step 1: OnboardingModal — paper surface + STEP indicator**
 
 Change the wrapper `bg-white` → `bg-paper`, and render a progress header above
 `renderCurrentStep()`:
@@ -601,7 +601,7 @@ Change the wrapper `bg-white` → `bg-paper`, and render a progress header above
   )
 ```
 
-- [ ] **Step 2: SelectCard — ink selection, Thai-safe fonts**
+- [x] **Step 2: SelectCard — ink selection, Thai-safe fonts**
 
 Full new file body:
 
@@ -638,12 +638,12 @@ export default function SelectCard({ name, detail, selected, onClick }) {
 (Note: `name` values are Thai career/program names — the old `pixel-font` here was a
 §5 violation.)
 
-- [ ] **Step 3: Sweep the step components** (`OnboardingIntro.jsx`, `MbtiStep.jsx`,
+- [x] **Step 3: Sweep the step components** (`OnboardingIntro.jsx`, `MbtiStep.jsx`,
 `PlanList.jsx`, `UniversityStep.jsx`, `ProgramStep.jsx`) with the Task 12 replacement
 table (they are part of this task's deliverable): white cards → `neo-card`/`bg-surface`,
 grays → ink tokens, pixel-font Thai → thai-font, CTAs already use `Button` (now neo).
 
-- [ ] **Step 4: Verify + commit**
+- [x] **Step 4: Verify + commit**
 
 Run: `npm test` → pass.
 
@@ -660,7 +660,7 @@ git commit -m "feat(design): onboarding as paper game dialog with step progress"
 - Modify: `src/pages/AuthPage.jsx`
 - Modify: `src/App.jsx` (LoadingScreen only)
 
-- [ ] **Step 1: AuthPage** — apply this exact mapping to the whole file
+- [x] **Step 1: AuthPage** — apply this exact mapping to the whole file
 (the starfield/sky gradient backdrop STAYS — scene-backdrop exception):
 
 | Old | New |
@@ -675,7 +675,7 @@ git commit -m "feat(design): onboarding as paper game dialog with step progress"
 
 CTAs already use `ui/Button` → inherit Task 2 automatically.
 
-- [ ] **Step 2: LoadingScreen — segmented block progress**
+- [x] **Step 2: LoadingScreen — segmented block progress**
 
 In `src/App.jsx`, replace the `role="progressbar"` div (the sliding-gradient bar) with:
 
@@ -694,7 +694,7 @@ In `src/App.jsx`, replace the `role="progressbar"` div (the sliding-gradient bar
 Keep the dark gradient backdrop and the `Loading...` pixel label (bump to `text-[10px]`
 if smaller).
 
-- [ ] **Step 3: Verify + commit**
+- [x] **Step 3: Verify + commit**
 
 Run: `npm test` → `AuthPage.test.jsx` behavior assertions (labels, error messages,
 handlers) must pass unchanged; update class-based assertions if any.
@@ -713,20 +713,20 @@ git commit -m "feat(design): auth + loading screen join the cartridge language"
 - Modify: any other file matched by the grep in Step 2
 - Modify: `src/index.css` (delete dead classes)
 
-- [ ] **Step 1: HeroSection**
+- [x] **Step 1: HeroSection**
 
 `<h1 className="pixel-font title-gradient ...">` → `<h1 className="pixel-font pixel-title-dark text-2xl md:text-5xl leading-relaxed">`.
 Scroll indicator: `animate-bounce` → `animate-scroll-hint`.
 
-- [ ] **Step 2: Replace remaining gradient-text usages**
+- [x] **Step 2: Replace remaining gradient-text usages**
 
 Run: `grep -rn "title-gradient\|title-soft-gradient" src/`
 For each hit: on dark backgrounds → `pixel-title-dark`; on light → `pixel-title`.
 
-- [ ] **Step 3: Delete `.title-gradient` and `.title-soft-gradient` from `src/index.css`**
+- [x] **Step 3: Delete `.title-gradient` and `.title-soft-gradient` from `src/index.css`**
 (only after Step 2's grep returns zero JSX hits).
 
-- [ ] **Step 4: Verify + commit**
+- [x] **Step 4: Verify + commit**
 
 Run: `npm test` → update `HeroSection.test.jsx` if it asserts the old class.
 
@@ -747,7 +747,7 @@ git commit -m "feat(design): welcome hero uses pixel-title, gradient text remove
 ⚠️ **Invariant (CONTEXT.md):** do not rotate/re-position any node's root `<div>`; do not
 touch `ConnectionDot`/Handle classes. Border, shadow, radius, and text colors only.
 
-- [ ] **Step 1: ProcessNode root div**
+- [x] **Step 1: ProcessNode root div**
 
 ```jsx
       className={`relative w-32 h-32 rounded-xl border-2 bg-surface p-2.5 flex flex-col gap-1 transition-all ${
@@ -759,12 +759,12 @@ touch `ConnectionDot`/Handle classes. Border, shadow, radius, and text colors on
 Textarea `text-gray-500` → `text-ink-soft`; placeholders `placeholder:text-gray-300` →
 `placeholder:text-ink-soft/50`.
 
-- [ ] **Step 2: Apply the same mapping to the other node files**
+- [x] **Step 2: Apply the same mapping to the other node files**
 (`rounded-2xl→rounded-xl`, `shadow-md/lg→shadow-hard-sm` when selected / none otherwise,
 `bg-white→bg-surface`, grays→ink tokens). Inner diamond rotation in ConditionNode stays
 exactly as is.
 
-- [ ] **Step 3: Verify + commit**
+- [x] **Step 3: Verify + commit**
 
 Run: `npm test` → `ProcessNode.test.jsx`, `ImageNode.test.jsx`, `VideoNode.test.jsx`
 behavior tests pass. Visual: open Roadmap, drag nodes, confirm handles still align.
@@ -780,7 +780,7 @@ git commit -m "feat(design): roadmap nodes wear ink borders and hard shadows"
 
 **Files:** every match under `src/components/` and `src/pages/` EXCEPT `admin/`.
 
-- [ ] **Step 1: Run each grep, apply its rule** (work file-by-file, commit per logical group):
+- [x] **Step 1: Run each grep, apply its rule** (work file-by-file, commit per logical group):
 
 | Grep | Rule |
 |---|---|
@@ -800,19 +800,19 @@ git commit -m "feat(design): roadmap nodes wear ink borders and hard shadows"
 | `animate-pulse` | keep ONLY on loading skeletons; delete elsewhere |
 | emoji inside `<button>`/headers (`✕ ▶ ⏸ 🎵 🎶 💬 📋 🔥 🎮`) | lucide: `X, Play, Pause, Music, MessageCircle, ClipboardList, Flame, Gamepad2` at `strokeWidth={2.5}`. Emoji in chat content / empty-state illustrations STAY |
 
-- [ ] **Step 2: Copy pass (design.md §9)** — while touching each file, fix microcopy:
+- [x] **Step 2: Copy pass (design.md §9)** — while touching each file, fix microcopy:
 active-voice Thai verbs on buttons; a button's name matches its toast
 ("แชร์" → "แชร์แล้ว"); vocabulary: ภารกิจ/แผนเส้นทาง/เพื่อน/แชท/โปรไฟล์; empty states =
 one sentence + one action, no mood filler.
 
-- [ ] **Step 3: Final verification**
+- [x] **Step 3: Final verification**
 
 Run: `npm test` → all pass.
 Run: `grep -rn "text-gray-\|bg-blue-\|text-blue-\|title-gradient" src/ --include="*.jsx" | grep -v admin | grep -v test` → expected: zero hits.
 Run: `npm run dev` → walk the litmus checklist in `design.md` §11 on: Welcome → Auth →
 Onboarding → Home → Task sheet → Chat → Roadmap → MiniPlayer/PlayerSheet.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/
