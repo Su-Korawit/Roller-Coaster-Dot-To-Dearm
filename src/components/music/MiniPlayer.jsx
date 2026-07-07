@@ -33,7 +33,7 @@ export default function MiniPlayer() {
         {status !== 'connected' ? (
           <button
             onClick={openSheet}
-            className="w-full bg-white/95 rounded-2xl shadow-md px-4 py-2 flex items-center gap-2 pixel-font text-[9px] text-brand"
+            className="w-full neo-btn neo-slab px-4 py-2.5 flex items-center gap-2 pixel-font text-[10px] text-brand-strong"
           >
             <Music size={16} /> เชื่อม Spotify
           </button>
@@ -41,16 +41,16 @@ export default function MiniPlayer() {
           <div
             onClick={openSheet}
             role="button"
-            className="w-full bg-white rounded-2xl shadow-md px-3 py-2 flex items-center gap-3"
+            className="w-full neo-slab px-3 py-2 flex items-center gap-3"
           >
             {track?.albumArt
-              ? <img src={track.albumArt} alt="" className="w-9 h-9 rounded" />
-              : <div className="w-9 h-9 rounded bg-brand-soft flex items-center justify-center"><Music size={16} className="text-brand" /></div>}
+              ? <img src={track.albumArt} alt="" className="w-9 h-9 rounded-lg border-2 border-ink" />
+              : <div className="w-9 h-9 rounded-lg border-2 border-ink bg-brand-soft flex items-center justify-center"><Music size={16} className="text-brand" /></div>}
             <span className="flex-1 min-w-0">
               <span className="block truncate thai-font text-sm text-ink">{track?.name ?? 'พร้อมเล่น'}</span>
-              <span className="block truncate thai-font text-xs text-gray-400">{track?.artists ?? ''}</span>
+              <span className="block truncate thai-font text-xs text-ink-soft">{track?.artists ?? ''}</span>
             </span>
-            <button onClick={togglePlay} aria-label={isPlaying ? 'Pause' : 'Play'} className="text-brand">
+            <button onClick={togglePlay} aria-label={isPlaying ? 'Pause' : 'Play'} className="text-ink">
               {isPlaying ? <Pause size={22} /> : <Play size={22} />}
             </button>
           </div>
