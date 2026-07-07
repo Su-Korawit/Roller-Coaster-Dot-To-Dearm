@@ -19,8 +19,8 @@ export default function VideoNode({ id, data, selected }) {
   return (
     <div className="relative w-32 h-32">
       <div
-        className={`w-full h-full rounded-2xl border-2 bg-black shadow-md overflow-hidden flex items-center justify-center transition-all cursor-pointer ${
-          selected ? 'border-brand shadow-brand/30 shadow-lg' : 'border-brand/40'
+        className={`w-full h-full rounded-xl border-2 bg-black overflow-hidden flex items-center justify-center transition-all cursor-pointer ${
+          selected ? 'border-ink shadow-hard-sm' : 'border-ink/30 shadow-none'
         }`}
         onClick={hasVideo ? undefined : () => setPickerOpen(true)}
         role="button"
@@ -31,7 +31,7 @@ export default function VideoNode({ id, data, selected }) {
         ) : (
           <div className="flex flex-col items-center gap-1 text-brand/50">
             <VideoIcon size={28} strokeWidth={1.5} />
-            <span className="pixel-font text-[7px] text-gray-300">tap to choose</span>
+            <span className="pixel-font text-[10px] text-ink-soft">tap to choose</span>
           </div>
         )}
       </div>
@@ -42,7 +42,7 @@ export default function VideoNode({ id, data, selected }) {
           onPointerDown={(e) => e.stopPropagation()}
           onClick={() => setPickerOpen(true)}
           aria-label="เปลี่ยนวิดีโอ"
-          className="nodrag absolute top-1 right-1 w-6 h-6 rounded-lg bg-white/90 shadow flex items-center justify-center text-gray-500 hover:text-brand active:scale-95 transition-all"
+          className="nodrag absolute top-1 right-1 w-6 h-6 rounded-lg bg-surface border-2 border-ink flex items-center justify-center text-ink-soft hover:text-brand"
         >
           <Pencil size={13} />
         </button>
@@ -54,7 +54,7 @@ export default function VideoNode({ id, data, selected }) {
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => { e.stopPropagation(); setLightboxOpen(true) }}
           aria-label="ขยายวิดีโอ"
-          className="nodrag absolute bottom-1 right-1 w-6 h-6 rounded-lg bg-white/90 shadow flex items-center justify-center text-gray-500 hover:text-brand active:scale-95 transition-all"
+          className="nodrag absolute bottom-1 right-1 w-6 h-6 rounded-lg bg-surface border-2 border-ink flex items-center justify-center text-ink-soft hover:text-brand"
         >
           <Maximize2 size={13} />
         </button>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, X, Plus, Check, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X, Plus, Check, Trash2, Calendar } from 'lucide-react'
 import { useTaskStore } from '../stores/useTaskStore'
 import TaskForm from './TaskForm'
 import Popup from './ui/Popup'
@@ -72,27 +72,29 @@ export default function CalendarPopup({ onClose }) {
       <div className="flex items-center gap-1 px-4 py-2 shrink-0">
         <button
           onClick={prevMonth}
-          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 active:scale-95 transition-transform"
+          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-brand-soft active:scale-95 transition-transform"
         >
-          <ChevronLeft size={18} className="text-gray-600" />
+          <ChevronLeft size={18} className="text-ink-soft" />
         </button>
 
-        <h2 className="flex-1 text-center pixel-font text-[12px] font-bold text-gray-800">
-          📅 {MONTHS[viewMonth]} {viewYear}
+        <h2 className="flex-1 text-center pixel-font text-[12px] font-bold text-ink flex items-center justify-center gap-1.5">
+          <Calendar size={14} strokeWidth={2.5} aria-hidden="true" />
+          {MONTHS[viewMonth]} {viewYear}
         </h2>
 
         <button
           onClick={nextMonth}
-          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 active:scale-95 transition-transform"
+          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-brand-soft active:scale-95 transition-transform"
         >
-          <ChevronRight size={18} className="text-gray-600" />
+          <ChevronRight size={18} className="text-ink-soft" />
         </button>
 
         <button
           onClick={onClose}
-          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 ml-1"
+          aria-label="ปิด"
+          className="neo-btn w-9 h-9 flex items-center justify-center rounded-lg bg-surface text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ml-1"
         >
-          <X size={16} />
+          <X size={16} strokeWidth={2.5} aria-hidden="true" />
         </button>
       </div>
 
@@ -104,7 +106,7 @@ export default function CalendarPopup({ onClose }) {
             <div
               key={d}
               className={`text-center pixel-font text-[8px] py-1
-                ${i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-gray-400'}`}
+                ${i === 0 ? 'text-danger' : i === 6 ? 'text-brand' : 'text-ink-soft'}`}
             >
               {d}
             </div>
@@ -129,16 +131,16 @@ export default function CalendarPopup({ onClose }) {
                 key={dateStr}
                 onClick={() => handleDayClick(dateStr)}
                 className={`relative flex flex-col items-center justify-start pt-1.5 pb-1 rounded-xl min-h-11.5 transition-all active:scale-95
-                  ${isSelected ? 'bg-purple-100 ring-2 ring-purple-400' : 'hover:bg-gray-50'}
-                  ${isToday && !isSelected ? 'bg-orange-50 ring-1 ring-orange-300' : ''}`}
+                  ${isSelected ? 'bg-brand-soft ring-2 ring-brand' : 'hover:bg-paper'}
+                  ${isToday && !isSelected ? 'bg-warn/10 ring-1 ring-warn' : ''}`}
               >
                 <span
                   className={`pixel-font text-[10px] leading-none
-                    ${isSelected ? 'text-purple-700 font-bold'
-                      : isToday ? 'text-orange-500 font-bold'
-                      : dow === 0 ? 'text-red-400'
-                      : dow === 6 ? 'text-blue-400'
-                      : 'text-gray-700'}`}
+                    ${isSelected ? 'text-brand-strong font-bold'
+                      : isToday ? 'text-warn font-bold'
+                      : dow === 0 ? 'text-danger'
+                      : dow === 6 ? 'text-brand'
+                      : 'text-ink'}`}
                 >
                   {day}
                 </span>
@@ -150,11 +152,11 @@ export default function CalendarPopup({ onClose }) {
                       <span
                         key={i}
                         className={`w-1.5 h-1.5 rounded-full
-                          ${i < doneCnt ? 'bg-green-400' : 'bg-purple-400'}`}
+                          ${i < doneCnt ? 'bg-good' : 'bg-brand'}`}
                       />
                     ))}
                     {totalCnt > 3 && (
-                      <span className="pixel-font text-[6px] text-gray-400 leading-none mt-px">
+                      <span className="pixel-font text-[6px] text-ink-soft leading-none mt-px">
                         +{totalCnt - 3}
                       </span>
                     )}
@@ -166,17 +168,17 @@ export default function CalendarPopup({ onClose }) {
         </div>
 
         {/* ── Selected Day Panel ── */}
-        <div className="mt-4 rounded-2xl bg-gray-50 border border-gray-200 overflow-hidden">
+        <div className="mt-4 rounded-2xl bg-paper border border-ink/10 overflow-hidden">
           {/* Day header row */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-ink/10 bg-white">
             <div>
-              <p className="pixel-font text-[11px] font-bold text-gray-800">
+              <p className="pixel-font text-[11px] font-bold text-ink">
                 {MONTHS[selMonthNum - 1]} {selDay}, {selYear}
                 {selectedDate === todayStr && (
-                  <span className="ml-2 pixel-font text-[9px] text-orange-400">• Today</span>
+                  <span className="ml-2 pixel-font text-[9px] text-warn">• Today</span>
                 )}
               </p>
-              <p className="pixel-font text-[8px] text-gray-400 mt-0.5">
+              <p className="pixel-font text-[8px] text-ink-soft mt-0.5">
                 {selectedTasks.length === 0
                   ? 'No tasks scheduled'
                   : `${completedSelected} / ${selectedTasks.length} completed`}
@@ -185,7 +187,7 @@ export default function CalendarPopup({ onClose }) {
             <button
             onClick={() => setShowForm((v) => !v)}
             className={`w-8 h-8 rounded-full flex items-center justify-center shadow active:scale-95 transition-all
-              ${showForm ? 'bg-gray-200 text-gray-600 rotate-45' : 'bg-purple-500 text-white'}`}
+              ${showForm ? 'bg-brand-soft/60 text-ink-soft rotate-45' : 'bg-brand-soft0 text-white'}`}
             >
               <Plus size={14} />
             </button>
@@ -193,7 +195,7 @@ export default function CalendarPopup({ onClose }) {
 
           {/* Add task form */}
           {showForm && (
-            <div className="border-b border-gray-200">
+            <div className="border-b border-ink/10">
               <TaskForm
                 defaultDate={selectedDate}
                 onSave={(payload) => { addTask(payload); setShowForm(false) }}
@@ -206,23 +208,23 @@ export default function CalendarPopup({ onClose }) {
           {selectedTasks.length === 0 && !showForm ? (
             <div className="px-4 py-6 text-center">
               <p className="text-2xl mb-2">🗓️</p>
-              <p className="pixel-font text-[9px] text-gray-400">No tasks for this day</p>
-              <p className="pixel-font text-[8px] text-gray-300 mt-1">Tap + to schedule one</p>
+              <p className="pixel-font text-[9px] text-ink-soft">No tasks for this day</p>
+              <p className="pixel-font text-[8px] text-ink-soft/50 mt-1">Tap + to schedule one</p>
             </div>
           ) : (
             <div>
               {selectedTasks.map((task) => (
                 <div
                   key={task.id}
-                  className={`flex items-center gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0
-                    ${task.completed ? 'opacity-60 bg-green-50/40' : 'bg-white'}`}
+                  className={`flex items-center gap-3 px-4 py-3 border-b border-ink/10 last:border-b-0
+                    ${task.completed ? 'opacity-60 bg-good/10/40' : 'bg-white'}`}
                 >
                   <button
                     onClick={() => toggleTask(task.id)}
                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors active:scale-90
                       ${task.completed
-                        ? 'border-green-400 bg-green-400 text-white'
-                        : 'border-gray-300 hover:border-purple-400'}`}
+                        ? 'border-good bg-good text-white'
+                        : 'border-ink/30 hover:border-brand'}`}
                   >
                     {task.completed && <Check size={12} />}
                   </button>
@@ -230,18 +232,18 @@ export default function CalendarPopup({ onClose }) {
                   <div className="flex-1 min-w-0">
                     <p
                       className={`pixel-font text-[9px] truncate
-                        ${task.completed ? 'line-through text-gray-400' : 'text-gray-800'}`}
+                        ${task.completed ? 'line-through text-ink-soft' : 'text-ink'}`}
                     >
                       {task.title}
                     </p>
-                    <p className="pixel-font text-[7px] text-gray-400 mt-0.5">
+                    <p className="pixel-font text-[7px] text-ink-soft mt-0.5">
                       {task.type} · {task.timeMinutes} min
                     </p>
                   </div>
 
                   <button
                     onClick={() => removeTask(task.id)}
-                    className="text-gray-300 hover:text-red-400 p-1 transition-colors active:scale-90"
+                    className="text-ink-soft/50 hover:text-danger p-1 transition-colors active:scale-90"
                   >
                     <Trash2 size={13} />
                   </button>

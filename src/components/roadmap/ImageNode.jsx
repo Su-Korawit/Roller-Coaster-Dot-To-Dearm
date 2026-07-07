@@ -64,9 +64,9 @@ export default function ImageNode({ id, data, selected }) {
   return (
     <div className="relative w-32 h-32">
       <div
-        className={`w-full h-full rounded-2xl border-2 bg-white shadow-md overflow-hidden flex items-center justify-center transition-all ${
+        className={`w-full h-full rounded-xl border-2 bg-surface overflow-hidden flex items-center justify-center transition-all ${
           panning ? 'nodrag cursor-grab active:cursor-grabbing' : 'cursor-pointer'
-        } ${selected ? 'border-brand shadow-brand/30 shadow-lg' : 'border-brand/40'}`}
+        } ${selected ? 'border-ink shadow-hard-sm' : 'border-ink/30 shadow-none'}`}
         style={data.color ? { borderColor: data.color } : undefined}
         onClick={hasImage ? undefined : () => setPickerOpen(true)}
         onPointerDown={onPointerDown}
@@ -87,7 +87,7 @@ export default function ImageNode({ id, data, selected }) {
         ) : (
           <div className="flex flex-col items-center gap-1 text-brand/50">
             <ImageIcon size={28} strokeWidth={1.5} />
-            <span className="pixel-font text-[7px] text-gray-300">tap to choose</span>
+            <span className="pixel-font text-[10px] text-ink-soft">tap to choose</span>
           </div>
         )}
       </div>
@@ -116,7 +116,7 @@ export default function ImageNode({ id, data, selected }) {
           onPointerDown={(e) => e.stopPropagation()}
           onClick={() => setPickerOpen(true)}
           aria-label="เพิ่ม/เปลี่ยนรูป"
-          className="nodrag absolute top-1 right-1 w-6 h-6 rounded-lg bg-white/90 shadow flex items-center justify-center text-gray-500 hover:text-brand active:scale-95 transition-all"
+          className="nodrag absolute top-1 right-1 w-6 h-6 rounded-lg bg-surface border-2 border-ink flex items-center justify-center text-ink-soft hover:text-brand"
         >
           <Pencil size={13} />
         </button>
@@ -128,7 +128,7 @@ export default function ImageNode({ id, data, selected }) {
           onPointerDown={(e) => e.stopPropagation()}
           onClick={removeActive}
           aria-label="ลบรูปนี้"
-          className="nodrag absolute top-1 left-1 w-6 h-6 rounded-lg bg-white/90 shadow flex items-center justify-center text-gray-500 hover:text-red-500 active:scale-95 transition-all"
+          className="nodrag absolute top-1 left-1 w-6 h-6 rounded-lg bg-surface border-2 border-ink flex items-center justify-center text-ink-soft hover:text-danger"
         >
           <Trash2 size={13} />
         </button>
@@ -140,7 +140,7 @@ export default function ImageNode({ id, data, selected }) {
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => { e.stopPropagation(); setLightboxOpen(true) }}
           aria-label="ขยายรูป"
-          className="nodrag absolute bottom-1 right-1 w-6 h-6 rounded-lg bg-white/90 shadow flex items-center justify-center text-gray-500 hover:text-brand active:scale-95 transition-all"
+          className="nodrag absolute bottom-1 right-1 w-6 h-6 rounded-lg bg-surface border-2 border-ink flex items-center justify-center text-ink-soft hover:text-brand"
         >
           <Maximize2 size={13} />
         </button>
@@ -153,7 +153,7 @@ export default function ImageNode({ id, data, selected }) {
             onPointerDown={(e) => e.stopPropagation()}
             onClick={goToIndex(-1)}
             aria-label="รูปก่อนหน้า"
-            className="nodrag absolute left-1 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white/90 shadow flex items-center justify-center text-gray-500 hover:text-brand active:scale-95 transition-all"
+            className="nodrag absolute left-1 top-1/2 -translate-y-1/2 w-5 h-5 rounded-lg bg-surface border-2 border-ink flex items-center justify-center text-ink-soft hover:text-brand"
           >
             <ChevronLeft size={12} />
           </button>
@@ -162,11 +162,11 @@ export default function ImageNode({ id, data, selected }) {
             onPointerDown={(e) => e.stopPropagation()}
             onClick={goToIndex(1)}
             aria-label="รูปถัดไป"
-            className="nodrag absolute right-1 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white/90 shadow flex items-center justify-center text-gray-500 hover:text-brand active:scale-95 transition-all"
+            className="nodrag absolute right-1 top-1/2 -translate-y-1/2 w-5 h-5 rounded-lg bg-surface border-2 border-ink flex items-center justify-center text-ink-soft hover:text-brand"
           >
             <ChevronRight size={12} />
           </button>
-          <span className="nodrag absolute bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full bg-white/90 shadow pixel-font text-[6px] text-gray-500">
+          <span className="nodrag absolute bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full bg-surface border-2 border-ink pixel-font text-[10px] text-ink-soft">
             {activeIndex + 1}/{images.length}
           </span>
         </>

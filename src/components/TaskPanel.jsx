@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
-import { GripVertical, Loader2, Share2, Trash, Trash2 } from 'lucide-react'
+import { GripVertical, Loader2, Share2, Trash, Trash2, X, Gamepad2, ClipboardList } from 'lucide-react'
 import { updateDoc } from 'firebase/firestore'
 import { refs } from '../lib/db'
 import { useAuthStore } from '../stores/useAuthStore'
@@ -79,17 +79,15 @@ function TaskShareSheet({ task, onClose }) {
   return (
     <Popup variant="sheet" size="md" onClose={onClose}>
       <div className="pb-4">
-        <p className="pixel-font text-[9px] text-center text-gray-700 mb-1 px-5">ส่ง Task ให้เพื่อน</p>
-        <p
-          className="text-center text-gray-500 mb-4 px-6 truncate"
-          style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 11 }}
-        >
-          📋 {task.title}
+        <p className="pixel-font text-[9px] text-center text-ink mb-1 px-5">ส่ง Task ให้เพื่อน</p>
+        <p className="flex items-center justify-center gap-1.5 text-center text-ink-soft mb-4 px-6 thai-font text-[11px]">
+          <ClipboardList size={12} strokeWidth={2.5} className="shrink-0 text-brand" aria-hidden="true" />
+          <span className="truncate">{task.title}</span>
         </p>
         {chats.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-8 opacity-50">
             <span className="text-3xl">💬</span>
-            <p className="pixel-font text-[7px] text-gray-400 text-center leading-relaxed">ยังไม่มีการสนทนา</p>
+            <p className="pixel-font text-[7px] text-ink-soft text-center leading-relaxed">ยังไม่มีการสนทนา</p>
           </div>
         ) : (
           <div className="max-h-60 overflow-y-auto">
@@ -101,23 +99,23 @@ function TaskShareSheet({ task, onClose }) {
                   key={chat.id}
                   onClick={() => handleSend(chat)}
                   disabled={!!sending}
-                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 text-left"
+                  className="w-full flex items-center gap-3 px-5 py-3 hover:bg-paper active:bg-brand-soft transition-colors disabled:opacity-50 text-left"
                 >
-                  <div className="w-9 h-9 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center shrink-0 border border-gray-200">
+                  <div className="w-9 h-9 rounded-full bg-brand-soft overflow-hidden flex items-center justify-center shrink-0 border border-ink/10">
                     {other?.photoURL
                       ? <img src={other.photoURL} alt="" className="w-full h-full object-cover" />
-                      : <span className="text-base">🎮</span>}
+                      : <Gamepad2 size={16} strokeWidth={2.5} className="text-ink" aria-hidden="true" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="pixel-font text-[8px] text-gray-800 truncate">
+                    <p className="pixel-font text-[8px] text-ink truncate">
                       {other?.displayName ?? '...'}
                     </p>
-                    <p className="text-gray-400 truncate mt-0.5" style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 11 }}>
+                    <p className="text-ink-soft truncate mt-0.5" style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 11 }}>
                       {chat.lastMessage || 'เริ่มการสนทนา'}
                     </p>
                   </div>
                   {sending === chat.id
-                    ? <Loader2 size={14} className="text-purple-400 animate-spin shrink-0" />
+                    ? <Loader2 size={14} className="text-brand animate-spin shrink-0" />
                     : <span className="thai-font text-xs text-brand shrink-0">ส่ง</span>}
                 </button>
               )
@@ -140,10 +138,10 @@ function ReflectionSheet({ task, onSubmit, onClose, isEvaluating }) {
       onClose={!isEvaluating ? onClose : undefined}
     >
       <div className="px-6 pt-4 pb-10 flex flex-col h-full">
-        <h3 className="text-center font-bold text-gray-800 text-base mb-1 shrink-0">
+        <h3 className="text-center font-bold text-ink text-base mb-1 shrink-0">
           📝 Daily Reflection
         </h3>
-        <p className="text-center text-xs text-gray-500 mb-4 shrink-0 pixel-font">
+        <p className="text-center text-xs text-ink-soft mb-4 shrink-0 pixel-font">
           {task.title}
         </p>
         <div className="overflow-y-auto flex-1 pb-2">
@@ -152,19 +150,19 @@ function ReflectionSheet({ task, onSubmit, onClose, isEvaluating }) {
             value={reflection}
             onChange={(e) => setReflection(e.target.value)}
             placeholder="What did you do? What did you learn? Any obstacles?"
-            className="w-full rounded-xl border border-gray-200 shadow-sm px-4 py-3 outline-none focus:border-purple-400 resize-none text-sm"
+            className="w-full rounded-xl border border-ink/10  px-4 py-3 outline-none focus:border-brand resize-none text-sm"
             disabled={isEvaluating}
           />
         </div>
         <button
           onClick={() => onSubmit(reflection)}
           disabled={isEvaluating || !reflection.trim()}
-          className="mt-3 w-full rounded-xl border border-purple-300 bg-purple-50 py-3 pixel-font text-[10px] text-purple-800 disabled:opacity-50 shrink-0"
+          className="mt-3 w-full rounded-xl border border-brand/40 bg-brand-soft py-3 pixel-font text-[10px] text-brand-strong disabled:opacity-50 shrink-0"
         >
           {isEvaluating ? '🤖 AI is evaluating your progress...' : 'Submit Reflection'}
         </button>
         {!isEvaluating && (
-          <button onClick={onClose} className="mt-2 w-full text-gray-400 text-sm py-1 shrink-0">
+          <button onClick={onClose} className="mt-2 w-full text-ink-soft text-sm py-1 shrink-0">
             Cancel
           </button>
         )}
@@ -348,13 +346,13 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
       style={{ top: '10%' }}
     >
       <div className="flex justify-center pt-3 pb-1">
-        <div className="w-10 h-1 bg-gray-300 rounded-full" />
+        <div className="w-10 h-1 bg-ink rounded-full" />
       </div>
 
       <div className="px-4 pb-4">
-        <div className="rounded-xl bg-white border border-gray-200 shadow-sm overflow-hidden h-[82vh] flex flex-col">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-            <h2 className="pixel-font text-[12px] text-gray-800">
+        <div className="rounded-xl bg-white border border-ink/10  overflow-hidden h-[82vh] flex flex-col">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-ink/10">
+            <h2 className="pixel-font text-[12px] text-ink">
               {view === 'list' ? 'Task List'
                 : view === 'trash' ? 'Trash'
                 : editingTaskId ? 'Edit Task'
@@ -364,12 +362,12 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
               {view === 'list' && (
                 <button
                   onClick={() => setView('trash')}
-                  className="relative text-gray-400 hover:text-gray-700 p-1"
+                  className="relative text-ink-soft hover:text-ink p-1"
                   aria-label="Trash"
                 >
                   <Trash size={16} />
                   {trash.length > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-red-400 pixel-font text-[7px] text-white flex items-center justify-center leading-none">
+                    <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-danger pixel-font text-[7px] text-white flex items-center justify-center leading-none">
                       {trash.length > 9 ? '9+' : trash.length}
                     </span>
                   )}
@@ -378,7 +376,7 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
               {(view === 'form' || view === 'trash') && (
                 <button
                   onClick={() => setView('list')}
-                  className="text-sm rounded-xl px-3 py-1.5 bg-gray-100 text-gray-600"
+                  className="text-sm rounded-xl px-3 py-1.5 bg-brand-soft text-ink-soft"
                 >
                   Back
                 </button>
@@ -386,9 +384,9 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
               <button
                 onClick={onClose}
                 aria-label="ปิด"
-                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 active:scale-90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                className="neo-btn w-9 h-9 flex items-center justify-center rounded-lg bg-surface text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
               >
-                <span aria-hidden="true" className="text-base leading-none">✕</span>
+                <X size={16} strokeWidth={2.5} aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -457,7 +455,7 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
       {/* ── Undo-delete toast ── */}
       {deletedTask && (
         <div
-          className="absolute bottom-4 left-4 right-4 flex items-center justify-between bg-gray-900 text-white rounded-2xl px-4 py-3 shadow-xl"
+          className="absolute bottom-4 left-4 right-4 flex items-center justify-between bg-ink text-white rounded-2xl px-4 py-3 shadow-hard-sm"
           style={{ zIndex: Z_TOAST }}
         >
           <span className="pixel-font text-[9px] opacity-80 truncate mr-3">
@@ -465,7 +463,7 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
           </span>
           <button
             onClick={handleUndoDelete}
-            className="pixel-font text-[9px] text-purple-300 shrink-0 active:opacity-70"
+            className="pixel-font text-[9px] text-brand-soft shrink-0 active:opacity-70"
           >
             Undo
           </button>
@@ -478,14 +476,14 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
           className="absolute inset-0 flex items-center justify-center bg-black/40 p-6"
           style={{ zIndex: Z_MODAL }}
         >
-          <div className="bg-white rounded-2xl p-5 w-full max-w-xs shadow-xl text-center">
+          <div className="bg-white rounded-2xl p-5 w-full max-w-xs shadow-hard-sm text-center">
             <p className="text-2xl mb-2">🎉</p>
-            <p className="pixel-font text-[10px] text-purple-700 mb-3">AI Progress Report</p>
-            <p className="text-sm text-gray-700 mb-3">{evalResult.note}</p>
-            <p className="pixel-font text-[9px] text-green-600 mb-4">+{evalResult.gainedPercent}% Journey Progress</p>
+            <p className="pixel-font text-[10px] text-brand-strong mb-3">AI Progress Report</p>
+            <p className="text-sm text-ink mb-3">{evalResult.note}</p>
+            <p className="pixel-font text-[9px] text-good mb-4">+{evalResult.gainedPercent}% Journey Progress</p>
             <button
               onClick={() => setEvalResult(null)}
-              className="w-full rounded-xl bg-purple-500 text-white py-2 text-sm font-medium"
+              className="w-full rounded-xl bg-brand-soft0 text-white py-2 text-sm font-medium"
             >
               Awesome!
             </button>
@@ -508,7 +506,7 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onShare, on
               className="flex-1 overflow-y-auto"
             >
               {tasks.length === 0 && (
-                <div className="px-6 pt-20 text-center text-gray-400">
+                <div className="px-6 pt-20 text-center text-ink-soft">
                   <p className="pixel-font text-[10px]">No tasks yet</p>
                   <p className="text-sm mt-2">Tap + to create your first task</p>
                 </div>
@@ -522,14 +520,14 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onShare, on
                       {...provided.draggableProps}
                       className={`flex flex-col gap-1.5 px-4 py-3 border-b transition-shadow ${
                         snapshot.isDragging
-                          ? 'shadow-xl scale-[1.02] bg-white/95 backdrop-blur-sm z-50 rounded-xl border-transparent'
+                          ? 'shadow-hard-sm scale-[1.02] bg-white/95 backdrop-blur-sm z-50 rounded-xl border-transparent'
                           : task.assignedSkill === 'ignite' && !task.completed
-                          ? 'border-orange-300 bg-orange-50 shadow-[0_0_8px_2px_rgba(251,146,60,0.3)]'
+                          ? 'border-warn/40 bg-warn/10 shadow-[0_0_8px_2px_rgba(251,146,60,0.3)]'
                           : task.assignedSkill === 'capsule' && !task.completed
-                          ? 'border-sky-300 bg-sky-50 shadow-[0_0_8px_2px_rgba(56,189,248,0.3)]'
+                          ? 'border-brand/40 bg-brand-soft shadow-[0_0_8px_2px_rgba(56,189,248,0.3)]'
                           : task.isAIGenerated && !task.completed
-                          ? 'border-gray-200 bg-purple-50'
-                          : 'border-gray-200 bg-white'
+                          ? 'border-ink/10 bg-brand-soft'
+                          : 'border-ink/10 bg-white'
                       }`}
                     >
                       {/* ── Top row: checkbox · content · drag handle ── */}
@@ -538,20 +536,20 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onShare, on
                         <button
                           onClick={() => onToggle(task)}
                           className={`w-10 h-10 rounded-xl border-[3px] flex items-center justify-center shrink-0
-                            ${task.completed ? 'bg-black border-black text-white' : 'border-black text-transparent'}`}
+                            ${task.completed ? 'bg-ink border-ink text-white' : 'border-ink text-transparent'}`}
                         >
                           ✓
                         </button>
 
                         {/* Task info (tap to edit) */}
                         <button onClick={() => onEdit(task)} className="flex-1 min-w-0 text-left">
-                          <p className={`pixel-font text-[11px] line-clamp-2 ${task.completed ? 'line-through text-gray-400' : 'text-black'}`}>
+                          <p className={`pixel-font text-[11px] line-clamp-2 ${task.completed ? 'line-through text-ink-soft' : 'text-ink'}`}>
                             {task.isAIGenerated && !task.completed && <span className="mr-1">✨</span>}
                             {task.assignedSkill === 'ignite' && !task.completed && <span className="mr-1">🚀</span>}
                             {task.assignedSkill === 'capsule' && !task.completed && <span className="mr-1">⏳</span>}
                             #{index + 1} | {task.title}
                           </p>
-                          <p className="text-xs text-gray-400 mt-1">
+                          <p className="text-xs text-ink-soft mt-1">
                             {task.type} - {task.timeMinutes} min - {task.rewardCoins} coins
                           </p>
                         </button>
@@ -559,7 +557,7 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onShare, on
                         {/* Drag handle */}
                         <span
                           {...provided.dragHandleProps}
-                          className="shrink-0 text-gray-300 cursor-grab active:cursor-grabbing touch-none"
+                          className="shrink-0 text-ink-soft/50 cursor-grab active:cursor-grabbing touch-none"
                           aria-label="Drag to reorder"
                         >
                           <GripVertical size={18} />
@@ -571,7 +569,7 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onShare, on
                         {/* Share */}
                         <button
                           onClick={() => onShare?.(task)}
-                          className="text-gray-300 hover:text-purple-400 active:scale-95 transition-transform"
+                          className="text-ink-soft/50 hover:text-brand active:scale-95 transition-transform"
                           aria-label="Share task to chat"
                         >
                           <Share2 size={15} />
@@ -580,7 +578,7 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onShare, on
                         {/* Delete */}
                         <button
                           onClick={() => onRemove(task)}
-                          className="text-gray-300 hover:text-red-400 active:scale-95 transition-transform"
+                          className="text-ink-soft/50 hover:text-danger active:scale-95 transition-transform"
                           aria-label="Delete task"
                         >
                           <Trash2 size={14} />
@@ -596,32 +594,32 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onShare, on
         </Droppable>
       </DragDropContext>
 
-      <div className="border-t border-gray-200 px-5 py-3 space-y-2">
+      <div className="border-t border-ink/10 px-5 py-3 space-y-2">
         <div className="flex items-center gap-3">
           <button
             onClick={onAutoGenerate}
             disabled={isAutoGenerating}
-            className="flex-1 flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-2xl px-4 py-2.5 active:scale-95 transition-transform disabled:opacity-60"
+            className="flex-1 flex items-center gap-2 bg-brand-soft border border-brand/30 rounded-2xl px-4 py-2.5 active:scale-95 transition-transform disabled:opacity-60"
           >
             {isAutoGenerating ? (
-              <Loader2 size={13} className="animate-spin text-purple-500" />
+              <Loader2 size={13} className="animate-spin text-brand-strong" />
             ) : (
               <span>✨</span>
             )}
-            <span className="pixel-font text-[9px] text-purple-700">
+            <span className="pixel-font text-[9px] text-brand-strong">
               {isAutoGenerating ? 'Generating...' : "Today's Mastery Task"}
             </span>
           </button>
           <button
             onClick={onCreate}
-            className="w-10 h-10 rounded-full border-2 border-black text-2xl leading-none bg-white shadow-sm shrink-0 flex items-center justify-center"
+            className="w-10 h-10 rounded-full border-2 border-ink text-2xl leading-none bg-surface shrink-0 flex items-center justify-center"
             aria-label="Create task"
           >
             +
           </button>
         </div>
         {autoGenError && (
-          <p className="pixel-font text-[8px] text-red-500 bg-red-50 rounded-xl px-3 py-1.5">{autoGenError}</p>
+          <p className="pixel-font text-[8px] text-danger bg-danger/10 rounded-xl px-3 py-1.5">{autoGenError}</p>
         )}
       </div>
     </>
@@ -633,30 +631,30 @@ function TrashView({ trash, onRestore, onPurge, onEmpty }) {
     <div className="flex-1 flex flex-col min-h-0">
       <div className="flex-1 overflow-y-auto min-h-0">
         {trash.length === 0 ? (
-          <div className="px-6 pt-20 text-center text-gray-400">
+          <div className="px-6 pt-20 text-center text-ink-soft">
             <p className="text-3xl mb-3">🗑️</p>
             <p className="pixel-font text-[10px]">Trash is empty</p>
           </div>
         ) : (
           trash.map((task) => (
-            <div key={task.id} className="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
+            <div key={task.id} className="flex items-center gap-3 px-4 py-3 border-b border-ink/10">
               <div className="flex-1 min-w-0">
-                <p className="pixel-font text-[11px] text-gray-400 line-through truncate">
+                <p className="pixel-font text-[11px] text-ink-soft line-through truncate">
                   {task.title}
                 </p>
-                <p className="text-xs text-gray-300 mt-0.5">
+                <p className="text-xs text-ink-soft/50 mt-0.5">
                   {task.type} - {task.timeMinutes} min
                 </p>
               </div>
               <button
                 onClick={() => onRestore(task.id)}
-                className="pixel-font text-[9px] text-purple-500 shrink-0 px-2 py-1 rounded-lg hover:bg-purple-50 active:scale-95 transition-all"
+                className="pixel-font text-[9px] text-brand-strong shrink-0 px-2 py-1 rounded-lg hover:bg-brand-soft active:scale-95 transition-all"
               >
                 Restore
               </button>
               <button
                 onClick={() => onPurge(task.id)}
-                className="text-gray-300 hover:text-red-400 shrink-0 active:scale-95 transition-transform"
+                className="text-ink-soft/50 hover:text-danger shrink-0 active:scale-95 transition-transform"
                 aria-label="Delete permanently"
               >
                 <Trash2 size={14} />
@@ -667,10 +665,10 @@ function TrashView({ trash, onRestore, onPurge, onEmpty }) {
       </div>
 
       {trash.length > 0 && (
-        <div className="shrink-0 px-5 py-3 border-t border-gray-100 bg-white">
+        <div className="shrink-0 px-5 py-3 border-t border-ink/10 bg-white">
           <button
             onClick={onEmpty}
-            className="w-full rounded-xl border border-red-200 py-2.5 pixel-font text-[9px] text-red-400 hover:bg-red-50 active:scale-95 transition-all"
+            className="w-full rounded-xl border border-danger/30 py-2.5 pixel-font text-[9px] text-danger hover:bg-danger/10 active:scale-95 transition-all"
           >
             Empty Trash ({trash.length})
           </button>

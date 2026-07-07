@@ -1,3 +1,5 @@
+import { Search } from 'lucide-react'
+
 /**
  * SearchBar — shared search input used across the wizard select pages.
  * Renders a labelled text input + search icon.
@@ -5,7 +7,7 @@
  */
 export default function SearchBar({ value, onChange, placeholder = 'Search...', label = 'ค้นหา' }) {
   return (
-    <div className="flex items-center rounded-2xl bg-white px-4 py-3 focus-within:ring-2 focus-within:ring-brand shadow-sm">
+    <div className="flex items-center rounded-xl neo-input px-4 py-3 focus-within:ring-2 focus-within:ring-brand">
       <label className="sr-only">{label}</label>
       <input
         type="search"
@@ -13,10 +15,9 @@ export default function SearchBar({ value, onChange, placeholder = 'Search...', 
         onChange={onChange}
         placeholder={placeholder}
         aria-label={label}
-        className="w-full bg-transparent text-sm text-gray-800 placeholder:text-gray-400 outline-none"
-        style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
+        className="w-full bg-transparent thai-font text-sm text-ink placeholder:text-ink-soft/50 outline-none"
       />
-      <span className="text-lg text-gray-400 shrink-0" aria-hidden="true">⌕</span>
+      <Search size={18} strokeWidth={2.5} className="text-ink-soft shrink-0" aria-hidden="true" />
     </div>
   )
 }

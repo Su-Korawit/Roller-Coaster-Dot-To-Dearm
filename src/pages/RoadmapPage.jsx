@@ -234,13 +234,13 @@ export default function RoadmapPage({ onClose }) {
   return (
     <div className={`h-full w-full flex flex-col ${overlay ? 'bg-transparent' : 'bg-[#F4F7FC]'}`}>
       {/* Header */}
-      <div className="shrink-0 flex items-center gap-3 px-4 py-3 bg-white shadow-sm z-10">
+      <div className="shrink-0 flex items-center gap-3 px-4 py-3 bg-white  z-10">
         <button
           onClick={handleBack}
           aria-label={overlay ? 'ปิด Roadmap' : 'กลับหน้าหลัก'}
-          className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-100 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          className="w-9 h-9 rounded-xl flex items-center justify-center text-ink-soft hover:bg-brand-soft active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
-          {overlay ? <X size={20} strokeWidth={2} /> : <ArrowLeft size={20} strokeWidth={2} />}
+          {overlay ? <X size={20} strokeWidth={2.5} /> : <ArrowLeft size={20} strokeWidth={2.5} />}
         </button>
         <h1 className="pixel-font text-[13px] text-ink font-bold">Roadmap</h1>
 
@@ -249,14 +249,14 @@ export default function RoadmapPage({ onClose }) {
           <button
             onClick={() => fileInputRef.current?.click()}
             aria-label="นำเข้า Roadmap"
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-100 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-ink-soft hover:bg-brand-soft active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             <Upload size={18} strokeWidth={2} />
           </button>
           <button
             onClick={handleExport}
             aria-label="ส่งออก Roadmap"
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-100 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-ink-soft hover:bg-brand-soft active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             <Download size={18} strokeWidth={2} />
           </button>
@@ -269,7 +269,7 @@ export default function RoadmapPage({ onClose }) {
           />
         </div>
       </div>
-      <div className="shrink-0 border-t border-gray-50 bg-white">
+      <div className="shrink-0 border-t border-ink/10 bg-white">
         <SheetSwitcher />
       </div>
 
@@ -313,15 +313,15 @@ export default function RoadmapPage({ onClose }) {
           {/* Save/saved status indicator */}
           {syncStatus !== 'idle' && (
             <Panel position="top-right">
-              <div className="mt-2 mr-2 px-3 py-1.5 rounded-xl bg-white shadow-md border border-gray-100">
+              <div className="mt-2 mr-2 px-3 py-1.5 rounded-xl bg-white shadow-hard-sm border border-ink/10">
                 {syncStatus === 'saving' && (
-                  <span className="pixel-font text-[8px] text-gray-400">Saving...</span>
+                  <span className="pixel-font text-[8px] text-ink-soft">Saving...</span>
                 )}
                 {syncStatus === 'saved' && (
-                  <span className="pixel-font text-[8px] text-green-500">Saved</span>
+                  <span className="pixel-font text-[8px] text-good">Saved</span>
                 )}
                 {syncStatus === 'error' && (
-                  <span className="pixel-font text-[8px] text-red-500">Save failed</span>
+                  <span className="pixel-font text-[8px] text-danger">Save failed</span>
                 )}
               </div>
             </Panel>
@@ -330,8 +330,8 @@ export default function RoadmapPage({ onClose }) {
           {/* Tool palette */}
           {canEdit && (
             <Panel position="top-center">
-              <div className="flex items-center gap-2 bg-white rounded-2xl shadow-md px-3 py-2 border border-gray-100 mt-2 max-w-[calc(100vw-1rem)] overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
-                <span className="pixel-font text-[9px] text-gray-400 mr-1">Add</span>
+              <div className="flex items-center gap-2 bg-white rounded-2xl shadow-hard-sm px-3 py-2 border border-ink/10 mt-2 max-w-[calc(100vw-1rem)] overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+                <span className="pixel-font text-[9px] text-ink-soft mr-1">Add</span>
                 <button
                   onClick={() => addAtCenter('process')}
                   draggable="true"
@@ -395,10 +395,10 @@ export default function RoadmapPage({ onClose }) {
                 </button>
                 <button
                   onClick={() => addAtCenter('start')}
-                  className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-emerald-500/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                  className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-good/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-good"
                   aria-label="Add Start block"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border-2 border-emerald-500/50 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-good/20 border-2 border-good/50 flex items-center justify-center">
                     <span className="text-[14px]">🚩</span>
                   </div>
                   <span className="pixel-font text-[8px] text-ink">Start</span>
@@ -422,7 +422,7 @@ export default function RoadmapPage({ onClose }) {
                   aria-label={mobileSelectMode ? 'Exit select mode' : 'Enter select mode'}
                   aria-pressed={mobileSelectMode}
                 >
-                  <MousePointer2 size={16} className={mobileSelectMode ? 'text-brand' : 'text-gray-500'} strokeWidth={2} />
+                  <MousePointer2 size={16} className={mobileSelectMode ? 'text-brand' : 'text-ink-soft'} strokeWidth={2} />
                   <span className="pixel-font text-[8px] text-ink">Select</span>
                 </button>
               </div>

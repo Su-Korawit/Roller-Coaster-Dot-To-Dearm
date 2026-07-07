@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
-import { Settings, Share2, Pencil } from 'lucide-react'
+import { Settings, Share2, Pencil, X } from 'lucide-react'
 import { getDoc } from 'firebase/firestore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useSelectStore } from '../stores/useSelectStore'
@@ -57,29 +57,29 @@ export default function ProfilePanel({ onClose, onOpenRoadmap }) {
     >
       {/* Handle */}
       <div className="flex justify-center pt-3 pb-1">
-        <div className="w-10 h-1 bg-gray-300 rounded-full" />
+        <div className="w-10 h-1 bg-ink rounded-full" />
       </div>
 
       {/* Top-right icons */}
       <div className="flex justify-end items-center gap-2 px-5 pt-1">
         <button
           onClick={() => openPopup('settings')}
-          className="text-gray-400 hover:text-gray-600"
+          className="text-ink-soft hover:text-ink"
         >
-          <Settings size={19} />
+          <Settings size={19} strokeWidth={2.5} />
         </button>
         <button
           onClick={() => alert('Share link copied!')}
-          className="text-gray-400 hover:text-gray-600"
+          className="text-ink-soft hover:text-ink"
         >
-          <Share2 size={19} />
+          <Share2 size={19} strokeWidth={2.5} />
         </button>
         <button
           onClick={onClose}
           aria-label="ปิด"
-          className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 active:scale-90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ml-1"
+          className="neo-btn w-9 h-9 flex items-center justify-center rounded-lg bg-surface text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ml-1"
         >
-          <span aria-hidden="true" className="text-base leading-none">✕</span>
+          <X size={16} strokeWidth={2.5} aria-hidden="true" />
         </button>
       </div>
 
@@ -90,22 +90,22 @@ export default function ProfilePanel({ onClose, onOpenRoadmap }) {
             className="flex flex-col items-center gap-2 pt-2 animate-pulse"
             data-testid="profile-header-skeleton"
           >
-            <div className="w-20 h-20 rounded-full bg-gray-200" />
-            <div className="h-4 bg-gray-200 rounded w-24" />
-            <div className="h-3 bg-gray-100 rounded w-32" />
+            <div className="w-20 h-20 rounded-full bg-brand-soft/60" />
+            <div className="h-4 bg-brand-soft/60 rounded w-24" />
+            <div className="h-3 bg-brand-soft/40 rounded w-32" />
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2 pt-2">
             <div className="relative">
-              <div className="w-20 h-20 rounded-full overflow-hidden bg-purple-100 flex items-center justify-center shadow-md border-4 border-white">
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-brand-soft flex items-center justify-center shadow-hard-sm border-4 border-surface">
                 {photoURL
                   ? <img src={photoURL} alt="" className="w-full h-full object-cover" />
-                  : <span className="text-3xl font-bold text-purple-400">{initials}</span>}
+                  : <span className="text-3xl font-bold text-brand-strong">{initials}</span>}
               </div>
-              <div className="absolute bottom-1 right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white" />
+              <div className="absolute bottom-1 right-1 w-3 h-3 bg-good rounded-full border-2 border-surface" />
             </div>
-            <p className="pixel-font text-[13px] text-gray-800">{displayName}</p>
-            <p className="text-xs text-gray-400 text-center leading-snug max-w-50">
+            <p className="pixel-font text-[13px] text-ink">{displayName}</p>
+            <p className="text-xs text-ink-soft text-center leading-snug max-w-50">
               {bio || `MBTI: ${mbti || '-'}`}
             </p>
           </div>
@@ -117,8 +117,8 @@ export default function ProfilePanel({ onClose, onOpenRoadmap }) {
         {/* Roadmap preview — live embed of the same useRoadmapStore canvas the
             Roadmap FAB opens, so Profile and Roadmap are one tap apart */}
         <div>
-          <p className="pixel-font text-[9px] text-gray-500 mb-2">Your Roadmap</p>
-          <Suspense fallback={<div className="w-full h-40 rounded-2xl bg-gray-100 animate-pulse" />}>
+          <p className="pixel-font text-[10px] text-ink-soft mb-2">Your Roadmap</p>
+          <Suspense fallback={<div className="w-full h-40 rounded-2xl bg-brand-soft/40 animate-pulse" />}>
             <RoadmapPreview onOpen={onOpenRoadmap} />
           </Suspense>
         </div>
@@ -126,7 +126,7 @@ export default function ProfilePanel({ onClose, onOpenRoadmap }) {
         {/* Edit path */}
         <button
           onClick={openOnboarding}
-          className="w-full rounded-2xl border-2 border-dashed border-purple-200 py-3 text-sm text-purple-400 hover:border-purple-400 hover:text-purple-500 transition-colors"
+          className="w-full rounded-2xl border-2 border-dashed border-brand/30 py-3 text-sm text-brand-strong hover:border-brand hover:text-brand-strong transition-colors"
         >
           <Pencil size={12} strokeWidth={2} className="inline mr-1" />
           Edit your path

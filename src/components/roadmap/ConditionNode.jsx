@@ -26,8 +26,8 @@ export default function ConditionNode({ id, data, selected }) {
           React Flow anchors the handles. This keeps the diamond's footprint at
           the full 128x128 (matching ProcessNode) and the dots flush on the edge. */}
       <div
-        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-2 bg-white shadow-md transition-all ${
-          selected ? 'border-accent-pink shadow-accent-pink/30 shadow-lg' : 'border-accent-pink/50'
+        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-2 bg-surface transition-all ${
+          selected ? 'border-ink shadow-hard-sm' : 'border-ink/30 shadow-none'
         }`}
         style={{ width: '70.71%', height: '70.71%', borderRadius: '8px', ...(data.color ? { borderColor: data.color } : {}) }}
       />
@@ -35,7 +35,7 @@ export default function ConditionNode({ id, data, selected }) {
       {/* Centered text (root is upright, so no counter-rotation needed) */}
       <div className="absolute inset-0 flex items-center justify-center px-1">
         <input
-          className="w-20 text-center text-[11px] font-semibold text-ink bg-transparent outline-none placeholder:text-gray-300"
+          className="w-20 text-center text-[11px] font-semibold text-ink bg-transparent outline-none placeholder:text-ink-soft/50"
           placeholder="Decision"
           value={data.label}
           onChange={onLabelChange}

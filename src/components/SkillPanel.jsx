@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
-import { Lock } from 'lucide-react'
+import { Lock, X, Calendar, ClipboardList } from 'lucide-react'
 import { useSkillStore, PASSIVE_UNLOCK_THRESHOLDS } from '../stores/useSkillStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useTaskStore } from '../stores/useTaskStore'
@@ -76,14 +76,14 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
     <div className="absolute inset-0 z-50 flex flex-col overflow-hidden md:max-w-2xl md:mx-auto lg:max-w-3xl" style={{ top: '8%' }}>
       {/* Drag handle */}
       <div className="flex justify-center pt-3 pb-1">
-        <div className="w-10 h-1 bg-gray-300 rounded-full" />
+        <div className="w-10 h-1 bg-ink rounded-full" />
       </div>
 
       <div className="px-3 pb-4 flex-1 flex flex-col">
-        <div className="rounded-2xl bg-white border border-gray-200 shadow-sm flex-1 flex flex-col overflow-hidden">
+        <div className="rounded-2xl bg-white border border-ink/10  flex-1 flex flex-col overflow-hidden">
 
           {/* Tab header */}
-          <div className="flex border-b border-gray-200">
+          <div className="flex border-b border-ink/10">
             <TabBtn active={tab === 'passive'} onClick={() => setTab('passive')}>
               Passive Skill
             </TabBtn>
@@ -93,9 +93,9 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
             <button
               onClick={onClose}
               aria-label="ปิด"
-              className="ml-auto w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 active:scale-90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              className="ml-auto neo-btn w-9 h-9 flex items-center justify-center rounded-lg bg-surface text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
             >
-              <span aria-hidden="true" className="text-base leading-none">✕</span>
+              <X size={16} strokeWidth={2.5} aria-hidden="true" />
             </button>
           </div>
 
@@ -107,7 +107,7 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                 <>
                   {/* ── 3 Passive Slots ───────────────────────────────── */}
                   <div>
-                    <p className="pixel-font text-[9px] text-gray-500 mb-3">Equipped Passive Slots</p>
+                    <p className="pixel-font text-[9px] text-ink-soft mb-3">Equipped Passive Slots</p>
                     <div className="flex gap-2">
                       {PASSIVE_UNLOCK_THRESHOLDS.map((threshold, slotIdx) => {
                         const isUnlocked = totalStacks >= threshold
@@ -118,7 +118,7 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                           <div key={slotIdx} className="flex-1 flex flex-col gap-1">
                             {/* Slot header label */}
                             <p className={`pixel-font text-[7px] text-center ${
-                              isUnlocked ? 'text-pink-400' : 'text-gray-400'
+                              isUnlocked ? 'text-accent-pink' : 'text-ink-soft'
                             }`}>
                               {isUnlocked ? `Slot ${slotIdx + 1}` : `🔒 ${threshold} stacks`}
                             </p>
@@ -130,34 +130,34 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                                   {...provided.droppableProps}
                                   className={`relative border-2 border-dashed rounded-xl h-24 flex flex-col items-center justify-center transition-all duration-150 overflow-hidden ${
                                     !isUnlocked
-                                      ? 'border-gray-200 bg-gray-50 opacity-50 grayscale'
+                                      ? 'border-ink/10 bg-paper opacity-50 grayscale'
                                       : snapshot.isDraggingOver
-                                      ? 'border-pink-400 bg-pink-50 scale-[1.02]'
+                                      ? 'border-accent-pink bg-accent-pink/10 scale-[1.02]'
                                       : equipped
-                                      ? 'border-pink-300 bg-pink-50'
-                                      : 'border-gray-300 bg-gray-50'
+                                      ? 'border-accent-pink/70 bg-accent-pink/10'
+                                      : 'border-ink/30 bg-paper'
                                   }`}
                                 >
                                   {!isUnlocked ? (
-                                    <Lock size={18} className="text-gray-300" />
+                                    <Lock size={18} className="text-ink-soft/50" />
                                   ) : equipped ? (
                                     <>
                                       {equipped.image
                                         ? <img src={equipped.image} alt={equipped.name} className="w-9 h-9 object-contain" />
                                         : <span className="text-3xl leading-none">{equipped.emoji}</span>
                                       }
-                                      <span className="pixel-font text-[8px] text-gray-800 font-bold mt-0.5">{equipped.name}</span>
+                                      <span className="pixel-font text-[8px] text-ink font-bold mt-0.5">{equipped.name}</span>
                                       {/* Tap-to-clear button */}
                                       <button
                                         onClick={() => clearPassiveSlot(slotIdx)}
-                                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-gray-200 text-gray-500 text-[10px] leading-none flex items-center justify-center active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                                        className="absolute top-1 right-1 neo-btn w-5 h-5 rounded-lg bg-surface text-ink-soft flex items-center justify-center active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         aria-label="ถอด skill ออก"
                                       >
-                                        <span aria-hidden="true">✕</span>
+                                        <X size={10} strokeWidth={2.5} aria-hidden="true" />
                                       </button>
                                     </>
                                   ) : (
-                                    <p className="pixel-font text-[8px] text-gray-400 text-center px-1">Drop here</p>
+                                    <p className="pixel-font text-[8px] text-ink-soft text-center px-1">Drop here</p>
                                   )}
                                   {provided.placeholder}
                                 </div>
@@ -171,14 +171,14 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                     {/* Stack progress bar */}
                     <div className="mt-3 px-1">
                       <div className="flex justify-between mb-1">
-                        <p className="pixel-font text-[7px] text-gray-400">Stacks: {totalStacks}</p>
-                        <p className="pixel-font text-[7px] text-gray-400">
+                        <p className="pixel-font text-[7px] text-ink-soft">Stacks: {totalStacks}</p>
+                        <p className="pixel-font text-[7px] text-ink-soft">
                           Next unlock: {PASSIVE_UNLOCK_THRESHOLDS.find((t) => totalStacks < t) ?? 'MAX ✓'}
                         </p>
                       </div>
-                      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-1.5 bg-brand-soft rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-pink-400 rounded-full transition-all duration-500"
+                          className="h-full bg-accent-pink rounded-full transition-all duration-500"
                           style={{ width: `${Math.min(100, (totalStacks / 7) * 100)}%` }}
                         />
                       </div>
@@ -187,7 +187,7 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
 
                   {/* ── Available passive skills ───────────────────────── */}
                   <div>
-                    <p className="pixel-font text-[9px] text-gray-500 mb-2">Available Skills</p>
+                    <p className="pixel-font text-[9px] text-ink-soft mb-2">Available Skills</p>
                     <Droppable droppableId="list-passive" direction="horizontal" isDropDisabled>
                       {(provided) => (
                         <div ref={provided.innerRef} {...provided.droppableProps} className="flex gap-3">
@@ -199,16 +199,16 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
                                   className={`flex-1 rounded-2xl border-2 p-3 flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing transition-all select-none
-                                    ${passiveSlots.some((s) => s.equippedSkillId === skill.id) ? 'border-pink-400 bg-pink-50' : 'border-gray-200 bg-white'}
-                                    ${snapshot.isDragging ? 'shadow-xl scale-105 z-50 rotate-1' : ''}`}
+                                    ${passiveSlots.some((s) => s.equippedSkillId === skill.id) ? 'border-accent-pink bg-accent-pink/10' : 'border-ink/10 bg-white'}
+                                    ${snapshot.isDragging ? 'shadow-hard-sm scale-105 z-50 rotate-1' : ''}`}
                                 >
                                   {skill.image
                                     ? <img src={skill.image} alt={skill.name} className="w-10 h-10 object-contain" draggable={false} />
                                     : <span className="text-3xl leading-none">{skill.emoji}</span>
                                   }
-                                  <span className="pixel-font text-[8px] text-gray-700">{skill.name}</span>
+                                  <span className="pixel-font text-[8px] text-ink">{skill.name}</span>
                                   {passiveSlots.some((s) => s.equippedSkillId === skill.id) && (
-                                    <span className="pixel-font text-[7px] text-pink-400">✓ Equipped</span>
+                                    <span className="pixel-font text-[7px] text-accent-pink">✓ Equipped</span>
                                   )}
                                 </div>
                               )}
@@ -224,14 +224,14 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                       {passiveLocked.map((skill) => (
                         <div
                           key={skill.id}
-                          className="flex-1 rounded-2xl border-2 border-gray-200 bg-gray-50 p-3 flex flex-col items-center gap-1 opacity-50 grayscale select-none"
+                          className="flex-1 rounded-2xl border-2 border-ink/10 bg-paper p-3 flex flex-col items-center gap-1 opacity-50 grayscale select-none"
                         >
                           {skill.image
                             ? <img src={skill.image} alt={skill.name} className="w-10 h-10 object-contain" />
                             : <span className="text-3xl leading-none">{skill.emoji}</span>
                           }
-                          <span className="pixel-font text-[8px] text-gray-500">{skill.name}</span>
-                          <Lock size={10} className="text-gray-400" />
+                          <span className="pixel-font text-[8px] text-ink-soft">{skill.name}</span>
+                          <Lock size={10} className="text-ink-soft" />
                         </div>
                       ))}
                     </div>
@@ -246,15 +246,16 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                           const skill = PASSIVE_SKILLS.find((p) => p.id === s.equippedSkillId)
                           if (!skill) return null
                           return (
-                            <div key={skill.id} className="rounded-xl bg-pink-50 border border-pink-100 px-4 py-3">
-                              <p className="pixel-font text-[9px] text-pink-600 font-bold mb-1">{skill.name} — Active Effect</p>
-                              <p className="text-xs text-gray-600 leading-relaxed">{skill.description}</p>
+                            <div key={skill.id} className="rounded-xl bg-accent-pink/10 border border-accent-pink/20 px-4 py-3">
+                              <p className="pixel-font text-[9px] text-accent-pink font-bold mb-1">{skill.name} — Active Effect</p>
+                              <p className="text-xs text-ink-soft leading-relaxed">{skill.description}</p>
                               {skill.id === 'planner' && (
                                 <button
                                   onClick={() => onOpenCalendar?.()}
-                                  className="mt-3 w-full rounded-xl bg-purple-500 text-white py-2.5 pixel-font text-[10px] active:scale-95 transition-transform shadow"
+                                  className="mt-3 w-full rounded-xl bg-brand-strong text-white py-2.5 pixel-font text-[10px] active:scale-95 transition-transform flex items-center justify-center gap-2"
                                 >
-                                  📅 Open Calendar
+                                  <Calendar size={14} strokeWidth={2.5} aria-hidden="true" />
+                                  Open Calendar
                                 </button>
                               )}
                             </div>
@@ -267,13 +268,13 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                 <>
                   {/* ── Task Drop Zone (TOP) ─────────────────────────────── */}
                   <div>
-                    <p className="pixel-font text-[9px] text-gray-500 mb-2">
+                    <p className="pixel-font text-[9px] text-ink-soft mb-2">
                       {pendingTasks.length > 0 ? `Tasks (${pendingTasks.length})` : 'No Active Tasks'}
                     </p>
                     {pendingTasks.length === 0 ? (
-                      <div className="border-2 border-dashed border-gray-200 rounded-xl py-10 flex flex-col items-center gap-2">
-                        <span className="text-3xl">📋</span>
-                        <p className="pixel-font text-[9px] text-gray-300">Create a task first!</p>
+                      <div className="border-2 border-dashed border-ink/10 rounded-xl py-10 flex flex-col items-center gap-2">
+                        <ClipboardList size={28} strokeWidth={2.5} className="text-ink-soft" aria-hidden="true" />
+                        <p className="pixel-font text-[9px] text-ink-soft/50">Create a task first!</p>
                       </div>
                     ) : (
                       <div className="space-y-2 max-h-56 overflow-y-auto pr-0.5">
@@ -285,12 +286,12 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                                 {...provided.droppableProps}
                                 className={`rounded-xl border-2 px-4 py-3 flex items-center gap-3 transition-all duration-150 min-h-16 ${
                                   task.assignedSkill === 'ignite'
-                                    ? 'border-orange-300 bg-orange-50 shadow-[0_0_10px_rgba(251,146,60,0.35)]'
+                                    ? 'border-warn/40 bg-warn/10 shadow-[0_0_10px_rgba(251,146,60,0.35)]'
                                     : task.assignedSkill === 'capsule'
-                                    ? 'border-sky-300 bg-sky-50 shadow-[0_0_10px_rgba(56,189,248,0.35)]'
+                                    ? 'border-brand/40 bg-brand-soft shadow-[0_0_10px_rgba(56,189,248,0.35)]'
                                     : snapshot.isDraggingOver
-                                    ? 'border-purple-400 bg-purple-50 scale-[1.01] shadow-md'
-                                    : 'border-gray-200 bg-white'
+                                    ? 'border-brand bg-brand-soft scale-[1.01] shadow-hard-sm'
+                                    : 'border-ink/10 bg-white'
                                 }`}
                               >
                                 {/* Skill badge or drop target indicator */}
@@ -300,16 +301,16 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                                   </span>
                                 ) : (
                                   <div className={`w-8 h-8 rounded-lg border-2 border-dashed flex items-center justify-center shrink-0 transition-colors ${
-                                    snapshot.isDraggingOver ? 'border-purple-400 bg-purple-100' : 'border-gray-200'
+                                    snapshot.isDraggingOver ? 'border-brand bg-brand-soft' : 'border-ink/10'
                                   }`}>
-                                    <span className="text-sm text-gray-300">+</span>
+                                    <span className="text-sm text-ink-soft/50">+</span>
                                   </div>
                                 )}
 
                                 {/* Task info */}
                                 <div className="flex-1 min-w-0">
-                                  <p className="pixel-font text-[10px] text-gray-800 truncate">{task.title}</p>
-                                  <p className="text-xs text-gray-400 mt-0.5">
+                                  <p className="pixel-font text-[10px] text-ink truncate">{task.title}</p>
+                                  <p className="text-xs text-ink-soft mt-0.5">
                                     {task.type} · {task.timeMinutes}min · {task.rewardCoins}💰
                                   </p>
                                 </div>
@@ -319,7 +320,7 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                                   <button
                                     onClick={() => setActiveSkillTask(task)}
                                     className={`pixel-font text-[8px] text-white rounded-xl px-3 py-1.5 active:scale-95 transition-transform shrink-0 shadow ${
-                                      task.assignedSkill === 'ignite' ? 'bg-orange-400' : 'bg-sky-400'
+                                      task.assignedSkill === 'ignite' ? 'bg-warn' : 'bg-brand'
                                     }`}
                                   >
                                     {task.assignedSkill === 'ignite' ? '🚀 Go' : '⏳ View'}
@@ -339,17 +340,17 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                   {/* ── Dynamic how-to-use / drag hint ──────────────────── */}
                   <div className={`rounded-xl px-4 py-3 transition-colors duration-200 ${
                     draggingSkillId === 'ignite'
-                      ? 'bg-orange-50 border border-orange-200'
+                      ? 'bg-warn/10 border border-warn/30'
                       : draggingSkillId === 'capsule'
-                      ? 'bg-sky-50 border border-sky-200'
-                      : 'bg-gray-50 border border-gray-100'
+                      ? 'bg-brand-soft border border-brand/30'
+                      : 'bg-paper border border-ink/10'
                   }`}>
-                    <p className="pixel-font text-[9px] font-bold mb-1 text-gray-700">
+                    <p className="pixel-font text-[9px] font-bold mb-1 text-ink">
                       {draggingSkillId === 'ignite' ? '🚀 Ignite — Drop on a task!'
                         : draggingSkillId === 'capsule' ? '⏳ Capsule — Drop on a task!'
                         : '💡 How to Use'}
                     </p>
-                    <p className="text-xs text-gray-500 leading-relaxed">
+                    <p className="text-xs text-ink-soft leading-relaxed">
                       {draggingSkillId === 'ignite'
                         ? 'Drop onto any task above to start a 5-second launch countdown!'
                         : draggingSkillId === 'capsule'
@@ -360,7 +361,7 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
 
                   {/* ── Available Active Skills — drag source (BOTTOM) ──── */}
                   <div>
-                    <p className="pixel-font text-[9px] text-gray-500 mb-2">Available Skills — Drag onto a Task ↑</p>
+                    <p className="pixel-font text-[9px] text-ink-soft mb-2">Available Skills — Drag onto a Task ↑</p>
                     <Droppable droppableId="list-active" direction="horizontal" isDropDisabled>
                       {(provided) => (
                         <div ref={provided.innerRef} {...provided.droppableProps} className="flex gap-3">
@@ -373,16 +374,16 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                                   {...provided.dragHandleProps}
                                   className={`flex-1 rounded-2xl border-2 p-4 flex flex-col items-center gap-1.5 cursor-grab active:cursor-grabbing transition-all select-none
                                     ${skill.id === 'ignite'
-                                      ? 'border-orange-300 bg-orange-50'
-                                      : 'border-sky-300 bg-sky-50'}
-                                    ${snapshot.isDragging ? 'shadow-2xl scale-110 z-50 opacity-90 rotate-2' : ''}`}
+                                      ? 'border-warn/40 bg-warn/10'
+                                      : 'border-brand/40 bg-brand-soft'}
+                                    ${snapshot.isDragging ? 'shadow-hard-sm scale-110 z-50 opacity-90 rotate-2' : ''}`}
                                 >
                                   {skill.image
                                     ? <img src={skill.image} alt={skill.name} className="w-12 h-12 object-contain" draggable={false} />
                                     : <span className="text-3xl leading-none">{skill.emoji}</span>
                                   }
-                                  <span className="pixel-font text-[8px] text-gray-700">{skill.name}</span>
-                                  <span className={`pixel-font text-[7px] ${skill.id === 'ignite' ? 'text-orange-400' : 'text-sky-400'}`}>
+                                  <span className="pixel-font text-[8px] text-ink">{skill.name}</span>
+                                  <span className={`pixel-font text-[7px] ${skill.id === 'ignite' ? 'text-warn' : 'text-brand'}`}>
                                     {skill.tagline}
                                   </span>
                                 </div>
@@ -399,14 +400,14 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                         {activeLocked.map((skill) => (
                           <div
                             key={skill.id}
-                            className="flex-1 rounded-2xl border-2 border-gray-200 bg-gray-50 p-3 flex flex-col items-center gap-1 opacity-50 grayscale select-none"
+                            className="flex-1 rounded-2xl border-2 border-ink/10 bg-paper p-3 flex flex-col items-center gap-1 opacity-50 grayscale select-none"
                           >
                             {skill.image
                               ? <img src={skill.image} alt={skill.name} className="w-10 h-10 object-contain" />
                               : <span className="text-3xl leading-none">{skill.emoji}</span>
                             }
-                            <span className="pixel-font text-[8px] text-gray-500">{skill.name}</span>
-                            <Lock size={10} className="text-gray-400" />
+                            <span className="pixel-font text-[8px] text-ink-soft">{skill.name}</span>
+                            <Lock size={10} className="text-ink-soft" />
                           </div>
                         ))}
                       </div>
@@ -439,8 +440,8 @@ function TabBtn({ active, onClick, children }) {
       onClick={onClick}
       className={`flex-1 py-4 pixel-font text-[10px] transition-colors
         ${active
-          ? 'text-[#c46b9a] border-b-2 border-[#c46b9a]'
-          : 'text-gray-400'
+          ? 'text-accent-pink border-b-2 border-[#c46b9a]'
+          : 'text-ink-soft'
         }`}
     >
       {children}
@@ -498,10 +499,10 @@ function SkillInfoSheet({ skill, onClose }) {
       <div className="bg-[#fce4ef] px-6 pt-6 pb-8 h-full overflow-y-auto">
         {/* Tab strip (just shows type) */}
         <div className="flex gap-2 mb-6">
-          <div className={`px-4 py-2 rounded-xl pixel-font text-[9px] ${isPassive ? 'bg-white text-gray-800' : 'text-gray-400'}`}>
+          <div className={`px-4 py-2 rounded-xl pixel-font text-[9px] ${isPassive ? 'bg-white text-ink' : 'text-ink-soft'}`}>
             Passive Skill
           </div>
-          <div className={`px-4 py-2 rounded-xl pixel-font text-[9px] ${!isPassive ? 'bg-pink-100 text-[#c46b9a]' : 'text-gray-400'}`}>
+          <div className={`px-4 py-2 rounded-xl pixel-font text-[9px] ${!isPassive ? 'bg-accent-pink/15 text-accent-pink' : 'text-ink-soft'}`}>
             Active Skill
           </div>
         </div>
@@ -510,7 +511,7 @@ function SkillInfoSheet({ skill, onClose }) {
         <div className="flex items-center justify-center gap-4 mb-5">
           {stages.map((stage, i) => (
             <div key={i} className="flex items-center gap-2">
-              <div className={`w-20 h-20 rounded-2xl border-2 border-gray-300 bg-white flex items-center justify-center
+              <div className={`w-20 h-20 rounded-2xl border-2 border-ink/30 bg-white flex items-center justify-center
                 ${stage.dark ? 'brightness-50' : ''}`}
               >
                 {stage.img
@@ -519,27 +520,27 @@ function SkillInfoSheet({ skill, onClose }) {
                       alt={stage.label}
                       className={`w-12 h-12 object-contain ${stage.dark ? 'opacity-40' : ''}`}
                     />
-                  : <span className="pixel-font text-2xl text-gray-400">?</span>
+                  : <span className="pixel-font text-2xl text-ink-soft">?</span>
                 }
               </div>
               {i < stages.length - 1 && (
-                <span className="text-gray-500 text-xl font-bold">→</span>
+                <span className="text-ink-soft text-xl font-bold">→</span>
               )}
             </div>
           ))}
         </div>
 
         {/* Name + description */}
-        <h2 className="pixel-font text-[14px] text-gray-800 mb-2">{skill.tagline}</h2>
-        <p className="text-sm text-gray-600 leading-relaxed mb-4">{skill.description}</p>
+        <h2 className="pixel-font text-[14px] text-ink mb-2">{skill.tagline}</h2>
+        <p className="text-sm text-ink-soft leading-relaxed mb-4">{skill.description}</p>
 
         {/* Example button */}
-        <button className="w-full rounded-full border-2 border-gray-800 py-2 pixel-font text-[10px] text-gray-800 mb-3">
+        <button className="w-full rounded-full border-2 border-ink py-2 pixel-font text-[10px] text-ink mb-3">
           Example
         </button>
 
         {/* MBTI tags */}
-        <p className="text-center text-sm text-gray-500 mb-4">
+        <p className="text-center text-sm text-ink-soft mb-4">
           {skill.mbtiMatch.join(' / ')}
         </p>
 
@@ -548,10 +549,10 @@ function SkillInfoSheet({ skill, onClose }) {
           <button
             onClick={handleEquip}
             disabled={isEquipped}
-            className={`w-full rounded-full py-4 pixel-font text-[12px] shadow-sm transition-all
+            className={`w-full rounded-full py-4 pixel-font text-[12px]  transition-all
               ${isEquipped
-                ? 'bg-gray-200 text-gray-400'
-                : 'bg-white border-2 border-gray-800 text-gray-800 active:scale-[0.98]'
+                ? 'bg-brand-soft/60 text-ink-soft'
+                : 'bg-white border-2 border-ink text-ink active:scale-[0.98]'
               }`}
           >
             {isEquipped ? 'Equipped ✓' : `Equip | ${skill.cost} 🪙`}
@@ -560,10 +561,10 @@ function SkillInfoSheet({ skill, onClose }) {
           <button
             onClick={handleBuy}
             disabled={coins < skill.cost}
-            className={`w-full rounded-full py-4 pixel-font text-[12px] shadow-sm transition-all
+            className={`w-full rounded-full py-4 pixel-font text-[12px]  transition-all
               ${coins < skill.cost
-                ? 'bg-gray-200 text-gray-400'
-                : 'bg-white border-2 border-gray-800 text-gray-800 active:scale-[0.98]'
+                ? 'bg-brand-soft/60 text-ink-soft'
+                : 'bg-white border-2 border-ink text-ink active:scale-[0.98]'
               }`}
           >
             {coins < skill.cost ? 'Not enough coins' : `Buy & Equip | ${skill.cost} 🪙`}

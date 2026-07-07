@@ -79,8 +79,7 @@ function RegisterPage() {
 
       <div className="mx-auto max-w-2xl mt-8 px-6 flex flex-col items-center w-full gap-3">
         <h2
-          className="text-center text-xl md:text-2xl font-bold text-gray-900"
-          style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
+          className="thai-font text-center text-xl md:text-2xl font-bold text-ink"
         >
           ลงทะเบียนเพื่อเริ่มใช้งาน
         </h2>

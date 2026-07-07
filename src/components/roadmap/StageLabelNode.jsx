@@ -13,10 +13,10 @@ export default function StageLabelNode({ id, data, selected }) {
 
   return (
     <div
-      className={`group min-w-[100px] px-4 py-1.5 rounded-full border transition-all ${
+      className={`group min-w-[100px] px-4 py-1.5 rounded-xl border-2 transition-all ${
         selected
-          ? 'border-brand bg-brand/10'
-          : 'border-brand/30 bg-white/70 hover:border-brand/60'
+          ? 'border-ink bg-brand-soft shadow-hard-sm'
+          : 'border-ink/30 bg-surface hover:border-ink/60'
       }`}
     >
       <input

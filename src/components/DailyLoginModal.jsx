@@ -19,19 +19,19 @@ const MOODS = [
 ]
 
 const BG_COLORS = {
-  1: 'bg-gray-100 border-gray-300',
-  2: 'bg-blue-50  border-blue-200',
-  3: 'bg-yellow-50 border-yellow-200',
-  4: 'bg-green-50  border-green-200',
-  5: 'bg-emerald-50 border-emerald-300',
+  1: 'bg-paper border-ink/30',
+  2: 'bg-brand-soft border-brand/30',
+  3: 'bg-warn/10 border-warn/30',
+  4: 'bg-good/10 border-good/30',
+  5: 'bg-good/20 border-good/40',
 }
 
 const SELECTED_RING = {
-  1: 'ring-gray-400',
-  2: 'ring-blue-300',
-  3: 'ring-yellow-300',
-  4: 'ring-green-400',
-  5: 'ring-emerald-400',
+  1: 'ring-ink/40',
+  2: 'ring-brand',
+  3: 'ring-warn',
+  4: 'ring-good',
+  5: 'ring-good',
 }
 
 export default function DailyLoginModal({ onClose }) {
@@ -59,8 +59,8 @@ export default function DailyLoginModal({ onClose }) {
           <>
             {/* Header */}
             <div className="text-center">
-              <p className="pixel-font text-[11px] text-gray-800 mb-1">How are you today?</p>
-              <p className="text-xs text-gray-400">Tap a mood to check in — unlocks your daily stack!</p>
+              <p className="pixel-font text-[11px] text-ink mb-1">How are you today?</p>
+              <p className="text-xs text-ink-soft">Tap a mood to check in — unlocks your daily stack!</p>
             </div>
 
             {/* Mood buttons */}
@@ -74,7 +74,7 @@ export default function DailyLoginModal({ onClose }) {
                     ${selected === level ? `ring-2 ring-offset-1 scale-105 ${SELECTED_RING[level]}` : ''}`}
                 >
                   <span className="text-2xl leading-none">{emoji}</span>
-                  <span className="pixel-font text-[7px] text-gray-600">{label}</span>
+                  <span className="pixel-font text-[10px] text-ink-soft">{label}</span>
                 </button>
               ))}
             </div>
@@ -83,7 +83,7 @@ export default function DailyLoginModal({ onClose }) {
             <button
               onClick={handleConfirm}
               disabled={!selected}
-              className="w-full rounded-xl bg-gray-900 text-white py-3 pixel-font text-[10px] active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-full rounded-xl bg-ink text-white py-3 pixel-font text-[10px] active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {selected ? `Check In as "${MOODS[selected - 1].label}"` : 'Select a mood first'}
             </button>
@@ -91,7 +91,7 @@ export default function DailyLoginModal({ onClose }) {
             {/* Skip */}
             <button
               onClick={onClose}
-              className="text-center pixel-font text-[8px] text-gray-400 active:opacity-60"
+              className="text-center pixel-font text-[10px] text-ink-soft active:opacity-60"
             >
               Skip for today
             </button>
@@ -101,27 +101,27 @@ export default function DailyLoginModal({ onClose }) {
             {/* Success header */}
             <div className="text-center">
               <p className="text-4xl mb-2">{MOODS[selected - 1].emoji}</p>
-              <p className="pixel-font text-[11px] text-gray-800 mb-1">
+              <p className="pixel-font text-[11px] text-ink mb-1">
                 Feeling {MOODS[selected - 1].label}!
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-ink-soft">
                 Stack +1 earned! Total stacks:{' '}
-                <span className="font-bold text-pink-500">{totalStacks}</span>
+                <span className="font-bold text-accent-pink">{totalStacks}</span>
               </p>
             </div>
 
             {/* Heatmap */}
             <div className="bg-[#161b22] rounded-2xl p-4">
-              <p className="pixel-font text-[8px] text-[#636e7b] mb-3">Mood Log — Past Year</p>
+              <p className="pixel-font text-[10px] text-[#636e7b] mb-3">Mood Log — Past Year</p>
               <MoodHeatmap feelingNotes={feelingNotes} />
             </div>
 
             {/* Close */}
             <button
               onClick={onClose}
-              className="w-full rounded-xl bg-gray-900 text-white py-3 pixel-font text-[10px] active:scale-95 transition-transform"
+              className="w-full rounded-xl bg-ink text-white py-3 pixel-font text-[10px] active:scale-95 transition-transform"
             >
-              Let's go! 🚀
+              Let&apos;s go!
             </button>
           </>
         )}

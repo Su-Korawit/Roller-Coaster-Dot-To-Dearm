@@ -22,8 +22,8 @@ export default function ProcessNode({ id, data, selected }) {
 
   return (
     <div
-      className={`relative w-32 h-32 rounded-2xl border-2 bg-white shadow-md p-2.5 flex flex-col gap-1 transition-all ${
-        selected ? 'border-brand shadow-brand/30 shadow-lg' : 'border-brand/40'
+      className={`relative w-32 h-32 rounded-xl border-2 bg-surface p-2.5 flex flex-col gap-1 transition-all ${
+        selected ? 'border-ink shadow-hard-sm' : 'border-ink/30 shadow-none'
       }`}
       style={data.color ? { borderColor: data.color } : undefined}
     >
@@ -49,13 +49,13 @@ export default function ProcessNode({ id, data, selected }) {
       />
 
       <input
-        className="w-full text-[12px] font-semibold text-ink bg-transparent outline-none placeholder:text-gray-300 focus:placeholder:text-gray-200"
+        className="w-full text-[12px] font-semibold text-ink bg-transparent outline-none placeholder:text-ink-soft/50 focus:placeholder:text-ink-soft"
         placeholder="Title"
         value={data.label}
         onChange={onLabelChange}
       />
       <textarea
-        className="w-full flex-1 text-[10px] text-gray-500 bg-transparent outline-none resize-none placeholder:text-gray-300 focus:placeholder:text-gray-200 leading-tight"
+        className="w-full flex-1 text-[10px] text-ink-soft bg-transparent outline-none resize-none placeholder:text-ink-soft/50 focus:placeholder:text-ink-soft leading-tight"
         placeholder="Note (optional)"
         value={data.note}
         onChange={onNoteChange}

@@ -166,9 +166,13 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 pb-3 shrink-0">
-          <p className="pixel-font text-[11px] text-gray-700">Settings</p>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={18} />
+          <p className="pixel-font text-[11px] text-ink">Settings</p>
+          <button
+            onClick={onClose}
+            aria-label="ปิด"
+            className="neo-btn w-9 h-9 flex items-center justify-center rounded-lg bg-surface text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          >
+            <X size={16} strokeWidth={2.5} aria-hidden="true" />
           </button>
         </div>
 
@@ -178,15 +182,15 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
 
           {activeTab === 'profile' && (
           <section className="space-y-3">
-            <p className="pixel-font text-[9px] text-purple-500 uppercase tracking-wide">Edit Profile</p>
+            <p className="pixel-font text-[9px] text-brand-strong uppercase tracking-wide">Edit Profile</p>
 
             {/* Avatar picker */}
             <div className="flex items-center gap-4">
               <div className="relative shrink-0">
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-purple-100 flex items-center justify-center border-2 border-purple-200">
+                <div className="w-16 h-16 rounded-full overflow-hidden bg-brand-soft flex items-center justify-center border-2 border-brand/30">
                   {currentPhoto
                     ? <img src={currentPhoto} alt="" className="w-full h-full object-cover" />
-                    : <span className="text-2xl font-bold text-purple-400">{initials}</span>}
+                    : <span className="text-2xl font-bold text-brand-strong">{initials}</span>}
                 </div>
                 <button
                   onClick={() => fileInputRef.current?.click()}
@@ -206,7 +210,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
                 {authUser?.photoURL && photoURL !== authUser.photoURL && (
                   <button
                     onClick={() => { setNewPhotoFile(null); setNewPhotoPreview(null); setPhotoURL(authUser.photoURL) }}
-                    className="text-xs text-gray-400 hover:text-gray-600 text-left"
+                    className="text-xs text-ink-soft hover:text-ink text-left"
                   >
                     ใช้ Google Photo
                   </button>
@@ -224,26 +228,26 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
 
             {/* Display name */}
             <div>
-              <label className="thai-font text-xs text-gray-400 block mb-1">ชื่อที่แสดง</label>
+              <label className="thai-font text-xs text-ink-soft block mb-1">ชื่อที่แสดง</label>
               <input
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="ชื่อของคุณ"
-                className="w-full rounded-xl border border-purple-200 px-3 py-2 text-sm outline-none focus:border-purple-400"
+                className="w-full rounded-xl border border-brand/30 px-3 py-2 text-sm outline-none focus:border-brand"
               />
             </div>
 
             {/* Bio */}
             <div>
-              <label className="pixel-font text-[8px] text-gray-400 block mb-1">
-                Bio <span className="text-gray-300">({bio.length}/100)</span>
+              <label className="pixel-font text-[8px] text-ink-soft block mb-1">
+                Bio <span className="text-ink-soft/50">({bio.length}/100)</span>
               </label>
               <textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value.slice(0, 100))}
                 rows={2}
                 placeholder="แนะนำตัวสั้นๆ..."
-                className="w-full rounded-xl border border-purple-200 px-3 py-2 text-sm outline-none focus:border-purple-400 resize-none"
+                className="w-full rounded-xl border border-brand/30 px-3 py-2 text-sm outline-none focus:border-brand resize-none"
               />
             </div>
 
@@ -263,10 +267,10 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
 
             {PRIVACY_ITEMS.map(({ key, label }) => (
               <div key={key}>
-                <p className="text-xs font-semibold text-gray-700 mb-2">{label}</p>
+                <p className="text-xs font-semibold text-ink mb-2">{label}</p>
                 <div className="space-y-2 pl-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">คนที่ไม่ได้ follow เห็นได้</span>
+                    <span className="text-xs text-ink-soft">คนที่ไม่ได้ follow เห็นได้</span>
                     <Toggle
                       checked={privacy[key]?.public ?? false}
                       onChange={(v) => updatePrivacy(key, 'public', v)}
@@ -274,7 +278,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
                     />
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">คนที่ follow เห็นได้</span>
+                    <span className="text-xs text-ink-soft">คนที่ follow เห็นได้</span>
                     <Toggle
                       checked={privacy[key]?.followers ?? true}
                       onChange={(v) => updatePrivacy(key, 'followers', v)}
@@ -289,10 +293,10 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
 
           {activeTab === 'general' && (
           <section className="space-y-3">
-            <p className="pixel-font text-[9px] text-purple-500 uppercase tracking-wide">General</p>
+            <p className="pixel-font text-[9px] text-brand-strong uppercase tracking-wide">General</p>
 
             <div>
-              <p className="pixel-font text-[8px] text-gray-400 mb-1.5">AI Output Language</p>
+              <p className="pixel-font text-[8px] text-ink-soft mb-1.5">AI Output Language</p>
               <div className="flex gap-2">
                 {['Thai', 'English'].map((lang) => (
                   <button
@@ -301,7 +305,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
                     className={`flex-1 rounded-xl py-2 text-sm border transition-colors ${
                       aiLanguage === lang
                         ? 'bg-brand border-brand text-white font-semibold'
-                        : 'bg-white border-purple-200 text-purple-500'
+                        : 'bg-white border-brand/30 text-brand-strong'
                     }`}
                   >
                     {lang === 'Thai' ? 'ภาษาไทย' : 'English'}
@@ -311,7 +315,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
             </div>
 
             <div>
-              <p className="pixel-font text-[8px] text-gray-400 mb-1.5">Movement Control</p>
+              <p className="pixel-font text-[8px] text-ink-soft mb-1.5">Movement Control</p>
               <div className="flex gap-2">
                 {[
                   { value: 'joystick',    label: 'Joystick' },
@@ -323,7 +327,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
                     className={`flex-1 rounded-xl py-2 text-sm border transition-colors ${
                       controlMode === value
                         ? 'bg-brand border-brand text-white font-semibold'
-                        : 'bg-white border-purple-200 text-purple-500'
+                        : 'bg-white border-brand/30 text-brand-strong'
                     }`}
                   >
                     {label}
@@ -334,14 +338,14 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
 
             <button
               onClick={handleResetOnboarding}
-              className="w-full rounded-xl border border-gray-200 text-gray-600 py-2 text-sm hover:bg-gray-50 transition-colors"
+              className="w-full rounded-xl border border-ink/20 text-ink-soft py-2 text-sm hover:bg-brand-soft/60 transition-colors"
             >
               Reset Onboarding
             </button>
 
             <button
               onClick={handleSignOut}
-              className="w-full rounded-xl border border-red-200 text-red-500 py-2 text-sm hover:bg-red-50 transition-colors"
+              className="w-full rounded-xl border border-danger/30 text-danger py-2 text-sm hover:bg-danger/10 transition-colors"
             >
               Sign Out
             </button>
@@ -350,11 +354,11 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
 
           {activeTab === 'interface' && (
           <section className="space-y-4">
-            <p className="pixel-font text-[9px] text-purple-500 uppercase tracking-wide">Interface</p>
+            <p className="pixel-font text-[9px] text-brand-strong uppercase tracking-wide">Interface</p>
 
             {UI_VISIBILITY_ITEMS.map(({ key, label }) => (
               <div key={key} className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-700">{label}</span>
+                <span className="text-xs font-semibold text-ink">{label}</span>
                 <Toggle
                   checked={uiVisibility?.[key] ?? true}
                   onChange={(v) => setUiVisibility(key, v)}
