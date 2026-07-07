@@ -30,6 +30,9 @@ GOOGLE_APPLICATION_CREDENTIALS=./serviceAccountKey.json node scripts/uploadAsset
 
 # Upload Sprout Lands assets from the Assets repo (see d:\Ikkyusan\Downloads\Assets)
 GOOGLE_APPLICATION_CREDENTIALS=./serviceAccountKey.json node scripts/pushToFirebase.mjs
+
+# Refresh the /api/mytcas fallback snapshot (run when MyTCAS data is healthy)
+GOOGLE_APPLICATION_CREDENTIALS=./serviceAccountKey.json npm run refresh-tcas-snapshot
 ```
 
 ---
