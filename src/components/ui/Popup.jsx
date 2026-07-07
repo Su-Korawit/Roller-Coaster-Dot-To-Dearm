@@ -50,8 +50,8 @@ export default function Popup({
         />
       )}
       <div
-        className={`relative bg-white flex flex-col overflow-hidden w-full ${maxW} md:mx-auto ${maxHeight} ${
-          isSheet ? 'rounded-t-3xl' : 'rounded-3xl'
+        className={`relative flex flex-col overflow-hidden w-full ${maxW} md:mx-auto ${maxHeight} ${
+          isSheet ? 'neo-sheet animate-sheet-up' : 'neo-card'
         }`}
         style={clearNav ? { paddingBottom: NAV_SAFE_PB } : undefined}
         onClick={(e) => e.stopPropagation()}
