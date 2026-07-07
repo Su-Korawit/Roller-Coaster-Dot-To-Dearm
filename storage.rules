@@ -88,6 +88,15 @@ service firebase.storage {
       allow write: if isSuperAdmin();
     }
 
+    // Server-consumed public datasets (e.g. the MyTCAS snapshot that
+    // /api/mytcas falls back to during TCAS cycle transitions). World-readable
+    // by design — the Vercel function fetches these anonymously via alt=media.
+    // Written only by scripts/refreshTcasSnapshot.mjs (admin SDK) or the owner.
+    match /data/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
     // Welcome page media — game preview, news covers, testimonial avatars.
     // Public read (download URLs are public tokens); super-admin writes via Dashboard.
     match /welcome/{allPaths=**} {
