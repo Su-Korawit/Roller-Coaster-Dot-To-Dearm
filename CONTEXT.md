@@ -125,7 +125,7 @@ because Firestore queries filter on it. See [[Profile]] in Domain Vocabulary.
 
 | What | Where | How |
 |---|---|---|
-| External data (camphub, MyTCAS) | Vercel `/api/*` | `fetch('/api/camphub')` |
+| External data (camphub, MyTCAS) | Vercel `/api/*` | `fetch('/api/camphub')`; MyTCAS falls back to a Storage snapshot (`data/mytcas/`, refreshed via `npm run refresh-tcas-snapshot`) when the live dataset is mid-rebuild between TCAS cycles |
 | Payments, business logic | Firebase Cloud Functions | Called via Firebase SDK |
 | Dev mocks | Vite middleware in `vite.config.js` | Auto; matches prod routes |
 
