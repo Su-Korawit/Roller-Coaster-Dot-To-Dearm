@@ -18,7 +18,7 @@ function ProgramRoundTags({ programId }) {
       {rounds.map((r) => (
         <span
           key={r.id ?? r.round}
-          className="rounded-full bg-yellow-300 px-2 py-0.5 text-[10px] font-medium text-black"
+          className="rounded-full bg-warn px-2 py-0.5 text-[10px] font-medium text-ink"
         >
           {r.name ?? `รอบ ${r.round}`}
         </span>
@@ -44,8 +44,8 @@ function PlanCard({ plan, selected, onSelect, onDelete, dragHandleProps }) {
           onSelect()
         }
       }}
-      className={`flex w-full items-start gap-3 rounded-2xl border bg-white p-4 text-left transition-all hover:shadow-md active:scale-[0.98] ${
-        selected ? 'border-brand-strong ring-2 ring-brand-strong bg-brand-soft' : 'border-gray-200'
+      className={`flex w-full items-start gap-3 rounded-xl border-2 bg-surface p-4 text-left transition-all hover:bg-brand-soft/60 active:scale-[0.98] ${
+        selected ? 'border-ink shadow-hard-sm bg-brand-soft' : 'border-ink/25'
       }`}
       aria-label={`แผน ${plan.id}`}
       {...dragHandleProps}
@@ -65,7 +65,7 @@ function PlanCard({ plan, selected, onSelect, onDelete, dragHandleProps }) {
 
       <div className="min-w-0 flex-1">
         <p className="pixel-font truncate text-[11px] text-ink">{uniName}</p>
-        <p className="thai-font mt-0.5 truncate text-xs text-gray-500">{programName}</p>
+        <p className="thai-font mt-0.5 truncate text-xs text-ink-soft">{programName}</p>
         {plan.program && <ProgramRoundTags programId={plan.program} />}
       </div>
 
@@ -75,7 +75,7 @@ function PlanCard({ plan, selected, onSelect, onDelete, dragHandleProps }) {
           event.stopPropagation()
           onDelete()
         }}
-        className="shrink-0 rounded-xl p-2 text-red-400 hover:bg-red-50 hover:text-red-600"
+        className="shrink-0 rounded-lg p-2 text-danger hover:bg-brand-soft"
         aria-label={`ลบแผน ${plan.id}`}
       >
         <Trash2 size={18} />
@@ -123,8 +123,8 @@ export default function PlanList({ onEditPlan, onNext, onBack }) {
       <StepScreen
         title="เลือกสายการเรียน"
         subtitle={
-          <div className="flex items-center justify-between rounded-2xl bg-brand-soft px-4 py-3">
-            <p className="thai-font text-xs text-gray-600">
+          <div className="flex items-center justify-between rounded-xl border-2 border-ink bg-brand-soft px-4 py-3">
+            <p className="thai-font text-xs text-ink-soft">
               เพิ่มได้อีก {remaining} โปรแกรม
             </p>
             <ProgressRing value={plans.length} total={MAX_PLANS} />
@@ -138,8 +138,8 @@ export default function PlanList({ onEditPlan, onNext, onBack }) {
       >
         <div className="mx-auto mt-3 w-full max-w-3xl space-y-3 pb-20">
           {plans.length === 0 ? (
-            <div className="rounded-2xl bg-white/80 px-4 py-8 text-center">
-              <p className="thai-font text-sm text-gray-500">ยังไม่มีแผน กด + เพื่อเพิ่มแผนแรกของคุณ</p>
+            <div className="neo-card bg-surface px-4 py-8 text-center">
+              <p className="thai-font text-sm text-ink-soft">ยังไม่มีแผน กด + เพื่อเพิ่มแผนแรกของคุณ</p>
             </div>
           ) : (
             <DragDropContext onDragEnd={handleDragEnd}>
@@ -177,7 +177,7 @@ export default function PlanList({ onEditPlan, onNext, onBack }) {
         type="button"
         onClick={handleAdd}
         disabled={plans.length >= MAX_PLANS}
-        className="absolute bottom-24 right-6 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-brand-strong text-2xl font-bold text-white shadow-lg transition hover:bg-brand disabled:opacity-50"
+        className="absolute bottom-24 right-6 z-10 neo-btn flex h-14 w-14 items-center justify-center rounded-lg bg-brand-strong text-2xl font-bold text-white disabled:opacity-50"
         aria-label="Add plan"
       >
         +

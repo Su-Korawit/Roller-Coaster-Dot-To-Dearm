@@ -11,7 +11,7 @@ function ProgramRoundBadge({ programId }) {
   const { rounds } = useTcasRounds(programId)
   if (!rounds.length) return null
   return (
-    <span className="inline-block rounded-full bg-yellow-300 px-2 py-0.5 text-[10px] font-medium text-black">
+    <span className="inline-block rounded-full bg-warn px-2 py-0.5 text-[10px] font-medium text-ink">
       {rounds.map((r) => r.name ?? `รอบ ${r.round}`).join(' · ')}
     </span>
   )
@@ -70,13 +70,12 @@ function ProgramStep({ onNext, onBack }) {
     <button
       type="button"
       onClick={() => { setSelectedFaculty(null); setQuery('') }}
-      className="text-sm font-semibold text-gray-600"
-      style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
+      className="thai-font text-sm font-semibold text-ink-soft"
     >
       ← เลือกคณะใหม่
     </button>
   ) : (
-    <h2 className="text-sm font-bold text-gray-700" style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
+    <h2 className="thai-font text-sm font-bold text-ink">
       เลือกคณะ
     </h2>
   )
@@ -95,25 +94,24 @@ function ProgramStep({ onNext, onBack }) {
     >
       {!university ? (
         <div className="mt-10 text-center">
-          <p className="text-sm text-gray-500" style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
+          <p className="thai-font text-sm text-ink-soft">
             กรุณาเลือกมหาวิทยาลัยก่อน
           </p>
           <button
             type="button"
             onClick={onBack}
-            className="mt-3 rounded-2xl bg-brand-strong px-4 py-2 text-sm text-white"
-            style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
+            className="neo-btn mt-3 rounded-xl bg-brand-strong px-4 py-2 thai-font text-sm text-white"
           >
             ไปเลือกมหาวิทยาลัย
           </button>
         </div>
       ) : !selectedFaculty ? (
         facLoading ? (
-          <p className="py-10 text-center text-sm text-gray-500" style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
+          <p className="thai-font py-10 text-center text-sm text-ink-soft">
             กำลังโหลดคณะ...
           </p>
         ) : facError ? (
-          <p className="py-10 text-center text-sm text-red-500" style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
+          <p className="thai-font py-10 text-center text-sm text-danger">
             โหลดข้อมูลไม่สำเร็จ
           </p>
         ) : (
@@ -130,11 +128,11 @@ function ProgramStep({ onNext, onBack }) {
         )
       ) : (
         progLoading ? (
-          <p className="py-10 text-center text-sm text-gray-500" style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
+          <p className="thai-font py-10 text-center text-sm text-ink-soft">
             กำลังโหลดหลักสูตร...
           </p>
         ) : progError ? (
-          <p className="py-10 text-center text-sm text-red-500" style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}>
+          <p className="thai-font py-10 text-center text-sm text-danger">
             โหลดข้อมูลไม่สำเร็จ
           </p>
         ) : (

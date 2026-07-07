@@ -40,31 +40,25 @@ function MbtiStep({ onNext, onBack }) {
               onClick={() => handleSelect(item.code)}
               aria-pressed={selected}
               aria-label={`${item.code} ${item.name}`}
-              className={`flex flex-col items-center rounded-2xl border bg-white p-3 transition-all active:scale-[0.98] ${
-                selected ? 'border-brand-strong ring-2 ring-brand-strong bg-brand-soft' : 'border-gray-200 hover:border-brand'
+              className={`flex flex-col items-center rounded-xl border-2 bg-surface p-3 transition-all active:scale-[0.98] ${
+                selected ? 'border-ink shadow-hard-sm bg-brand-soft' : 'border-ink/25 hover:border-ink/60'
               }`}
             >
               <CharacterSprite code={item.code} />
               <p className="pixel-font mt-2 text-xs font-bold text-ink">{item.code}</p>
-              <p className="text-[10px] text-gray-500">{item.name}</p>
+              <p className="thai-font text-[10px] text-ink-soft">{item.name}</p>
             </button>
           )
         })}
       </div>
 
       {description && (
-        <p
-          className="mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-brand-strong"
-          style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
-        >
+        <p className="thai-font mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-brand-strong">
           {description}
         </p>
       )}
 
-      <p
-        className="mx-auto mt-3 max-w-2xl text-center text-xs text-gray-500"
-        style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
-      >
+      <p className="thai-font mx-auto mt-3 max-w-2xl text-center text-xs text-ink-soft">
         หากต้องการค้นหาตัวเองให้ชัดเจนขึ้น{' '}
         <a
           href="https://personality.co/"

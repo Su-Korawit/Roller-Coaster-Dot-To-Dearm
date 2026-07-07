@@ -86,15 +86,15 @@ export function UniversityLogo({ uni }) {
   if (stage === 'cloud' && !cloudResolved) {
     return (
       <div
-        className="mx-auto h-14 w-14 md:h-16 md:w-16 lg:h-20 lg:w-20 rounded-full bg-gray-100 animate-pulse"
+        className="mx-auto h-14 w-14 md:h-16 md:w-16 lg:h-20 lg:w-20 rounded-full bg-paper animate-pulse"
         aria-hidden="true"
       />
     )
   }
 
   return (
-    <div className="mx-auto flex h-14 w-14 md:h-16 md:w-16 lg:h-20 lg:w-20 items-center justify-center rounded-full bg-linear-to-br from-indigo-400 to-purple-500">
-      <span className="pixel-font text-[9px] md:text-[11px] font-bold text-white">{badgeText(uni)}</span>
+    <div className="mx-auto flex h-14 w-14 md:h-16 md:w-16 lg:h-20 lg:w-20 items-center justify-center rounded-full bg-brand-strong">
+      <span className="pixel-font text-[10px] md:text-[11px] font-bold text-white">{badgeText(uni)}</span>
     </div>
   )
 }
@@ -138,19 +138,13 @@ function UniversityStep({ onNext, onBack }) {
       onBack={onBack}
       nextDisabled={!selected}
     >
-      <div className="mx-auto max-w-5xl rounded-[20px] bg-white/55 p-4 md:p-6">
+      <div className="mx-auto max-w-5xl neo-card bg-surface p-4 md:p-6">
         {loading ? (
-          <p
-            className="py-10 text-center text-sm text-gray-500"
-            style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
-          >
+          <p className="thai-font py-10 text-center text-sm text-ink-soft">
             กำลังโหลดข้อมูล...
           </p>
         ) : error ? (
-          <p
-            className="py-10 text-center text-sm text-red-500"
-            style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
-          >
+          <p className="thai-font py-10 text-center text-sm text-danger">
             โหลดข้อมูลไม่สำเร็จ ลองใหม่อีกครั้ง
           </p>
         ) : (
@@ -161,9 +155,9 @@ function UniversityStep({ onNext, onBack }) {
                 onClick={() => commitUniversity(university.university_id)}
                 aria-label={university.university_name_th}
                 aria-pressed={selected === university.university_id}
-                className={`relative rounded-2xl bg-white p-3 transition-all hover:shadow-md active:scale-95
+                className={`relative rounded-xl bg-surface border-2 p-3 transition-all active:scale-95
                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1
-                  ${selected === university.university_id ? 'ring-2 ring-brand-strong border-2 border-brand-strong shadow-md' : 'shadow-sm border border-gray-100'}`}
+                  ${selected === university.university_id ? 'border-ink shadow-hard-sm bg-brand-soft' : 'border-ink/25 hover:border-ink/60'}`}
               >
                 <UniversityLogo uni={university} />
               </button>

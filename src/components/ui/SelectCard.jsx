@@ -1,7 +1,6 @@
 /**
  * SelectCard — selectable card used by Career and Mastery pages.
- * Shows name + optional detail text. Pink ring when selected.
- * Aria: role="option" + aria-selected for screen readers.
+ * Ink border + pressed brand fill when selected (design.md §4).
  */
 export default function SelectCard({ name, detail, selected, onClick }) {
   return (
@@ -10,25 +9,17 @@ export default function SelectCard({ name, detail, selected, onClick }) {
       aria-selected={selected}
       onClick={onClick}
       className={`
-        flex w-full items-start overflow-hidden rounded-2xl bg-white text-left
-        transition-all hover:shadow-md active:scale-[0.98]
+        flex w-full items-start overflow-hidden rounded-xl text-left border-2 transition-all
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1
-        ${selected ? 'ring-4 ring-pink-400 shadow-md' : 'ring-0 shadow-sm'}
+        ${selected
+          ? 'border-ink bg-brand-soft shadow-hard-sm'
+          : 'border-ink/25 bg-surface hover:border-ink/60'}
       `}
     >
       <div className="px-4 py-3">
-        <p
-          className="pixel-font text-sm font-bold text-gray-900 leading-snug"
-        >
-          {name}
-        </p>
+        <p className="thai-font text-sm font-bold text-ink leading-snug">{name}</p>
         {detail && (
-          <p
-            className="mt-1 text-xs leading-snug text-gray-500"
-            style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
-          >
-            {detail}
-          </p>
+          <p className="thai-font mt-1 text-xs leading-snug text-ink-soft">{detail}</p>
         )}
       </div>
     </button>

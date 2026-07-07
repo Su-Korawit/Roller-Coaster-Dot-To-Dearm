@@ -64,7 +64,20 @@ function OnboardingModal() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-white">
+    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-paper">
+      {step > 0 && subStep === null && (
+        <div className="flex items-center justify-between px-5 pt-4 shrink-0">
+          <span className="pixel-font text-[10px] text-ink">STEP {step}/{LAST_MAIN_STEP}</span>
+          <div className="flex gap-1" aria-hidden="true">
+            {[1, 2].map((s) => (
+              <span
+                key={s}
+                className={`w-6 h-2 border-2 border-ink ${s <= step ? 'bg-brand-strong' : 'bg-surface'}`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
       {renderCurrentStep()}
     </div>
   )
