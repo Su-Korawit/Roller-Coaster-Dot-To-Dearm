@@ -115,23 +115,6 @@ html {
   font-family: 'Noto Sans Thai', sans-serif;
 }
 
-.title-gradient {
-  /* background: linear-gradient(90deg, #f15fa8 0%, #f89ccd 55%, #5f3457 100%); */
-  background: linear-gradient(90deg, #d93d8c 0%, #e36aa8 55%, #3f1f3a 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.title-soft-gradient {
-  /* background: linear-gradient(90deg, #5cc5cf 0%, #e67aa5 52%, #4fd18a 100%); */
-  background: linear-gradient(90deg, #1f3a5f, #5a2a6e, #1f5f4a);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-}
-
 /* ── Welcome page: neo-brutalist "pixel kawaii" surface language ───────────── */
 .neo-card {
   border: 2px solid var(--color-ink);

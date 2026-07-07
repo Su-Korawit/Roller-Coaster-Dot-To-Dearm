@@ -62,15 +62,15 @@ function RegisterPage() {
       <TopBar icon="♫" />
 
       <div className="mx-auto max-w-2xl mt-4 px-6 text-center">
-        <h1 className="title-gradient pixel-font text-2xl md:text-3xl leading-snug">Roller Coaster</h1>
-        <p className="title-gradient pixel-font mt-2 text-xs md:text-sm leading-tight">The best solution</p>
-        <p className="title-gradient pixel-font text-xs md:text-sm leading-tight">For self-discovery.</p>
+        <h1 className="pixel-font pixel-title text-2xl md:text-3xl leading-snug">Roller Coaster</h1>
+        <p className="pixel-font pixel-title mt-2 text-xs md:text-sm leading-tight">The best solution</p>
+        <p className="pixel-font pixel-title text-xs md:text-sm leading-tight">For self-discovery.</p>
       </div>
 
       <div className="mx-auto max-w-2xl mt-5 px-6 text-center">
         <div className="mx-auto mb-4 h-px w-full bg-black/80" />
         <p
-          className="title-soft-gradient pixel-font text-xl md:text-2xl py-4 transition-opacity duration-500"
+          className="pixel-font pixel-title text-xl md:text-2xl py-4 transition-opacity duration-500"
           style={{ opacity: visible ? 1 : 0 }}
         >
           {LOOP_WORDS[wordIndex]}

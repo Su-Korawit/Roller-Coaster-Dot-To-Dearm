@@ -48,8 +48,8 @@ export default function ProgramDetail({ programId, programName, onBack, onConfir
   return (
     <section className="onboarding-bg flex h-full flex-col">
       <div className="shrink-0 px-6 pt-4">
-        <p className="text-xs text-gray-400">หลักสูตร</p>
-        <h1 className="title-gradient pixel-font text-lg leading-tight">{programName ?? programId}</h1>
+        <p className="thai-font text-xs text-ink-soft">หลักสูตร</p>
+        <h1 className="thai-font text-lg font-bold text-ink leading-tight">{programName ?? programId}</h1>
         <h2 className="mt-4 text-xs font-bold tracking-widest text-brand-strong">ADMISSION ROUNDS</h2>
       </div>
 

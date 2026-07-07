@@ -1,4 +1,5 @@
 import SearchBar from './SearchBar'
+import Button from './Button'
 
 /**
  * StepScreen — shared layout shell for onboarding wizard steps.
@@ -22,7 +23,7 @@ export default function StepScreen({
   return (
     <section className="onboarding-bg flex h-full flex-col">
       <div className={`mx-auto w-full ${maxWidth} shrink-0 px-6 pt-6`}>
-        <h1 className="title-gradient pixel-font text-xl leading-tight">{title}</h1>
+        <h1 className="thai-font text-xl font-bold text-ink leading-tight">{title}</h1>
         {subtitle && <div className="mb-1 mt-2">{subtitle}</div>}
       </div>
 
@@ -30,7 +31,7 @@ export default function StepScreen({
         {children}
       </div>
 
-      <div className="sticky bottom-0 bg-white/95 backdrop-blur border-t border-white/60">
+      <div className="sticky bottom-0 bg-paper/95 border-t-2 border-ink">
         <div className={`mx-auto w-full ${maxWidth} px-6 py-3 space-y-3`}>
           {!hideSearch && onSearchChange && (
             <SearchBar
@@ -44,22 +45,17 @@ export default function StepScreen({
               <button
                 type="button"
                 onClick={onBack}
-                className="flex-1 rounded-2xl border border-gray-200 py-3 text-sm text-gray-600"
+                className="neo-btn flex-1 rounded-xl border-2 border-ink bg-surface py-3 thai-font text-sm text-ink"
               >
                 ย้อนกลับ
               </button>
             )}
-            <button
-              type="button"
-              onClick={onNext}
-              disabled={nextDisabled}
-              className="flex-1 rounded-2xl bg-brand-strong text-white py-3 text-sm font-semibold disabled:opacity-50"
-            >
+            <Button onClick={onNext} disabled={nextDisabled} className="flex-1">
               {nextLabel}
-            </button>
+            </Button>
           </div>
           {attribution && (
-            <p className="thai-font text-center text-[10px] text-gray-400">
+            <p className="thai-font text-center text-[10px] text-ink-soft">
               {attribution}
             </p>
           )}
