@@ -7,6 +7,12 @@ import { STATIC_UPDATES } from '../data/appUpdates'
 // Shared listener slot — owns the detach-before-reattach lifecycle.
 const updatesListener = createFirestoreListener()
 
+// getAllUpdates cache — must return a stable reference while `updates` is
+// unchanged, because NewsPanel selects it reactively and useSyncExternalStore
+// treats a fresh array as a new snapshot every render (infinite loop).
+let mergedUpdates = null
+let mergedSource = null
+
 export const useNewsStore = create((set, get) => ({
   updates: [], // Firestore-backed appUpdates, admin-added
 
@@ -34,8 +40,12 @@ export const useNewsStore = create((set, get) => ({
   // Merge static + Firestore updates, sorted by date desc.
   getAllUpdates: () => {
     const { updates } = get()
-    return [...STATIC_UPDATES, ...updates]
-      .map((u) => ({ ...u, _ts: u.createdAt?.toMillis?.() ?? new Date(u.date).getTime() }))
-      .sort((a, b) => b._ts - a._ts)
+    if (mergedSource !== updates) {
+      mergedSource = updates
+      mergedUpdates = [...STATIC_UPDATES, ...updates]
+        .map((u) => ({ ...u, _ts: u.createdAt?.toMillis?.() ?? new Date(u.date).getTime() }))
+        .sort((a, b) => b._ts - a._ts)
+    }
+    return mergedUpdates
   },
 }))
