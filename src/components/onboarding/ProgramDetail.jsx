@@ -42,7 +42,7 @@ function RoundCard({ round, expanded, onToggle }) {
 
 // Admission rounds detail for a selected program.
 export default function ProgramDetail({ programId, programName, onBack, onConfirm }) {
-  const { rounds, loading } = useTcasRounds(programId)
+  const { rounds, announced, tcasYear, loading } = useTcasRounds(programId)
   const [expandedId, setExpandedId] = useState(null)
 
   return (
@@ -57,7 +57,11 @@ export default function ProgramDetail({ programId, programName, onBack, onConfir
         {loading ? (
           <p className="thai-font text-center text-sm text-ink-soft">กำลังโหลดรอบรับสมัคร...</p>
         ) : rounds.length === 0 ? (
-          <p className="thai-font text-center text-sm text-ink-soft">ไม่พบข้อมูลรอบรับสมัคร</p>
+          <p className="thai-font text-center text-sm text-ink-soft">
+            {announced === false && tcasYear
+              ? `เกณฑ์รอบรับสมัคร TCAS${tcasYear - 2500} ยังไม่ประกาศ — โปรดติดตามประกาศจาก ทปอ.`
+              : 'ไม่พบข้อมูลรอบรับสมัคร'}
+          </p>
         ) : (
           rounds.map((round) => (
             <RoundCard
