@@ -9,6 +9,14 @@
   --color-accent-pink:  #d93d8c;
   --color-ink:          #1a1035;
   --color-surface:      #ffffff;
+  --color-paper:        #fdf6ec;
+  --color-hud:          #fffdf8;
+  --color-ink-soft:     #6b6284;
+  --color-good:         #3f9e58;
+  --color-warn:         #e0a53c;
+  --color-danger:       #d9534f;
+  --shadow-hard:        4px 4px 0 0 #1a1035;
+  --shadow-hard-sm:     3px 3px 0 0 #1a1035;
 }
 
 /* ── Filter sub-category reveal ────────────────────────────────────────────── */
@@ -147,4 +155,61 @@ html {
 @media (prefers-reduced-motion: reduce) {
   .neo-btn { transition: none; }
   .neo-btn:hover, .neo-btn:active { transform: none; }
+}
+
+/* ── Cartridge HUD surface system (see design.md §4) ───────────────────────── */
+.neo-slab {
+  border: 2px solid var(--color-ink);
+  border-radius: 0.75rem;
+  background: var(--color-hud);
+  box-shadow: 3px 3px 0 0 var(--color-ink);
+}
+.neo-sheet {
+  border: 2px solid var(--color-ink);
+  border-bottom: none;
+  border-radius: 1rem 1rem 0 0;
+  background: var(--color-paper);
+}
+.neo-pressed {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+  background: var(--color-brand-soft);
+}
+.neo-input {
+  border: 2px solid var(--color-ink);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+}
+.neo-input:focus {
+  outline: none;
+  box-shadow: 3px 3px 0 0 var(--color-brand);
+}
+
+/* ── Headline treatment — replaces gradient-clipped text (design.md §5) ────── */
+.pixel-title      { color: var(--color-ink); text-shadow: 3px 3px 0 var(--color-accent-pink); }
+.pixel-title-dark { color: #ffffff;          text-shadow: 3px 3px 0 var(--color-brand-strong); }
+
+/* ── Stepped motion (design.md §7) ─────────────────────────────────────────── */
+@keyframes sheetUp {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.animate-sheet-up { animation: sheetUp 220ms steps(4); }
+
+@keyframes blockFill {
+  0%, 100% { opacity: 0.15; }
+  50%      { opacity: 1; }
+}
+.animate-block-fill { animation: blockFill 1.1s steps(2) infinite; }
+
+@keyframes scrollHint {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(6px); }
+}
+.animate-scroll-hint { animation: scrollHint 1.2s steps(2) infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-sheet-up   { animation: none; }
+  .animate-block-fill { animation: none; opacity: 1; }
+  .animate-scroll-hint { animation: none; }
 }
