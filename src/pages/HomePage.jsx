@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
-import { Calendar, MessageCircle, Map, Newspaper, Trophy } from 'lucide-react'
+import { Calendar, MessageCircle, Map, Newspaper, Trophy, Flame, Play, Pause, Music, Gamepad2 } from 'lucide-react'
 import { useUserStore } from '../stores/useUserStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { APP_VIEWS, shouldShowNav } from '../constants/appViews'
@@ -223,11 +223,11 @@ function HomePage() {
           <button
             onClick={() => handleTabChange(APP_VIEWS.PROFILE)}
             aria-label="โปรไฟล์"
-            className="pointer-events-auto w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/90 shadow flex items-center justify-center shrink-0 border border-white/60 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            className="pointer-events-auto neo-btn w-10 h-10 md:w-12 md:h-12 rounded-full bg-hud flex items-center justify-center shrink-0 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             {(profilePhotoURL || authUser?.photoURL)
               ? <img src={profilePhotoURL || authUser.photoURL} alt="avatar" className="w-full h-full object-cover rounded-full" />
-              : <span className="text-lg">🎮</span>
+              : <Gamepad2 size={18} strokeWidth={2.5} className="text-ink" />
             }
           </button>
 
@@ -236,12 +236,12 @@ function HomePage() {
           <button
             onClick={() => handleTabChange(APP_VIEWS.MUSIC)}
             aria-label={isPlaying ? `กำลังเล่น: ${tracks[currentTrackIdx].title}` : 'เปิดรายการเพลง'}
-            className="pointer-events-auto flex items-center gap-1.5 h-10 bg-white/90 rounded-full shadow px-3 overflow-hidden min-w-0 flex-1 max-w-40 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            className="pointer-events-auto neo-btn neo-slab flex items-center gap-1.5 h-10 px-3 overflow-hidden min-w-0 flex-1 max-w-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
-            <span className="text-sm shrink-0">{isPlaying ? '🎵' : '🎶'}</span>
+            <Music size={14} strokeWidth={2.5} className="shrink-0 text-brand-strong" />
             <span className="overflow-hidden flex-1">
               <span
-                className={`block whitespace-nowrap pixel-font text-[8px] text-blue-700 ${
+                className={`block whitespace-nowrap pixel-font text-[10px] text-brand-strong ${
                   isPlaying && tracks[currentTrackIdx].title.length > 14 ? 'animate-marquee' : ''
                 }`}
               >
@@ -253,64 +253,60 @@ function HomePage() {
         </div>
 
         {/* Streak + Coins + Gold */}
-        <div className="pointer-events-auto flex items-center gap-3 bg-white/90 rounded-full px-4 py-1.5 shadow">
-          <span className="pixel-font text-[11px] text-orange-500 flex items-center gap-1">
-            🔥 {totalStacks}
+        <div className="pointer-events-auto neo-slab flex items-center gap-3 px-4 py-1.5">
+          <span className="pixel-font text-[11px] text-ink flex items-center gap-1">
+            <Flame size={14} strokeWidth={2.5} className="text-danger" aria-hidden="true" />
+            {totalStacks}
           </span>
-          <span className="pixel-font text-[11px] text-brand flex items-center gap-1">
+          <span className="pixel-font text-[11px] text-ink flex items-center gap-1">
             <CoinIcon size={14} />
             {coins}
           </span>
-          <span className="pixel-font text-[11px] text-amber-700 flex items-center gap-1">
+          <span className="pixel-font text-[11px] text-ink flex items-center gap-1">
             <GoldIcon size={14} />
             {gold}g
           </span>
         </div>
       </div>
 
-      {/* ── PASSIVE SKILL FAB (Calendar shortcut) + Roadmap FAB ── */}
+      {/* ── QUICK RAIL (Calendar · Mastery · Roadmap · News) ── */}
       {uiVisibility.shortcuts && (
       <div className="absolute top-20 left-4 z-20 flex flex-col gap-2">
         <button
           onClick={handlePlannerTransition}
           aria-label="เปิดปฏิทิน"
-          className="w-12 h-12 md:w-14 md:h-14 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-gray-100 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          className="neo-btn w-12 h-12 rounded-lg bg-hud flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
-          <Calendar size={22} strokeWidth={1.5} className="text-brand" />
+          <Calendar size={22} strokeWidth={2.5} className="text-ink" />
         </button>
         <button
           onClick={() => openPopup('mastery')}
           aria-label="เปิด Mastery"
-          className="w-12 h-12 md:w-14 md:h-14 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-gray-100 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          className="neo-btn w-12 h-12 rounded-lg bg-hud flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
-          <Trophy size={22} strokeWidth={1.5} className="text-brand" />
+          <Trophy size={22} strokeWidth={2.5} className="text-ink" />
         </button>
         <button
           onClick={() => openPopup('roadmap')}
           aria-label="เปิด Roadmap"
-          className="w-12 h-12 md:w-14 md:h-14 bg-white rounded-2xl shadow-lg flex items-center justify-center border border-gray-100 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          className="neo-btn w-12 h-12 rounded-lg bg-hud flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
-          <Map size={22} strokeWidth={1.5} className="text-brand" />
+          <Map size={22} strokeWidth={2.5} className="text-ink" />
         </button>
-      </div>
-      )}
-
-      {/* ── NEWS BUTTON (top-right below coins) ── */}
-      {uiVisibility.newsButton && (
-      <div className="absolute top-20 right-4 z-20">
-        <button
-          onClick={() => handleTabChange(APP_VIEWS.NEWS)}
-          aria-label="ข่าวสาร"
-          className="relative flex items-center gap-2 bg-white/90 rounded-2xl shadow-lg px-4 py-2 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-        >
-          <Newspaper size={18} strokeWidth={1.5} className="text-gray-600" aria-hidden="true" />
-          <span className="pixel-font text-[10px] text-gray-700">News</span>
-          {!newsRead && (
-            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center" aria-hidden="true">
-              1
-            </span>
-          )}
-        </button>
+        {uiVisibility.newsButton && (
+          <button
+            onClick={() => handleTabChange(APP_VIEWS.NEWS)}
+            aria-label="ข่าวสาร"
+            className="relative neo-btn w-12 h-12 rounded-lg bg-hud flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          >
+            <Newspaper size={22} strokeWidth={2.5} className="text-ink" />
+            {!newsRead && (
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-danger border-2 border-ink text-white text-[10px] font-bold flex items-center justify-center" aria-hidden="true">
+                1
+              </span>
+            )}
+          </button>
+        )}
       </div>
       )}
 
@@ -368,25 +364,25 @@ function HomePage() {
       {/* ── TRACKLIST PANEL ── */}
       {activePopup === 'trackList' && (
         <div
-          className="absolute bottom-28 left-1/2 -translate-x-1/2 w-[90%] max-w-sm md:max-w-md bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl flex flex-col overflow-hidden max-h-[55vh]"
+          className="absolute bottom-28 left-1/2 -translate-x-1/2 w-[90%] max-w-sm md:max-w-md neo-card flex flex-col overflow-hidden max-h-[55vh]"
           style={{ zIndex: Z_NAV }}
         >
           {/* Header */}
-          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between shrink-0">
+          <div className="px-4 py-3 border-b-2 border-ink flex items-center justify-between shrink-0">
             <div className="min-w-0 flex-1">
-              <p className="pixel-font text-[10px] font-bold text-gray-800">🎵 Background Music</p>
+              <p className="pixel-font text-[10px] text-ink">BACKGROUND MUSIC</p>
               {isPlaying && (
-                <p className="pixel-font text-[9px] text-blue-600 mt-0.5 truncate">
-                  ▶ {tracks[currentTrackIdx].title}
+                <p className="thai-font text-xs text-brand-strong mt-0.5 truncate">
+                  {tracks[currentTrackIdx].title}
                 </p>
               )}
             </div>
             <button
               onClick={handleTogglePlay}
               aria-label={isPlaying ? 'หยุดเพลง' : 'เล่นเพลง'}
-              className="ml-3 shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              className="ml-3 shrink-0 neo-btn w-9 h-9 rounded-lg bg-brand-soft flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
             >
-              <span aria-hidden="true">{isPlaying ? '⏸' : '▶'}</span>
+              <span aria-hidden="true">{isPlaying ? <Pause size={14} strokeWidth={2.5}/> : <Play size={14} strokeWidth={2.5}/>}</span>
             </button>
           </div>
           {/* Track list */}
@@ -395,17 +391,17 @@ function HomePage() {
               <button
                 key={i}
                 onClick={() => handleSelectTrack(i)}
-                className={`w-full flex items-center gap-2 px-4 py-2.5 text-left border-b border-gray-50 hover:bg-blue-50 transition-colors ${
-                  currentTrackIdx === i && isPlaying ? 'bg-blue-50' : ''
+                className={`w-full flex items-center gap-2 px-4 py-2.5 text-left border-b border-ink/10 hover:bg-brand-soft transition-colors ${
+                  currentTrackIdx === i && isPlaying ? 'bg-brand-soft' : ''
                 }`}
               >
-                <span className={`pixel-font text-[9px] truncate flex-1 ${
-                  currentTrackIdx === i && isPlaying ? 'text-blue-700 font-bold' : 'text-gray-700'
+                <span className={`thai-font text-xs font-semibold truncate flex-1 ${
+                  currentTrackIdx === i && isPlaying ? 'text-brand-strong' : 'text-ink'
                 }`}>
                   {t.title}
                 </span>
                 {currentTrackIdx === i && isPlaying && (
-                  <span className="shrink-0 text-[10px] text-blue-500">♪</span>
+                  <Music size={12} className="shrink-0 text-brand-strong" />
                 )}
               </button>
             ))}
@@ -425,17 +421,10 @@ function HomePage() {
           <button
             onClick={openAdminChat}
             aria-label="ติดต่อผู้พัฒนา"
-            className="relative w-12 h-12 rounded-full flex items-center justify-center active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1"
-            style={{
-              background: 'linear-gradient(135deg, var(--color-brand), var(--color-brand-strong))',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3), 0 0 12px rgba(167,139,218,0.4)',
-            }}
+            className="relative neo-btn w-12 h-12 rounded-lg bg-brand-strong flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1"
           >
             {!contactedAdmin && (
-              <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
-              </span>
+              <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-danger border-2 border-ink" />
             )}
             <MessageCircle size={22} className="text-white" />
           </button>
