@@ -19,8 +19,8 @@ export default function Button({
   ...rest
 }) {
   const base =
-    'inline-flex items-center justify-center gap-2 w-full rounded-2xl font-bold ' +
-    'transition-all active:scale-95 disabled:opacity-50 ' +
+    'inline-flex items-center justify-center gap-2 w-full rounded-xl font-bold ' +
+    'disabled:opacity-50 disabled:pointer-events-none ' +
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand '
 
   const sizes = {
@@ -29,15 +29,10 @@ export default function Button({
   }
 
   const variants = {
-    primary: 'text-white shadow-lg',
-    secondary: 'bg-white text-gray-800 shadow border border-gray-100',
-    ghost: 'text-brand',
+    primary: 'neo-btn bg-brand-strong text-white',
+    secondary: 'neo-btn bg-surface text-ink',
+    ghost: 'text-brand-strong',
   }
-
-  const primaryStyle =
-    variant === 'primary'
-      ? { background: 'linear-gradient(135deg, #a78bda, #7c3aed)' }
-      : undefined
 
   return (
     <button
@@ -46,7 +41,6 @@ export default function Button({
       disabled={disabled}
       aria-label={ariaLabel}
       className={`${base} ${sizes[size] ?? sizes.md} ${variants[variant] ?? variants.primary} ${className}`}
-      style={primaryStyle}
       {...rest}
     >
       {children}
