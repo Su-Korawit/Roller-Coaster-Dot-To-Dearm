@@ -18,16 +18,9 @@ vi.mock('../../utils/syncSelectToFirestore', () => ({
   syncSelectToFirestore: (...args) => syncSelectToFirestore(...args),
 }))
 
+let tcasState
 vi.mock('../../hooks/useMytcas', () => ({
-  useTcasUniversities: () => ({
-    universities: [
-      { university_id: 'CU', university_name_th: 'จุฬาลงกรณ์', university_name_en: 'Chulalongkorn', logo_url: null },
-    ],
-    total: 1,
-    loading: false,
-    error: null,
-    refetch: vi.fn(),
-  }),
+  useTcasUniversities: () => tcasState,
 }))
 
 vi.mock('../../utils/cloudAsset', () => ({
@@ -38,6 +31,16 @@ const { default: UniversityStep } = await import('./UniversityStep')
 
 describe('UniversityStep', () => {
   beforeEach(() => {
+    tcasState = {
+      universities: [
+        { university_id: 'CU', university_name_th: 'จุฬาลงกรณ์', university_name_en: 'Chulalongkorn', logo_url: null },
+      ],
+      total: 1,
+      loading: false,
+      error: null,
+      dataSource: 'live',
+      refetch: vi.fn(),
+    }
     authState = { user: { uid: 'u1' } }
     plansState = {
       plans: [{ id: 'p1', university: null, program: null, addedAt: 1 }],
@@ -58,5 +61,16 @@ describe('UniversityStep', () => {
     fireEvent.click(screen.getByLabelText('จุฬาลงกรณ์'))
     expect(plansState.updatePlan).toHaveBeenCalledWith('p1', { university: 'CU' })
     expect(syncSelectToFirestore).toHaveBeenCalledWith('u1')
+  })
+
+  it('shows a stale-data notice when universities come from the fallback snapshot', () => {
+    tcasState = { ...tcasState, dataSource: 'snapshot' }
+    render(<UniversityStep onNext={vi.fn()} />)
+    expect(screen.getByText(/ข้อมูลรอบก่อนหน้า/)).toBeTruthy()
+  })
+
+  it('shows no stale-data notice when data is live', () => {
+    render(<UniversityStep onNext={vi.fn()} />)
+    expect(screen.queryByText(/ข้อมูลรอบก่อนหน้า/)).toBeNull()
   })
 })

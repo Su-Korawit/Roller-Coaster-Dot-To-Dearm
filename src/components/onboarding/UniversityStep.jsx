@@ -102,7 +102,7 @@ export function UniversityLogo({ uni }) {
 // Step 4 of OnboardingModal — WizardStepper index 2 ("University").
 function UniversityStep({ onNext, onBack }) {
   const [query, setQuery] = useState('')
-  const { universities, loading, error } = useTcasUniversities()
+  const { universities, loading, error, dataSource } = useTcasUniversities()
   const plans = usePlansStore((state) => state.plans)
   const activePlanId = usePlansStore((state) => state.activePlanId)
   const updatePlan = usePlansStore((state) => state.updatePlan)
@@ -139,6 +139,11 @@ function UniversityStep({ onNext, onBack }) {
       nextDisabled={!selected}
     >
       <div className="mx-auto max-w-5xl neo-card bg-surface p-4 md:p-6">
+        {dataSource === 'snapshot' && (
+          <p className="thai-font mb-3 rounded-lg border-2 border-ink/25 bg-brand-soft px-3 py-2 text-center text-xs text-ink-soft">
+            ข้อมูล TCAS กำลังอัปเดตสำหรับรอบใหม่ — แสดงข้อมูลรอบก่อนหน้าไปพลางก่อน
+          </p>
+        )}
         {loading ? (
           <p className="thai-font py-10 text-center text-sm text-ink-soft">
             กำลังโหลดข้อมูล...

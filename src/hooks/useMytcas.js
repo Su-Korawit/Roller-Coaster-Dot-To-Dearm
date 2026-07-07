@@ -10,7 +10,14 @@ export const tcasLogoUrl = (id) => `https://assets.mytcas.com/i/logo/${id}.png`
 // ── Hook: list all universities ──────────────────────────────────────────────
 export function useTcasUniversities() {
   const { data, loading, error, refetch } = useMytcasFetch({}, [])
-  return { universities: data?.universities ?? [], total: data?.total ?? 0, loading, error, refetch }
+  return {
+    universities: data?.universities ?? [],
+    total: data?.total ?? 0,
+    dataSource: data?.data_source ?? 'live',
+    loading,
+    error,
+    refetch,
+  }
 }
 
 // ── Hook: faculties of a university ─────────────────────────────────────────
@@ -50,5 +57,12 @@ export function useTcasRounds(program_id) {
     [program_id],
     { enabled: !!program_id },
   )
-  return { rounds: data?.rounds ?? [], loading, error, refetch }
+  return {
+    rounds: data?.rounds ?? [],
+    announced: data?.announced ?? true,
+    tcasYear: data?.tcas_year ?? null,
+    loading,
+    error,
+    refetch,
+  }
 }
