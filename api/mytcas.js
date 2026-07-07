@@ -9,11 +9,25 @@
 //   GET /api/mytcas?program_id=10010121300001A&rounds=true → all rounds + score criteria
 //   GET /api/mytcas?program_id=10010121300001A&round=3     → round 3 (Admission) only
 
+import {
+  MIN_LIVE_ROWS,
+  pickCourseSource,
+  resolveTcasYear,
+  buildRoundsPayload,
+} from "./mytcasSource.js";
+
 const S3_URL      = "https://my-tcas.s3.ap-southeast-1.amazonaws.com/mytcas/courses.json";
 const PREVIEW_URL = "https://tcas65.as.r.appspot.com";
 const LOGO_BASE   = "https://assets.mytcas.com/i/logo";
 const CACHE_TTL   = 6 * 60 * 60 * 1000; // 6 hours
-const TCAS_YEAR   = 2569; // Thai Buddhist Era — update each TCAS cycle
+const DEFAULT_TCAS_YEAR = 2570; // TCAS70 — fallback when meta.json is unreachable
+
+// Fallback snapshot maintained by scripts/refreshTcasSnapshot.mjs (public read
+// — see the data/ block in storage.rules).
+const STORAGE_BASE =
+  "https://firebasestorage.googleapis.com/v0/b/rollercoasterdottodream.firebasestorage.app/o";
+const SNAPSHOT_URL = `${STORAGE_BASE}/${encodeURIComponent("data/mytcas/courses-snapshot.json")}?alt=media`;
+const META_URL     = `${STORAGE_BASE}/${encodeURIComponent("data/mytcas/meta.json")}?alt=media`;
 
 // ── Score key → human-readable label ────────────────────────────────────────
 const SCORE_LABELS = {
@@ -55,9 +69,53 @@ const SCORE_LABELS = {
   priority_score:"คะแนนลำดับการเลือก",
 };
 
-// ── Caches ───────────────────────────────────────────────────────────────────
-let _cache = null;
-let _cacheTime = 0;
+// ── Course data caches (live + fallback snapshot) ────────────────────────────
+let _live = null;      // { rows, time }
+let _snapshot = null;  // { rows, meta, time }
+
+async function fetchJsonOrNull(url) {
+  try {
+    const res = await fetch(url, { headers: { "Accept-Encoding": "gzip" } });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+async function getLiveRows() {
+  if (_live && Date.now() - _live.time < CACHE_TTL) return _live.rows;
+  const rows = await fetchJsonOrNull(S3_URL);
+  _live = { rows: Array.isArray(rows) ? rows : [], time: Date.now() };
+  return _live.rows;
+}
+
+async function getSnapshot() {
+  if (_snapshot && Date.now() - _snapshot.time < CACHE_TTL) return _snapshot;
+  const [rows, meta] = await Promise.all([
+    fetchJsonOrNull(SNAPSHOT_URL),
+    fetchJsonOrNull(META_URL),
+  ]);
+  _snapshot = { rows: Array.isArray(rows) ? rows : [], meta: meta ?? null, time: Date.now() };
+  return _snapshot;
+}
+
+// Live data when healthy; the Storage snapshot while MyTCAS rebuilds between
+// TCAS cycles. The snapshot is only fetched when live fails the sanity check.
+async function getCourseData() {
+  const liveRows = await getLiveRows();
+  if (liveRows.length >= MIN_LIVE_ROWS) {
+    return { rows: liveRows, source: "live", tcasYear: await getTcasYear() };
+  }
+  const snapshot = await getSnapshot();
+  const picked = pickCourseSource({ liveRows, snapshotRows: snapshot.rows });
+  return { rows: picked.rows, source: picked.source, tcasYear: await getTcasYear() };
+}
+
+async function getTcasYear() {
+  const snapshot = await getSnapshot();
+  return resolveTcasYear(snapshot.meta, DEFAULT_TCAS_YEAR);
+}
 
 // Per-program rounds cache — max 500 entries to bound memory usage
 const _roundsCache   = new Map(); // key: program_id → { data, time }
@@ -65,15 +123,6 @@ const ROUNDS_MAX     = 500;
 const ROUNDS_TTL     = 6 * 60 * 60 * 1000;
 
 // ── Data fetchers ─────────────────────────────────────────────────────────────
-async function getAllCourses() {
-  if (_cache && Date.now() - _cacheTime < CACHE_TTL) return _cache;
-  const res = await fetch(S3_URL, { headers: { "Accept-Encoding": "gzip" } });
-  if (!res.ok) throw new Error(`courses.json fetch failed: ${res.status}`);
-  _cache     = await res.json();
-  _cacheTime = Date.now();
-  return _cache;
-}
-
 async function getProgramRounds(program_id) {
   const hit = _roundsCache.get(program_id);
   if (hit && Date.now() - hit.time < ROUNDS_TTL) return hit.data;
@@ -182,17 +231,40 @@ export default async function handler(req, res) {
   try {
     const { university_id, faculty_id, program_id, rounds, round } = req.query;
 
+    // ── Ops probe (?status=true) — snapshot freshness + which source is serving ──
+    if (req.query.status === "true") {
+      const liveRows = await getLiveRows();
+      const snapshot = await getSnapshot();
+      const picked = pickCourseSource({ liveRows, snapshotRows: snapshot.rows });
+      return res.json({
+        tcas_year: await getTcasYear(),
+        serving: picked.source,
+        live_rows: liveRows.length,
+        snapshot_rows: snapshot.rows.length,
+        snapshot_updated_at: snapshot.meta?.updatedAt ?? null,
+      });
+    }
+
     // ── All rounds for a program (?program_id=...&rounds=true) ──────────────
     if (program_id && rounds === "true") {
-      const rawRows    = await getProgramRounds(program_id);
-      const allRounds  = formatRounds(rawRows);
-      return res.json({ program_id, tcas_year: TCAS_YEAR, rounds: allRounds });
+      const tcasYear = await getTcasYear();
+      let rawRows = [];
+      try {
+        rawRows = await getProgramRounds(program_id);
+      } catch {
+        // Upstream rounds service unreachable — to a student this is identical
+        // to "criteria not yet published", so say that instead of a 500.
+        rawRows = [];
+      }
+      const allRounds = formatRounds(Array.isArray(rawRows) ? rawRows : []);
+      return res.json(buildRoundsPayload(program_id, tcasYear, allRounds));
     }
 
     // ── Single round (?program_id=...&round=3) ───────────────────────────────
     if (program_id && round) {
+      const tcasYear = await getTcasYear();
       const roundNum   = Number(round);
-      const typePrefix = `${roundNum}_${TCAS_YEAR}`;
+      const typePrefix = `${roundNum}_${tcasYear}`;
       const rawRows    = await getProgramRounds(program_id);
       const filtered   = rawRows.filter((r) => r.type === typePrefix);
 
@@ -203,18 +275,18 @@ export default async function handler(req, res) {
       }
 
       const [formatted] = formatRounds(filtered);
-      return res.json({ program_id, tcas_year: TCAS_YEAR, ...formatted });
+      return res.json({ program_id, tcas_year: tcasYear, ...formatted });
     }
 
     // ── Existing: courses data ────────────────────────────────────────────────
-    const courses = await getAllCourses();
+    const { rows: courses, source: dataSource, tcasYear } = await getCourseData();
 
     // 1. Single program detail
     if (program_id) {
       const rows = courses.filter((c) => c.program_id === program_id);
       if (!rows.length) return res.status(404).json({ error: "Program not found" });
       const [program] = groupToPrograms(rows);
-      return res.json(program);
+      return res.json({ ...program, data_source: dataSource });
     }
 
     // 2. Programs inside a faculty
@@ -229,6 +301,7 @@ export default async function handler(req, res) {
         faculty_name_th: rawRows[0].faculty_name_th,
         faculty_name_en: rawRows[0].faculty_name_en,
         total:           groupToPrograms(rawRows).length,
+        data_source:     dataSource,
         programs:        groupToPrograms(rawRows),
       });
     }
@@ -259,6 +332,7 @@ export default async function handler(req, res) {
         logo_url:                `${LOGO_BASE}/${university_id}.png`,
         campus_name_th:          uniCourses[0].campus_name_th,
         total_programs:          new Set(uniCourses.map((c) => c.program_id)).size,
+        data_source:             dataSource,
         faculties:               Array.from(facultyMap.values())
           .map((f) => ({ ...f, program_count: f.program_count.size }))
           .sort((a, b) => a.faculty_name_th.localeCompare(b.faculty_name_th, "th")),
@@ -287,6 +361,8 @@ export default async function handler(req, res) {
     return res.json({
       total:          uniMap.size,
       total_programs: new Set(courses.map((c) => c.program_id)).size,
+      data_source:    dataSource,
+      tcas_year:      tcasYear,
       universities:   Array.from(uniMap.values())
         .map((u) => ({
           university_id:          u.university_id,
