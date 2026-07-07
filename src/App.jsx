@@ -24,16 +24,14 @@ function LoadingScreen() {
     >
       <span className="text-5xl mb-5" aria-hidden="true">🎢</span>
       <span className="pixel-font text-[10px] text-purple-300 mb-4">Loading...</span>
-      <div
-        className="w-48 h-1.5 rounded-full overflow-hidden bg-white/10"
-        role="progressbar"
-        aria-label="กำลังโหลด"
-        aria-busy="true"
-      >
-        <div
-          className="h-full w-1/3 rounded-full animate-loading-slide"
-          style={{ background: 'linear-gradient(90deg, transparent, var(--color-brand), var(--color-accent-pink), transparent)' }}
-        />
+      <div className="flex gap-1" role="progressbar" aria-label="กำลังโหลด" aria-busy="true">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <span
+            key={i}
+            className="w-6 h-3 border-2 border-ink/60 bg-brand animate-block-fill"
+            style={{ animationDelay: `${i * 0.18}s` }}
+          />
+        ))}
       </div>
     </div>
   )
