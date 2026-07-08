@@ -5,6 +5,7 @@ import { refs } from '../lib/db'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useChatStore } from '../stores/useChatStore'
 import { useNewsStore } from '../stores/useNewsStore'
+import TcasCalendarTab from './TcasCalendarTab'
 import { ADMIN_UID } from '../constants/admin'
 import { UPDATE_TYPES } from '../data/appUpdates'
 import { CAMP_GROUPS, DEFAULT_CATEGORY, groupKeyForCategory, labelForCategory } from '../data/campCategories'
@@ -326,9 +327,10 @@ export default function NewsPanel({ onClose }) {
  {/* Tab bar */}
  <div className="flex border-b border-ink/10">
  {[
- { key: 'camphub', label: 'Camphub' },
- { key: 'rollercoaster', label: 'RollerCoaster' },
- ].map((tab) => (
+            { key: 'camphub', label: 'Camphub' },
+            { key: 'rollercoaster', label: 'RollerCoaster' },
+            { key: 'tcas', label: 'TCAS70' },
+          ].map((tab) => (
  <button
  key={tab.key}
  onClick={() => setActiveTab(tab.key)}
@@ -585,8 +587,15 @@ export default function NewsPanel({ onClose }) {
  </div>
  )}
 
- {/* Add update form (admin) */}
- {showAddForm && <AddUpdateSheet onClose={() => setShowAddForm(false)} />}
+        {/* TCAS70 Calendar Feed */}
+        {activeTab === 'tcas' && (
+          <div className="flex-1 overflow-y-auto">
+            <TcasCalendarTab />
+          </div>
+        )}
+
+        {/* Add update form (admin) */}
+        {showAddForm && <AddUpdateSheet onClose={() => setShowAddForm(false)} />}
 
  {/* Update detail sheet */}
  {detailUpdate && <UpdateDetailSheet update={detailUpdate} onClose={() => setDetailUpdate(null)} />}
