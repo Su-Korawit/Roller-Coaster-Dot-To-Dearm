@@ -81,6 +81,28 @@ export const useSchoolStore = create(
       importNotes: (entries) => {
         entries.forEach((entry) => get().upsertNote(entry))
       },
+      // Merge a timetable template (see src/utils/timetableTemplate.js) into
+      // the store. Same-name subjects are skipped whole, so re-importing a
+      // template never duplicates. Runs through addSubject/addScheduleSlot so
+      // the existing schoolSync persists everything with no extra wiring.
+      importTimetable: (entries) => {
+        let added = 0
+        let skipped = 0
+        entries.forEach((entry) => {
+          const name = entry.name.trim()
+          const exists = get().subjects.some(
+            (s) => s.name.trim().toLowerCase() === name.toLowerCase(),
+          )
+          if (exists) {
+            skipped += 1
+            return
+          }
+          const subjectId = get().addSubject({ name, color: entry.color })
+          entry.slots.forEach((slot) => get().addScheduleSlot(subjectId, slot))
+          added += 1
+        })
+        return { added, skipped }
+      },
       // Only tracks the streak stack here (mirrors useTaskStore.toggleTask).
       // Coin rewards are decided and applied by the calling UI, same as
       // TaskPanel does for regular tasks.

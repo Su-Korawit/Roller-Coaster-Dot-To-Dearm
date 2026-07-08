@@ -169,4 +169,29 @@ describe('useSchoolStore', () => {
       id, subjectId: null, kind: 'tcas', dueDate: '2026-07-15', completed: false,
     })
   })
+
+  it('importTimetable adds subjects with their slots', () => {
+    const result = useSchoolStore.getState().importTimetable([
+      { name: 'Math', color: '#a78bda', slots: [{ day: 'mon', startTime: '09:00', endTime: '10:00' }] },
+      { name: 'Physics', color: '#7c3aed', slots: [] },
+    ])
+    const state = useSchoolStore.getState()
+    expect(result).toEqual({ added: 2, skipped: 0 })
+    expect(state.subjects.map((s) => s.name)).toEqual(['Math', 'Physics'])
+    expect(state.scheduleSlots).toHaveLength(1)
+    expect(state.scheduleSlots[0]).toMatchObject({ day: 'mon', startTime: '09:00', endTime: '10:00' })
+    expect(state.scheduleSlots[0].subjectId).toBe(state.subjects[0].id)
+  })
+
+  it('importTimetable skips subjects whose name already exists (case-insensitive)', () => {
+    useSchoolStore.getState().addSubject({ name: 'math' })
+    const result = useSchoolStore.getState().importTimetable([
+      { name: ' Math ', color: '#a78bda', slots: [{ day: 'mon', startTime: '09:00', endTime: '10:00' }] },
+      { name: 'English', color: '#d93d8c', slots: [] },
+    ])
+    const state = useSchoolStore.getState()
+    expect(result).toEqual({ added: 1, skipped: 1 })
+    expect(state.subjects.map((s) => s.name.toLowerCase().trim())).toEqual(['math', 'english'])
+    expect(state.scheduleSlots).toHaveLength(0) // skipped subject's slots not imported
+  })
 })
