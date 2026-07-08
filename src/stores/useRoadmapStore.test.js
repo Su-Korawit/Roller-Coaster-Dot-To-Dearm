@@ -123,6 +123,17 @@ describe('useRoadmapStore', () => {
     expect(nodes[0].type).toBe('image')
   })
 
+  it('addSticker adds an image node with the sticker url and sets the setpoint', () => {
+    const id = useRoadmapStore.getState().addSticker('https://assets.mytcas.com/i/logo/001.png', { x: 50, y: 60 })
+    const node = useRoadmapStore.getState().nodes.find((n) => n.id === id)
+    expect(node).toMatchObject({
+      type: 'image',
+      position: { x: 50, y: 60 },
+      data: { url: 'https://assets.mytcas.com/i/logo/001.png', offset: { x: 0, y: 0 } },
+    })
+    expect(useRoadmapStore.getState().setpoint).toBe(id)
+  })
+
   it('addNode creates a start-typed node with a null journeyRef', () => {
     useRoadmapStore.getState().addNode('start')
     const { nodes } = useRoadmapStore.getState()

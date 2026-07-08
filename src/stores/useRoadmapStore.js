@@ -137,6 +137,16 @@ export const useRoadmapStore = create(
           const data = type === 'start' ? { journeyRef: null } : { label: '', note: '', color: null }
           return { setpoint: id, ...applyToActive(state, { nodes: [...state.nodes, { id, type, position, data }] }) }
         }),
+      addSticker: (url, position = { x: 120, y: 120 }) => {
+        const id = nextId()
+        set((state) => {
+          const result = applyToActive(state, {
+            nodes: [...state.nodes, { id, type: 'image', position, data: { url, offset: { x: 0, y: 0 } } }],
+          })
+          return { setpoint: id, ...result }
+        })
+        return id
+      },
       updateNodeData: (id, patch) =>
         set((state) => applyToActive(state, {
           nodes: state.nodes.map((n) =>
