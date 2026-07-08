@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { nextStreak } from '../utils/streakCycle'
 
 const defaultPortfolioData = {
   mastery: { title: 'Mastery', image: '', description: '', progress: 50 },
@@ -15,10 +16,12 @@ const defaultJourneys = {
 
 export const useUserStore = create(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       coins: 0,
       streak: 0,
+      lastStreakDate: null, // 'YYYY-MM-DD' of the last day that counted toward the streak
+      bestStreak: 0,
       totalStacks: 0,   // incremented each time a task is marked complete
       userName: '',
       // Daily mood check-in
@@ -45,20 +48,26 @@ export const useUserStore = create(
       setStreak: (streak) => set({ streak }),
       incrementStacks: () => set((state) => ({ totalStacks: state.totalStacks + 1 })),
 
-      // Daily feel check-in (max once per day). Increments stacks.
-      addDailyFeel: (level) => {
-        const today = new Date().toISOString().slice(0, 10)
-        set((state) => {
-          if (state.lastLoginDate === today) return state // already checked in
-          return {
-            lastLoginDate: today,
-            totalStacks: state.totalStacks + 1,
-            feelingNotes: [
-              ...state.feelingNotes,
-              { date: today, feel: level },
-            ],
-          }
+      // Daily feel check-in (max once per day). Increments stacks and advances
+      // the consecutive-day streak. Returns { streak, changed, broken } so the
+      // check-in UI can show the Motivation screen. todayStr is injectable for
+      // tests (same pattern as SchoolPanel's `today` prop).
+      addDailyFeel: (level, todayStr) => {
+        const today = todayStr ?? new Date().toISOString().slice(0, 10)
+        const state = get()
+        if (state.lastLoginDate === today) {
+          return { streak: state.streak, changed: false, broken: false }
+        }
+        const result = nextStreak(state.lastStreakDate, today, state.streak)
+        set({
+          lastLoginDate: today,
+          totalStacks: state.totalStacks + 1,
+          feelingNotes: [...state.feelingNotes, { date: today, feel: level }],
+          streak: result.streak,
+          lastStreakDate: today,
+          bestStreak: Math.max(state.bestStreak ?? 0, result.streak),
         })
+        return result
       },
 
       // Returns true if the user has NOT yet checked in today
@@ -139,6 +148,8 @@ export const useUserStore = create(
           user: null,
           coins: 0,
           streak: 0,
+          lastStreakDate: null,
+          bestStreak: 0,
           totalStacks: 0,
           userName: '',
           feelingNotes: [],
