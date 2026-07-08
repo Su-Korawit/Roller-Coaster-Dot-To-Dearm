@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { X, ChevronLeft, ChevronRight, Plus, BookOpen, ClipboardCheck, Download, Upload } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Plus, BookOpen, ClipboardCheck, CalendarDays, Download, Upload } from 'lucide-react'
 import { useSchoolStore } from '../../stores/useSchoolStore'
 import { useUserStore } from '../../stores/useUserStore'
 import { appointmentsDueOn, isOverdue, noteFor } from '../../utils/schoolDayView'
@@ -167,7 +167,9 @@ export default function SchoolPanel({ onClose, onOpenSubject, initialDate, today
                         checked={appt.completed}
                         onChange={() => handleToggle(appt)}
                       />
-                      {appt.kind === 'checkpoint'
+                      {appt.kind === 'tcas'
+                        ? <CalendarDays size={16} className={overdue ? 'text-danger shrink-0' : 'text-brand-strong shrink-0'} aria-hidden="true" />
+                        : appt.kind === 'checkpoint'
                         ? <ClipboardCheck size={16} className={overdue ? 'text-danger shrink-0' : 'text-brand-strong shrink-0'} aria-hidden="true" />
                         : <BookOpen size={16} className={overdue ? 'text-danger shrink-0' : 'text-brand-strong shrink-0'} aria-hidden="true" />}
                       <span className="flex-1 min-w-0">

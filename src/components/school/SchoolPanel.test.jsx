@@ -153,4 +153,14 @@ describe('SchoolPanel', () => {
     expect(schoolState.importNotes).not.toHaveBeenCalled()
     alertSpy.mockRestore()
   })
+
+  it('renders a TCAS appointment with the calendar icon and no subject line', () => {
+    schoolState.appointments = [
+      { id: 't1', subjectId: null, title: 'ลงทะเบียน myTCAS', kind: 'tcas', dueDate: '2026-07-08', completed: false, createdAt: 1, completedAt: null },
+    ]
+    render(<SchoolPanel onClose={vi.fn()} onOpenSubject={vi.fn()} initialDate="2026-07-08" />)
+    const item = screen.getByTestId('school-appointment-item')
+    expect(item.textContent).toContain('ลงทะเบียน myTCAS')
+    expect(item.querySelector('.lucide-calendar-days')).toBeTruthy()
+  })
 })

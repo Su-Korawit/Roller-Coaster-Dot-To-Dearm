@@ -160,4 +160,13 @@ describe('useSchoolStore', () => {
     useSchoolStore.getState().clearSchool()
     expect(useSchoolStore.getState().notes).toEqual([])
   })
+
+  it('accepts a subject-less TCAS appointment (Add to Calendar path)', () => {
+    const id = useSchoolStore.getState().addAppointment(null, {
+      title: 'ลงทะเบียน myTCAS', kind: 'tcas', dueDate: '2026-07-15',
+    })
+    expect(useSchoolStore.getState().appointments[0]).toMatchObject({
+      id, subjectId: null, kind: 'tcas', dueDate: '2026-07-15', completed: false,
+    })
+  })
 })
