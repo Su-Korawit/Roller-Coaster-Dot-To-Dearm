@@ -101,3 +101,23 @@ describe('start node schema round-trip', () => {
     expect(roundTripped.nodes[0].data).toEqual({ journeyRef: null })
   })
 })
+
+describe('annotation edge type passthrough', () => {
+  const EDGE = { id: 'a1', source: 'a', target: 'b', sourceHandle: null, targetHandle: null, type: 'annotation' }
+  const NODES = [
+    { id: 'a', type: 'process', position: { x: 0, y: 0 }, data: {} },
+    { id: 'b', type: 'process', position: { x: 100, y: 0 }, data: {} },
+  ]
+
+  it('round-trips an edge type through toSchema/fromSchema', () => {
+    const out = fromSchema(JSON.parse(JSON.stringify(toSchema(NODES, [EDGE]))))
+    expect(out.edges[0].type).toBe('annotation')
+  })
+
+  it('omits the type field entirely for plain edges (v1 files stay byte-stable)', () => {
+    const plain = { id: 'e1', source: 'a', target: 'b', sourceHandle: null, targetHandle: null }
+    const schema = toSchema(NODES, [plain])
+    expect('type' in schema.edges[0]).toBe(false)
+    expect(fromSchema(JSON.parse(JSON.stringify(schema))).edges[0].type).toBeUndefined()
+  })
+})
