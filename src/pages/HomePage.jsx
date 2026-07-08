@@ -57,12 +57,11 @@ function HomePage() {
   const gold = useInventoryStore((s) => s.gold)
   const uiVisibility = useUserStore((s) => s.uiVisibility)
 
-  // Show daily check-in modal on first mount if not yet checked in today
-  // useEffect(() => {
-  //   const today = new Date().toISOString().slice(0, 10)
-  //   if (lastLoginDate !== today) setShowDailyModal(true)
-  // // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [])
+  // Daily check-in — once per day, on entering Home.
+  useEffect(() => {
+    if (useUserStore.getState().needsDailyCheckIn()) openPopup('dailyLogin')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Load the admin-editable track list (falls back to DEFAULT_TRACKS on error)
   useEffect(() => {
@@ -376,7 +375,7 @@ function HomePage() {
 
       {/* ── DAILY MOOD CHECK-IN ── */}
       {activePopup === 'dailyLogin' && (
-        <DailyLoginModal onClose={closePopup} />
+        <DailyLoginModal onClose={closePopup} today={new Date().toISOString().slice(0, 10)} />
       )}
 
       {/* ── ROADMAP OVERLAY (semi-transparent, game keeps running behind) ── */}
