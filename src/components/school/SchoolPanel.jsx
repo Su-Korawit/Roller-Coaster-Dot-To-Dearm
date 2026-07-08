@@ -1,8 +1,9 @@
-import { useState } from 'react'
-import { X, ChevronLeft, ChevronRight, Plus, BookOpen, ClipboardCheck } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { X, ChevronLeft, ChevronRight, Plus, BookOpen, ClipboardCheck, Download, Upload } from 'lucide-react'
 import { useSchoolStore } from '../../stores/useSchoolStore'
 import { useUserStore } from '../../stores/useUserStore'
-import { appointmentsDueOn, isOverdue } from '../../utils/schoolDayView'
+import { appointmentsDueOn, isOverdue, noteFor } from '../../utils/schoolDayView'
+import { toNotebookSchema, fromNotebookSchema } from '../../utils/notebookExport'
 
 export const HOMEWORK_REWARD_COINS = 5
 
@@ -23,6 +24,9 @@ export default function SchoolPanel({ onClose, onOpenSubject, initialDate, today
   const appointments = useSchoolStore((s) => s.appointments)
   const toggleAppointment = useSchoolStore((s) => s.toggleAppointment)
   const addSubject = useSchoolStore((s) => s.addSubject)
+  const notes = useSchoolStore((s) => s.notes)
+  const upsertNote = useSchoolStore((s) => s.upsertNote)
+  const importNotes = useSchoolStore((s) => s.importNotes)
   const addCoins = useUserStore((s) => s.addCoins)
 
   const [date, setDate] = useState(
@@ -32,6 +36,7 @@ export default function SchoolPanel({ onClose, onOpenSubject, initialDate, today
   // `date` (which changes as the student browses other days) — an appointment
   // is only ever overdue relative to the real today, not the day being viewed.
   const todayStr = today ?? initialDate ?? new Date().toISOString().slice(0, 10)
+  const fileInputRef = useRef(null)
 
   const dayItems = appointmentsDueOn(appointments, date)
 
@@ -43,6 +48,27 @@ export default function SchoolPanel({ onClose, onOpenSubject, initialDate, today
   function handleAddSubject() {
     const name = window.prompt('ชื่อวิชา')
     if (name && name.trim()) addSubject({ name: name.trim() })
+  }
+
+  function handleExportNotebook() {
+    const blob = new Blob([JSON.stringify(toNotebookSchema(notes), null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'notebook.json'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  async function handleImportNotebookFile(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    try {
+      importNotes(fromNotebookSchema(JSON.parse(await file.text())))
+    } catch {
+      window.alert('ไฟล์ Notebook ไม่ถูกต้อง (รองรับเฉพาะ schema v1)')
+    }
   }
 
   return (
@@ -66,13 +92,33 @@ export default function SchoolPanel({ onClose, onOpenSubject, initialDate, today
                 <ChevronRight size={18} />
               </button>
             </div>
-            <button
-              onClick={onClose}
-              aria-label="ปิด"
-              className="neo-btn w-9 h-9 flex items-center justify-center rounded-lg bg-surface text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-            >
-              <X size={16} strokeWidth={2.5} aria-hidden="true" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="นำเข้า Notebook"
+                className="text-ink-soft hover:text-ink p-2"
+              >
+                <Upload size={16} />
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/json,.json"
+                aria-label="เลือกไฟล์ Notebook"
+                onChange={handleImportNotebookFile}
+                className="hidden"
+              />
+              <button onClick={handleExportNotebook} aria-label="ส่งออก Notebook" className="text-ink-soft hover:text-ink p-2">
+                <Download size={16} />
+              </button>
+              <button
+                onClick={onClose}
+                aria-label="ปิด"
+                className="neo-btn w-9 h-9 flex items-center justify-center rounded-lg bg-surface text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              >
+                <X size={16} strokeWidth={2.5} aria-hidden="true" />
+              </button>
+            </div>
           </div>
 
           <div className="flex flex-1 min-h-0">
@@ -134,6 +180,18 @@ export default function SchoolPanel({ onClose, onOpenSubject, initialDate, today
                   )
                 })
               )}
+              <div className="pt-2">
+                <h3 className="pixel-font text-[10px] text-ink-soft mb-2">Notebook</h3>
+                <textarea
+                  key={date}
+                  aria-label="Notebook"
+                  defaultValue={noteFor(notes, date, null)?.text ?? ''}
+                  onBlur={(e) => upsertNote({ date, subjectId: null, text: e.target.value })}
+                  rows={4}
+                  placeholder="จดสิ่งที่เรียนวันนี้..."
+                  className="w-full rounded-xl border border-ink/10 px-3 py-2 outline-none focus:border-brand resize-none text-sm thai-font"
+                />
+              </div>
             </div>
           </div>
         </div>

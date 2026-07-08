@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 let schoolState
@@ -29,6 +29,9 @@ describe('SchoolPanel', () => {
       ],
       toggleAppointment: vi.fn(),
       addSubject: vi.fn(),
+      notes: [],
+      upsertNote: vi.fn(),
+      importNotes: vi.fn(),
     }
   })
 
@@ -87,5 +90,67 @@ describe('SchoolPanel', () => {
     render(<SchoolPanel onClose={onClose} onOpenSubject={vi.fn()} initialDate="2026-07-08" />)
     fireEvent.click(screen.getByLabelText('ปิด'))
     expect(onClose).toHaveBeenCalled()
+  })
+
+  it('shows the existing note text for the viewed day', () => {
+    schoolState.notes = [
+      { id: 'n1', date: '2026-07-08', subjectId: null, text: 'เรียนถึงเรื่องอนุกรมแล้ว', createdAt: 1, updatedAt: 1 },
+    ]
+    render(<SchoolPanel onClose={vi.fn()} onOpenSubject={vi.fn()} initialDate="2026-07-08" />)
+    expect(screen.getByLabelText('Notebook').value).toBe('เรียนถึงเรื่องอนุกรมแล้ว')
+  })
+
+  it('editing the notebook and blurring saves it via upsertNote', () => {
+    render(<SchoolPanel onClose={vi.fn()} onOpenSubject={vi.fn()} initialDate="2026-07-08" />)
+    const textarea = screen.getByLabelText('Notebook')
+    fireEvent.change(textarea, { target: { value: 'new note' } })
+    fireEvent.blur(textarea)
+    expect(schoolState.upsertNote).toHaveBeenCalledWith({ date: '2026-07-08', subjectId: null, text: 'new note' })
+  })
+
+  it('exporting the notebook triggers a file download', () => {
+    const clickSpy = vi.fn()
+    const fakeAnchor = { click: clickSpy, href: '', download: '' }
+    const origCreateElement = document.createElement.bind(document)
+    const createElementSpy = vi.spyOn(document, 'createElement').mockImplementation((tag, ...args) => {
+      if (tag === 'a') return fakeAnchor
+      return origCreateElement(tag, ...args)
+    })
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock')
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+
+    render(<SchoolPanel onClose={vi.fn()} onOpenSubject={vi.fn()} initialDate="2026-07-08" />)
+    fireEvent.click(screen.getByLabelText('ส่งออก Notebook'))
+
+    expect(clickSpy).toHaveBeenCalled()
+    expect(fakeAnchor.download).toBe('notebook.json')
+    createElementSpy.mockRestore()
+  })
+
+  it('importing a valid notebook file calls importNotes with the parsed entries', async () => {
+    render(<SchoolPanel onClose={vi.fn()} onOpenSubject={vi.fn()} initialDate="2026-07-08" />)
+    const file = new File(
+      [JSON.stringify({ version: 1, notes: [{ date: '2026-07-09', subjectId: null, text: 'imported' }] })],
+      'notebook.json',
+      { type: 'application/json' },
+    )
+    const input = screen.getByLabelText('เลือกไฟล์ Notebook')
+    fireEvent.change(input, { target: { files: [file] } })
+    await waitFor(() => {
+      expect(schoolState.importNotes).toHaveBeenCalledWith([{ date: '2026-07-09', subjectId: null, text: 'imported' }])
+    })
+  })
+
+  it('importing an invalid notebook file alerts instead of throwing', async () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
+    render(<SchoolPanel onClose={vi.fn()} onOpenSubject={vi.fn()} initialDate="2026-07-08" />)
+    const file = new File(['not json'], 'bad.json', { type: 'application/json' })
+    const input = screen.getByLabelText('เลือกไฟล์ Notebook')
+    fireEvent.change(input, { target: { files: [file] } })
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalled()
+    })
+    expect(schoolState.importNotes).not.toHaveBeenCalled()
+    alertSpy.mockRestore()
   })
 })
