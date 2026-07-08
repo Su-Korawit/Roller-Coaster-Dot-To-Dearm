@@ -12,6 +12,10 @@ vi.mock('../../stores/useUserStore', () => ({
   useUserStore: (sel) => sel({ addCoins }),
 }))
 
+vi.mock('./TimetableTemplateSheet', () => ({
+  default: ({ onClose }) => <div data-testid="template-sheet"><button onClick={onClose}>close-sheet</button></div>,
+}))
+
 const { default: SchoolPanel } = await import('./SchoolPanel')
 
 describe('SchoolPanel', () => {
@@ -162,5 +166,14 @@ describe('SchoolPanel', () => {
     const item = screen.getByTestId('school-appointment-item')
     expect(item.textContent).toContain('ลงทะเบียน myTCAS')
     expect(item.querySelector('.lucide-calendar-days')).toBeTruthy()
+  })
+
+  it('opens the timetable template sheet from the rail button', () => {
+    render(<SchoolPanel onClose={vi.fn()} onOpenSubject={vi.fn()} initialDate="2026-07-08" />)
+    expect(screen.queryByTestId('template-sheet')).toBeNull()
+    fireEvent.click(screen.getByLabelText('โหลดตารางเรียน'))
+    expect(screen.getByTestId('template-sheet')).toBeTruthy()
+    fireEvent.click(screen.getByText('close-sheet'))
+    expect(screen.queryByTestId('template-sheet')).toBeNull()
   })
 })

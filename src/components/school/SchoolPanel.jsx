@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react'
-import { X, ChevronLeft, ChevronRight, Plus, BookOpen, ClipboardCheck, CalendarDays, Download, Upload } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Plus, BookOpen, ClipboardCheck, CalendarDays, Download, Upload, FolderDown } from 'lucide-react'
 import { useSchoolStore } from '../../stores/useSchoolStore'
 import { useUserStore } from '../../stores/useUserStore'
 import { appointmentsDueOn, isOverdue, noteFor } from '../../utils/schoolDayView'
 import { toNotebookSchema, fromNotebookSchema } from '../../utils/notebookExport'
+import TimetableTemplateSheet from './TimetableTemplateSheet'
 
 export const HOMEWORK_REWARD_COINS = 5
 
@@ -32,6 +33,7 @@ export default function SchoolPanel({ onClose, onOpenSubject, initialDate, today
   const [date, setDate] = useState(
     initialDate ?? new Date().toISOString().slice(0, 10),
   )
+  const [showTemplates, setShowTemplates] = useState(false)
   // "today" is fixed for the panel's lifetime (when it opened), independent of
   // `date` (which changes as the student browses other days) — an appointment
   // is only ever overdue relative to the real today, not the day being viewed.
@@ -147,6 +149,13 @@ export default function SchoolPanel({ onClose, onOpenSubject, initialDate, today
               >
                 <Plus size={16} />
               </button>
+              <button
+                onClick={() => setShowTemplates(true)}
+                aria-label="โหลดตารางเรียน"
+                className="w-8 h-8 rounded-full border-2 border-dashed border-brand/40 text-brand flex items-center justify-center"
+              >
+                <FolderDown size={14} />
+              </button>
             </div>
 
             {/* Day view */}
@@ -198,6 +207,7 @@ export default function SchoolPanel({ onClose, onOpenSubject, initialDate, today
           </div>
         </div>
       </div>
+      {showTemplates && <TimetableTemplateSheet onClose={() => setShowTemplates(false)} />}
     </div>
   )
 }
