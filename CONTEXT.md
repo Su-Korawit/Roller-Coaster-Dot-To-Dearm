@@ -248,7 +248,7 @@ Central visual feature. Files:
 | **Match score** | 0–100 compatibility score between two users (program 40 pts, MBTI 15, university 10…) |
 | **Capsule** | Active skill timer — a skill the user has committed to for a time window |
 | **Coins** | In-app currency earned through streaks, AI tasks, matches |
-| **Streak** | Consecutive daily login / task-completion counter |
+| **Streak** | Consecutive daily check-in counter with real semantics: advances via `useUserStore.addDailyFeel` (pure math in `src/utils/streakCycle.js` — same-day no-op, yesterday +1, gap resets to 1 flagging `broken`). `lastStreakDate`/`bestStreak` persist through `portfolioSync`. The check-in success screen is the "N Day" Motivation screen (5-dot cycle, deterministic Thai message, reflection saved into the Notebook) |
 | **Personal Map** | A user's own instance of the base Phaser world (`test3` tilemap) plus the **Decoration objects** they have placed. Persisted at `maps/{ownerUid}` in Firestore. Distinct from **Roadmap** (the React Flow career plan) |
 | **Subject** | A School System entry (`{ id, name, color, description }`) representing one class/course. Owns weekly **Schedule slots** and **Appointments**. Persisted at `users/{uid}.school.subjects` via `useSchoolStore` |
 | **Schedule slot** | A recurring weekly time block for a Subject: `{ id, subjectId, day, startTime, endTime }`. `day` is one of `sun`..`sat`; does not carry a specific calendar date |
@@ -279,4 +279,4 @@ Central visual feature. Files:
 | **Spotify connection** | A user's linked Spotify account. The OAuth **refresh token** + `spotifyUserId`, stored in the private subcollection `users/{uid}/private/spotify` (owner-only; kept out of the world-readable user doc). Managed via `refs.spotifyAuth(uid)` / `shapes.spotifyConnection`. See ADR-0010. Distinct from **musicConfig** (admin-authored background music for the game/welcome). |
 | **Connect remote** | The app acting as a Spotify **Connect** controller: it sends Web API playback commands but plays no audio itself — sound comes from the user's own active Spotify **device**. Requires Spotify Premium. |
 | **Active device** | A Spotify client (phone app, desktop app, speaker) currently reachable by the Connect API. Absence surfaces as `NO_ACTIVE_DEVICE` (404); the Music UI then prompts the user to open Spotify or pick a device via `transferPlayback`. |
-| **MiniPlayer / PlayerSheet** | The persistent now-playing bar mounted in `MobileLayout` (**MiniPlayer**) and its expanded full-control bottom sheet (**PlayerSheet**: search, playlists, transport, device picker). |
+| **MiniPlayer / PlayerSheet** | The persistent now-playing bar mounted in `MobileLayout` (**MiniPlayer**) and its expanded full-control bottom sheet (**PlayerSheet**: search, playlists, transport, device picker). PlayerSheet's body is the reusable **SpotifyControls**, also embedded in **MusicPanel** (the unified Background + Spotify panel the HomePage music pill opens). |
