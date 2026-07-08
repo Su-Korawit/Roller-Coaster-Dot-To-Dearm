@@ -17,6 +17,7 @@ import { nodeTypes } from '../components/roadmap/nodeTypes'
 import TrashZone from '../components/roadmap/TrashZone'
 import SelectionActionBar from '../components/roadmap/SelectionActionBar'
 import SheetSwitcher from '../components/roadmap/SheetSwitcher'
+import StickerPickerSheet from '../components/roadmap/StickerPickerSheet'
 import { findProximityConnection } from '../utils/findProximityConnection'
 import { computeNodeCenter } from '../utils/computeNodeCenter'
 import { computeCenteredPosition } from '../utils/computeCenteredPosition'
@@ -44,6 +45,7 @@ export default function RoadmapPage({ onClose }) {
   const setNodes = useRoadmapStore((s) => s.setNodes)
   const setEdges = useRoadmapStore((s) => s.setEdges)
   const addNode = useRoadmapStore((s) => s.addNode)
+  const addSticker = useRoadmapStore((s) => s.addSticker)
   const removeNode = useRoadmapStore((s) => s.removeNode)
   const connect = useRoadmapStore((s) => s.connect)
   const removeEdge = useRoadmapStore((s) => s.removeEdge)
@@ -72,6 +74,9 @@ export default function RoadmapPage({ onClose }) {
 
   // Mobile select mode — tapping a block toggles its selection membership.
   const [mobileSelectMode, setMobileSelectMode] = useState(false)
+  const [showStickers, setShowStickers] = useState(false)
+  const [lineMode, setLineMode] = useState(false)
+  const [showBlockPalette, setShowBlockPalette] = useState(false)
 
   // Trash zone
   const trashRef = useRef(null)
@@ -91,8 +96,14 @@ export default function RoadmapPage({ onClose }) {
     [removeNode],
   )
   const onConnect = useCallback(
-    (params) => connect(params),
-    [connect],
+    (params) => {
+      if (lineMode) {
+        setEdges(addEdge({ ...params, type: 'annotation' }, edges))
+      } else {
+        connect(params)
+      }
+    },
+    [lineMode, connect, setEdges, edges],
   )
   const onEdgesDelete = useCallback(
     (deleted) => deleted.forEach((e) => removeEdge(e.id)),
@@ -328,8 +339,8 @@ export default function RoadmapPage({ onClose }) {
             </Panel>
           )}
 
-          {/* Tool palette */}
-          {canEdit && (
+          {/* Tool palette — block types (+ expands this strip) */}
+          {canEdit && showBlockPalette && (
             <Panel position="top-center">
               <div className="flex items-center gap-2 bg-white rounded-2xl shadow-hard-sm px-3 py-2 border border-ink/10 mt-2 max-w-[calc(100vw-1rem)] overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
                 <span className="pixel-font text-[9px] text-ink-soft mr-1">Add</span>
@@ -354,19 +365,6 @@ export default function RoadmapPage({ onClose }) {
                 >
                   <div className="w-8 h-8 rotate-45 bg-accent-pink/20 border-2 border-accent-pink/50" style={{ borderRadius: '6px' }} />
                   <span className="pixel-font text-[8px] text-ink">Condition</span>
-                </button>
-                <button
-                  onClick={() => addAtCenter('stageLabel')}
-                  draggable="true"
-                  onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'stageLabel')}
-                  {...getHandlers('stageLabel')}
-                  className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-                  aria-label="Add Stage Label"
-                >
-                  <div className="w-8 h-5 rounded-full bg-brand/20 border-2 border-brand/50 flex items-center justify-center">
-                    <span className="pixel-font text-[6px] text-brand">Aa</span>
-                  </div>
-                  <span className="pixel-font text-[8px] text-ink">Stage</span>
                 </button>
                 <button
                   onClick={() => addAtCenter('image')}
@@ -430,6 +428,64 @@ export default function RoadmapPage({ onClose }) {
             </Panel>
           )}
 
+          {/* Wireframe toolbar: Text · Line · Sticker · + */}
+          {canEdit && (
+            <Panel position="bottom-center">
+              <div className="flex items-center gap-2 bg-white rounded-2xl shadow-hard-sm px-3 py-2 border border-ink/10 mb-2">
+                <button
+                  onClick={() => addAtCenter('stageLabel')}
+                  className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  aria-label="เพิ่มข้อความ"
+                >
+                  <div className="w-8 h-5 rounded-full bg-brand/20 border-2 border-brand/50 flex items-center justify-center">
+                    <span className="pixel-font text-[6px] text-brand">Aa</span>
+                  </div>
+                  <span className="pixel-font text-[8px] text-ink">Text</span>
+                </button>
+                <button
+                  onClick={() => setLineMode((m) => !m)}
+                  className={[
+                    'flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl active:scale-95 transition-all',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand',
+                    lineMode ? 'bg-brand/20 hover:bg-brand/30' : 'hover:bg-brand/10',
+                  ].join(' ')}
+                  aria-label="โหมดเส้น"
+                  aria-pressed={lineMode}
+                >
+                  <div className="w-8 h-8 rounded-xl border-2 border-dashed border-brand/50 flex items-center justify-center">
+                    <span className="text-[14px]">〰️</span>
+                  </div>
+                  <span className="pixel-font text-[8px] text-ink">Line</span>
+                </button>
+                <button
+                  onClick={() => setShowStickers(true)}
+                  className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  aria-label="เพิ่มสติกเกอร์"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-brand/10 border-2 border-brand/30 flex items-center justify-center">
+                    <span className="text-[14px]">⭐</span>
+                  </div>
+                  <span className="pixel-font text-[8px] text-ink">Sticker</span>
+                </button>
+                <button
+                  onClick={() => setShowBlockPalette((v) => !v)}
+                  className={[
+                    'flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl active:scale-95 transition-all',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand',
+                    showBlockPalette ? 'bg-brand/20 hover:bg-brand/30' : 'hover:bg-brand/10',
+                  ].join(' ')}
+                  aria-label="เพิ่มบล็อก"
+                  aria-pressed={showBlockPalette}
+                >
+                  <div className="w-8 h-8 rounded-xl bg-brand/20 border-2 border-brand/50 flex items-center justify-center">
+                    <span className="pixel-font text-[14px] text-brand font-bold">+</span>
+                  </div>
+                  <span className="pixel-font text-[8px] text-ink">+</span>
+                </button>
+              </div>
+            </Panel>
+          )}
+
           {/* Selection action bar */}
           <Panel position="bottom-center">
             <SelectionActionBar
@@ -449,6 +505,14 @@ export default function RoadmapPage({ onClose }) {
           </Panel>
 
         </ReactFlow>
+
+        {/* Sticker picker sheet */}
+        {showStickers && (
+          <StickerPickerSheet
+            onPick={(url) => addSticker(url)}
+            onClose={() => setShowStickers(false)}
+          />
+        )}
 
         {/* Trash zone — appears only while a block is being dragged */}
         <TrashZone ref={trashRef} visible={isDragging} over={isOverTrash} />
