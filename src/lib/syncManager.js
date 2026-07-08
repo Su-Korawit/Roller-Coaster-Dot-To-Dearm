@@ -165,9 +165,12 @@ const roadmapSheetSync = createFirestoreSync({
 const portfolioSync = createFirestoreSync({
   store: useUserStore,
   logName: 'syncPortfolio',
-  toDoc: ({ portfolioData, journeys }) => ({
+  toDoc: ({ portfolioData, journeys, streak, lastStreakDate, bestStreak }) => ({
     portfolioData,
     journeys,
+    streak,
+    lastStreakDate,
+    bestStreak,
     portfolioUpdatedAt: serverTimestamp(),
   }),
   fromDoc: (data) => {
@@ -175,9 +178,14 @@ const portfolioSync = createFirestoreSync({
     if (data.portfolioData) updates.portfolioData = data.portfolioData
     if (data.journeys) updates.journeys = data.journeys
     if (data.photoURL) updates.profilePhotoURL = data.photoURL
+    if (typeof data.streak === 'number') updates.streak = data.streak
+    if (typeof data.lastStreakDate === 'string') updates.lastStreakDate = data.lastStreakDate
+    if (typeof data.bestStreak === 'number') updates.bestStreak = data.bestStreak
     return updates
   },
-  changed: (s, p) => s.portfolioData !== p.portfolioData || s.journeys !== p.journeys,
+  changed: (s, p) =>
+    s.portfolioData !== p.portfolioData || s.journeys !== p.journeys
+    || s.streak !== p.streak || s.lastStreakDate !== p.lastStreakDate || s.bestStreak !== p.bestStreak,
   needsSeed: (data) => !data.portfolioData || !data.journeys,
 })
 
