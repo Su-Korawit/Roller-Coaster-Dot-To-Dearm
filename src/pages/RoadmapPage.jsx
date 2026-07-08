@@ -23,6 +23,7 @@ import { computeCenteredPosition } from '../utils/computeCenteredPosition'
 import { computeDropPosition } from '../utils/computeDropPosition'
 import { toSchema, selectSubset } from '../utils/roadmapExport'
 import { useLongPressDrag } from '../hooks/useLongPressDrag'
+import AnnotationEdge from '../components/roadmap/AnnotationEdge'
 
 const SNAP_THRESHOLD = 40
 
@@ -30,7 +31,7 @@ const SNAP_THRESHOLD = 40
 function InvisibleEdge() {
   return null
 }
-const edgeTypes = { default: InvisibleEdge }
+const edgeTypes = { default: InvisibleEdge, annotation: AnnotationEdge }
 
 export default function RoadmapPage({ onClose }) {
   const navigate = useNavigate()
