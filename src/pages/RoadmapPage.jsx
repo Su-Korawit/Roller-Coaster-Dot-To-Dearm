@@ -18,6 +18,7 @@ import TrashZone from '../components/roadmap/TrashZone'
 import SelectionActionBar from '../components/roadmap/SelectionActionBar'
 import SheetSwitcher from '../components/roadmap/SheetSwitcher'
 import StickerPickerSheet from '../components/roadmap/StickerPickerSheet'
+import StageBands, { DEFAULT_STAGES } from '../components/roadmap/StageBands'
 import { findProximityConnection } from '../utils/findProximityConnection'
 import { computeNodeCenter } from '../utils/computeNodeCenter'
 import { computeCenteredPosition } from '../utils/computeCenteredPosition'
@@ -59,6 +60,8 @@ export default function RoadmapPage({ onClose }) {
   const importRoadmap = useRoadmapStore((s) => s.importRoadmap)
   const sheets = useRoadmapStore((s) => s.sheets)
   const activeSheetId = useRoadmapStore((s) => s.activeSheetId)
+  const timeline = useRoadmapStore((s) => s.timeline)
+  const renameStage = useRoadmapStore((s) => s.renameStage)
   const canEdit = (sheets.find((s) => s.id === activeSheetId)?.myRole ?? 'owner') !== 'view'
   const syncStatus = useRoadmapStore((s) => s.syncStatus)
   const setSyncStatus = useRoadmapStore((s) => s.setSyncStatus)
@@ -283,6 +286,10 @@ export default function RoadmapPage({ onClose }) {
       </div>
       <div className="shrink-0 border-t border-ink/10 bg-white">
         <SheetSwitcher />
+        <StageBands
+          stages={timeline?.stages ?? DEFAULT_STAGES}
+          onRename={renameStage}
+        />
       </div>
 
       {/* Canvas */}

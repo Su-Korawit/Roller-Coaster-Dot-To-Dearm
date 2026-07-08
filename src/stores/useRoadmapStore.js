@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import { addEdge } from '@xyflow/react'
 import { computeSnapPosition } from '../utils/computeSnapPosition'
 import { fromSchema } from '../utils/roadmapExport'
+import { DEFAULT_STAGES } from '../components/roadmap/StageBands'
 
 const IMPORT_GAP = 80
 
@@ -18,6 +19,7 @@ function applyToActive(state, patch) {
   const sheetPatch = {}
   if ('nodes' in patch) sheetPatch.nodes = patch.nodes
   if ('edges' in patch) sheetPatch.edges = patch.edges
+  if ('timeline' in patch) sheetPatch.timeline = patch.timeline
   return {
     ...patch,
     sheets: state.sheets.map((sh) =>
@@ -31,12 +33,13 @@ export const useRoadmapStore = create(
     (set) => ({
       // Multi-sheet state
       myUid: null,
-      sheets: [{ id: 'local-default', name: 'Roadmap', nodes: [], edges: [], ownerUid: null, myRole: 'owner' }],
+      sheets: [{ id: 'local-default', name: 'Roadmap', nodes: [], edges: [], timeline: null, ownerUid: null, myRole: 'owner' }],
       activeSheetId: 'local-default',
 
       // Compatibility fields (always mirror active sheet)
       nodes: [],
       edges: [],
+      timeline: null,
       setpoint: null,
       selection: [],
       syncStatus: 'idle',
@@ -50,6 +53,7 @@ export const useRoadmapStore = create(
             activeSheetId: active?.id ?? null,
             nodes: active?.nodes ?? [],
             edges: active?.edges ?? [],
+            timeline: active?.timeline ?? null,
             setpoint: null,
             selection: [],
           }
@@ -57,10 +61,11 @@ export const useRoadmapStore = create(
       createSheet: (name) => {
         const id = crypto.randomUUID()
         set((state) => ({
-          sheets: [...state.sheets, { id, name, nodes: [], edges: [], ownerUid: state.myUid, myRole: 'owner' }],
+          sheets: [...state.sheets, { id, name, nodes: [], edges: [], timeline: null, ownerUid: state.myUid, myRole: 'owner' }],
           activeSheetId: id,
           nodes: [],
           edges: [],
+          timeline: null,
           setpoint: null,
           selection: [],
         }))
@@ -75,6 +80,7 @@ export const useRoadmapStore = create(
             activeSheetId: sheetId,
             nodes: target.nodes,
             edges: target.edges,
+            timeline: target.timeline ?? null,
             setpoint: null,
             selection: [],
           }
@@ -94,9 +100,18 @@ export const useRoadmapStore = create(
             activeSheetId: fallback.id,
             nodes: fallback.nodes,
             edges: fallback.edges,
+            timeline: fallback.timeline ?? null,
             setpoint: null,
             selection: [],
           }
+        }),
+
+      renameStage: (index, label) =>
+        set((state) => {
+          const active = state.sheets.find((sh) => sh.id === state.activeSheetId)
+          const stages = active?.timeline?.stages ?? DEFAULT_STAGES.map((s) => ({ ...s }))
+          const newStages = stages.map((s, i) => (i === index ? { ...s, label } : s))
+          return applyToActive(state, { timeline: { stages: newStages } })
         }),
 
       setNodes: (nodes) => set((state) => applyToActive(state, { nodes })),

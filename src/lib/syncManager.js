@@ -148,11 +148,18 @@ const roadmapSheetSync = createFirestoreSync({
     const sheet = state.sheets.find((sh) => sh.id === sheetId)
     const nodes = sheet?.nodes ?? state.nodes
     const edges = sheet?.edges ?? state.edges
-    return { nodes, edges, updatedAt: serverTimestamp() }
+    return { nodes, edges, timeline: sheet?.timeline ?? state.timeline ?? null, updatedAt: serverTimestamp() }
   },
-  fromDoc: (data) =>
-    ('nodes' in data || 'edges' in data) ? { nodes: data.nodes ?? [], edges: data.edges ?? [] } : {},
-  changed: (s, p) => s.nodes !== p.nodes || s.edges !== p.edges,
+  fromDoc: (data) => {
+    if (!('nodes' in data || 'edges' in data || 'timeline' in data)) return {}
+    const updates = {
+      nodes: data.nodes ?? [],
+      edges: data.edges ?? [],
+    }
+    if ('timeline' in data) updates.timeline = data.timeline
+    return updates
+  },
+  changed: (s, p) => s.nodes !== p.nodes || s.edges !== p.edges || s.timeline !== p.timeline,
   guard: (state, sheetId) => {
     const sheet = state.sheets.find((sh) => sh.id === sheetId)
     return state.activeSheetId === sheetId && sheet?.myRole !== 'view'
@@ -195,7 +202,16 @@ export const hydrateTasksFromFirestore = tasksSync.hydrate
 export const setTaskSyncUser = tasksSync.setSyncUser
 
 export const pushRoadmapSheetToFirestore = roadmapSheetSync.push
-export const hydrateRoadmapSheetFromFirestore = roadmapSheetSync.hydrate
+export async function hydrateRoadmapSheetFromFirestore(sheetId) {
+  await roadmapSheetSync.hydrate(sheetId)
+  useRoadmapStore.setState((state) => ({
+    sheets: state.sheets.map((sh) =>
+      sh.id === state.activeSheetId
+        ? { ...sh, nodes: state.nodes, edges: state.edges, timeline: state.timeline ?? sh.timeline ?? null }
+        : sh,
+    ),
+  }))
+}
 export const armRoadmapSheetSync = (sheetId) => roadmapSheetSync.setSyncUser(sheetId)
 export const disarmRoadmapSheetSync = () => roadmapSheetSync.setSyncUser(null)
 

@@ -70,7 +70,7 @@ describe('SyncManager (roadmap sheet instance)', () => {
 
     expect(setDoc).toHaveBeenCalledWith(
       { _path: 'roadmapSheets/sheet-a' },
-      { nodes, edges, updatedAt: { _type: 'serverTimestamp' } },
+      { nodes, edges, timeline: null, updatedAt: { _type: 'serverTimestamp' } },
       { merge: true },
     )
   })

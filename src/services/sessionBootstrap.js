@@ -106,6 +106,7 @@ async function bootstrapRoadmapSheets(uid, userDoc) {
     name: sheet.name,
     nodes: sheet.nodes ?? [],
     edges: sheet.edges ?? [],
+    timeline: sheet.timeline ?? null,
     ownerUid: sheet.ownerUid,
     myRole: roleForSheet(sheet, uid),
   }))
