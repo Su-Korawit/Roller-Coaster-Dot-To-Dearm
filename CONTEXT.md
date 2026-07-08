@@ -45,6 +45,7 @@ Mobile-first React web app for Thai students: gamified career planning, MBTI pro
     ├── components/
     │   ├── ui/                 Atomic UI primitives (Button, BottomSheet, Toggle…)
     │   ├── roadmap/            Node-based flow editor nodes + ruler
+    │   ├── school/             SchoolPanel (day view), SubjectDetailPanel (schedule + appointments)
     │   ├── admin/              Admin dashboard sections
     │   ├── profile/            ProfilePanel parts (JourneyManager + presentational)
     │   └── shop/               Shop + payment UI
@@ -249,6 +250,9 @@ Central visual feature. Files:
 | **Coins** | In-app currency earned through streaks, AI tasks, matches |
 | **Streak** | Consecutive daily login / task-completion counter |
 | **Personal Map** | A user's own instance of the base Phaser world (`test3` tilemap) plus the **Decoration objects** they have placed. Persisted at `maps/{ownerUid}` in Firestore. Distinct from **Roadmap** (the React Flow career plan) |
+| **Subject** | A School System entry (`{ id, name, color, description }`) representing one class/course. Owns weekly **Schedule slots** and **Appointments**. Persisted at `users/{uid}.school.subjects` via `useSchoolStore` |
+| **Schedule slot** | A recurring weekly time block for a Subject: `{ id, subjectId, day, startTime, endTime }`. `day` is one of `sun`..`sat`; does not carry a specific calendar date |
+| **Appointment** | A dated School System item under a Subject — homework or a graded checkpoint: `{ id, subjectId, title, kind, dueDate, completed, createdAt, completedAt }`. `kind` is `homework` or `checkpoint`. Completing one awards Coins and a streak stack the same way a Task does |
 | **Decoration object** | One item a user places on their Personal Map: `{ key, x, y }`. `key` is a stable item identifier from `src/constants/mapItems.js`; `spriteKey` is the Phaser texture key used to render it |
 | **Visit** | Rendering another user's Personal Map and joining its live presence room. The viewer is the **visitor**; the map's `ownerUid` is the **owner** |
 | **Map room / presence** | The set of users currently inside a given Personal Map, broadcast in real time via RTDB at `/worlds/{ownerUid}/players/{uid}` |
