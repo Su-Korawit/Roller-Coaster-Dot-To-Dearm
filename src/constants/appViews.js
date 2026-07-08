@@ -7,6 +7,7 @@ export const APP_VIEWS = {
   NEWS: 'news',
   PROFILE: 'profile',
   SKILL: 'skill',
+  SCHOOL: 'school',
   SOCIAL: 'social',
   CHAT: 'chat',
   MUSIC: 'music',

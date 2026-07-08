@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
-import { Calendar, MessageCircle, Map, Newspaper, Trophy, Flame, Play, Pause, Music, Gamepad2 } from 'lucide-react'
+import { Calendar, MessageCircle, Map, Newspaper, Trophy, Flame, Play, Pause, Music, Gamepad2, GraduationCap } from 'lucide-react'
 import { useUserStore } from '../stores/useUserStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { APP_VIEWS, shouldShowNav } from '../constants/appViews'
@@ -12,6 +12,8 @@ import SocialPanel from '../components/SocialPanel'
 import ChatPanel from '../components/ChatPanel'
 import CalendarPopup from '../components/CalendarPopup'
 import MasteryPopup from '../components/MasteryPopup'
+import SchoolPanel from '../components/school/SchoolPanel'
+import SubjectDetailPanel from '../components/school/SubjectDetailPanel'
 import DailyLoginModal from '../components/DailyLoginModal'
 import { getDoc, setDoc } from 'firebase/firestore'
 import { auth } from '../firebase'
@@ -34,6 +36,7 @@ function HomePage() {
   const [newsRead, setNewsRead] = useState(false)
   const [taskInitialView, setTaskInitialView] = useState('list')
   const [chatInitialView, setChatInitialView] = useState('list')
+  const [openSubjectId, setOpenSubjectId] = useState(null)
   const [contactedAdmin, setContactedAdmin] = useState(() => localStorage.getItem('rc-contacted-admin') === 'true')
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTrackIdx, setCurrentTrackIdx] = useState(0)
@@ -293,6 +296,13 @@ function HomePage() {
         >
           <Map size={22} strokeWidth={2.5} className="text-ink" />
         </button>
+        <button
+          onClick={() => handleTabChange(APP_VIEWS.SCHOOL)}
+          aria-label="เปิดตารางเรียน"
+          className="neo-btn w-12 h-12 rounded-lg bg-hud flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        >
+          <GraduationCap size={22} strokeWidth={2.5} className="text-ink" />
+        </button>
         {uiVisibility.newsButton && (
           <button
             onClick={() => handleTabChange(APP_VIEWS.NEWS)}
@@ -333,6 +343,17 @@ function HomePage() {
           }}
           onOpenCalendar={handlePlannerTransition}
         />
+      )}
+      {activeTab === APP_VIEWS.SCHOOL && !openSubjectId && (
+        <SchoolPanel
+          onClose={closePanel}
+          onOpenSubject={setOpenSubjectId}
+          initialDate={new Date().toISOString().slice(0, 10)}
+          today={new Date().toISOString().slice(0, 10)}
+        />
+      )}
+      {activeTab === APP_VIEWS.SCHOOL && openSubjectId && (
+        <SubjectDetailPanel subjectId={openSubjectId} onClose={() => setOpenSubjectId(null)} />
       )}
 
       {/* ── CALENDAR POPUP (PLANNER_CALENDAR view) ── */}
