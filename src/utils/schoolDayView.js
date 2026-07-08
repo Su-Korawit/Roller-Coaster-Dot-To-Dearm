@@ -29,3 +29,13 @@ export function appointmentsDueOn(appointments, dateStr) {
 export function isOverdue(appointment, todayStr) {
   return !appointment.completed && appointment.dueDate < todayStr
 }
+
+export function noteFor(notes, date, subjectId = null) {
+  return notes.find((n) => n.date === date && (n.subjectId ?? null) === subjectId)
+}
+
+export function notesForSubject(notes, subjectId) {
+  return notes
+    .filter((n) => n.subjectId === subjectId)
+    .sort((a, b) => a.date.localeCompare(b.date))
+}
