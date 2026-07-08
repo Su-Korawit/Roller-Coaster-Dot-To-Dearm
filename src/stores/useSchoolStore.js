@@ -8,10 +8,11 @@ function nextId(prefix) {
 
 export const useSchoolStore = create(
   persist(
-    (set) => ({
+    (set, get) => ({
       subjects: [],
       scheduleSlots: [],
       appointments: [],
+      notes: [],
 
       addSubject: ({ name, color = '#a78bda', description = '' }) => {
         const id = nextId('subject')
@@ -61,6 +62,25 @@ export const useSchoolStore = create(
         })),
       removeAppointment: (id) =>
         set((state) => ({ appointments: state.appointments.filter((a) => a.id !== id) })),
+      upsertNote: ({ date, subjectId = null, text }) => {
+        const existing = get().notes.find((n) => n.date === date && (n.subjectId ?? null) === subjectId)
+        if (existing) {
+          set((s) => ({
+            notes: s.notes.map((n) => (n.id === existing.id ? { ...n, text, updatedAt: Date.now() } : n)),
+          }))
+          return existing.id
+        }
+        const id = nextId('note')
+        set((s) => ({
+          notes: [...s.notes, { id, date, subjectId, text, createdAt: Date.now(), updatedAt: Date.now() }],
+        }))
+        return id
+      },
+      removeNote: (id) =>
+        set((state) => ({ notes: state.notes.filter((n) => n.id !== id) })),
+      importNotes: (entries) => {
+        entries.forEach((entry) => get().upsertNote(entry))
+      },
       // Only tracks the streak stack here (mirrors useTaskStore.toggleTask).
       // Coin rewards are decided and applied by the calling UI, same as
       // TaskPanel does for regular tasks.
@@ -79,7 +99,7 @@ export const useSchoolStore = create(
           }
         }),
 
-      clearSchool: () => set({ subjects: [], scheduleSlots: [], appointments: [] }),
+      clearSchool: () => set({ subjects: [], scheduleSlots: [], appointments: [], notes: [] }),
     }),
     { name: 'rc-school-store' },
   ),

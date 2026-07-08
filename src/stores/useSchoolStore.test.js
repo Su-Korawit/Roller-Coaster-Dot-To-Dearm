@@ -112,4 +112,52 @@ describe('useSchoolStore', () => {
     useSchoolStore.getState().removeAppointment(apptId)
     expect(useSchoolStore.getState().appointments).toEqual([])
   })
+
+  it('upserts a new note for a date with no existing note', () => {
+    const id = useSchoolStore.getState().upsertNote({ date: '2026-07-10', text: 'เรียนถึงเรื่องอนุกรมแล้ว' })
+    const notes = useSchoolStore.getState().notes
+    expect(notes).toHaveLength(1)
+    expect(notes[0]).toMatchObject({ id, date: '2026-07-10', subjectId: null, text: 'เรียนถึงเรื่องอนุกรมแล้ว' })
+    expect(typeof notes[0].createdAt).toBe('number')
+  })
+
+  it('upserting the same date+subject again updates the existing note instead of duplicating', () => {
+    const firstId = useSchoolStore.getState().upsertNote({ date: '2026-07-10', text: 'first draft' })
+    const secondId = useSchoolStore.getState().upsertNote({ date: '2026-07-10', text: 'edited draft' })
+    const notes = useSchoolStore.getState().notes
+    expect(secondId).toBe(firstId)
+    expect(notes).toHaveLength(1)
+    expect(notes[0].text).toBe('edited draft')
+  })
+
+  it('keeps a general note and a subject-tagged note for the same date separate', () => {
+    const mathId = useSchoolStore.getState().addSubject({ name: 'Math' })
+    useSchoolStore.getState().upsertNote({ date: '2026-07-10', text: 'general note' })
+    useSchoolStore.getState().upsertNote({ date: '2026-07-10', subjectId: mathId, text: 'math note' })
+    expect(useSchoolStore.getState().notes).toHaveLength(2)
+  })
+
+  it('removes a note', () => {
+    const id = useSchoolStore.getState().upsertNote({ date: '2026-07-10', text: 'temp' })
+    useSchoolStore.getState().removeNote(id)
+    expect(useSchoolStore.getState().notes).toEqual([])
+  })
+
+  it('importing notes merges into existing ones by date+subject', () => {
+    useSchoolStore.getState().upsertNote({ date: '2026-07-10', text: 'old' })
+    useSchoolStore.getState().importNotes([
+      { date: '2026-07-10', subjectId: null, text: 'imported over old' },
+      { date: '2026-07-11', subjectId: null, text: 'new day' },
+    ])
+    const notes = useSchoolStore.getState().notes
+    expect(notes).toHaveLength(2)
+    expect(notes.find((n) => n.date === '2026-07-10').text).toBe('imported over old')
+    expect(notes.find((n) => n.date === '2026-07-11').text).toBe('new day')
+  })
+
+  it('clearSchool also resets notes', () => {
+    useSchoolStore.getState().upsertNote({ date: '2026-07-10', text: 'temp' })
+    useSchoolStore.getState().clearSchool()
+    expect(useSchoolStore.getState().notes).toEqual([])
+  })
 })
