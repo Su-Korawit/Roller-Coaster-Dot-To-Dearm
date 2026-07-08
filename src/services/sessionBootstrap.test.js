@@ -16,6 +16,9 @@ const m = vi.hoisted(() => ({
   hydrateFarm: vi.fn(),
   armFarmSync: vi.fn(),
   disarmFarmSync: vi.fn(),
+  hydrateSchool: vi.fn(),
+  setSchoolSyncUser: vi.fn(),
+  disarmSchoolSync: vi.fn(),
   setCoins: vi.fn(),
   setMapOwner: vi.fn(),
   resetPlans: vi.fn(),
@@ -90,6 +93,9 @@ vi.mock('../lib/syncManager', () => ({
   hydrateFarmFromFirestore: (...a) => m.hydrateFarm(...a),
   armFarmSync: (...a) => m.armFarmSync(...a),
   disarmFarmSync: (...a) => m.disarmFarmSync(...a),
+  hydrateSchoolFromFirestore: (...a) => m.hydrateSchool(...a),
+  setSchoolSyncUser: (...a) => m.setSchoolSyncUser(...a),
+  disarmSchoolSync: (...a) => m.disarmSchoolSync(...a),
 }))
 
 const { bootstrapSession, teardownSession } = await import('./sessionBootstrap')
@@ -113,6 +119,7 @@ describe('bootstrapSession', () => {
     m.hydrateMap.mockResolvedValue(undefined)
     m.hydrateInventory.mockResolvedValue(undefined)
     m.hydrateFarm.mockResolvedValue(undefined)
+    m.hydrateSchool.mockResolvedValue(undefined)
     m.hydrateSpotify.mockResolvedValue(undefined)
     m.migrateLegacyRoadmap.mockReturnValue(null)
   })
@@ -154,6 +161,19 @@ describe('bootstrapSession', () => {
     m.hydrateInventory.mockRejectedValue(new Error('inventory boom'))
     await bootstrapSession({ uid: 'u1' })
     expect(m.hydrateFarm).toHaveBeenCalledWith('u1')
+  })
+
+  it('hydrates school and arms its sync writer on login', async () => {
+    await bootstrapSession({ uid: 'u1' })
+    expect(m.hydrateSchool).toHaveBeenCalledWith('u1')
+    expect(m.setSchoolSyncUser).toHaveBeenCalledWith('u1')
+  })
+
+  it('keeps hydrating school even when farm hydration throws', async () => {
+    m.hydrateFarm.mockRejectedValueOnce(new Error('farm boom'))
+    await bootstrapSession({ uid: 'u1' })
+    expect(m.hydrateSchool).toHaveBeenCalledWith('u1')
+    expect(m.setSchoolSyncUser).toHaveBeenCalledWith('u1')
   })
 
   it('keeps arming inventory sync even when farm hydration throws', async () => {

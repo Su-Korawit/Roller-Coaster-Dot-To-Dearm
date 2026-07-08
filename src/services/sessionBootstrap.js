@@ -43,6 +43,9 @@ import {
   hydrateFarmFromFirestore,
   armFarmSync,
   disarmFarmSync,
+  hydrateSchoolFromFirestore,
+  setSchoolSyncUser,
+  disarmSchoolSync,
 } from '../lib/syncManager'
 
 function readSelectStore() {
@@ -161,6 +164,10 @@ export async function bootstrapSession(firebaseUser) {
       await hydrateInventoryFromFirestore(uid)
       setInventorySyncUser(uid)
     }),
+    step('hydrate/arm school', async () => {
+      await hydrateSchoolFromFirestore(uid)
+      setSchoolSyncUser(uid)
+    }),
     step('hydrate/arm farm', async () => {
       await hydrateFarmFromFirestore(uid)
       armFarmSync(uid)
@@ -179,6 +186,7 @@ export function teardownSession() {
   disarmMapSync()
   disarmInventorySync()
   disarmFarmSync()
+  disarmSchoolSync()
   useWorldStore.getState().setMapOwner(null)
   usePlansStore.getState().resetPlans()
 }

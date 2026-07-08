@@ -21,6 +21,7 @@ import { useUserStore } from '../stores/useUserStore'
 import { useWorldStore } from '../stores/useWorldStore'
 import { useInventoryStore } from '../stores/useInventoryStore'
 import { useFarmStore } from '../stores/useFarmStore'
+import { useSchoolStore } from '../stores/useSchoolStore'
 
 /**
  * Build a debounced Firestore sync for a single Zustand store.
@@ -241,6 +242,31 @@ const inventorySync = createFirestoreSync({
 export const hydrateInventoryFromFirestore = inventorySync.hydrate
 export const setInventorySyncUser = inventorySync.setSyncUser
 export const disarmInventorySync = () => inventorySync.setSyncUser(null)
+
+// ── School System (subjects, schedule slots, appointments) → users/{uid} ─────
+const schoolSync = createFirestoreSync({
+  store: useSchoolStore,
+  logName: 'syncSchool',
+  toDoc: ({ subjects, scheduleSlots, appointments }) => ({
+    school: { subjects, scheduleSlots, appointments },
+    schoolUpdatedAt: serverTimestamp(),
+  }),
+  fromDoc: (data) => {
+    if (!data.school) return {}
+    return {
+      subjects: data.school.subjects ?? [],
+      scheduleSlots: data.school.scheduleSlots ?? [],
+      appointments: data.school.appointments ?? [],
+    }
+  },
+  changed: (s, p) =>
+    s.subjects !== p.subjects || s.scheduleSlots !== p.scheduleSlots || s.appointments !== p.appointments,
+  needsSeed: () => false,
+})
+
+export const hydrateSchoolFromFirestore = schoolSync.hydrate
+export const setSchoolSyncUser = schoolSync.setSyncUser
+export const disarmSchoolSync = () => schoolSync.setSyncUser(null)
 
 // ── Farm plots (visitor-readable) → maps/{uid}; owner-only writes ─────────────
 // guard mirrors mapSync: only debounce-write when viewing one's OWN map, so
