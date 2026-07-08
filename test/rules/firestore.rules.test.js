@@ -247,3 +247,23 @@ describe('Roadmap Sheets rules (roadmapSheets/{sheetId})', () => {
     await assertSucceeds(getDocs(q))
   })
 })
+
+describe('tcasEvents rules', () => {
+  it('allows a signed-in user to read events', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'tcasEvents/e1'), { title: 'สมัคร TCAS70', date: '2026-07-15' })
+    })
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(getDoc(doc(alice, 'tcasEvents/e1')))
+  })
+
+  it('BLOCKS a non-admin write', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(setDoc(doc(alice, 'tcasEvents/e2'), { title: 'hack', date: '2026-01-01' }))
+  })
+
+  it('allows the super-admin to write', async () => {
+    const admin = testEnv.authenticatedContext(SUPER_UID).firestore()
+    await assertSucceeds(setDoc(doc(admin, 'tcasEvents/e3'), { title: 'ประกาศผล', date: '2026-12-01' }))
+  })
+})

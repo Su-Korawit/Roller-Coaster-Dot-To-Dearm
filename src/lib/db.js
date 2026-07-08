@@ -27,6 +27,7 @@ export const refs = {
   farmShop:    (id)             => doc(db, 'farmShops', id),
   roadmapSheet: (sheetId)       => doc(db, 'roadmapSheets', sheetId),
   appUpdate:   (id)             => doc(db, 'appUpdates', id),
+  tcasEvent:   (id)             => doc(db, 'tcasEvents', id),
   welcomeGamePreview: ()        => doc(db, 'welcomeConfig', 'gamePreview'),
   welcomeStats:       ()        => doc(db, 'welcomeConfig', 'stats'),
   welcomeNewsPost:    (id)     => doc(db, 'welcomeConfig', 'news', 'items', id),
@@ -47,6 +48,7 @@ export const cols = {
   mapConfigs:   collection(db, 'mapConfigs'),
   assetFolders: collection(db, 'assetFolders'),
   appUpdates:   collection(db, 'appUpdates'),
+  tcasEvents:   collection(db, 'tcasEvents'),
   chatMessages: (chatId) => collection(db, 'chats', chatId, 'messages'),
   userMatches:  (uid)    => collection(db, 'users', uid, 'matches'),
   userCredits:  (uid)    => collection(db, 'users', uid, 'receivedCredits'),
@@ -79,6 +81,7 @@ export const queries = {
   purchasesByUser: (uid) => query(cols.purchases, where('uid', '==', uid)),
   sheetsSharedWithMe: (uid) => query(cols.roadmapSheets, where('collaboratorUids', 'array-contains', uid)),
   appUpdatesByDate: () => query(cols.appUpdates, orderBy('createdAt', 'desc')),
+  tcasEventsByDate: () => query(cols.tcasEvents, orderBy('date', 'asc')),
 }
 
 // ── Document shapes ───────────────────────────────────────────────────────────

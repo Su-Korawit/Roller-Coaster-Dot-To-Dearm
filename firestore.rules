@@ -179,5 +179,17 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow write: if isSuperAdmin();
     }
+
+    // Admin-curated content feeds: app updates (News tab) and TCAS calendar
+    // events. Signed-in users read; only the super-admin writes (in-panel
+    // forms gate on ADMIN_UID client-side; these rules are the real gate).
+    match /appUpdates/{updateId} {
+      allow read: if isSignedIn();
+      allow write: if isSuperAdmin();
+    }
+    match /tcasEvents/{eventId} {
+      allow read: if isSignedIn();
+      allow write: if isSuperAdmin();
+    }
   }
 }
