@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
-import { Calendar, MessageCircle, Map, Newspaper, Trophy, Flame, Play, Pause, Music, Gamepad2, GraduationCap } from 'lucide-react'
+import { Calendar, MessageCircle, Map, Newspaper, Trophy, Flame, Music, Gamepad2, GraduationCap } from 'lucide-react'
 import { useUserStore } from '../stores/useUserStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { APP_VIEWS, shouldShowNav } from '../constants/appViews'
@@ -25,7 +25,7 @@ import { CoinIcon } from '../components/ui/CoinIcon'
 import { useInventoryStore } from '../stores/useInventoryStore'
 import { useCloudAsset } from '../hooks/useCloudAsset'
 import { getMusicConfig, DEFAULT_TRACKS } from '../utils/musicConfig'
-import { Z_NAV } from '../constants/zIndex'
+import MusicPanel from '../components/music/MusicPanel'
 import { usePopupStore } from '../stores/usePopupStore'
 
 const GameCanvas = lazy(() => import('../components/GameCanvas'))
@@ -387,52 +387,15 @@ function HomePage() {
         </div>
       )}
 
-      {/* ── TRACKLIST PANEL ── */}
       {activePopup === 'trackList' && (
-        <div
-          className="absolute bottom-28 left-1/2 -translate-x-1/2 w-[90%] max-w-sm md:max-w-md neo-card flex flex-col overflow-hidden max-h-[55vh]"
-          style={{ zIndex: Z_NAV }}
-        >
-          {/* Header */}
-          <div className="px-4 py-3 border-b-2 border-ink flex items-center justify-between shrink-0">
-            <div className="min-w-0 flex-1">
-              <p className="pixel-font text-[10px] text-ink">BACKGROUND MUSIC</p>
-              {isPlaying && (
-                <p className="thai-font text-xs text-brand-strong mt-0.5 truncate">
-                  {tracks[currentTrackIdx].title}
-                </p>
-              )}
-            </div>
-            <button
-              onClick={handleTogglePlay}
-              aria-label={isPlaying ? 'หยุดเพลง' : 'เล่นเพลง'}
-              className="ml-3 shrink-0 neo-btn w-9 h-9 rounded-lg bg-brand-soft flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-            >
-              <span aria-hidden="true">{isPlaying ? <Pause size={14} strokeWidth={2.5}/> : <Play size={14} strokeWidth={2.5}/>}</span>
-            </button>
-          </div>
-          {/* Track list */}
-          <div className="overflow-y-auto">
-            {tracks.map((t, i) => (
-              <button
-                key={i}
-                onClick={() => handleSelectTrack(i)}
-                className={`w-full flex items-center gap-2 px-4 py-2.5 text-left border-b border-ink/10 hover:bg-brand-soft transition-colors ${
-                  currentTrackIdx === i && isPlaying ? 'bg-brand-soft' : ''
-                }`}
-              >
-                <span className={`thai-font text-xs font-semibold truncate flex-1 ${
-                  currentTrackIdx === i && isPlaying ? 'text-brand-strong' : 'text-ink'
-                }`}>
-                  {t.title}
-                </span>
-                {currentTrackIdx === i && isPlaying && (
-                  <Music size={12} className="shrink-0 text-brand-strong" />
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
+        <MusicPanel
+          onClose={closePopup}
+          tracks={tracks}
+          currentTrackIdx={currentTrackIdx}
+          isPlaying={isPlaying}
+          onTogglePlay={handleTogglePlay}
+          onSelectTrack={handleSelectTrack}
+        />
       )}
 
       {/* ── CONTACT DEVELOPER FAB ── */}

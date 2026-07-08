@@ -241,7 +241,8 @@ Central visual feature. Files:
 | **Selection** | The set of currently-selected roadmap blocks. Built on desktop via React Flow marquee / Shift-click, on mobile via a Select mode (tap-to-toggle, with Cancel). Duplicate, bulk-delete, and export-selected all act on it |
 | **Trash zone** | A drop target shown at the bottom-centre of the canvas only while a block is being dragged; dropping a block on it deletes that block |
 | **Setpoint** | The most recently added block; the canvas centres on it when the Roadmap opens (replaces `fitView`) |
-| **Roadmap export schema** | Versioned JSON (`{ version, nodes, edges }`) that serialises a Roadmap, or a Selection subset, independently of React Flow's runtime node shape. The contract a future AI generator reads/writes — see ADR-0001 |
+| **Roadmap export schema** | Versioned JSON (`{ version, nodes, edges }`) that serialises a Roadmap, or a Selection subset, independently of React Flow's runtime node shape. The contract a future AI generator reads/writes — see ADR-0001; edges may carry an optional additive `type` (`annotation` = dashed free connector) |
+| **Sticker** | A curated image node inserted from `STICKER_CATALOG` (university logos via MyTCAS CDN + emoji SVG data-URLs). Premium packs extend the catalog (Epic G) |
 | **Journey** | A top-level goal category (e.g. `mastery`, `career`); a user has multiple |
 | **Mastery block** | One milestone/step within the mastery journey |
 | **Stack / fireStack** | Daily chat interaction credit; one per chat per day; used for social ranking |
