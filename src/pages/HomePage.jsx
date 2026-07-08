@@ -95,6 +95,7 @@ function HomePage() {
       return
     }
     if (activePopup === 'trackList') closePopup()
+    setOpenSubjectId(null)
     setActiveTab(tab)
     if (tab === APP_VIEWS.NEWS) setNewsRead(true)
   }
@@ -105,6 +106,7 @@ function HomePage() {
     setActiveTab(APP_VIEWS.HOME)
     setTaskInitialView('list')
     setChatInitialView('list')
+    setOpenSubjectId(null)
   }
 
   // Opens the full Roadmap overlay from inside Profile. Profile (z-50) sits
