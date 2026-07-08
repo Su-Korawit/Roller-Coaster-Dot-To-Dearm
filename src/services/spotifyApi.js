@@ -109,3 +109,10 @@ export const seek = (accessToken, positionMs) =>
   spotifyFetch(accessToken, `/me/player/seek?position_ms=${Math.round(positionMs)}`, { method: 'PUT' })
 export const setVolume = (accessToken, percent) =>
   spotifyFetch(accessToken, `/me/player/volume?volume_percent=${Math.round(percent)}`, { method: 'PUT' })
+
+export const queueTrack = (accessToken, uri) =>
+  spotifyFetch(accessToken, `/me/player/queue?uri=${encodeURIComponent(uri)}`, { method: 'POST' })
+export const setShuffle = (accessToken, state) =>
+  spotifyFetch(accessToken, `/me/player/shuffle?state=${state ? 'true' : 'false'}`, { method: 'PUT' })
+export const setRepeat = (accessToken, state) =>
+  spotifyFetch(accessToken, `/me/player/repeat?state=${state}`, { method: 'PUT' })

@@ -1,6 +1,6 @@
 // src/services/spotifyApi.test.js
 import { describe, it, expect, vi } from 'vitest'
-import { spotifyFetch, SpotifyError, searchTracks, play, pause, getPlaylistTracks, getMyPlaylists } from './spotifyApi'
+import { spotifyFetch, SpotifyError, searchTracks, play, pause, getPlaylistTracks, getMyPlaylists, queueTrack, setShuffle, setRepeat } from './spotifyApi'
 
 function res({ ok = true, status = 200, json = {}, text = '' }) {
   return { ok, status, json: () => Promise.resolve(json), text: () => Promise.resolve(text) }
@@ -97,5 +97,34 @@ describe('wrappers', () => {
     vi.stubGlobal('fetch', fetchMock)
     const out = await getMyPlaylists('AT')
     expect(out.map((p) => p.id)).toEqual(['p1', 'p3'])
+  })
+})
+
+describe('queue / shuffle / repeat', () => {
+  it('queueTrack POSTs the encoded uri', async () => {
+    const fetchSpy = vi.fn().mockResolvedValue({ ok: true, status: 204, text: async () => '' })
+    vi.stubGlobal('fetch', fetchSpy)
+    await queueTrack('tok', 'spotify:track:abc123')
+    const [url, opts] = fetchSpy.mock.calls[0]
+    expect(url).toContain('/me/player/queue?uri=spotify%3Atrack%3Aabc123')
+    expect(opts.method).toBe('POST')
+  })
+
+  it('setShuffle PUTs the state flag', async () => {
+    const fetchSpy = vi.fn().mockResolvedValue({ ok: true, status: 204, text: async () => '' })
+    vi.stubGlobal('fetch', fetchSpy)
+    await setShuffle('tok', true)
+    const [url, opts] = fetchSpy.mock.calls[0]
+    expect(url).toContain('/me/player/shuffle?state=true')
+    expect(opts.method).toBe('PUT')
+  })
+
+  it('setRepeat PUTs the repeat mode', async () => {
+    const fetchSpy = vi.fn().mockResolvedValue({ ok: true, status: 204, text: async () => '' })
+    vi.stubGlobal('fetch', fetchSpy)
+    await setRepeat('tok', 'context')
+    const [url, opts] = fetchSpy.mock.calls[0]
+    expect(url).toContain('/me/player/repeat?state=context')
+    expect(opts.method).toBe('PUT')
   })
 })
