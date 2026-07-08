@@ -27,6 +27,8 @@ describe('SubjectDetailPanel', () => {
       toggleAppointment: vi.fn(),
       updateSubject: vi.fn(),
       removeSubject: vi.fn(),
+      notes: [],
+      upsertNote: vi.fn(),
     }
   })
 
@@ -90,5 +92,33 @@ describe('SubjectDetailPanel', () => {
     render(<SubjectDetailPanel subjectId="math" onClose={vi.fn()} />)
     fireEvent.click(screen.getByLabelText('ลบงาน'))
     expect(schoolState.removeAppointment).toHaveBeenCalledWith('a1')
+  })
+
+  it("shows a textarea for today's note tagged to this subject", () => {
+    schoolState.notes = [
+      { id: 'n1', date: '2026-07-08', subjectId: 'math', text: 'today math note', createdAt: 1, updatedAt: 1 },
+    ]
+    render(<SubjectDetailPanel subjectId="math" onClose={vi.fn()} today="2026-07-08" />)
+    expect(screen.getByLabelText('Notebook').value).toBe('today math note')
+  })
+
+  it('editing and blurring the notebook textarea saves it via upsertNote', () => {
+    render(<SubjectDetailPanel subjectId="math" onClose={vi.fn()} today="2026-07-08" />)
+    const textarea = screen.getByLabelText('Notebook')
+    fireEvent.change(textarea, { target: { value: 'updated note' } })
+    fireEvent.blur(textarea)
+    expect(schoolState.upsertNote).toHaveBeenCalledWith({ date: '2026-07-08', subjectId: 'math', text: 'updated note' })
+  })
+
+  it('lists past notes for this subject only', () => {
+    schoolState.notes = [
+      { id: 'n1', date: '2026-07-01', subjectId: 'math', text: 'first lesson', createdAt: 1, updatedAt: 1 },
+      { id: 'n2', date: '2026-07-05', subjectId: 'math', text: 'second lesson', createdAt: 2, updatedAt: 2 },
+      { id: 'n3', date: '2026-07-03', subjectId: 'physics', text: 'unrelated', createdAt: 3, updatedAt: 3 },
+    ]
+    render(<SubjectDetailPanel subjectId="math" onClose={vi.fn()} today="2026-07-08" />)
+    expect(screen.getByText('first lesson')).toBeTruthy()
+    expect(screen.getByText('second lesson')).toBeTruthy()
+    expect(screen.queryByText('unrelated')).toBeNull()
   })
 })

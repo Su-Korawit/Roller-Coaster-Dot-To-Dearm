@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { X, Trash2 } from 'lucide-react'
 import { useSchoolStore } from '../../stores/useSchoolStore'
-import { DAY_KEYS } from '../../utils/schoolDayView'
+import { DAY_KEYS, noteFor, notesForSubject } from '../../utils/schoolDayView'
 
 const DAY_LABELS = { sun: 'sun', mon: 'mon', tue: 'tue', wed: 'wed', thu: 'thu', fri: 'fri', sat: 'sat' }
 
-export default function SubjectDetailPanel({ subjectId, onClose }) {
+export default function SubjectDetailPanel({ subjectId, onClose, today }) {
+  const todayStr = today ?? new Date().toISOString().slice(0, 10)
   const subject = useSchoolStore((s) => s.subjects.find((sub) => sub.id === subjectId))
   const scheduleSlots = useSchoolStore((s) => s.scheduleSlots.filter((sl) => sl.subjectId === subjectId))
   const appointments = useSchoolStore((s) => s.appointments.filter((a) => a.subjectId === subjectId))
@@ -16,6 +17,8 @@ export default function SubjectDetailPanel({ subjectId, onClose }) {
   const toggleAppointment = useSchoolStore((s) => s.toggleAppointment)
   const updateSubject = useSchoolStore((s) => s.updateSubject)
   const removeSubject = useSchoolStore((s) => s.removeSubject)
+  const notes = useSchoolStore((s) => s.notes)
+  const upsertNote = useSchoolStore((s) => s.upsertNote)
 
   const [nameDraft, setNameDraft] = useState(subject?.name ?? '')
 
@@ -168,6 +171,29 @@ export default function SubjectDetailPanel({ subjectId, onClose }) {
                   เพิ่มงาน
                 </button>
               </div>
+            </section>
+
+            <section>
+              <h3 className="pixel-font text-[10px] text-ink-soft mb-2">Notebook</h3>
+              <textarea
+                key={todayStr}
+                aria-label="Notebook"
+                defaultValue={noteFor(notes, todayStr, subjectId)?.text ?? ''}
+                onBlur={(e) => upsertNote({ date: todayStr, subjectId, text: e.target.value })}
+                rows={3}
+                placeholder="จดสิ่งที่เรียนวันนี้..."
+                className="w-full rounded-xl border border-ink/10 px-3 py-2 outline-none focus:border-brand resize-none text-sm thai-font mb-3"
+              />
+              <ul className="space-y-1">
+                {notesForSubject(notes, subjectId)
+                  .filter((n) => n.date !== todayStr)
+                  .map((n) => (
+                    <li key={n.id} className="neo-card p-2">
+                      <p className="thai-font text-[10px] text-ink-soft">{n.date}</p>
+                      <p className="thai-font text-sm text-ink">{n.text}</p>
+                    </li>
+                  ))}
+              </ul>
             </section>
           </div>
         </div>

@@ -353,7 +353,11 @@ function HomePage() {
         />
       )}
       {activeTab === APP_VIEWS.SCHOOL && openSubjectId && (
-        <SubjectDetailPanel subjectId={openSubjectId} onClose={() => setOpenSubjectId(null)} />
+        <SubjectDetailPanel
+          subjectId={openSubjectId}
+          onClose={() => setOpenSubjectId(null)}
+          today={new Date().toISOString().slice(0, 10)}
+        />
       )}
 
       {/* ── CALENDAR POPUP (PLANNER_CALENDAR view) ── */}
