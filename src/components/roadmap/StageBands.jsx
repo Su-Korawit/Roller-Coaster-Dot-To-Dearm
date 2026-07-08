@@ -1,3 +1,4 @@
+// eslint-disable-next-line react-refresh/only-export-components
 export const DEFAULT_STAGES = [
   { label: 'School', startMonth: 1, endMonth: 5 },
   { label: 'University', startMonth: 6, endMonth: 12 },
