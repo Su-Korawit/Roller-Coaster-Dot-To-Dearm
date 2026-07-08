@@ -191,5 +191,16 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow write: if isSuperAdmin();
     }
+
+    // Community timetable templates: any student publishes their own timetable
+    // (createdBy must be themselves); templates are immutable once published;
+    // delete own or super-admin (moderation).
+    match /timetableTemplates/{templateId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.createdBy == request.auth.uid;
+      allow update: if false;
+      allow delete: if isSignedIn() &&
+        (resource.data.createdBy == request.auth.uid || isSuperAdmin());
+    }
   }
 }

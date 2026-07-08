@@ -267,3 +267,45 @@ describe('tcasEvents rules', () => {
     await assertSucceeds(setDoc(doc(admin, 'tcasEvents/e3'), { title: 'ประกาศผล', date: '2026-12-01' }))
   })
 })
+
+describe('timetableTemplates rules', () => {
+  it('allows a signed-in user to create a template as themselves', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(setDoc(doc(alice, 'timetableTemplates/t1'), {
+      version: 1, name: 'ม.5/1', schoolName: 'สวนกุหลาบ', classLevel: 'ม.5', subjects: [], createdBy: 'alice',
+    }))
+  })
+
+  it('BLOCKS creating a template with a spoofed createdBy', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(setDoc(doc(alice, 'timetableTemplates/t2'), {
+      version: 1, name: 'x', schoolName: 'x', classLevel: 'ม.4', subjects: [], createdBy: 'bob',
+    }))
+  })
+
+  it('BLOCKS updating a published template', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'timetableTemplates/t3'), { createdBy: 'alice', name: 'old' })
+    })
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(updateDoc(doc(alice, 'timetableTemplates/t3'), { name: 'new' }))
+  })
+
+  it('allows deleting your own template but not someone else\'s', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'timetableTemplates/mine'), { createdBy: 'alice' })
+      await setDoc(doc(ctx.firestore(), 'timetableTemplates/theirs'), { createdBy: 'bob' })
+    })
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(deleteDoc(doc(alice, 'timetableTemplates/mine')))
+    await assertFails(deleteDoc(doc(alice, 'timetableTemplates/theirs')))
+  })
+
+  it('allows the super-admin to delete any template (moderation)', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'timetableTemplates/spam'), { createdBy: 'bob' })
+    })
+    const admin = testEnv.authenticatedContext(SUPER_UID).firestore()
+    await assertSucceeds(deleteDoc(doc(admin, 'timetableTemplates/spam')))
+  })
+})
