@@ -243,12 +243,12 @@ export const hydrateInventoryFromFirestore = inventorySync.hydrate
 export const setInventorySyncUser = inventorySync.setSyncUser
 export const disarmInventorySync = () => inventorySync.setSyncUser(null)
 
-// ── School System (subjects, schedule slots, appointments) → users/{uid} ─────
+// ── School System (subjects, schedule slots, appointments, notes) → users/{uid}
 const schoolSync = createFirestoreSync({
   store: useSchoolStore,
   logName: 'syncSchool',
-  toDoc: ({ subjects, scheduleSlots, appointments }) => ({
-    school: { subjects, scheduleSlots, appointments },
+  toDoc: ({ subjects, scheduleSlots, appointments, notes }) => ({
+    school: { subjects, scheduleSlots, appointments, notes },
     schoolUpdatedAt: serverTimestamp(),
   }),
   fromDoc: (data) => {
@@ -257,10 +257,12 @@ const schoolSync = createFirestoreSync({
       subjects: data.school.subjects ?? [],
       scheduleSlots: data.school.scheduleSlots ?? [],
       appointments: data.school.appointments ?? [],
+      notes: data.school.notes ?? [],
     }
   },
   changed: (s, p) =>
-    s.subjects !== p.subjects || s.scheduleSlots !== p.scheduleSlots || s.appointments !== p.appointments,
+    s.subjects !== p.subjects || s.scheduleSlots !== p.scheduleSlots
+    || s.appointments !== p.appointments || s.notes !== p.notes,
   needsSeed: () => false,
 })
 
