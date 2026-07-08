@@ -7,9 +7,16 @@ const DAY_LABELS = { sun: 'sun', mon: 'mon', tue: 'tue', wed: 'wed', thu: 'thu',
 
 export default function SubjectDetailPanel({ subjectId, onClose, today }) {
   const todayStr = today ?? new Date().toISOString().slice(0, 10)
-  const subject = useSchoolStore((s) => s.subjects.find((sub) => sub.id === subjectId))
-  const scheduleSlots = useSchoolStore((s) => s.scheduleSlots.filter((sl) => sl.subjectId === subjectId))
-  const appointments = useSchoolStore((s) => s.appointments.filter((a) => a.subjectId === subjectId))
+  // Select raw store arrays and derive per-subject views during render.
+  // Filtering inside the selector returns a fresh array on every store read,
+  // which useSyncExternalStore treats as an ever-changing snapshot → infinite
+  // re-render loop (same class of bug as the news store fix in 115101b).
+  const allSubjects = useSchoolStore((s) => s.subjects)
+  const allScheduleSlots = useSchoolStore((s) => s.scheduleSlots)
+  const allAppointments = useSchoolStore((s) => s.appointments)
+  const subject = allSubjects.find((sub) => sub.id === subjectId)
+  const scheduleSlots = allScheduleSlots.filter((sl) => sl.subjectId === subjectId)
+  const appointments = allAppointments.filter((a) => a.subjectId === subjectId)
   const addScheduleSlot = useSchoolStore((s) => s.addScheduleSlot)
   const removeScheduleSlot = useSchoolStore((s) => s.removeScheduleSlot)
   const addAppointment = useSchoolStore((s) => s.addAppointment)
