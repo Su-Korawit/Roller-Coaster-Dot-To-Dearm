@@ -1,4 +1,19 @@
-// Placeholder — replaced in Task 2.2
+import LandingShell from '../../components/landing/LandingShell'
+
+const BENEFITS = [
+  { icon: '📅', title: 'ตารางเรียน', text: 'จัดตารางเรียนรายวัน พร้อมโหลดเทมเพลตจากชุมชน' },
+  { icon: '✅', title: 'การบ้าน & To-do', text: 'ติดตามงานที่ต้องส่ง แยกตามวิชา และวันครบกำหนด' },
+  { icon: '📝', title: 'Notebook', text: 'จดโน้ตประจำวัน ส่งออก/นำเข้า JSON ได้' },
+]
+
 export default function SchoolLanding() {
-  return <main data-testid="school-landing" className="min-h-dvh bg-[#F4F7FC] p-8"><p className="pixel-font text-sm text-ink">School</p></main>
+  return (
+    <LandingShell
+      siteKey="school"
+      toolPath="/app"
+      toolLabel="เปิดระบบโรงเรียน"
+      benefits={BENEFITS}
+      screenshotLabel="ตัวอย่างหน้าจอ School System"
+    />
+  )
 }

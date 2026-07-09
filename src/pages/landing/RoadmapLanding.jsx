@@ -1,4 +1,19 @@
-// Placeholder — replaced in Task 2.2
+import LandingShell from '../../components/landing/LandingShell'
+
+const BENEFITS = [
+  { icon: '🧩', title: 'ลากวางได้อิสระ', text: 'วางบล็อกเป้าหมาย คณะ และกิจกรรมบนแผนภาพแบบ visual' },
+  { icon: '🎨', title: 'ตกแต่งได้', text: 'สติกเกอร์ สี และเส้นเชื่อม — ทำให้แผนของคุณเป็นของคุณจริงๆ' },
+  { icon: '💾', title: 'บันทึกได้ทันที', text: 'ใช้งานได้เลยไม่ต้องล็อกอิน งานเก็บในเครื่อง — ล็อกอินเมื่อพร้อม sync ขึ้น cloud' },
+]
+
 export default function RoadmapLanding() {
-  return <main data-testid="roadmap-landing" className="min-h-dvh bg-[#F4F7FC] p-8"><p className="pixel-font text-sm text-ink">Roadmap</p></main>
+  return (
+    <LandingShell
+      siteKey="roadmap"
+      toolPath="/editor"
+      toolLabel="เริ่มวางแผนเลย"
+      benefits={BENEFITS}
+      screenshotLabel="ตัวอย่างหน้าจอ Roadmap"
+    />
+  )
 }

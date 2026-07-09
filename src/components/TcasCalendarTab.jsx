@@ -57,7 +57,7 @@ function EventRow({ event, passed, expanded, onToggle, onAdd, added, isAdmin, on
   )
 }
 
-export default function TcasCalendarTab({ today }) {
+export default function TcasCalendarTab({ today, onGuestAction }) {
   const user = useAuthStore((s) => s.user)
   const isAdmin = user?.uid === ADMIN_UID
   const events = useTcasEventsStore((s) => s.events)
@@ -82,6 +82,10 @@ export default function TcasCalendarTab({ today }) {
   const { passed, upcoming } = splitTcasEvents(events, todayStr)
 
   function handleAddToCalendar(event) {
+    if (!user) {
+      onGuestAction?.()
+      return
+    }
     addAppointment(null, { title: event.title, kind: 'tcas', dueDate: event.date })
     setAddedIds((prev) => new Set(prev).add(event.id))
   }
