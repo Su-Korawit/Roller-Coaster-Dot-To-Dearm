@@ -167,3 +167,48 @@ exports.verifyPayment = onCall({ secrets: [SLIPOK_API_KEY] }, async (req) => {
 
 // Exported for unit testing the pure SlipOK error mapping.
 exports._mapSlipOkError = mapSlipOkError
+
+// Atomically spends Coins on a catalog entitlement. Price and payload come
+// from entitlementCatalog (never the client); coins and entitlements are
+// Functions-owned fields, so this transaction is the only spend path.
+exports.purchaseEntitlement = onCall(async (req) => {
+  const uid = req.auth?.uid
+  if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.')
+  const itemId = req.data?.itemId
+  if (!itemId) throw new HttpsError('invalid-argument', 'itemId is required.')
+
+  const itemRef = db.collection('entitlementCatalog').doc(itemId)
+  const userRef = db.collection('users').doc(uid)
+
+  return db.runTransaction(async (tx) => {
+    const [itemSnap, userSnap] = await Promise.all([tx.get(itemRef), tx.get(userRef)])
+    if (!itemSnap.exists || itemSnap.data().active !== true) {
+      throw new HttpsError('not-found', 'Item is not available.')
+    }
+    if (!userSnap.exists) throw new HttpsError('not-found', 'User not found.')
+
+    const item = itemSnap.data()
+    const user = userSnap.data()
+    if (user.entitlements?.[itemId]) {
+      throw new HttpsError('already-exists', 'Already owned.')
+    }
+    const price = Number(item.priceCoins)
+    const balance = Number(user.coins ?? 0)
+    if (!Number.isFinite(price) || price < 0) {
+      throw new HttpsError('failed-precondition', 'Item is misconfigured.')
+    }
+    if (balance < price) throw new HttpsError('failed-precondition', 'INSUFFICIENT_COINS')
+
+    const newBalance = balance - price
+    tx.update(userRef, {
+      coins: newBalance,
+      [`entitlements.${itemId}`]: {
+        kind: item.kind ?? null,
+        payload: item.payload ?? null,
+        pricePaid: price,
+        purchasedAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+    })
+    return { ok: true, newBalance, itemId }
+  })
+})
