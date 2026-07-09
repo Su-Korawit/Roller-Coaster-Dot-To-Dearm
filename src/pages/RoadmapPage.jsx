@@ -35,12 +35,12 @@ function InvisibleEdge() {
 }
 const edgeTypes = { default: InvisibleEdge, annotation: AnnotationEdge }
 
-export default function RoadmapPage({ onClose }) {
+export default function RoadmapPage({ onClose, backPath }) {
   const navigate = useNavigate()
   // Overlay mode (onClose provided) sits over the live game: transparent backdrop
   // and a close button. Route mode keeps the solid background and a back arrow.
   const overlay = Boolean(onClose)
-  const handleBack = onClose ?? (() => navigate('/home'))
+  const handleBack = onClose ?? (() => navigate(backPath ?? '/home'))
   const nodes = useRoadmapStore((s) => s.nodes)
   const edges = useRoadmapStore((s) => s.edges)
   const setNodes = useRoadmapStore((s) => s.setNodes)
