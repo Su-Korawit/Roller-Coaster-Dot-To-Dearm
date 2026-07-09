@@ -1,67 +1,129 @@
+import { Map, GraduationCap, Newspaper, NotebookPen, Gamepad2, ArrowRight, HardDriveDownload, CloudUpload, LockOpen, Check } from 'lucide-react'
 import { SITES } from '../constants/sites'
+import SiteNav, { siteHref } from '../components/landing/SiteNav'
 import WelcomeFooter from '../components/welcome/WelcomeFooter'
 
-const TOOL_SITES = ['roadmap', 'tcas', 'news', 'school']
-
+// Hub anatomy per design.md §13: nav → text-only outcome hero → tool grid
+// (the hero product) → 3-step "work your way" strip → dark app band → trust
+// strip → footer. Copy comes from SITES h1/intro/shortName/pixelName only.
 const TOOL_ICONS = {
-  roadmap: '🗺️',
-  tcas: '🎓',
-  news: '📰',
-  school: '📚',
+  roadmap: Map,
+  tcas: GraduationCap,
+  news: Newspaper,
+  school: NotebookPen,
 }
 
-function siteHref(key) {
-  if (import.meta.env.DEV) return `/?site=${key}`
-  return SITES[key].path
+const STEPS = [
+  {
+    icon: LockOpen,
+    title: 'เปิดแล้วใช้ได้เลย',
+    text: 'ทุกเครื่องมือใช้ฟรี ไม่ต้องสมัคร ไม่ต้องล็อกอิน ไม่มีลิมิต',
+  },
+  {
+    icon: HardDriveDownload,
+    title: 'งานเก็บในเครื่องอัตโนมัติ',
+    text: 'ปิดแท็บแล้วกลับมา งานยังอยู่ครบ — ไม่ต้องกดเซฟ',
+  },
+  {
+    icon: CloudUpload,
+    title: 'ล็อกอินเมื่อพร้อม sync',
+    text: 'อยากเก็บขึ้นคลาวด์หรือใช้ AI ค่อยล็อกอิน งานเดิมตามไปด้วย',
+  },
+]
+
+function ToolCard({ siteKey }) {
+  const site = SITES[siteKey]
+  const Icon = TOOL_ICONS[siteKey]
+  return (
+    <a href={siteHref(siteKey)} className="neo-card neo-btn group flex flex-col p-6 text-left">
+      <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg border-2 border-ink bg-brand-soft">
+        <Icon size={24} strokeWidth={2.5} className="text-brand-strong" aria-hidden="true" />
+      </span>
+      <span className="pixel-font mb-2 text-[10px] uppercase text-brand-strong">{site.pixelName}</span>
+      <h3 className="thai-font mb-1.5 text-lg font-bold leading-snug text-ink">{site.h1}</h3>
+      <p className="thai-font mb-4 flex-1 text-sm leading-relaxed text-ink-soft">{site.description}</p>
+      <span className="thai-font inline-flex items-center gap-1.5 text-sm font-semibold text-brand-strong">
+        เปิดเครื่องมือ
+        <ArrowRight size={16} strokeWidth={2.5} className="transition-transform group-hover:translate-x-1" aria-hidden="true" />
+      </span>
+    </a>
+  )
 }
 
 export default function HubPage() {
   return (
-    <main data-testid="hub-page" className="min-h-dvh w-full bg-[#F4F7FC] overflow-x-hidden">
-      <header className="border-b-2 border-ink bg-surface px-6 py-8 text-center">
-        <p className="pixel-font text-sm md:text-base pixel-title text-ink mb-3">I LOVE TCAS</p>
-        <p className="thai-font text-base md:text-lg text-ink/80 max-w-xl mx-auto">
-          เครื่องมือวางแผน TCAS ครบวงจร — ใช้ได้ทันที ไม่ต้องล็อกอิน
-        </p>
+    <main data-testid="hub-page" className="min-h-dvh w-full overflow-x-hidden bg-mist">
+      <SiteNav currentKey="hub" />
+
+      {/* Hero — text only; the tool grid right below is the real hero (§13) */}
+      <header className="pixel-checker border-b-2 border-ink bg-surface">
+        <div className="mx-auto max-w-6xl px-4 py-14 text-center md:px-6 md:py-20">
+          <p className="pixel-font pixel-title mb-5 text-[10px] md:text-xs">I LOVE TCAS</p>
+          <h1 className="thai-font mx-auto max-w-3xl text-3xl font-extrabold leading-tight text-ink md:text-5xl">
+            {SITES.hub.h1}
+          </h1>
+          <p className="thai-font mx-auto mt-4 max-w-xl text-base text-ink-soft md:text-lg">
+            {SITES.hub.intro}
+          </p>
+        </div>
       </header>
 
-      <section className="px-6 py-10 md:py-14">
-        <div className="mx-auto grid max-w-5xl gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {TOOL_SITES.map((key) => {
-            const site = SITES[key]
-            return (
-              <a
-                key={key}
-                href={siteHref(key)}
-                className="neo-card group flex flex-col p-6 transition-transform hover:-translate-y-1"
-              >
-                <span className="text-4xl mb-4" aria-hidden="true">{TOOL_ICONS[key]}</span>
-                <h2 className="pixel-font text-[10px] md:text-xs text-brand-strong mb-2 group-hover:text-brand">
-                  {site.title.split('—')[0].trim()}
-                </h2>
-                <p className="thai-font text-sm text-ink/75 flex-1">{site.description}</p>
-                <span className="thai-font text-xs text-brand-strong mt-4 font-semibold">
-                  เปิดเครื่องมือ →
-                </span>
-              </a>
-            )
-          })}
+      {/* Tool grid — the product */}
+      <section aria-label="เครื่องมือทั้งหมด" className="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {Object.keys(TOOL_ICONS).map((key) => (
+            <ToolCard key={key} siteKey={key} />
+          ))}
+        </div>
+      </section>
 
+      {/* Work-your-way strip */}
+      <section className="border-y-2 border-ink bg-surface">
+        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 md:grid-cols-3 md:px-6 md:py-14">
+          {STEPS.map((step, i) => (
+            <div key={step.title} className="flex items-start gap-4">
+              <span className="pixel-font flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border-2 border-ink bg-warn/20 text-xs text-ink">
+                {i + 1}
+              </span>
+              <div>
+                <h3 className="thai-font mb-1 text-base font-bold text-ink">{step.title}</h3>
+                <p className="thai-font text-sm leading-relaxed text-ink-soft">{step.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* App band — the one dark moment on the page (§15) */}
+      <section className="bg-ink">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-14 text-center md:flex-row md:justify-between md:px-6 md:text-left">
+          <div>
+            <p className="pixel-font pixel-title-dark mb-3 text-sm md:text-base">PLAY YOUR PATH</p>
+            <p className="thai-font max-w-xl text-base text-white/85">
+              เส้นทางสอบติดไม่ต้องน่าเบื่อ — เข้าแอปเต็มรูปแบบ เลี้ยงฟาร์ม เก็บเหรียญ
+              ทำภารกิจรายวัน และหาเพื่อนเป้าหมายเดียวกัน
+            </p>
+          </div>
           <a
             href={siteHref('app')}
-            className="neo-card group flex flex-col p-6 sm:col-span-2 lg:col-span-1 border-brand bg-brand-soft transition-transform hover:-translate-y-1"
+            className="neo-btn thai-font inline-flex shrink-0 items-center gap-2 rounded-lg border-2 border-surface bg-brand-strong px-6 py-3 text-base font-semibold text-white"
+            style={{ boxShadow: '4px 4px 0 0 var(--color-surface)' }}
           >
-            <span className="text-4xl mb-4" aria-hidden="true">🎢</span>
-            <h2 className="pixel-font text-[10px] md:text-xs text-brand-strong mb-2">
-              เข้าแอปเต็ม + เกม
-            </h2>
-            <p className="thai-font text-sm text-ink/75 flex-1">
-              {SITES.app.description} — MBTI, gamification, และทุกฟีเจอร์ในที่เดียว
-            </p>
-            <span className="thai-font text-xs text-brand-strong mt-4 font-semibold">
-              เข้าแอป →
-            </span>
+            <Gamepad2 size={20} strokeWidth={2.5} aria-hidden="true" />
+            เข้าแอป + เกม
           </a>
+        </div>
+      </section>
+
+      {/* Trust strip */}
+      <section className="border-b-2 border-ink bg-surface">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-10 gap-y-3 px-4 py-6 md:px-6">
+          {['ฟรี 100% ไม่มีค่าใช้จ่ายแอบแฝง', 'ข้อมูลคณะจาก MyTCAS', 'ใช้ได้โดยไม่ต้องสมัครสมาชิก'].map((line) => (
+            <p key={line} className="thai-font inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft">
+              <Check size={16} strokeWidth={2.5} className="text-good" aria-hidden="true" />
+              {line}
+            </p>
+          ))}
         </div>
       </section>
 

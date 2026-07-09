@@ -1,15 +1,17 @@
 import { useMemo, useState } from 'react'
 import { useEffect } from 'react'
+import { Search, LayoutList, LockOpen } from 'lucide-react'
 import { SITES } from '../../constants/sites'
 import { useTcasUniversities, useTcasFaculties, useTcasPrograms } from '../../hooks/useMytcas'
 import { UniversityLogo } from '../../components/onboarding/UniversityStep'
 import SelectableRow from '../../components/ui/SelectableRow'
+import SiteNav from '../../components/landing/SiteNav'
 import WelcomeFooter from '../../components/welcome/WelcomeFooter'
 
 const BENEFITS = [
-  { icon: '🔍', title: 'ค้นหาเร็ว', text: 'ค้นหามหาวิทยาลัย คณะ และหลักสูตรจากข้อมูล MyTCAS จริง' },
-  { icon: '📊', title: 'รอบรับสมัคร', text: 'ดูรอบ Portfolio Quota Admission บนแต่ละหลักสูตร' },
-  { icon: '🆓', title: 'ใช้ฟรี', text: 'ไม่ต้องล็อกอิน ค้นหาได้ไม่จำกัด' },
+  { icon: Search, title: 'ค้นหาเร็ว', text: 'ค้นหามหาวิทยาลัย คณะ และหลักสูตรจากข้อมูล MyTCAS จริง' },
+  { icon: LayoutList, title: 'รอบรับสมัคร', text: 'ดูรอบ Portfolio Quota Admission บนแต่ละหลักสูตร' },
+  { icon: LockOpen, title: 'ใช้ฟรี', text: 'ไม่ต้องล็อกอิน ค้นหาได้ไม่จำกัด' },
 ]
 
 export default function TcasExplorerPage() {
@@ -52,26 +54,35 @@ export default function TcasExplorerPage() {
   const hubHref = import.meta.env.DEV ? '/?site=hub' : SITES.hub.path
 
   return (
-    <main data-testid="tcas-explorer" className="min-h-dvh w-full bg-[#F4F7FC] overflow-x-hidden">
-      <header className="border-b-2 border-ink bg-surface px-6 py-8">
+    <main data-testid="tcas-explorer" className="min-h-dvh w-full bg-mist overflow-x-hidden">
+      <SiteNav currentKey="tcas" />
+
+      <header className="pixel-checker border-b-2 border-ink bg-surface px-6 py-12 md:py-16">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="pixel-font text-[10px] text-brand-strong mb-4">I LOVE TCAS</p>
-          <h1 className="pixel-font text-sm md:text-base text-ink mb-4">
-            {SITES.tcas.description}
+          <p className="pixel-font mb-4 text-[10px] uppercase text-brand-strong md:text-xs">
+            {SITES.tcas.pixelName}
+          </p>
+          <h1 className="thai-font text-3xl font-extrabold leading-tight text-ink md:text-4xl">
+            {SITES.tcas.h1}
           </h1>
-          <p className="thai-font text-base text-ink/70">{SITES.tcas.title}</p>
+          <p className="thai-font mt-4 text-base leading-relaxed text-ink-soft">{SITES.tcas.intro}</p>
         </div>
       </header>
 
       <section className="px-6 py-8">
         <div className="mx-auto max-w-3xl grid gap-4 sm:grid-cols-3 mb-8">
-          {BENEFITS.map((b) => (
-            <div key={b.title} className="neo-card p-4 text-center">
-              <span className="text-2xl mb-2 block" aria-hidden="true">{b.icon}</span>
-              <h2 className="pixel-font text-[8px] text-brand-strong mb-1">{b.title}</h2>
-              <p className="thai-font text-xs text-ink/75">{b.text}</p>
-            </div>
-          ))}
+          {BENEFITS.map((b) => {
+            const Icon = b.icon
+            return (
+              <div key={b.title} className="neo-card p-4">
+                <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg border-2 border-ink bg-brand-soft">
+                  <Icon size={20} strokeWidth={2.5} className="text-brand-strong" aria-hidden="true" />
+                </span>
+                <h2 className="thai-font mb-1 text-sm font-bold text-ink">{b.title}</h2>
+                <p className="thai-font text-xs leading-relaxed text-ink-soft">{b.text}</p>
+              </div>
+            )
+          })}
         </div>
 
         <div className="mx-auto max-w-3xl neo-card p-4 md:p-6">

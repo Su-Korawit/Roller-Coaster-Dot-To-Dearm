@@ -6,6 +6,7 @@ import { useAuthStore } from '../../stores/useAuthStore'
 import { UPDATE_TYPES } from '../../data/appUpdates'
 import { DEFAULT_CATEGORY } from '../../data/campCategories'
 import TcasCalendarTab from '../../components/TcasCalendarTab'
+import SiteNav from '../../components/landing/SiteNav'
 import Popup from '../../components/ui/Popup'
 import WelcomeFooter from '../../components/welcome/WelcomeFooter'
 
@@ -65,14 +66,18 @@ export default function NewsHomePage() {
   }
 
   return (
-    <main data-testid="news-home" className="min-h-dvh w-full bg-[#F4F7FC] overflow-x-hidden">
-      <header className="border-b-2 border-ink bg-surface px-6 py-8">
+    <main data-testid="news-home" className="min-h-dvh w-full bg-mist overflow-x-hidden">
+      <SiteNav currentKey="news" />
+
+      <header className="pixel-checker border-b-2 border-ink bg-surface px-6 py-12 md:py-16">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="pixel-font text-[10px] text-brand-strong mb-4">I LOVE TCAS</p>
-          <h1 className="pixel-font text-sm md:text-base text-ink mb-4">
-            {SITES.news.description}
+          <p className="pixel-font mb-4 text-[10px] uppercase text-brand-strong md:text-xs">
+            {SITES.news.pixelName}
+          </p>
+          <h1 className="thai-font text-3xl font-extrabold leading-tight text-ink md:text-4xl">
+            {SITES.news.h1}
           </h1>
-          <p className="thai-font text-base text-ink/70">{SITES.news.title}</p>
+          <p className="thai-font mt-4 text-base leading-relaxed text-ink-soft">{SITES.news.intro}</p>
         </div>
       </header>
 
@@ -88,7 +93,7 @@ export default function NewsHomePage() {
                 key={tab.key}
                 type="button"
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex-1 py-3 pixel-font text-[9px] transition-colors relative ${
+                className={`flex-1 py-3 thai-font text-sm font-semibold transition-colors relative ${
                   activeTab === tab.key ? 'text-brand-strong' : 'text-ink-soft'
                 }`}
               >

@@ -17,8 +17,7 @@ function hubHref() {
 }
 
 function siteLabel(key) {
-  const title = SITES[key]?.title ?? key
-  return title.split('—')[0].trim()
+  return SITES[key]?.shortName ?? key
 }
 
 export default function FeatureLayout({ children }) {
@@ -45,8 +44,8 @@ export default function FeatureLayout({ children }) {
   return (
     <div className="h-dvh w-full flex flex-col bg-[#F4F7FC] overflow-hidden">
       <header className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 border-b-2 border-ink bg-surface z-20">
-        <h1 className="pixel-font text-[10px] text-ink truncate min-w-0">
-          {siteLabel(currentSite)}
+        <h1 className="pixel-font text-[10px] uppercase text-ink truncate min-w-0">
+          {site.pixelName}
         </h1>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -92,7 +91,7 @@ export default function FeatureLayout({ children }) {
               {user.photoURL ? (
                 <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full border-2 border-ink/20 object-cover" />
               ) : (
-                <span className="w-8 h-8 rounded-full bg-brand-soft pixel-font text-[8px] flex items-center justify-center text-ink">
+                <span className="w-8 h-8 rounded-full bg-brand-soft pixel-font text-[10px] flex items-center justify-center text-ink">
                   U
                 </span>
               )}

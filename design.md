@@ -11,6 +11,17 @@ This document is **binding** for all UI work (Cursor and Claude Code both). When
 conflicts with this doc, this doc wins. It extends `CONTEXT.md` (styling section) and the
 existing Welcome-page `neo-*` language in `src/index.css` — it does not replace them.
 
+**Two scopes, one material language:**
+
+| Scope | Sections | Thesis |
+|---|---|---|
+| **Part A — In-app UI** (`app.ilovetcas.com`) | §1–11 | The UI is the game's HUD |
+| **Part B — Public sites** (hub + feature landings, ADR-0012) | §12–17 | The showroom around the cartridge |
+
+Part B inherits every Part A ban (no gradients on controls, no soft shadows, no emoji
+chrome, pixel font Latin-only ≥10px, tokens only) — it changes *layout discipline*, not
+material.
+
 ---
 
 ## 1. Design thesis
@@ -220,3 +231,117 @@ Pixel games snap; they don't ease. Chrome motion uses **stepped timing**:
 7. Does it join an existing HUD zone instead of adding a new floating layer?
 
 If any answer is "no" — it's not done.
+
+---
+
+# Part B — Public sites (hub + feature landings)
+
+> **TL;DR (ไทย):** เว็บสาธารณะ (ilovetcas.com + landing ของแต่ละเครื่องมือ) คือ
+> "โชว์รูมของตลับเกม" — วินัย layout ระดับ ILOVEPDF (grid เป๊ะ, การ์ดขับด้วย typography,
+> จังหวะ section ชัด, ขาวโล่งหายใจได้) แต่วัสดุยังเป็นตลับเดิม: ขอบหมึก 2px, เงาแข็ง,
+> พิกเซลฟอนต์เป็น display Latin เท่านั้น พาดหัวไทยใช้ Noto Sans Thai หนา-ใหญ่
+> ห้าม emoji เป็นไอคอน ห้าม gradient — ความ "โปร" มาจากความนิ่งของ grid
+> ไม่ใช่การถอดอัตลักษณ์พิกเซลทิ้ง
+
+## 12. References (studied 2026-07-10)
+
+| Ref | What we take | What we do NOT take |
+|---|---|---|
+| **ilovepdf.com** | Hero = one outcome sentence + tools ARE the hero (grid immediately after); typography-driven cards (title + 1–2-line description, no icon circus); section rhythm: grid → "work your way" strip → premium band → trust badges → deep footer; generous whitespace | Its neutral sans identity, its red, its rounded-soft chrome |
+| **2026 SaaS patterns** (saaslandingpage.com, genesysgrowth, swipepages roundups) | Outcome-first headline (not feature list); exactly ONE high-contrast primary CTA above the fold; proof/trust within two scrolls; single-field friction | Glassmorphism, purple-gradient heroes, smooth parallax circus |
+
+One-sentence test for any public-site section:
+
+> *"Would this section look at home on a serious tool suite's homepage — while still
+> obviously belonging to the same cartridge as the game?"*
+
+## 13. Page anatomy
+
+### Hub (`ilovetcas.com`) — top to bottom
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ SiteNav: [I LOVE TCAS]      Roadmap · คณะ · ข่าว · ตาราง │ [เข้าแอป] ← 1 CTA
+├──────────────────────────────────────────────────────────┤
+│  I LOVE TCAS (pixel eyebrow, 10px)                        │
+│  พาดหัว OUTCOME ภาษาไทย (thai-font 800, 30–44px)          │  ← hero: text only,
+│  ประโยครองหนึ่งบรรทัด (ink-soft)                           │    tools are the hero
+├──────────────────────────────────────────────────────────┤
+│  [ROADMAP]  [TCAS]  [NEWS]  [SCHOOL]   ← 4 tool cards     │  ← the product
+│  (การ์ด: icon tile → pixel eyebrow EN → ชื่อไทย 700 →     │
+│   คำอธิบาย 2 บรรทัด → เปิดเครื่องมือ →)                    │
+├──────────────────────────────────────────────────────────┤
+│  strip 3 ขั้น: ใช้ฟรีไม่ล็อกอิน → งานเก็บในเครื่อง →        │  ← "work your way"
+│  ล็อกอินเมื่อพร้อม sync                                     │
+├──────────────────────────────────────────────────────────┤
+│  ██ แถบ ink เข้ม: PLAY YOUR PATH (pixel-title-dark)       │  ← app/game band
+│  ██ ชวนเข้าแอปเต็ม+เกม + CTA เดียว                         │    (premium slot)
+├──────────────────────────────────────────────────────────┤
+│  trust strip: ฟรี 100% · ข้อมูล MyTCAS · ไม่ต้องสมัคร      │
+│  WelcomeFooter                                            │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Feature landing (LandingShell) — split hero
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ SiteNav (เหมือน hub + ปุ่มล็อกอิน/บันทึกของ FeatureLayout) │
+├──────────────────────────────────────────────────────────┤
+│  ROADMAP (pixel eyebrow)      ┌────────────────────────┐ │
+│  h1 ไทยใหญ่ = SITES[key].h1   │  screenshot slot        │ │
+│  intro = SITES[key].intro     │  (neo-card, พื้น        │ │
+│  [เริ่มใช้เลย]  เครื่องมืออื่น →  │   checker pixel จางๆ)  │ │
+├──────────────────────────────────────────────────────────┤
+│  benefits 3 คอลัมน์ (lucide icon tile, ไม่มี emoji)        │
+│  CTA ซ้ำ · ลิงก์กลับ hub · WelcomeFooter                  │
+└──────────────────────────────────────────────────────────┘
+```
+
+**Copy sources are `SITES` fields only** (`src/constants/sites.js`):
+`h1` = on-page headline · `intro` = on-page sub · `title`/`description` = `<head>` +
+OG + prerender ONLY — **never render `title` in visible UI** (the `| I LOVE TCAS`
+suffix reads as duplication; pixel font draws `|` as `I`).
+
+## 14. Public-site typography
+
+| Role | Font | Size | Notes |
+|---|---|---|---|
+| Wordmark / eyebrows / EN tool names | Press Start 2P | 10–12px, uppercase | Latin only — `pixelName` field, never Thai strings |
+| **H1 ไทย (hero)** | Noto Sans Thai **800** | 30px mobile / 40–44px desktop, leading-tight | This is the "professional" register — scale contrast against the tiny pixel eyebrow is the signature |
+| Section heading ไทย | Noto Sans Thai 700 | 20–24px | |
+| Body / card description | Noto Sans Thai 400 | 14–16px, `text-ink-soft` | Max 2 lines in cards |
+| Link/CTA labels | Noto Sans Thai 600 | 14px | Verb-first: "เปิดเครื่องมือ", "เริ่มวางแผน" |
+
+## 15. Public-site surfaces & color
+
+- Canvas: `--color-mist` (#f4f7fc — token added; kills the raw-hex `bg-[#F4F7FC]`).
+  Sections alternate mist / surface. The app band is `bg-ink` with white/brand-soft text —
+  the ONE dark moment on the page.
+- Cards: `neo-card` + `neo-btn` press mechanics on the whole card (cards are buttons).
+- Icon tiles: 40–48px square, `rounded-lg`, 2px ink border, flat `brand-soft` fill,
+  lucide icon `strokeWidth={2.5}` in `brand-strong`. **This replaces every emoji.**
+- Exactly one `bg-brand-strong` CTA per viewport: nav "เข้าแอป" | hero CTA | band CTA.
+- Texture: `.pixel-checker` (2-tone 8px checkerboard, ink at 3–4% opacity) allowed as
+  hero/screenshot-slot backdrop — the Part-A gradient ban stands; checker is the
+  cartridge-native alternative to "atmosphere gradients".
+
+## 16. Behavior
+
+- SiteNav collapses tool links behind a "เครื่องมือ ▾" `neo-card` dropdown under 768px;
+  wordmark always links to the hub.
+- Whole-card links: the full `neo-card` is the anchor (44px+ targets everywhere).
+- Landing screenshot slot: until real captures exist, checker backdrop + one thai-font
+  line — never a gradient, never lorem.
+- Motion budget per page: card hover lift + press (steps), ONE staggered reveal on hero
+  (steps(3), ≤300ms). Nothing scroll-jacked. `prefers-reduced-motion` snaps all.
+
+## 17. Public-site litmus (add to §11 when touching hub/landings)
+
+1. Is every visible headline from `h1`/`intro`/`shortName`/`pixelName` — zero
+   `site.title` leaks, zero `split('—')` string surgery?
+2. Tools grid within the first scroll? Exactly one brand-strong CTA per viewport?
+3. Zero emoji icons — every icon a lucide glyph inside an ink-bordered tile?
+4. Thai never in pixel font; pixel font never under 10px?
+5. Does the page still read as the same cartridge as the game (ink borders, hard
+   shadows, checker — not a generic white SaaS template)?
