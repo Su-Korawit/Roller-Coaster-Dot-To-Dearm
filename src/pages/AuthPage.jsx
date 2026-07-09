@@ -110,10 +110,10 @@ export default function AuthPage() {
 
       <div className="relative z-10 flex flex-col items-center mb-7">
         <div className="mb-4 flex h-16 w-16 items-center justify-center neo-card bg-surface">
-          <span className="pixel-font text-xl text-brand-strong" aria-hidden="true">RC</span>
+          <span className="pixel-font text-xl text-brand-strong" aria-hidden="true">ILT</span>
         </div>
         <h1 className="pixel-font pixel-title-dark text-xl text-center leading-relaxed tracking-wide">
-          RollerCoaster
+          I LOVE TCAS
         </h1>
         <p className="thai-font mt-2 text-sm md:text-base text-white/70">
           เส้นทางสู่ความสำเร็จของคุณ
@@ -200,7 +200,7 @@ export default function AuthPage() {
       </div>
 
       <p className="relative z-10 mt-5 thai-font text-xs text-center text-white/30">
-        RollerCoaster · v0.1
+        I LOVE TCAS · v0.1
       </p>
     </section>
   )

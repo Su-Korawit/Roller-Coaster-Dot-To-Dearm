@@ -328,7 +328,7 @@ export default function NewsPanel({ onClose }) {
  <div className="flex border-b border-ink/10">
  {[
             { key: 'camphub', label: 'Camphub' },
-            { key: 'rollercoaster', label: 'RollerCoaster' },
+            { key: 'rollercoaster', label: 'อัปเดตแอป' },
             { key: 'tcas', label: 'TCAS70' },
           ].map((tab) => (
  <button
@@ -505,7 +505,7 @@ export default function NewsPanel({ onClose }) {
  </div>
  )}
 
- {/* RollerCoaster Feed */}
+ {/* App-updates feed (legacy tab key: rollercoaster) */}
  {activeTab === 'rollercoaster' && (
  <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
  {/* Admin: add update button */}

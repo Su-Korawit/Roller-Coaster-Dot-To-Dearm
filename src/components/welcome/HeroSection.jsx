@@ -51,7 +51,7 @@ export default function HeroSection({ gamePreview, loading }) {
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center text-center px-6">
         <h1 className="pixel-font pixel-title-dark text-2xl md:text-5xl leading-relaxed">
-          ROLLER COASTER
+          I LOVE TCAS
         </h1>
         <p className="thai-font mt-4 text-sm md:text-base text-white/70 whitespace-nowrap">
           วางแผนอนาคต · เชื่อมต่อเพื่อน · เรียนรู้ผ่านเกม

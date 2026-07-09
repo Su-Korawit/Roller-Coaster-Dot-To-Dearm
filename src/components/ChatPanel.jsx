@@ -330,7 +330,7 @@ function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
                 >
                   สวัสดีครับ/ค่ะ<br />
                   ติดต่อสอบถามหรือแจ้งปัญหา<br />
-                  เกี่ยวกับ RollerCoaster<br />
+                  เกี่ยวกับ I LOVE TCAS<br />
                   ได้เลยครับ
                 </p>
               </div>

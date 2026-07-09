@@ -9,7 +9,7 @@ import UnlockSection from './UnlockSection'
 import PaymentCard from './PaymentCard'
 import { useChatComposer } from '../../hooks/useChatComposer'
 
-const WELCOME = 'สวัสดีครับ! 🛒 ฉันคือผู้ช่วยร้านค้า Roller Coaster ต้องการซื้อเหรียญหรือมีคำถามอะไรไหมครับ?'
+const WELCOME = 'สวัสดีครับ! 🛒 ฉันคือผู้ช่วยร้านค้า I LOVE TCAS ต้องการซื้อเหรียญหรือมีคำถามอะไรไหมครับ?'
 
 export default function ShopChatView({ onBack }) {
   const user = useAuthStore((s) => s.user)

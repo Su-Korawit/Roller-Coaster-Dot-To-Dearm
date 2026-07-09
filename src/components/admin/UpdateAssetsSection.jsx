@@ -115,7 +115,7 @@ export default function UpdateAssetsSection() {
           <code>audio/</code>) จาก Firebase Storage ไปยัง folder ในเครื่องของคุณ
         </p>
         <p className="mt-1 text-xs text-gray-400">
-          <code>rc/</code> (งาน Roller Coaster) จะไม่ถูกแตะต้อง
+          <code>rc/</code> (asset ของ I LOVE TCAS เอง) จะไม่ถูกแตะต้อง
         </p>
       </div>
 
