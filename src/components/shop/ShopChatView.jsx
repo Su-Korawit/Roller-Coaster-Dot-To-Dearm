@@ -5,6 +5,7 @@ import { useShopChatStore } from '../../stores/useShopChatStore'
 import { buildShopSystemPrompt } from '../../constants/shopPrompt'
 import { sendShopChat } from '../../services/shopAi'
 import ProductCard from './ProductCard'
+import UnlockSection from './UnlockSection'
 import PaymentCard from './PaymentCard'
 import { useChatComposer } from '../../hooks/useChatComposer'
 
@@ -168,6 +169,9 @@ export default function ShopChatView({ onBack }) {
           </div>
         </div>
       )}
+
+      {/* Entitlement unlocks — spend Coins on permanent features */}
+      <UnlockSection />
 
       {/* Chat input */}
       <div className="border-t border-gray-100 px-4 py-3">
