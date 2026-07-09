@@ -29,6 +29,7 @@ export const refs = {
   appUpdate:   (id)             => doc(db, 'appUpdates', id),
   tcasEvent:   (id)             => doc(db, 'tcasEvents', id),
   timetableTemplate: (id)       => doc(db, 'timetableTemplates', id),
+  entitlementItem: (id)         => doc(db, 'entitlementCatalog', id),
   welcomeGamePreview: ()        => doc(db, 'welcomeConfig', 'gamePreview'),
   welcomeStats:       ()        => doc(db, 'welcomeConfig', 'stats'),
   welcomeNewsPost:    (id)     => doc(db, 'welcomeConfig', 'news', 'items', id),
@@ -51,6 +52,7 @@ export const cols = {
   appUpdates:   collection(db, 'appUpdates'),
   tcasEvents:   collection(db, 'tcasEvents'),
   timetableTemplates: collection(db, 'timetableTemplates'),
+  entitlementCatalog: collection(db, 'entitlementCatalog'),
   chatMessages: (chatId) => collection(db, 'chats', chatId, 'messages'),
   userMatches:  (uid)    => collection(db, 'users', uid, 'matches'),
   userCredits:  (uid)    => collection(db, 'users', uid, 'receivedCredits'),
@@ -91,6 +93,7 @@ export const queries = {
     where('schoolName', '<=', prefixUpperBound(term)),
     limit(20),
   ),
+  activeEntitlements: () => query(cols.entitlementCatalog, where('active', '==', true)),
 }
 
 // ── Document shapes ───────────────────────────────────────────────────────────

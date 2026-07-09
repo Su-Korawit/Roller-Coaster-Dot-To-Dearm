@@ -39,12 +39,13 @@ service cloud.firestore {
     match /users/{uid} {
       allow get, list: if isSignedIn();
       allow create: if isSignedIn() && (request.auth.uid == uid || isSuperAdmin());
-      // Owners may update their own doc freely EXCEPT the `coins` field — that
-      // is written only by Cloud Functions (Admin SDK bypasses rules). Cross-user
-      // updates are restricted to ONLY the four social array fields.
+      // Owners may update their own doc freely EXCEPT the `coins` and
+      // `entitlements` fields — those are written only by Cloud Functions
+      // (Admin SDK bypasses rules). Cross-user updates are restricted to ONLY
+      // the four social array fields.
       allow update: if isSignedIn() && (
         (request.auth.uid == uid &&
-          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['coins'])) ||
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['coins', 'entitlements'])) ||
         request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['followRequests', 'followers', 'following', 'sentRequests'])
       );
@@ -201,6 +202,14 @@ service cloud.firestore {
       allow update: if false;
       allow delete: if isSignedIn() &&
         (resource.data.createdBy == request.auth.uid || isSuperAdmin());
+    }
+
+    // Entitlement catalog — priced unlockables. Signed-in read; super-admin
+    // writes (pricing experiments without a deploy). Purchases themselves are
+    // executed only by the purchaseEntitlement Cloud Function (Admin SDK).
+    match /entitlementCatalog/{itemId} {
+      allow read: if isSignedIn();
+      allow write: if isSuperAdmin();
     }
   }
 }

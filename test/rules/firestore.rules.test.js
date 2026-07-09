@@ -309,3 +309,26 @@ describe('timetableTemplates rules', () => {
     await assertSucceeds(deleteDoc(doc(admin, 'timetableTemplates/spam')))
   })
 })
+
+describe('entitlements protection', () => {
+  it('BLOCKS an owner writing their own entitlements field', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(updateDoc(doc(alice, 'users/alice'), { entitlements: { 'sticker-pack-1': {} } }))
+  })
+
+  it('still allows owner writes to ordinary fields', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(updateDoc(doc(alice, 'users/alice'), { aiLanguage: 'Thai' }))
+  })
+
+  it('entitlementCatalog: signed-in read, non-admin write blocked, admin write allowed', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'entitlementCatalog/item1'), { name: 'x', priceCoins: 50, active: true })
+    })
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(getDoc(doc(alice, 'entitlementCatalog/item1')))
+    await assertFails(setDoc(doc(alice, 'entitlementCatalog/item2'), { priceCoins: 1 }))
+    const admin = testEnv.authenticatedContext(SUPER_UID).firestore()
+    await assertSucceeds(setDoc(doc(admin, 'entitlementCatalog/item2'), { name: 'y', priceCoins: 99, active: true }))
+  })
+})
