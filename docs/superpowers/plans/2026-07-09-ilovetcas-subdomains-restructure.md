@@ -134,6 +134,14 @@ stores minimally
   guest keys; cloud has data → surface a pending-conflict flag for the UI.
 - Merge = additive (guest nodes/subjects appended), never overwrite (ADR-0012).
 
+> **As built (deviation):** both stores already persist continuously under
+> `rc-roadmap-store` / `rc-school-store`, so no parallel `rc-guest-*` data copy
+> exists. Instead a `rc-guest-dirty` marker records mutations made while auth is
+> settled logged-out; `bootstrapSession` snapshots marked work *before* hydration
+> and resolves it *after* (silent apply via `importRoadmap` / `importTimetable`,
+> or conflict → `useGuestMergeStore.offerGuestMerge`). Same policy, no key rename,
+> no double-write. See `src/services/guestMerge.js` header + CONTEXT.md glossary.
+
 ### Task 3.3: Conflict dialog + AI gates **[Cursor]**
 
 **Files:** Create `src/components/GuestMergeDialog.jsx`; touch AI entry points

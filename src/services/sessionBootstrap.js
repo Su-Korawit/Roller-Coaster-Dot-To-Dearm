@@ -29,6 +29,13 @@ import { hydrateFarmDataFromFirestore } from '../lib/farmDataSync.js'
 import { hydrateSpotify } from './spotifyConnect'
 import { migrateLegacyRoadmap } from '../utils/migrateLegacyRoadmap'
 import {
+  captureGuestWork,
+  resolveGuestMerge,
+  disableGuestTracking,
+  enableGuestTracking,
+} from './guestMerge'
+import { useGuestMergeStore } from '../stores/useGuestMergeStore'
+import {
   hydratePortfolioFromFirestore,
   setPortfolioSyncUser,
   hydrateTasksFromFirestore,
@@ -132,6 +139,12 @@ export async function bootstrapSession(firebaseUser) {
   const step = (name, fn) =>
     fn().catch((e) => console.error(`[sessionBootstrap] ${name} failed:`, e))
 
+  // Guest work (ADR-0012) must be snapshotted before the hydrations below
+  // overwrite the roadmap/school stores with cloud state; tracking is switched
+  // off first so those hydration writes are never mistaken for guest edits.
+  disableGuestTracking()
+  const guestWork = captureGuestWork()
+
   // Wave 1 — user doc creation gates the user-scoped reads below; the farm
   // data catalog is global and rides along in parallel.
   const [userData] = await Promise.all([
@@ -179,12 +192,24 @@ export async function bootstrapSession(firebaseUser) {
     }),
     step('hydrate spotify', () => hydrateSpotify(uid)),
   ])
+
+  // Cloud state is hydrated and the sync writers are armed — now merge guest
+  // work: empty cloud side merges silently (the armed writers persist it);
+  // a non-empty side becomes a pending conflict for GuestMergeDialog.
+  try {
+    const conflict = resolveGuestMerge(guestWork)
+    if (conflict) useGuestMergeStore.getState().offerGuestMerge(conflict)
+  } catch (e) {
+    console.error('[sessionBootstrap] guest merge failed:', e)
+  }
 }
 
 /**
  * Stop the debounced sync writers on logout.
  */
 export function teardownSession() {
+  // Auth is settled logged-out: store mutations from here on are guest work.
+  enableGuestTracking()
   setPortfolioSyncUser(null)
   setTaskSyncUser(null)
   disarmRoadmapSheetSync()
