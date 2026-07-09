@@ -1,4 +1,4 @@
-# design.md — Roller Coaster Dot To Dream · Design Constitution
+# design.md — I LOVE TCAS · Design Constitution
 
 > **TL;DR (ไทย):** UI ของแอปต้องเป็น "HUD ของเกม" ไม่ใช่แอป iOS ลอยทับเกม
 > ทุกชิ้นส่วน chrome (ปุ่ม, แผง, nav) ต้องดูเหมือนมาจากตลับเกมเดียวกับโลก Sprout Lands ข้างหลัง:

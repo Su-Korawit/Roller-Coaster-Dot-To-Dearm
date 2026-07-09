@@ -1,4 +1,4 @@
-# CLAUDE.md — Roller Coaster Dot To Dearm
+# CLAUDE.md — I LOVE TCAS
 
 Read `CONTEXT.md` first. It is the authoritative project glossary and architecture reference. Never contradict it.
 

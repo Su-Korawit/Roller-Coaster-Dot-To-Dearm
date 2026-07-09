@@ -1,5 +1,5 @@
 ---
-description: Roller Coaster Dot To Dearm — project conventions for Cursor IDE
+description: I LOVE TCAS — project conventions for Cursor IDE
 alwaysApply: true
 ---
 
@@ -7,7 +7,7 @@ alwaysApply: true
 
 Read `CONTEXT.md` at the repo root before making any changes. It is the authoritative glossary and architecture reference.
 
-This is a **mobile-first React + Phaser + Firebase** app for Thai students (gamified career planning). No TypeScript.
+This is **I LOVE TCAS** — a mobile-first React + Phaser + Firebase app for Thai students (gamified career planning). No TypeScript.
 
 ## Collaboration with Claude Code
 

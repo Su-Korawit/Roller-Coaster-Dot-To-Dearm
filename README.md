@@ -1,6 +1,6 @@
-# 🎢 Roller Coaster
+# ❤️ I LOVE TCAS
 
-A mobile-first **productivity RPG** for Thai high school and early university students. Real-life growth — choosing a career path, building mastery, studying for TCAS, and maintaining social relationships — is framed as a game with pixel-art aesthetics, AI-powered guidance, and a live social layer.
+A mobile-first **productivity RPG** (เดิมชื่อ Roller Coaster) for Thai high school and early university students. Real-life growth — choosing a career path, building mastery, studying for TCAS, and maintaining social relationships — is framed as a game with pixel-art aesthetics, AI-powered guidance, and a live social layer.
 
 > **⚠️ License — All Rights Reserved.** This repository is source-visible for
 > portfolio/reference purposes only. **Copying, modifying, redistributing, or
@@ -141,9 +141,9 @@ Status key:
 ### News
 | Feature | Status | Notes |
 |---|---|---|
-| News panel UI with 2 tabs | ✅ | Camphub tab + RollerCoaster (App Updates) tab; share-to-chat button per item |
+| News panel UI with 2 tabs | ✅ | Camphub tab + อัปเดตแอป (App Updates) tab; share-to-chat button per item |
 | Camphub live feed | ✅ | Vercel serverless function (api/camphub.js) scrapes camphub.in.th/computer/ real-time via cheerio, caches 30 min |
-| RollerCoaster (App Updates) | ✅ | Admin (`o.korawitt@gmail.com`) adds app announcements via bottom sheet; stored in Firestore `appUpdates` collection; real-time sync via onSnapshot |
+| อัปเดตแอป (App Updates) | ✅ | Admin (`o.korawitt@gmail.com`) adds app announcements via bottom sheet; stored in Firestore `appUpdates` collection; real-time sync via onSnapshot |
 | Update badges | ✅ | 3 types — ใหม่ (green) / อัปเดต (blue) / แก้บั๊ก (orange) |
 | Admin update form | ✅ | Add title, description, badge type, optional image URL; form inside NewsPanel |
 | Admin delete button | ✅ | Firestore updates only; delete icon visible to admin only |
@@ -350,7 +350,7 @@ All panels are `absolute inset-0` overlays with a `top: X%` offset (slides up fr
 | **ProfilePanel** | ✅ | Own profile: avatar, bio, portfolio circles, journey blocks, AI roadmap generator |
 | **SettingsSheet** | ✅ | Edit profile, privacy toggles, AI language, sign out (slides over ProfilePanel) |
 | **TaskPanel** | ✅ | Task list + create/edit form + active skill assignment |
-| **NewsPanel** | ✅ | 2-tab news feed: **Camphub** (live via Vercel scraper) + **RollerCoaster** (app updates, admin-managed) |
+| **NewsPanel** | ✅ | 2-tab news feed: **Camphub** (live via Vercel scraper) + **อัปเดตแอป** (app updates, admin-managed) |
 | **SkillPanel** | ✅ | Skill shop, equip passive/active slots |
 | **CalendarPopup** | ✅ | Month-view planner; accessible via Calendar FAB (no longer requires Planner skill) |
 | **SocialPanel** | ✅ | Map, Discover, Requests, Matched — 4-tab social hub |
@@ -661,7 +661,7 @@ match /appUpdates/{updateId} {
 }
 ```
 
-This enables the Admin to post app announcements from within the RollerCoaster tab while preventing unauthorized writes.
+This enables the Admin to post app announcements from within the อัปเดตแอป tab while preventing unauthorized writes.
 
 ### Environment Setup
 
