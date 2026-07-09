@@ -26,6 +26,7 @@ const SchoolLanding = lazy(() => import('./pages/landing/SchoolLanding'))
 const NewsHomePage = lazy(() => import('./pages/landing/NewsHomePage'))
 const TcasExplorerPage = lazy(() => import('./pages/landing/TcasExplorerPage'))
 const SchoolAppPage = lazy(() => import('./pages/SchoolAppPage'))
+const FeatureLayout = lazy(() => import('./components/FeatureLayout'))
 
 function LoadingScreen() {
   return (
@@ -140,7 +141,14 @@ function RoadmapSiteRoutes() {
   return (
     <Routes>
       <Route path="/" element={<RoadmapLanding />} />
-      <Route path="/editor" element={<RoadmapPage backPath="/" />} />
+      <Route
+        path="/editor"
+        element={(
+          <FeatureLayout>
+            <RoadmapPage backPath="/" />
+          </FeatureLayout>
+        )}
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
@@ -169,7 +177,14 @@ function SchoolSiteRoutes() {
   return (
     <Routes>
       <Route path="/" element={<SchoolLanding />} />
-      <Route path="/app" element={<SchoolAppPage />} />
+      <Route
+        path="/app"
+        element={(
+          <FeatureLayout>
+            <SchoolAppPage />
+          </FeatureLayout>
+        )}
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
