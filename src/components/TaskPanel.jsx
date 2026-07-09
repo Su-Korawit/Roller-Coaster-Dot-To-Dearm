@@ -9,6 +9,7 @@ import { useTaskStore } from '../stores/useTaskStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useSkillStore } from '../stores/useSkillStore'
 import { generateAIDailyTask, evaluateAndCompleteTask } from '../services/aiTasks'
+import { isFeatureSite } from '../lib/guestAiGate'
 import TaskForm from './TaskForm'
 import SkillExecutionPopup from './SkillExecutionPopup'
 import Popup from './ui/Popup'
@@ -188,6 +189,8 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
   const journeys = useUserStore((s) => s.journeys)
   const aiLanguage = useUserStore((s) => s.aiLanguage)
   const updateJourneyProgress = useUserStore((s) => s.updateJourneyProgress)
+  const user = useAuthStore((s) => s.user)
+  const signIn = useAuthStore((s) => s.signIn)
   const [view, setView] = useState(initialView)
   const [editingTaskId, setEditingTaskId] = useState(null)
   const [editInitialValues, setEditInitialValues] = useState({})
@@ -205,6 +208,8 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
   // Undo-delete state
   const [deletedTask, setDeletedTask] = useState(null)
   const [deleteTimerId, setDeleteTimerId] = useState(null)
+  const [showAiLoginCta, setShowAiLoginCta] = useState(false)
+  const [aiLoginBusy, setAiLoginBusy] = useState(false)
 
   function handleRemove(task) {
     if (deleteTimerId) clearTimeout(deleteTimerId)
@@ -263,6 +268,10 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
     if (!task.completed) {
       // AI-generated tasks require a reflection before completing
       if (task.isAIGenerated) {
+        if (isFeatureSite() && !user) {
+          setShowAiLoginCta(true)
+          return
+        }
         setReflectionTask(task)
         return
       }
@@ -277,6 +286,10 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
 
   async function handleReflectionSubmit(reflection) {
     if (!reflectionTask) return
+    if (isFeatureSite() && !user) {
+      setShowAiLoginCta(true)
+      return
+    }
     setIsEvaluating(true)
     try {
       const result = await evaluateAndCompleteTask(reflectionTask, reflection, { aiLanguage })
@@ -303,6 +316,10 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
   }
 
   async function handleAutoGenerate() {
+    if (isFeatureSite() && !user) {
+      setShowAiLoginCta(true)
+      return
+    }
     if (!activeMasteryBlockId) {
       setAutoGenError('No focus block pinned. Pin a block (📌) in your Profile first.')
       setTimeout(() => setAutoGenError(''), 4000)
@@ -489,6 +506,34 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
             </button>
           </div>
         </div>
+      )}
+      {showAiLoginCta && (
+        <Popup variant="center" size="sm" onClose={() => setShowAiLoginCta(false)}>
+          <div className="p-6 text-center">
+            <p className="pixel-font text-[10px] text-ink mb-3">ฟีเจอร์ AI ต้องล็อกอิน</p>
+            <p className="thai-font text-sm text-ink/70 mb-5">
+              งาน AI ใช้ Gemini มีค่าใช้จ่าย — ล็อกอินเพื่อสร้างและประเมินงาน AI การแก้ไขด้วยมือยังฟรีไม่จำกัด
+            </p>
+            <button
+              type="button"
+              disabled={aiLoginBusy}
+              onClick={async () => {
+                setAiLoginBusy(true)
+                try {
+                  await signIn('google')
+                  setShowAiLoginCta(false)
+                } catch (e) {
+                  console.error('[TaskPanel] AI login failed:', e)
+                } finally {
+                  setAiLoginBusy(false)
+                }
+              }}
+              className="neo-btn w-full rounded-xl bg-brand-strong py-3 thai-font text-sm text-white disabled:opacity-50"
+            >
+              {aiLoginBusy ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบด้วย Google'}
+            </button>
+          </div>
+        </Popup>
       )}
     </div>
   )

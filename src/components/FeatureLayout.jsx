@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { SITES } from '../constants/sites'
 import { currentSite } from '../lib/site'
 import { useAuthStore } from '../stores/useAuthStore'
+import GuestMergeDialog from './GuestMergeDialog'
 
 const TOOL_KEYS = ['roadmap', 'tcas', 'news', 'school', 'app']
 
@@ -112,6 +113,7 @@ export default function FeatureLayout({ children }) {
       <main className="flex-1 min-h-0 relative overflow-hidden">
         {children}
       </main>
+      <GuestMergeDialog />
     </div>
   )
 }
