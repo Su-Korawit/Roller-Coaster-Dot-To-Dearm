@@ -5,6 +5,7 @@ import { useAuthStore } from './stores/useAuthStore'
 import { getAdminSections } from './constants/admin'
 import OnboardingModal from './components/onboarding/OnboardingModal'
 import { currentSite } from './lib/site'
+import { SITES } from './constants/sites'
 
 // Route-level code splitting: each page loads on first navigation, keeping the
 // entry chunk free of Phaser (HomePage→GameCanvas), React Flow (RoadmapPage),
@@ -207,6 +208,15 @@ function SiteRoutes() {
 }
 
 function App() {
+  // SPA-side counterpart of the Phase 4 prerender: after hydration replaces
+  // the static landing HTML, keep the head tags matching the current site.
+  useEffect(() => {
+    const site = SITES[currentSite]
+    if (!site) return
+    document.title = site.title
+    document.querySelector('meta[name="description"]')?.setAttribute('content', site.description)
+  }, [])
+
   return (
     <Suspense fallback={<LoadingScreen />}>
       <SiteRoutes />

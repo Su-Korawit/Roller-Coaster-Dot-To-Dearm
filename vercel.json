@@ -1,6 +1,60 @@
 {
   "name": "roller-coaster-dot-to-dearm",
+  "redirects": [
+    {
+      "source": "/home",
+      "has": [{ "type": "host", "value": "ilovetcas.com" }],
+      "destination": "https://app.ilovetcas.com/home",
+      "permanent": true
+    },
+    {
+      "source": "/roadmap",
+      "has": [{ "type": "host", "value": "ilovetcas.com" }],
+      "destination": "https://app.ilovetcas.com/roadmap",
+      "permanent": true
+    },
+    {
+      "source": "/auth",
+      "has": [{ "type": "host", "value": "ilovetcas.com" }],
+      "destination": "https://app.ilovetcas.com/auth",
+      "permanent": true
+    },
+    {
+      "source": "/admin",
+      "has": [{ "type": "host", "value": "ilovetcas.com" }],
+      "destination": "https://app.ilovetcas.com/admin",
+      "permanent": true
+    },
+    {
+      "source": "/news/:id",
+      "has": [{ "type": "host", "value": "ilovetcas.com" }],
+      "destination": "https://news.ilovetcas.com/:id",
+      "permanent": true
+    }
+  ],
   "rewrites": [
+    { "source": "/", "has": [{ "type": "host", "value": "ilovetcas.com" }], "destination": "/sites/hub/index.html" },
+    { "source": "/sitemap.xml", "has": [{ "type": "host", "value": "ilovetcas.com" }], "destination": "/sites/hub/sitemap.xml" },
+    { "source": "/robots.txt", "has": [{ "type": "host", "value": "ilovetcas.com" }], "destination": "/sites/hub/robots.txt" },
+
+    { "source": "/", "has": [{ "type": "host", "value": "roadmap.ilovetcas.com" }], "destination": "/sites/roadmap/index.html" },
+    { "source": "/sitemap.xml", "has": [{ "type": "host", "value": "roadmap.ilovetcas.com" }], "destination": "/sites/roadmap/sitemap.xml" },
+    { "source": "/robots.txt", "has": [{ "type": "host", "value": "roadmap.ilovetcas.com" }], "destination": "/sites/roadmap/robots.txt" },
+
+    { "source": "/", "has": [{ "type": "host", "value": "tcas.ilovetcas.com" }], "destination": "/sites/tcas/index.html" },
+    { "source": "/sitemap.xml", "has": [{ "type": "host", "value": "tcas.ilovetcas.com" }], "destination": "/sites/tcas/sitemap.xml" },
+    { "source": "/robots.txt", "has": [{ "type": "host", "value": "tcas.ilovetcas.com" }], "destination": "/sites/tcas/robots.txt" },
+
+    { "source": "/", "has": [{ "type": "host", "value": "news.ilovetcas.com" }], "destination": "/sites/news/index.html" },
+    { "source": "/sitemap.xml", "has": [{ "type": "host", "value": "news.ilovetcas.com" }], "destination": "/sites/news/sitemap.xml" },
+    { "source": "/robots.txt", "has": [{ "type": "host", "value": "news.ilovetcas.com" }], "destination": "/sites/news/robots.txt" },
+
+    { "source": "/", "has": [{ "type": "host", "value": "school.ilovetcas.com" }], "destination": "/sites/school/index.html" },
+    { "source": "/sitemap.xml", "has": [{ "type": "host", "value": "school.ilovetcas.com" }], "destination": "/sites/school/sitemap.xml" },
+    { "source": "/robots.txt", "has": [{ "type": "host", "value": "school.ilovetcas.com" }], "destination": "/sites/school/robots.txt" },
+
+    { "source": "/robots.txt", "has": [{ "type": "host", "value": "app.ilovetcas.com" }], "destination": "/sites/app/robots.txt" },
+
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
