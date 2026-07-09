@@ -20,6 +20,7 @@
 import { getDoc, getDocs, setDoc } from 'firebase/firestore'
 import { refs, shapes, queries } from '../lib/db'
 import { useUserStore } from '../stores/useUserStore'
+import { useEntitlementsStore } from '../stores/useEntitlementsStore'
 import { useWorldStore } from '../stores/useWorldStore'
 import { useRoadmapStore } from '../stores/useRoadmapStore'
 import { usePlansStore } from '../stores/usePlansStore'
@@ -142,6 +143,9 @@ export async function bootstrapSession(firebaseUser) {
   // ensureUserDoc already read (no second round-trip).
   const serverCoins = userData?.coins ?? 0
   if (serverCoins > 0) useUserStore.getState().setCoins(serverCoins)
+
+  // Entitlements — Functions-owned, read from the same user-doc fetch.
+  useEntitlementsStore.getState().hydrateEntitlements(userData?.entitlements ?? {})
 
   // Wave 2 — independent per-store hydrations; each arms its debounced
   // writer only after its own hydrate succeeded.

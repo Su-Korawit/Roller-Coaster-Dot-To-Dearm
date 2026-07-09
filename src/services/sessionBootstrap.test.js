@@ -19,6 +19,7 @@ const m = vi.hoisted(() => ({
   hydrateSchool: vi.fn(),
   setSchoolSyncUser: vi.fn(),
   disarmSchoolSync: vi.fn(),
+  hydrateEntitlements: vi.fn(),
   setCoins: vi.fn(),
   setMapOwner: vi.fn(),
   resetPlans: vi.fn(),
@@ -64,6 +65,9 @@ vi.mock('../utils/migrateLegacyRoadmap', () => ({
 }))
 vi.mock('../stores/useUserStore', () => ({
   useUserStore: { getState: () => ({ setCoins: m.setCoins }) },
+}))
+vi.mock('../stores/useEntitlementsStore', () => ({
+  useEntitlementsStore: { getState: () => ({ hydrateEntitlements: m.hydrateEntitlements }) },
 }))
 vi.mock('../stores/useWorldStore', () => ({
   useWorldStore: { getState: () => ({ setMapOwner: m.setMapOwner }) },
@@ -161,6 +165,21 @@ describe('bootstrapSession', () => {
     m.hydrateInventory.mockRejectedValue(new Error('inventory boom'))
     await bootstrapSession({ uid: 'u1' })
     expect(m.hydrateFarm).toHaveBeenCalledWith('u1')
+  })
+
+  it('hydrates entitlements from the same user-doc read (empty default)', async () => {
+    await bootstrapSession({ uid: 'u1' })
+    expect(m.hydrateEntitlements).toHaveBeenCalledWith({})
+  })
+
+  it('hydrates entitlements with the map when the user doc carries one', async () => {
+    m.getDoc.mockImplementation((ref) =>
+      ref._path === 'users/u1'
+        ? Promise.resolve({ exists: () => true, data: () => ({ coins: 0, roadmapSheetIds: ['sheet-1'], entitlements: { 'pack-1': { kind: 'sticker-pack' } } }) })
+        : Promise.resolve({ exists: () => true, id: 'sheet-1', data: () => ({ ownerUid: 'u1', name: 'Roadmap', nodes: [], edges: [] }) }),
+    )
+    await bootstrapSession({ uid: 'u1' })
+    expect(m.hydrateEntitlements).toHaveBeenCalledWith({ 'pack-1': { kind: 'sticker-pack' } })
   })
 
   it('hydrates school and arms its sync writer on login', async () => {
