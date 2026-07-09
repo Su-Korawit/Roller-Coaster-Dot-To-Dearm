@@ -89,6 +89,6 @@
 
     { "source": "/robots.txt", "has": [{ "type": "host", "value": "app.ilovetcas.com" }], "destination": "/sites/app/robots.txt" },
 
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/(.*)", "destination": "/app.html" }
   ]
 }

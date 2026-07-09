@@ -15,14 +15,18 @@
 // door. Its robots.txt disallows indexing so app.ilovetcas.com never competes
 // with hub/feature pages as duplicate content.
 // ============================================================================
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, renameSync, existsSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { SITES } from '../src/constants/sites.js'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const dist = resolve(root, 'dist')
-const shell = readFileSync(resolve(dist, 'index.html'), 'utf8')
+// A re-run on an already-prerendered dist finds the shell at app.html.
+const shellPath = existsSync(resolve(dist, 'index.html'))
+  ? resolve(dist, 'index.html')
+  : resolve(dist, 'app.html')
+const shell = readFileSync(shellPath, 'utf8')
 
 const esc = (s) =>
   String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -141,4 +145,13 @@ for (const key of PRERENDERED_KEYS) {
   mkdirSync(out, { recursive: true })
   writeFileSync(resolve(out, 'robots.txt'), robots(SITES.app, { indexable: false }))
   console.log('wrote sites/app robots.txt (noindex)')
+}
+
+// Vercel serves real files BEFORE rewrites, so a dist/index.html would
+// shadow every host-conditional "/" rewrite. Move the shell to app.html —
+// vercel.json's catch-all rewrites everything unmatched to /app.html.
+{
+  const shellPath = resolve(dist, 'index.html')
+  if (existsSync(shellPath)) renameSync(shellPath, resolve(dist, 'app.html'))
+  console.log('moved index.html -> app.html (unshadow host rewrites)')
 }
