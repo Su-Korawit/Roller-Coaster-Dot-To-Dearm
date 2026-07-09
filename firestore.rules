@@ -182,14 +182,16 @@ service cloud.firestore {
     }
 
     // Admin-curated content feeds: app updates (News tab) and TCAS calendar
-    // events. Signed-in users read; only the super-admin writes (in-panel
-    // forms gate on ADMIN_UID client-side; these rules are the real gate).
+    // events. World-readable — the public news Feature site
+    // (news.ilovetcas.com, ADR-0012) renders both feeds without a session.
+    // Only the super-admin writes (in-panel forms gate on ADMIN_UID
+    // client-side; these rules are the real gate).
     match /appUpdates/{updateId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow write: if isSuperAdmin();
     }
     match /tcasEvents/{eventId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow write: if isSuperAdmin();
     }
 

@@ -249,12 +249,19 @@ describe('Roadmap Sheets rules (roadmapSheets/{sheetId})', () => {
 })
 
 describe('tcasEvents rules', () => {
-  it('allows a signed-in user to read events', async () => {
+  it('allows anyone (even unauthenticated) to read events — public news site (ADR-0012)', async () => {
     await testEnv.withSecurityRulesDisabled(async (ctx) => {
       await setDoc(doc(ctx.firestore(), 'tcasEvents/e1'), { title: 'สมัคร TCAS70', date: '2026-07-15' })
     })
     const alice = testEnv.authenticatedContext('alice').firestore()
     await assertSucceeds(getDoc(doc(alice, 'tcasEvents/e1')))
+    const anon = testEnv.unauthenticatedContext().firestore()
+    await assertSucceeds(getDoc(doc(anon, 'tcasEvents/e1')))
+  })
+
+  it('BLOCKS an unauthenticated write', async () => {
+    const anon = testEnv.unauthenticatedContext().firestore()
+    await assertFails(setDoc(doc(anon, 'tcasEvents/e9'), { title: 'hack', date: '2026-01-01' }))
   })
 
   it('BLOCKS a non-admin write', async () => {
@@ -265,6 +272,29 @@ describe('tcasEvents rules', () => {
   it('allows the super-admin to write', async () => {
     const admin = testEnv.authenticatedContext(SUPER_UID).firestore()
     await assertSucceeds(setDoc(doc(admin, 'tcasEvents/e3'), { title: 'ประกาศผล', date: '2026-12-01' }))
+  })
+})
+
+describe('appUpdates rules', () => {
+  it('allows anyone (even unauthenticated) to read updates — public news site (ADR-0012)', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'appUpdates/u1'), { title: 'เปิดตัว I LOVE TCAS', type: 'feature' })
+    })
+    const anon = testEnv.unauthenticatedContext().firestore()
+    await assertSucceeds(getDoc(doc(anon, 'appUpdates/u1')))
+    await assertSucceeds(getDocs(collection(anon, 'appUpdates')))
+  })
+
+  it('BLOCKS unauthenticated and non-admin writes', async () => {
+    const anon = testEnv.unauthenticatedContext().firestore()
+    await assertFails(setDoc(doc(anon, 'appUpdates/u2'), { title: 'hack' }))
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(setDoc(doc(alice, 'appUpdates/u3'), { title: 'hack' }))
+  })
+
+  it('allows the super-admin to write', async () => {
+    const admin = testEnv.authenticatedContext(SUPER_UID).firestore()
+    await assertSucceeds(setDoc(doc(admin, 'appUpdates/u4'), { title: 'อัปเดตแอป', type: 'fix' }))
   })
 })
 
