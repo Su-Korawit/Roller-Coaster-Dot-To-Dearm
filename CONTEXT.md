@@ -1,6 +1,11 @@
-# CONTEXT.md — Roller Coaster Dot To Dearm
+# CONTEXT.md — I LOVE TCAS
 
 Mobile-first React web app for Thai students: gamified career planning, MBTI profiling, university/program selection, AI-generated daily tasks, a node-based roadmap builder, social matching, and a PromptPay-backed shop. Firebase is the backend; Vercel hosts the frontend and light serverless functions.
+
+## Brand
+
+- **Wordmark:** `I LOVE TCAS` — all caps, three words. This is the only way to write the brand name (see ADR 0011). Domain: [ilovetcas.com](https://ilovetcas.com).
+- **Legacy name:** "Roller Coaster" survives only in internal identifiers that must never be renamed: `rc-*` localStorage keys, `rc/` Storage prefix, Firebase project id / bucket (`rollercoasterdottodream*`), repo / folder / package name.
 
 ---
 
@@ -184,6 +189,11 @@ AuthPage, RegisterPage  (public)
 
 Vercel `vercel.json` rewrites all paths → `index.html` (SPA).
 
+**Restructure in progress (ADR-0012):** the app is being split across subdomains —
+`ilovetcas.com` (Hub), `roadmap./tcas./news./school.ilovetcas.com` (Feature sites),
+`app.ilovetcas.com` (this full tree). `App.jsx` switches route trees on the Site key
+resolved from the hostname; unknown hosts (`*.vercel.app`, `localhost`) resolve to `app`.
+
 ---
 
 ## Naming Conventions
@@ -282,3 +292,8 @@ Central visual feature. Files:
 | **Connect remote** | The app acting as a Spotify **Connect** controller: it sends Web API playback commands but plays no audio itself — sound comes from the user's own active Spotify **device**. Requires Spotify Premium. |
 | **Active device** | A Spotify client (phone app, desktop app, speaker) currently reachable by the Connect API. Absence surfaces as `NO_ACTIVE_DEVICE` (404); the Music UI then prompts the user to open Spotify or pick a device via `transferPlayback`. |
 | **MiniPlayer / PlayerSheet** | The persistent now-playing bar mounted in `MobileLayout` (**MiniPlayer**) and its expanded full-control bottom sheet (**PlayerSheet**: search, playlists, transport, device picker). PlayerSheet's body is the reusable **SpotifyControls**, also embedded in **MusicPanel** (the unified Background + Spotify panel the HomePage music pill opens). |
+| **Hub** | The ILOVEPDF-style tool-grid homepage at `ilovetcas.com` — marketing + SEO only, no auth state, no game assets. Replaces WelcomePage at the apex; WelcomePage moves to `app.ilovetcas.com/`. See ADR-0012 |
+| **Feature site** | One public tool on its own subdomain (`roadmap.` builder, `tcas.` คณะ/มหาลัย search, `news.` ข่าว+ปฏิทิน TCAS, `school.` ตารางเรียน+การบ้าน+to-do). Guest-usable, wrapped in `FeatureLayout` (slim header, login-in-place), never behind `RequireAuth`. MBTI is deliberately not one |
+| **Site key** | `hub \| roadmap \| tcas \| news \| school \| app` — resolved from `window.location.hostname` by `src/lib/site.js` (`?site=` dev override); `App.jsx` picks its route tree from it. Unknown hosts (`*.vercel.app`, `localhost`) → `app` |
+| **Guest mode** | Using a Feature site with no session: work persists under `rc-guest-*` localStorage keys (Zustand persist, active only while logged out). Manual tool use is free; AI actions are login-gated. No Firebase Anonymous Auth (ADR-0012) |
+| **Guest merge** | On login, `services/guestMerge.js` lifts `rc-guest-*` work into Firestore: cloud side empty → silent additive merge; cloud has data → **GuestMergeDialog** asks keep-or-discard. Never overwrites either side |
