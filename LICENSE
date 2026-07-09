@@ -1,0 +1,64 @@
+PROPRIETARY LICENSE — ALL RIGHTS RESERVED
+==========================================
+
+Copyright (c) 2026 Korawit Suporn (Roller Coaster Dot To Dearm)
+All rights reserved.
+
+This repository is made publicly visible for portfolio, educational
+reference, and transparency purposes ONLY. Public visibility of the source
+code does NOT grant any license or rights to the code, assets, designs,
+or any other content in this repository.
+
+WITHOUT the prior written permission of the copyright holder, you may NOT:
+
+  1. Copy, reproduce, or redistribute this software or any part of it,
+     in source or binary form;
+  2. Modify, adapt, translate, or create derivative works from it;
+  3. Use it, in whole or in part, in any product, service, website,
+     application, or commercial offering;
+  4. Sublicense, sell, rent, lease, or transfer it to any third party;
+  5. Deploy or host this software or a derivative of it, publicly or
+     privately, for yourself or others.
+
+You MAY:
+
+  1. View and read the source code in this repository;
+  2. Reference small excerpts for the purpose of review, commentary,
+     or education, with attribution, to the extent permitted by
+     applicable copyright law (fair use / fair dealing).
+
+Contributions: by submitting a pull request or patch you agree to assign
+its copyright to the copyright holder; no rights back are granted beyond
+those in this license.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY ARISING FROM THE USE OF THE SOFTWARE.
+
+For licensing inquiries: o.korawitt@gmail.com
+
+--------------------------------------------------------------------------
+สรุปภาษาไทย (ฉบับย่อ — ยึดข้อความภาษาอังกฤษด้านบนเป็นหลัก)
+--------------------------------------------------------------------------
+
+โปรเจกต์นี้เปิดให้ "ดู" ซอร์สโค้ดได้เท่านั้น สงวนลิขสิทธิ์ทุกประการ
+ห้ามคัดลอก ดัดแปลง แจกจ่าย นำไปใช้ในผลิตภัณฑ์/บริการ หรือนำไป deploy
+ไม่ว่าเชิงพาณิชย์หรือไม่ก็ตาม เว้นแต่ได้รับอนุญาตเป็นลายลักษณ์อักษรจาก
+เจ้าของลิขสิทธิ์ (ติดต่อ: o.korawitt@gmail.com)
+
+--------------------------------------------------------------------------
+THIRD-PARTY CONTENT — NOT COVERED BY THIS LICENSE
+--------------------------------------------------------------------------
+
+The following content belongs to third parties and is governed by their
+own licenses/terms, NOT by this license:
+
+  * "Sprout Lands" pixel-art assets by Cup Nooble
+    (parts of public/assets/sprites/ and related game art) — see
+    Cup Nooble's asset pack license. These assets are included solely for
+    this application's use; you may not extract or reuse them from this
+    repository under any circumstances.
+  * University names and logos (served from the MyTCAS CDN) are the
+    property of their respective institutions.
+  * npm / Node.js dependencies are used under their respective
+    open-source licenses (see each package).

@@ -2,6 +2,11 @@
 
 A mobile-first **productivity RPG** for Thai high school and early university students. Real-life growth — choosing a career path, building mastery, studying for TCAS, and maintaining social relationships — is framed as a game with pixel-art aesthetics, AI-powered guidance, and a live social layer.
 
+> **⚠️ License — All Rights Reserved.** This repository is source-visible for
+> portfolio/reference purposes only. **Copying, modifying, redistributing, or
+> deploying this code or its assets is not permitted** without written
+> permission. See [LICENSE](LICENSE) · ห้ามคัดลอก ดัดแปลง หรือนำไปใช้โดยไม่ได้รับอนุญาต
+
 ---
 
 ## Tech Stack

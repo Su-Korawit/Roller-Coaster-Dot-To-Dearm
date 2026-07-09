@@ -1,6 +1,7 @@
 {
   "name": "roller-coaster-dot-to-dearm",
   "private": true,
+  "license": "SEE LICENSE IN LICENSE",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
