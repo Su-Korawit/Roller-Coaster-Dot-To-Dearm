@@ -30,12 +30,46 @@
       "has": [{ "type": "host", "value": "ilovetcas.com" }],
       "destination": "https://news.ilovetcas.com/:id",
       "permanent": true
+    },
+    {
+      "source": "/home",
+      "has": [{ "type": "host", "value": "www.ilovetcas.com" }],
+      "destination": "https://app.ilovetcas.com/home",
+      "permanent": true
+    },
+    {
+      "source": "/roadmap",
+      "has": [{ "type": "host", "value": "www.ilovetcas.com" }],
+      "destination": "https://app.ilovetcas.com/roadmap",
+      "permanent": true
+    },
+    {
+      "source": "/auth",
+      "has": [{ "type": "host", "value": "www.ilovetcas.com" }],
+      "destination": "https://app.ilovetcas.com/auth",
+      "permanent": true
+    },
+    {
+      "source": "/admin",
+      "has": [{ "type": "host", "value": "www.ilovetcas.com" }],
+      "destination": "https://app.ilovetcas.com/admin",
+      "permanent": true
+    },
+    {
+      "source": "/news/:id",
+      "has": [{ "type": "host", "value": "www.ilovetcas.com" }],
+      "destination": "https://news.ilovetcas.com/:id",
+      "permanent": true
     }
   ],
   "rewrites": [
     { "source": "/", "has": [{ "type": "host", "value": "ilovetcas.com" }], "destination": "/sites/hub/index.html" },
     { "source": "/sitemap.xml", "has": [{ "type": "host", "value": "ilovetcas.com" }], "destination": "/sites/hub/sitemap.xml" },
     { "source": "/robots.txt", "has": [{ "type": "host", "value": "ilovetcas.com" }], "destination": "/sites/hub/robots.txt" },
+
+    { "source": "/", "has": [{ "type": "host", "value": "www.ilovetcas.com" }], "destination": "/sites/hub/index.html" },
+    { "source": "/sitemap.xml", "has": [{ "type": "host", "value": "www.ilovetcas.com" }], "destination": "/sites/hub/sitemap.xml" },
+    { "source": "/robots.txt", "has": [{ "type": "host", "value": "www.ilovetcas.com" }], "destination": "/sites/hub/robots.txt" },
 
     { "source": "/", "has": [{ "type": "host", "value": "roadmap.ilovetcas.com" }], "destination": "/sites/roadmap/index.html" },
     { "source": "/sitemap.xml", "has": [{ "type": "host", "value": "roadmap.ilovetcas.com" }], "destination": "/sites/roadmap/sitemap.xml" },
