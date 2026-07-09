@@ -95,3 +95,22 @@ describe('daily streak via addDailyFeel', () => {
     expect(useUserStore.getState().bestStreak).toBe(6)
   })
 })
+
+describe('daily AI usage counter', () => {
+  beforeEach(() => {
+    useUserStore.setState({ aiUsage: null })
+  })
+
+  it('starts at 0 and increments within the same day', () => {
+    expect(useUserStore.getState().aiUsesToday('2026-07-09')).toBe(0)
+    expect(useUserStore.getState().trackAiUse('2026-07-09')).toBe(1)
+    expect(useUserStore.getState().trackAiUse('2026-07-09')).toBe(2)
+    expect(useUserStore.getState().aiUsesToday('2026-07-09')).toBe(2)
+  })
+
+  it('resets on a new date', () => {
+    useUserStore.getState().trackAiUse('2026-07-09')
+    expect(useUserStore.getState().aiUsesToday('2026-07-10')).toBe(0)
+    expect(useUserStore.getState().trackAiUse('2026-07-10')).toBe(1)
+  })
+})

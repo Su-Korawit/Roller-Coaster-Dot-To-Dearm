@@ -1,8 +1,17 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { usePlansStore } from './usePlansStore'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+
+const entitlementsMock = vi.hoisted(() => ({ extra: 0 }))
+vi.mock('./useEntitlementsStore', () => ({
+  useEntitlementsStore: { getState: () => ({ extraPlanSlots: () => entitlementsMock.extra }) },
+}))
+
+const { usePlansStore } = await import('./usePlansStore')
 
 describe('usePlansStore', () => {
-  beforeEach(() => usePlansStore.getState().resetPlans())
+  beforeEach(() => {
+    entitlementsMock.extra = 0
+    usePlansStore.getState().resetPlans()
+  })
 
   it('adds a plan and makes it active', () => {
     const id = usePlansStore.getState().addPlan()
@@ -30,5 +39,15 @@ describe('usePlansStore', () => {
     const b = usePlansStore.getState().addPlan()
     usePlansStore.getState().reorderPlans(1, 0)
     expect(usePlansStore.getState().plans.map((p) => p.id)).toEqual([b, a])
+  })
+
+  it('addPlan refuses beyond FREE_PLAN_SLOTS, then allows more with the entitlement', () => {
+    for (let i = 0; i < 3; i++) expect(usePlansStore.getState().addPlan()).toBeTruthy()
+    expect(usePlansStore.getState().addPlan()).toBeNull()
+    expect(usePlansStore.getState().plans).toHaveLength(3)
+
+    entitlementsMock.extra = 2
+    expect(usePlansStore.getState().addPlan()).toBeTruthy()
+    expect(usePlansStore.getState().plans).toHaveLength(4)
   })
 })

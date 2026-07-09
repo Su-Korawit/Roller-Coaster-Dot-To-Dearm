@@ -22,6 +22,7 @@ export const useUserStore = create(
       streak: 0,
       lastStreakDate: null, // 'YYYY-MM-DD' of the last day that counted toward the streak
       bestStreak: 0,
+      aiUsage: null, // { date: 'YYYY-MM-DD', count } — daily AI-generation counter
       totalStacks: 0,   // incremented each time a task is marked complete
       userName: '',
       // Daily mood check-in
@@ -47,6 +48,23 @@ export const useUserStore = create(
       setCoins: (amount) => set({ coins: amount }),
       setStreak: (streak) => set({ streak }),
       incrementStacks: () => set((state) => ({ totalStacks: state.totalStacks + 1 })),
+
+      // Daily AI-generation usage counter (resets on a new date). Client-side
+      // by design — the Gemini key is a client secret already, so the cap is a
+      // fairness gate, not a security boundary. Cap = useEntitlementsStore's
+      // aiDailyCap(). todayStr injectable for tests.
+      aiUsesToday: (todayStr) => {
+        const today = todayStr ?? new Date().toISOString().slice(0, 10)
+        const usage = get().aiUsage
+        return usage?.date === today ? usage.count : 0
+      },
+      trackAiUse: (todayStr) => {
+        const today = todayStr ?? new Date().toISOString().slice(0, 10)
+        const prev = get().aiUsage
+        const count = (prev?.date === today ? prev.count : 0) + 1
+        set({ aiUsage: { date: today, count } })
+        return count
+      },
 
       // Daily feel check-in (max once per day). Increments stacks and advances
       // the consecutive-day streak. Returns { streak, changed, broken } so the
@@ -150,6 +168,7 @@ export const useUserStore = create(
           streak: 0,
           lastStreakDate: null,
           bestStreak: 0,
+          aiUsage: null,
           totalStacks: 0,
           userName: '',
           feelingNotes: [],

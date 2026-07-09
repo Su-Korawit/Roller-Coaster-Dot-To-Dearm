@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { generateJourney } from '../../services/aiJourney'
 import { useUserStore } from '../../stores/useUserStore'
+import { useEntitlementsStore } from '../../stores/useEntitlementsStore'
 import { useSelectStore } from '../../stores/useSelectStore'
 import { usePlansStore } from '../../stores/usePlansStore'
 import { careers, masteries, universities, programs } from '../../data/onboardingData'
@@ -77,6 +78,13 @@ export default function MasteryTracks() {
   }
 
   async function generateRoadmap() {
+    // Daily AI cap: free tier + purchased ai-quota entitlements (Epic G).
+    const { aiUsesToday, trackAiUse } = useUserStore.getState()
+    if (aiUsesToday() >= useEntitlementsStore.getState().aiDailyCap()) {
+      alert('ครบโควต้า AI วันนี้แล้ว — ปลดล็อกเพิ่มได้ในร้านค้า')
+      return
+    }
+    trackAiUse()
     setIsGenerating(true)
     try {
       const steps = await generateJourney({

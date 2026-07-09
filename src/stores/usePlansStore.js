@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { useEntitlementsStore } from './useEntitlementsStore'
+import { FREE_PLAN_SLOTS } from '../constants/entitlements'
 
 let seq = 0
 const nextId = () => `plan-${++seq}-${Date.now()}`
@@ -10,7 +12,11 @@ export const usePlansStore = create(
       plans: [],
       activePlanId: null,
 
+      // Capped at the free tier + purchased plan-slot entitlements; returns
+      // null when at capacity so the UI can point to the shop Unlock section.
       addPlan: () => {
+        const cap = FREE_PLAN_SLOTS + useEntitlementsStore.getState().extraPlanSlots()
+        if (get().plans.length >= cap) return null
         const plan = { id: nextId(), university: null, program: null, addedAt: Date.now() }
         set((s) => ({ plans: [...s.plans, plan], activePlanId: plan.id }))
         return plan.id
