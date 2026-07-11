@@ -8,6 +8,23 @@ import { defaultIdeaRootData, defaultReportData } from '../constants/irBoard'
 
 const IMPORT_GAP = 80
 
+export function roadmapStorePartialize(state) {
+  return {
+    myUid: state.myUid,
+    sheets: state.sheets.filter((s) => s.id !== 'admin-idea-board'),
+    activeSheetId:
+      state.activeSheetId === 'admin-idea-board'
+        ? (state.sheets.find((s) => s.id !== 'admin-idea-board')?.id ?? 'local-default')
+        : state.activeSheetId,
+    nodes: state.nodes,
+    edges: state.edges,
+    timeline: state.timeline,
+    setpoint: state.setpoint,
+    selection: state.selection,
+    syncStatus: state.syncStatus,
+  }
+}
+
 let _counter = 0
 function nextId() {
   return `node-${++_counter}-${Date.now()}`
@@ -228,6 +245,9 @@ export const useRoadmapStore = create(
           })
         }),
     }),
-    { name: 'rc-roadmap-store' },
+    {
+      name: 'rc-roadmap-store',
+      partialize: roadmapStorePartialize,
+    },
   ),
 )

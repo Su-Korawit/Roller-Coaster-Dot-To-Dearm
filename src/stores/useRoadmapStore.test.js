@@ -7,7 +7,7 @@ vi.stubGlobal('localStorage', {
   removeItem: () => {},
 })
 
-const { useRoadmapStore } = await import('./useRoadmapStore')
+const { useRoadmapStore, roadmapStorePartialize } = await import('./useRoadmapStore')
 
 describe('useRoadmapStore', () => {
   beforeEach(() => {
@@ -444,5 +444,28 @@ describe('multi-sheet: createSheet / switchSheet / renameSheet / deleteSheet / h
     expect(sheets).toEqual(incoming)
     expect(activeSheetId).toBe('s1')
     expect(nodes).toHaveLength(1)
+  })
+})
+
+describe('persist partialize', () => {
+  it('excludes admin-idea-board from persisted sheets and remaps activeSheetId', () => {
+    const partial = roadmapStorePartialize({
+      myUid: 'alice',
+      sheets: [
+        { id: 'sheet-1', name: 'Mine', nodes: [], edges: [] },
+        { id: 'admin-idea-board', name: 'IR Board', nodes: [], edges: [] },
+      ],
+      activeSheetId: 'admin-idea-board',
+      nodes: [],
+      edges: [],
+      timeline: null,
+      setpoint: null,
+      selection: [],
+      syncStatus: 'idle',
+    })
+
+    expect(partial.sheets.map((s) => s.id)).toEqual(['sheet-1'])
+    expect(partial.activeSheetId).toBe('sheet-1')
+    expect(partial.myUid).toBe('alice')
   })
 })
