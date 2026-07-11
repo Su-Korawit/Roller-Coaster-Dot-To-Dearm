@@ -1,25 +1,26 @@
 # OWNER TODO — งาน console ที่เหลือ (ทำได้คนเดียว, code ฝั่งนี้เสร็จหมดแล้ว)
 
-_อัปเดตล่าสุด: 2026-07-10 · อ้างอิง ADR-0012 + แผน `2026-07-09-ilovetcas-subdomains-restructure.md`_
+_อัปเดตล่าสุด: 2026-07-11 · อ้างอิง ADR-0012 + แผน `2026-07-09-ilovetcas-subdomains-restructure.md` + แผนกู้ระบบ `2026-07-11-domain-dns-storage-quota-recovery.md`_
 
 ## สถานะตอนนี้
 
 - ✅ Code ทุก Phase (1–4) อยู่บน `main` และ deploy บน Vercel แล้ว
 - ✅ Firestore rules deploy แล้ว (ตรวจ anon read `tcasEvents` = 200)
-- ✅ `www.ilovetcas.com` เสิร์ฟ hub prerender + redirect ลิงก์เก่าทำงาน
-- ❌ subdomain ทั้งหมด (`app./roadmap./tcas./news./school.`) **ยัง resolve ไม่ได้** — DNS ฝั่ง GoDaddy ยังไม่ตั้ง
+- ✅ Owner เปลี่ยน nameservers ที่ GoDaddy เป็น `ns1/ns2.vercel-dns.com` แล้ว (ข้อ 1 ทาง A เดิม)
+- ❌ **โดเมนตายทั้ง zone** (2026-07-11) — NS ชี้มา Vercel แล้วแต่ Vercel ยังไม่ provision DNS zone
+  (nameserver ตอบ "Query refused" → ทุก host รวม `www.` SERVFAIL) — ดูขั้นกู้ใน
+  `docs/superpowers/plans/2026-07-11-domain-dns-storage-quota-recovery.md` Task A1
+- ❌ **Firebase Storage โควต้าเต็ม** — ทุก download ตอบ 402 → เกมโหลด asset ไม่ได้ (Task A2: อัปเกรด Blaze)
 
-## 1) GoDaddy DNS — ด่วนสุด ⚠️
+## 1) กู้ DNS zone บน Vercel — ด่วนสุด ⚠️ (แทนข้อ GoDaddy เดิมที่ทำไปแล้ว)
 
-ตอนนี้ redirect `/home` ชี้ไป `app.ilovetcas.com` ที่ยังเข้าไม่ได้ → ลิงก์เก่าบนโดเมนใหม่พังจนกว่าจะเสร็จข้อนี้
-
-**ทาง A (แนะนำ):** GoDaddy → Domains → `ilovetcas.com` → DNS → Nameservers → Change →
-"I'll use my own nameservers" → ใส่ `ns1.vercel-dns.com` + `ns2.vercel-dns.com`
-(Vercel มี wildcard `*.ilovetcas.com` รออยู่แล้ว — เสร็จข้อเดียวจบทุก subdomain)
-
-**ทาง B (ถ้าไม่อยากย้าย NS):** Manage DNS → เพิ่ม CNAME 5 รายการ
-(`app`, `roadmap`, `tcas`, `news`, `school` → `cname.vercel-dns.com`)
-และต้อง Add แต่ละ subdomain ใน Vercel → Settings → Domains ด้วย
+การชี้ NS มา Vercel เสร็จแล้ว แต่ zone ฝั่ง Vercel ว่าง/ไม่ active — ทำตาม **Task A1** ในแผนกู้ระบบ:
+1. ให้ Claude Code รัน `vercel dns add` สร้าง record แรก (บังคับ provision zone) แล้วตรวจด้วย
+   `nslookup ilovetcas.com ns1.vercel-dns.com` (ต้องไม่ "Query refused")
+2. ถ้าไม่หาย: Vercel dashboard → team → **Domains** → `ilovetcas.com` → กด Verify / Enable Vercel DNS
+   (ถ้ายังไม่หายอีก: ลบโดเมนออกจาก team แล้ว add ใหม่ + ผูก `ilovetcas.com`, `www`, `*.ilovetcas.com` กลับเข้า project)
+3. ทางหนีไฟ: ย้าย NS กลับ GoDaddy default + ตั้ง `A @ → 76.76.21.21` และ CNAME `www/app/roadmap/tcas/news/school → cname.vercel-dns.com`
+   (ข้อเสีย: เสีย wildcard — ต้อง add subdomain รายตัวใน Vercel)
 
 ## 2) Vercel — สลับทิศ redirect apex/www
 
