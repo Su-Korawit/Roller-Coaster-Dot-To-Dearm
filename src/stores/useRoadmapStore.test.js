@@ -141,6 +141,14 @@ describe('useRoadmapStore', () => {
     expect(nodes[0].data).toEqual({ journeyRef: null })
   })
 
+  it('addNode creates an ideaRoot node with default idea status', () => {
+    useRoadmapStore.getState().addNode('ideaRoot')
+    const { nodes } = useRoadmapStore.getState()
+    expect(nodes[0].type).toBe('ideaRoot')
+    expect(nodes[0].data.status).toBe('idea')
+    expect(nodes[0].data.title).toBe('')
+  })
+
   it('connect snaps the target block adjacent to the source block', () => {
     useRoadmapStore.getState().setNodes([
       { id: 'a', type: 'process', position: { x: 100, y: 100 }, data: { label: '' } },
