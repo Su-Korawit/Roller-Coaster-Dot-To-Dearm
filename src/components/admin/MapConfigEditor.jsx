@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { localMapPath } from '../../game/assetManifest'
 import { cloudAsset } from '../../utils/cloudAsset'
 import { uploadWithProgress, uploadAsset } from '../../utils/storageOps'
 import { getMapConfig, saveMapConfig } from '../../utils/mapConfig'
@@ -10,17 +11,21 @@ const TILESET_FOLDERS = ['rc/tilesets', 'rc/objects']
 const MAP_FOLDERS = ['maps'] // module-level so the prop keeps a stable identity
 const sanitize = (name) => name.trim().replace(/\s+/g, '_')
 
-// Fetch a map JSON's text, preferring its Storage copy and falling back to the
-// local public/ copy when the cloud URL is unreachable.
 async function loadMapText(key) {
-  const local = `/maps/${key}.json`
+  const local = localMapPath(key)
   const url = await cloudAsset(`maps/${key}.json`, { fallback: local })
-  try {
-    const res = await fetch(url)
-    if (res.ok) return await res.text()
-  } catch { /* fall through */ }
-  const res = await fetch(local)
-  return res.ok ? await res.text() : ''
+  for (const candidate of [url, local]) {
+    if (!candidate) continue
+    try {
+      const res = await fetch(candidate)
+      if (res.ok) {
+        const text = await res.text()
+        JSON.parse(text) // reject the SPA HTML shell masquerading as map JSON
+        return text
+      }
+    } catch { /* try next candidate */ }
+  }
+  return ''
 }
 
 // Rich editor for a single map: shows its layers (tick blocked/hidden) and the
