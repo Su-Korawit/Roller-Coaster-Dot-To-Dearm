@@ -38,12 +38,16 @@
 
 NS delegate มา Vercel แล้ว แต่ zone ว่างเปล่า/ไม่ active ต้องทำให้ Vercel DNS ตอบ query ให้ได้
 
-- [ ] **Step 1 (ลองทาง CLI ก่อน):** สร้าง record แรกเพื่อบังคับ provision zone
+- [x] **Step 1 (ลองทาง CLI ก่อน):** สร้าง record แรกเพื่อบังคับ provision zone
 
 ```bash
 npx vercel dns add ilovetcas.com '@' A 76.76.21.21 --scope ikkyusanstudys-projects-f4dc6e94
 npx vercel dns add ilovetcas.com www CNAME cname.vercel-dns.com --scope ikkyusanstudys-projects-f4dc6e94
 ```
+
+> **ผลจริง (2026-07-11):** CLI ทำไม่ได้ทุกทาง — `dns add` / `dns import` ตอบ "ilovetcas.com is not a DNS zone (400)",
+> `domains add` ตอบ alias_conflict ปลอม ๆ (โดเมนอยู่กับ `rollercoaster` ครบอยู่แล้ว ตรวจจาก `alias ls`)
+> → zone provisioning ต้องกดใน dashboard (Step 3) เท่านั้น
 
 - [ ] **Step 2: ตรวจว่า zone ตอบแล้ว**
 
@@ -69,9 +73,9 @@ foreach ($h in 'ilovetcas.com','www.ilovetcas.com','app.ilovetcas.com','roadmap.
 
 Expected: apex/www = 200 (hub prerender), subdomain = 200 หรือ 308 ตาม config — ไม่มี DNS error
 
-### Task A2: แก้ Firebase Storage โควต้าเต็ม (402)
+### Task A2: แก้ Firebase Storage โควต้าเต็ม (402) — ✅ เสร็จ 2026-07-11 (owner อัปเกรด Blaze แล้ว ตรวจซ้ำได้ 200)
 
-- [ ] **Step 1:** Owner เปิด Firebase Console → project `rollercoasterdottodream` → **Storage → Usage** ดูว่าโควต้าตัวไหนเต็ม (download bandwidth น่าจะใช่ — 402 ตอบทั้ง project)
+- [x] **Step 1:** Owner เปิด Firebase Console → project `rollercoasterdottodream` → **Storage → Usage** ดูว่าโควต้าตัวไหนเต็ม (download bandwidth น่าจะใช่ — 402 ตอบทั้ง project)
 - [ ] **Step 2 (แนะนำ):** อัปเกรดเป็น **Blaze plan** + ตั้ง budget alert ใน Google Cloud Billing (เช่น เตือนที่ $5/$10) — โควต้า no-cost จะกลับมาใช้ได้ทันทีและมี headroom
 - [ ] **Step 3 (ถ้ายังไม่พร้อมจ่าย):** รอโควต้ารีเซ็ต (รายวัน) — ระหว่างนี้เกมจะยังพังจนกว่า Part B จะ deploy (Part B ทำให้ degrade อย่างสุภาพแทน crash)
 - [ ] **Step 4: ตรวจ**
@@ -84,7 +88,7 @@ Expected: 200
 
 > **หมายเหตุลด bandwidth ระยะยาว (ยังไม่ทำในแผนนี้ — ต้องตัดสินใจก่อนเพราะขัด ADR-0003 cloud-first):** asset ส่วนใหญ่ (Sprout Lands sprites, MBTI sheets) มี copy ใน `public/` อยู่แล้ว — สลับให้ local-first จะตัด Storage egress เกือบหมด เหลือแค่ `rc/` + uploaded maps ถ้าโควต้าเต็มซ้ำอีก ให้เปิดหัวข้อนี้เป็นแผนใหม่
 
-### Task A3: แก้ Vercel env `VITE_FIREBASE_DATABASE_URL` (RTDB region ผิด)
+### Task A3: แก้ Vercel env `VITE_FIREBASE_DATABASE_URL` (RTDB region ผิด) — ✅ เสร็จ 2026-07-11 (production + preview แก้แล้ว, redeploy แล้ว; เคล็ด CLI: env add ฝั่ง preview ต้องส่ง branch เป็น `""`)
 
 - [ ] **Step 1:** ลบค่าเก่าแล้วใส่ใหม่ (ทั้ง production + preview)
 
