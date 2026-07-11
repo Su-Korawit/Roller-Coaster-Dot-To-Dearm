@@ -46,6 +46,12 @@ describe('ADMIN_ROLES ↔ rules email sync', () => {
     expect(extractEmails(fnBody(firestoreRules, 'canEditShop'))).toEqual(emailsForSection('shop'))
   })
 
+  it('firestore isAnyAdmin() lists every ADMIN_ROLES email exactly once', () => {
+    const body = fnBody(firestoreRules, 'isAnyAdmin')
+    const emails = extractEmails(body)
+    expect([...new Set(emails)].sort()).toEqual(Object.keys(ADMIN_ROLES).sort())
+  })
+
   it('storage canEditMaps() lists exactly the maps-section admins', () => {
     expect(extractEmails(fnBody(storageRules, 'canEditMaps'))).toEqual(emailsForSection('maps'))
   })

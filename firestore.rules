@@ -35,6 +35,13 @@ service cloud.firestore {
     function canEditShop() {
       return isSuperAdmin();
     }
+    function isAnyAdmin() {
+      return isSuperAdmin()
+        || userEmail() == 'o.korawitt@gmail.com'
+        || userEmail() == 'takadaoni07@gmail.com'
+        || userEmail() == 'play198725@gmail.com'
+        || userEmail() == 'itcity9476@gmail.com';
+    }
 
     match /users/{uid} {
       allow get, list: if isSignedIn();
@@ -152,13 +159,15 @@ service cloud.firestore {
         return isSheetCollaborator() && resource.data.collaborators[request.auth.uid] == 'edit';
       }
 
-      allow read: if canReadSheet();
-      allow create: if isSignedIn() && request.auth.uid == request.resource.data.ownerUid;
+      allow read: if canReadSheet() || (sheetId == 'admin-idea-board' && isAnyAdmin());
+      allow create: if (isSignedIn() && request.auth.uid == request.resource.data.ownerUid)
+        || (sheetId == 'admin-idea-board' && isAnyAdmin());
       allow update: if isSheetOwner() ||
         (isEditCollaborator() &&
           resource.data.ownerUid == request.resource.data.ownerUid &&
           resource.data.collaborators == request.resource.data.collaborators &&
-          resource.data.collaboratorUids == request.resource.data.collaboratorUids);
+          resource.data.collaboratorUids == request.resource.data.collaboratorUids)
+        || (sheetId == 'admin-idea-board' && isAnyAdmin());
       allow delete: if isSheetOwner();
     }
 
