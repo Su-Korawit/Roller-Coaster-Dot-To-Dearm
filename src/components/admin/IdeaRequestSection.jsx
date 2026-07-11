@@ -37,8 +37,12 @@ export default function IdeaRequestSection() {
     ;(async () => {
       try {
         const token = await mountIrBoard()
+        if (cancelled) {
+          await unmountIrBoard(token)
+          return
+        }
         tokenRef.current = token
-        if (!cancelled) setReady(true)
+        setReady(true)
       } catch (e) {
         if (!cancelled) setError(e.message ?? String(e))
       }
