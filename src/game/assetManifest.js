@@ -85,3 +85,12 @@ export const GAME_SCENE_KEYS = [
 export const INDOOR_SCENE_KEYS = ['indoor', 'Wooden_House', 'Basic_Furniture', 'Chest']
 
 export const GAME_ASSET_BY_KEY = Object.fromEntries(GAME_ASSETS.map((a) => [a.key, a]))
+
+// Local public/ copy of a map JSON — only for maps shipped with the repo.
+// Uploaded maps (Storage-only) return null; callers must NOT fabricate
+// `/maps/<key>.json` for those — on prod the SPA catch-all rewrite would
+// answer with app.html and JSON.parse blows up ("Unexpected token '<'").
+export function localMapPath(mapKey) {
+  const entry = GAME_ASSET_BY_KEY[mapKey]
+  return entry?.type === 'tilemapJSON' ? entry.localPath : null
+}

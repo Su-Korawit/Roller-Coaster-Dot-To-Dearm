@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
 import { useWorldStore } from '../stores/useWorldStore'
 import { MAP_ITEM_BY_KEY } from '../constants/mapItems'
-import { MBTI_TYPES, GAME_ASSETS, GAME_ASSET_BY_KEY } from './assetManifest'
+import { MBTI_TYPES, GAME_ASSETS, GAME_ASSET_BY_KEY, localMapPath } from './assetManifest'
 import { cloudAsset } from '../utils/cloudAsset'
 import { getMapConfig, DEFAULT_MAP_CONFIGS } from '../utils/mapConfig'
 import { updateSelf } from '../lib/presence'
@@ -122,7 +122,8 @@ export async function loadSceneData(mapKey) {
   // Resolve the map JSON URL (uploaded maps live in Storage, not /maps/*.json).
   // Store it under the map key so MapScene.preload() can use it directly via
   // urlFor() without falling back to the public-folder path that 404s for uploaded maps.
-  const mapJsonUrl = await cloudAsset(`maps/${mapKey}.json`, { fallback: `/maps/${mapKey}.json` })
+  const mapJsonUrl = await cloudAsset(`maps/${mapKey}.json`, { fallback: localMapPath(mapKey) })
+  if (!mapJsonUrl) throw new Error(`map-unavailable:${mapKey}`)
   return { assetUrls: { ...assetUrls, [mapKey]: mapJsonUrl }, mapConfig, tilesetUrls }
 }
 
@@ -157,11 +158,16 @@ export class MapScene extends Phaser.Scene {
     const r = this.registry
     const localByKey = {}
 
-    localByKey[this.mapKey] = { local: GAME_ASSET_BY_KEY[this.mapKey]?.localPath, kind: 'tilemap' }
-    this.load.tilemapTiledJSON(this.mapKey, urlFor(r, this.mapKey) ?? `/maps/${this.mapKey}.json`)
+    localByKey[this.mapKey] = { local: localMapPath(this.mapKey), kind: 'tilemap' }
+    const mapUrl = urlFor(r, this.mapKey) ?? localMapPath(this.mapKey)
+    if (mapUrl) this.load.tilemapTiledJSON(this.mapKey, mapUrl)
 
     const tiles = r.get('tilesetUrls') ?? {}
     Object.entries(tiles).forEach(([name, { url, local }]) => {
+      if (!url) {
+        console.warn(`[MapScene] tileset "${name}" unavailable (no cloud URL, no local copy) — skipped`)
+        return
+      }
       localByKey[name] = { local, kind: 'image' }
       this.load.image(name, url)
     })
@@ -190,6 +196,10 @@ export class MapScene extends Phaser.Scene {
   }
 
   create() {
+    if (!this.cache.tilemap.exists(this.mapKey)) {
+      this.game.events.emit('mapLoadFailed', { mapKey: this.mapKey })
+      return
+    }
     const map = this.make.tilemap({ key: this.mapKey })
     const cfg = this.registry.get('mapConfig')
       ?? DEFAULT_MAP_CONFIGS[this.mapKey]

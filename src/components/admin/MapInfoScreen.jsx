@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { localMapPath } from '../../game/assetManifest'
 import { cloudAsset } from '../../utils/cloudAsset'
 import { listFlat, uploadWithProgress, uploadAsset } from '../../utils/storageOps'
 import { getMapConfig, saveMapConfig } from '../../utils/mapConfig'
@@ -12,16 +13,20 @@ import Popup from '../ui/Popup'
 const TILESET_FOLDERS = ['rc/tilesets', 'rc/objects']
 const sanitize = (name) => name.trim().replace(/\s+/g, '_')
 
-// Fetch map JSON from Storage, falling back to local public/ copy.
+// Fetch map JSON from Storage, falling back to local public/ copy (repo-shipped
+// maps only — uploaded maps have no local copy; never fetch a fabricated
+// /maps/<key>.json, the SPA catch-all answers it with HTML).
 async function loadMapJson(key) {
-  const local = `/maps/${key}.json`
+  const local = localMapPath(key)
   const url = await cloudAsset(`maps/${key}.json`, { fallback: local })
-  try {
-    const res = await fetch(url)
-    if (res.ok) return await res.json()
-  } catch { /* fall through */ }
-  const res = await fetch(local)
-  return res.ok ? await res.json() : null
+  for (const candidate of [url, local]) {
+    if (!candidate) continue
+    try {
+      const res = await fetch(candidate)
+      if (res.ok) return await res.json()
+    } catch { /* try next candidate */ }
+  }
+  return null
 }
 
 // Simple upload row with progress bar (mirrors AssetsSection's UploadRow pattern).

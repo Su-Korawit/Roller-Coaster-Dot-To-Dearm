@@ -57,6 +57,7 @@ export default function GameCanvas({ active = true }) {
   // Farm state
   const [isBooting, setIsBooting] = useState(true)
   const [isSwitchingMap, setIsSwitchingMap] = useState(false)
+  const [bootError, setBootError] = useState(false)
   const [activeTile, setActiveTile] = useState(null)
   const [selectedHotbarIndex, setSelectedHotbarIndex] = useState(0)
   const selectedHotbarIndexRef = useRef(0)
@@ -182,6 +183,12 @@ export default function GameCanvas({ active = true }) {
         setIsBooting(false)
         setIsSwitchingMap(false)
       })
+      game.events.on('mapLoadFailed', ({ mapKey }) => {
+        console.error('[GameCanvas] map load failed:', mapKey)
+        setIsBooting(false)
+        setIsSwitchingMap(false)
+        setBootError(true)
+      })
       game.events.on('zoomChanged', (v) => {
         setZoom(+v.toFixed(1))
         setShowZoom(true)
@@ -240,6 +247,7 @@ export default function GameCanvas({ active = true }) {
     })().catch((e) => {
       console.error('[GameCanvas] boot failed:', e)
       setIsBooting(false)
+      setBootError(true)
     })
 
     const ro = new ResizeObserver((entries) => {
@@ -371,7 +379,25 @@ export default function GameCanvas({ active = true }) {
         ref={containerRef}
         style={{ width: '100%', height: '100%', overflow: 'hidden' }}
       />
-      {isBooting && (
+      {bootError && (
+        <div
+          className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-4"
+          style={{ background: 'linear-gradient(160deg, #0f0824 0%, #1a1035 50%, #0d1f3c 100%)' }}
+        >
+          <span className="text-5xl" aria-hidden="true">🛠️</span>
+          <span className="pixel-font text-[10px] text-purple-300 text-center leading-relaxed px-8">
+            โหลดแผนที่ไม่สำเร็จ — เซิร์ฟเวอร์ asset อาจไม่พร้อมใช้งานชั่วคราว
+          </span>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="pixel-font text-[10px] px-4 py-2 rounded border border-purple-400/50 text-purple-200 hover:bg-purple-400/10"
+          >
+            ลองใหม่
+          </button>
+        </div>
+      )}
+      {isBooting && !bootError && (
         <div
           className="absolute inset-0 z-50 flex flex-col items-center justify-center"
           style={{ background: 'linear-gradient(160deg, #0f0824 0%, #1a1035 50%, #0d1f3c 100%)' }}

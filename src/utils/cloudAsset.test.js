@@ -8,13 +8,17 @@ vi.mock('firebase/storage', () => ({
   getDownloadURL: (...args) => getDownloadURL(...args),
 }))
 
-import { cloudAsset, bustCache } from './cloudAsset'
+let cloudAsset, bustCache
 
 describe('cloudAsset', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    vi.resetModules()
     getDownloadURL.mockReset()
     vi.spyOn(console, 'warn').mockImplementation(() => {})
     localStorage.clear()
+    const mod = await import('./cloudAsset')
+    cloudAsset = mod.cloudAsset
+    bustCache = mod.bustCache
   })
 
   it('shares one network round-trip per path (returns the same Promise)', async () => {
@@ -67,5 +71,13 @@ describe('cloudAsset', () => {
     getDownloadURL.mockRejectedValueOnce(new Error('offline'))
     await cloudAsset('p', { fallback: '/assets/x.png' })
     expect(localStorage.getItem('rc-asset-url:p')).toBeNull()
+  })
+
+  it('stops calling getDownloadURL for later paths after quota-exceeded', async () => {
+    getDownloadURL.mockRejectedValueOnce({ code: 'storage/quota-exceeded' })
+    await expect(cloudAsset('q/a.png', { fallback: '/a.png' })).resolves.toBe('/a.png')
+    const callsAfterFirst = getDownloadURL.mock.calls.length
+    await expect(cloudAsset('q/b.png', { fallback: '/b.png' })).resolves.toBe('/b.png')
+    expect(getDownloadURL.mock.calls.length).toBe(callsAfterFirst) // no new round-trip
   })
 })
