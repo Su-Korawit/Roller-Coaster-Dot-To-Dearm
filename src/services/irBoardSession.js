@@ -27,7 +27,13 @@ export async function mountIrBoard() {
     activeSheetId: prev.activeSheetId,
   }
   disarmRoadmapSheetSync()
-  const data = await ensureIrBoardDoc()
+  let data
+  try {
+    data = await ensureIrBoardDoc()
+  } catch (err) {
+    if (token.activeSheetId) armRoadmapSheetSync(token.activeSheetId)
+    throw err
+  }
   const irSheet = {
     id: IR_SHEET_ID,
     name: data.name ?? 'IR Board',

@@ -468,4 +468,32 @@ describe('persist partialize', () => {
     expect(partial.activeSheetId).toBe('sheet-1')
     expect(partial.myUid).toBe('alice')
   })
+
+  it('persists user nodes/edges when IR board is active mirror', () => {
+    const userNodes = [{ id: 'u1', type: 'process', position: { x: 0, y: 0 }, data: {} }]
+    const userEdges = [{ id: 'e1', source: 'u1', target: 'u2' }]
+    const irNodes = [{ id: 'ir1', type: 'ideaRoot', position: { x: 10, y: 10 }, data: {} }]
+    const irEdges = [{ id: 'ire1', source: 'ir1', target: 'ir2' }]
+
+    const partial = roadmapStorePartialize({
+      myUid: 'alice',
+      sheets: [
+        { id: 'sheet-1', name: 'Mine', nodes: userNodes, edges: userEdges, timeline: null },
+        { id: 'admin-idea-board', name: 'IR Board', nodes: irNodes, edges: irEdges, timeline: null },
+      ],
+      activeSheetId: 'admin-idea-board',
+      nodes: irNodes,
+      edges: irEdges,
+      timeline: null,
+      setpoint: null,
+      selection: [],
+      syncStatus: 'idle',
+    })
+
+    expect(partial.activeSheetId).toBe('sheet-1')
+    expect(partial.nodes).toEqual(userNodes)
+    expect(partial.edges).toEqual(userEdges)
+    expect(partial.nodes).not.toEqual(irNodes)
+    expect(partial.edges).not.toEqual(irEdges)
+  })
 })

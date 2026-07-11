@@ -4,21 +4,34 @@ import { addEdge } from '@xyflow/react'
 import { computeSnapPosition } from '../utils/computeSnapPosition'
 import { fromSchema } from '../utils/roadmapExport'
 import { DEFAULT_STAGES } from '../components/roadmap/StageBands'
-import { defaultIdeaRootData, defaultReportData } from '../constants/irBoard'
+import { IR_SHEET_ID, defaultIdeaRootData, defaultReportData } from '../constants/irBoard'
 
 const IMPORT_GAP = 80
 
 export function roadmapStorePartialize(state) {
+  const sheets = state.sheets.filter((s) => s.id !== IR_SHEET_ID)
+  const activeSheetId =
+    state.activeSheetId === IR_SHEET_ID
+      ? (sheets[0]?.id ?? 'local-default')
+      : state.activeSheetId
+
+  let nodes = state.nodes
+  let edges = state.edges
+  let timeline = state.timeline
+  if (state.activeSheetId === IR_SHEET_ID) {
+    const userSheet = sheets.find((s) => s.id === activeSheetId)
+    nodes = userSheet?.nodes ?? []
+    edges = userSheet?.edges ?? []
+    timeline = userSheet?.timeline ?? null
+  }
+
   return {
     myUid: state.myUid,
-    sheets: state.sheets.filter((s) => s.id !== 'admin-idea-board'),
-    activeSheetId:
-      state.activeSheetId === 'admin-idea-board'
-        ? (state.sheets.find((s) => s.id !== 'admin-idea-board')?.id ?? 'local-default')
-        : state.activeSheetId,
-    nodes: state.nodes,
-    edges: state.edges,
-    timeline: state.timeline,
+    sheets,
+    activeSheetId,
+    nodes,
+    edges,
+    timeline,
     setpoint: state.setpoint,
     selection: state.selection,
     syncStatus: state.syncStatus,

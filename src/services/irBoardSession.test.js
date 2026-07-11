@@ -90,6 +90,16 @@ describe('irBoardSession', () => {
     expect(m.armRoadmapSheetSync).toHaveBeenLastCalledWith('sheet-1')
   })
 
+  it('re-arms prior sheet sync when ensureIrBoardDoc fails after disarm', async () => {
+    m.getDoc.mockRejectedValue(new Error('Firestore unavailable'))
+
+    await expect(mountIrBoard()).rejects.toThrow('Firestore unavailable')
+
+    expect(m.disarmRoadmapSheetSync).toHaveBeenCalled()
+    expect(m.armRoadmapSheetSync).toHaveBeenCalledWith('sheet-1')
+    expect(useRoadmapStore.getState().activeSheetId).toBe('sheet-1')
+  })
+
   it('ensureIrBoardDoc creates the sheet doc when missing', async () => {
     m.getDoc.mockResolvedValue({ exists: () => false })
 
