@@ -32,6 +32,11 @@ function writePersisted(path, url) {
   }
 }
 
+// Once Storage answers quota-exceeded it will 402 every request until the
+// quota resets — remember it for this session and fall back immediately
+// instead of hammering the bucket once per asset.
+let quotaExceeded = false
+
 export function cloudAsset(path, { fallback = null } = {}) {
   if (!urlCache.has(path)) {
     const persisted = readPersisted(path)
@@ -39,15 +44,18 @@ export function cloudAsset(path, { fallback = null } = {}) {
       path,
       persisted
         ? Promise.resolve(persisted)
-        : getDownloadURL(ref(storage, path))
-            .then((url) => {
-              writePersisted(path, url)
-              return url
-            })
-            .catch((err) => {
-              console.warn('[cloudAsset] falling back for', path, err?.code || err)
-              return fallback
-            }),
+        : quotaExceeded
+          ? Promise.resolve(fallback)
+          : getDownloadURL(ref(storage, path))
+              .then((url) => {
+                writePersisted(path, url)
+                return url
+              })
+              .catch((err) => {
+                if (err?.code === 'storage/quota-exceeded') quotaExceeded = true
+                console.warn('[cloudAsset] falling back for', path, err?.code || err)
+                return fallback
+              }),
     )
   }
   return urlCache.get(path)
