@@ -1,0 +1,98 @@
+import { useEffect, useCallback, useState, useRef } from 'react'
+import {
+  ReactFlow,
+  ReactFlowProvider,
+  Background,
+  Controls,
+  applyNodeChanges,
+  applyEdgeChanges,
+} from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
+import { nodeTypes } from '../roadmap/nodeTypes'
+import { useRoadmapStore } from '../../stores/useRoadmapStore'
+import { mountIrBoard, unmountIrBoard } from '../../services/irBoardSession'
+
+const IR_PALETTE = [
+  { type: 'ideaRoot', label: 'Idea Root' },
+  { type: 'process', label: 'Process' },
+  { type: 'image', label: 'Image' },
+  { type: 'update', label: 'Update' },
+  { type: 'success', label: 'Success' },
+]
+
+export default function IdeaRequestSection() {
+  const [ready, setReady] = useState(false)
+  const [error, setError] = useState(null)
+  const tokenRef = useRef(null)
+  const nodes = useRoadmapStore((s) => s.nodes)
+  const edges = useRoadmapStore((s) => s.edges)
+  const setNodes = useRoadmapStore((s) => s.setNodes)
+  const setEdges = useRoadmapStore((s) => s.setEdges)
+  const addNode = useRoadmapStore((s) => s.addNode)
+  const connect = useRoadmapStore((s) => s.connect)
+  const syncStatus = useRoadmapStore((s) => s.syncStatus)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const token = await mountIrBoard()
+        tokenRef.current = token
+        if (!cancelled) setReady(true)
+      } catch (e) {
+        if (!cancelled) setError(e.message ?? String(e))
+      }
+    })()
+    return () => {
+      cancelled = true
+      unmountIrBoard(tokenRef.current)
+      tokenRef.current = null
+    }
+  }, [])
+
+  const onNodesChange = useCallback(
+    (changes) => setNodes(applyNodeChanges(changes, nodes)),
+    [nodes, setNodes],
+  )
+  const onEdgesChange = useCallback(
+    (changes) => setEdges(applyEdgeChanges(changes, edges)),
+    [edges, setEdges],
+  )
+
+  if (error) return <p className="p-6 text-sm text-red-600">IR Board: {error}</p>
+  if (!ready) return <p className="p-6 text-sm text-ink-soft">Loading IR Board…</p>
+
+  return (
+    <div className="relative w-full h-full min-h-[480px] bg-surface">
+      <div className="absolute top-3 left-3 z-10 flex flex-wrap gap-2">
+        {IR_PALETTE.map((p) => (
+          <button
+            key={p.type}
+            type="button"
+            className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-ink/20 bg-white hover:border-brand"
+            onClick={() => addNode(p.type, { x: 120 + Math.random() * 80, y: 120 + Math.random() * 80 })}
+          >
+            + {p.label}
+          </button>
+        ))}
+        <span className="text-[10px] text-ink-soft self-center ml-2">sync: {syncStatus}</span>
+      </div>
+      <ReactFlowProvider>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={(c) => connect(c)}
+          connectionMode="loose"
+          fitView
+          className="w-full h-full"
+        >
+          <Background gap={20} color="#e2e8f0" />
+          <Controls />
+        </ReactFlow>
+      </ReactFlowProvider>
+    </div>
+  )
+}
