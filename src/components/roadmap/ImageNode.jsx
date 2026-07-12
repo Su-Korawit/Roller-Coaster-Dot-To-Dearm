@@ -19,7 +19,6 @@ export default function ImageNode({ id, data, selected }) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const dragRef = useRef(null)
-  const colorInputRef = useRef(null)
 
   const { images, activeIndex } = normalizeImageNodeData(data)
   const hasImage = images.length > 0
@@ -49,8 +48,6 @@ export default function ImageNode({ id, data, selected }) {
     e.currentTarget.releasePointerCapture?.(e.pointerId)
   }
 
-  const onColorChange = (e) => updateNodeData(id, { color: e.target.value })
-
   const goToIndex = (delta) => (e) => {
     e.stopPropagation()
     updateNodeData(id, { activeIndex: stepAlbumIndex(activeIndex, delta, images.length) })
@@ -67,7 +64,6 @@ export default function ImageNode({ id, data, selected }) {
         className={`w-full h-full rounded-xl border-2 bg-surface overflow-hidden flex items-center justify-center transition-all ${
           panning ? 'nodrag cursor-grab active:cursor-grabbing' : 'cursor-pointer'
         } ${selected ? 'border-ink shadow-hard-sm' : 'border-ink/30 shadow-none'}`}
-        style={data.color ? { borderColor: data.color } : undefined}
         onClick={hasImage ? undefined : () => setPickerOpen(true)}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -91,24 +87,6 @@ export default function ImageNode({ id, data, selected }) {
           </div>
         )}
       </div>
-
-      <button
-        type="button"
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={() => colorInputRef.current?.click()}
-        aria-label="Choose block color"
-        className="nodrag absolute top-8 left-1 w-5 h-5 rounded-full border-2 border-white shadow"
-        style={{ backgroundColor: data.color ?? '#94a3b8' }}
-      />
-      <input
-        ref={colorInputRef}
-        type="color"
-        value={data.color ?? '#94a3b8'}
-        onChange={onColorChange}
-        className="sr-only"
-        aria-hidden="true"
-        tabIndex={-1}
-      />
 
       {hasImage && (
         <button

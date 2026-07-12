@@ -187,7 +187,7 @@ export const useRoadmapStore = create(
             type === 'start' ? { journeyRef: null }
             : type === 'ideaRoot' ? defaultIdeaRootData()
             : type === 'update' || type === 'success' ? defaultReportData('')
-            : { label: '', note: '', color: null }
+            : { label: '', note: '' }
           return { setpoint: id, ...applyToActive(state, { nodes: [...state.nodes, { id, type, position, data }] }) }
         }),
       addSticker: (url, position = { x: 120, y: 120 }) => {

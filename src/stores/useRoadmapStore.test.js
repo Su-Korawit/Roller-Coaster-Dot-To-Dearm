@@ -60,20 +60,20 @@ describe('useRoadmapStore', () => {
     expect(node.data.label).toBe('My Step')
   })
 
-  it('addNode defaults data.color to null', () => {
+  it('addNode defaults process data to label and note only', () => {
     useRoadmapStore.getState().addNode('process')
     const { nodes } = useRoadmapStore.getState()
-    expect(nodes[0].data.color).toBeNull()
+    expect(nodes[0].data).toEqual({ label: '', note: '' })
   })
 
-  it('updateNodeData sets color on the correct node without touching others', () => {
+  it('updateNodeData sets label on the correct node without touching others', () => {
     useRoadmapStore.getState().addNode('process')
     useRoadmapStore.getState().addNode('process')
     const [a, b] = useRoadmapStore.getState().nodes.map((n) => n.id)
-    useRoadmapStore.getState().updateNodeData(a, { color: '#fff' })
+    useRoadmapStore.getState().updateNodeData(a, { label: 'X' })
     const { nodes } = useRoadmapStore.getState()
-    expect(nodes.find((n) => n.id === a).data.color).toBe('#fff')
-    expect(nodes.find((n) => n.id === b).data.color).toBeNull()
+    expect(nodes.find((n) => n.id === a).data.label).toBe('X')
+    expect(nodes.find((n) => n.id === b).data.label).toBe('')
   })
 
   it('removeNode removes the node from the board', () => {
