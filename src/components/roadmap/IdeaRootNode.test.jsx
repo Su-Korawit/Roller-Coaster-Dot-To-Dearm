@@ -12,6 +12,7 @@ vi.mock('@xyflow/react', () => ({
 vi.mock('../../stores/useRoadmapStore', () => ({
   useRoadmapStore: (sel) => sel(roadmapState),
 }))
+vi.mock('./ConnectionDot', () => ({ default: () => null }))
 
 const { default: IdeaRootNode } = await import('./IdeaRootNode')
 
