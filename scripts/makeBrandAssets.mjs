@@ -2,6 +2,7 @@
  * One-off: download the IR Idea illustration and emit favicon / logo / OG
  * assets into public/brand/. Usage:
  *   node scripts/makeBrandAssets.mjs [optional-local-path]
+ *   SOURCE_URL=<firebase-storage-download-url> node scripts/makeBrandAssets.mjs
  */
 import { mkdir, writeFile, access } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
@@ -12,9 +13,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
 const OUT = join(ROOT, 'public', 'brand')
 
-const SOURCE_URL =
-  'https://firebasestorage.googleapis.com/v0/b/rollercoasterdottodream.firebasestorage.app/o/users%2FIaltEhO0mPVfK3ng8npr4CdqnEE3%2Froadmap%2Fnode-4-1783855739462-1783856347273?alt=media&token=a62292a9-3da5-421a-9a02-8de2dfa22436'
-
 const BRAND_PURPLE = '#863bff'
 const MAX_KB = 200
 
@@ -23,7 +21,11 @@ async function loadSource(overridePath) {
     const { readFile } = await import('node:fs/promises')
     return readFile(overridePath)
   }
-  const res = await fetch(SOURCE_URL)
+  const sourceUrl = process.env.SOURCE_URL
+  if (!sourceUrl) {
+    throw new Error('Set SOURCE_URL env var or pass a local path as the first argument')
+  }
+  const res = await fetch(sourceUrl)
   if (!res.ok) throw new Error(`Failed to fetch source: ${res.status} ${res.statusText}`)
   return Buffer.from(await res.arrayBuffer())
 }
