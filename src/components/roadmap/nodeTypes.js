@@ -9,6 +9,7 @@ import ConditionNode from './ConditionNode'
 import StageLabelNode from './StageLabelNode'
 import ImageNode from './ImageNode'
 import VideoNode from './VideoNode'
+import FileNode from './FileNode'
 import StartNode from './StartNode'
 import IdeaRootNode from './IdeaRootNode'
 import UpdateNode from './UpdateNode'
@@ -20,6 +21,7 @@ export const nodeTypes = {
   stageLabel: StageLabelNode,
   image: ImageNode,
   video: VideoNode,
+  file: FileNode,
   start: StartNode,
   ideaRoot: IdeaRootNode,
   update: UpdateNode,

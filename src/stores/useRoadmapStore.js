@@ -187,6 +187,7 @@ export const useRoadmapStore = create(
             type === 'start' ? { journeyRef: null }
             : type === 'ideaRoot' ? defaultIdeaRootData()
             : type === 'update' || type === 'success' ? defaultReportData('')
+            : type === 'file' ? { url: '', name: '' }
             : { label: '', note: '' }
           return { setpoint: id, ...applyToActive(state, { nodes: [...state.nodes, { id, type, position, data }] }) }
         }),

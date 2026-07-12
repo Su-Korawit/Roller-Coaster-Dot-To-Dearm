@@ -5,6 +5,7 @@ export const BLOCK_SIZES = {
   condition: { w: 128, h: 128 },
   image: { w: 128, h: 128 },
   video: { w: 128, h: 128 },
+  file: { w: 128, h: 128 },
   stageLabel: { w: 120, h: 40 },
   start: { w: 128, h: 128 },
   ideaRoot: { w: 128, h: 128 },

@@ -396,6 +396,19 @@ export default function RoadmapPage({ onClose, backPath }) {
                   <span className="pixel-font text-[8px] text-ink">Video</span>
                 </button>
                 <button
+                  onClick={() => addAtCenter('file')}
+                  draggable="true"
+                  onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', 'file')}
+                  {...getHandlers('file')}
+                  className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-brand/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  aria-label="Add File block"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-brand/10 border-2 border-brand/30 flex items-center justify-center">
+                    <span className="text-[14px]">📄</span>
+                  </div>
+                  <span className="pixel-font text-[8px] text-ink">File</span>
+                </button>
+                <button
                   onClick={() => addAtCenter('start')}
                   className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-good/10 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-good"
                   aria-label="Add Start block"

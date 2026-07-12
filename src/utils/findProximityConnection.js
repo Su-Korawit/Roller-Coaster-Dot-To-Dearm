@@ -29,6 +29,7 @@ function getHandles(node) {
         { role: 'source', id: 'bottom', x: x + w / 2, y: y + h },
       ]
     case 'image':
+    case 'file':
       return [
         { role: 'source', id: 'left', x, y: y + h / 2 },
         { role: 'source', id: 'right', x: x + w, y: y + h / 2 },
