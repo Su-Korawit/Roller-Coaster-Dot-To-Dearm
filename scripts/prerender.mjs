@@ -47,6 +47,14 @@ function jsonLd(site) {
       },
       {
         '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'I LOVE TCAS',
+        url: site.path,
+        logo: 'https://ilovetcas.com/brand/favicon-512.png',
+        sameAs: [],
+      },
+      {
+        '@context': 'https://schema.org',
         '@type': 'ItemList',
         itemListElement: FEATURE_KEYS.map((key, i) => ({
           '@type': 'ListItem',
@@ -74,6 +82,7 @@ function jsonLd(site) {
 }
 
 function headTags(site) {
+  const ogImage = 'https://ilovetcas.com/brand/og-card.png'
   return [
     `<title>${esc(site.title)}</title>`,
     `<meta name="description" content="${esc(site.description)}" />`,
@@ -84,6 +93,13 @@ function headTags(site) {
     `<meta property="og:description" content="${esc(site.description)}" />`,
     `<meta property="og:url" content="${site.path}/" />`,
     `<meta property="og:locale" content="th_TH" />`,
+    `<meta property="og:image" content="${ogImage}" />`,
+    `<meta property="og:image:width" content="1200" />`,
+    `<meta property="og:image:height" content="630" />`,
+    `<meta name="twitter:card" content="summary_large_image" />`,
+    `<meta name="twitter:title" content="${esc(site.title)}" />`,
+    `<meta name="twitter:description" content="${esc(site.description)}" />`,
+    `<meta name="twitter:image" content="${ogImage}" />`,
     `<script type="application/ld+json">${JSON.stringify(jsonLd(site))}</script>`,
   ].join('\n    ')
 }
@@ -114,6 +130,9 @@ function renderSite(site) {
 
 const today = new Date().toISOString().slice(0, 10)
 
+// News post URLs are Firestore-only at build time — keep a single-URL sitemap
+// rather than pull with a service account on Vercel. Owner: expand via GSC
+// after posts exist, or add a static snapshot later.
 function sitemap(site) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
