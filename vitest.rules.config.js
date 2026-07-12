@@ -7,5 +7,9 @@ export default defineConfig({
   test: {
     include: ['test/rules/**/*.test.js'],
     testTimeout: 15000,
+    // initializeTestEnvironment loads rules into the Firestore emulator, whose
+    // rules-engine JVM can take >10s to warm up — the 10s default fails the
+    // whole suite before a single test runs.
+    hookTimeout: 60000,
   },
 })
