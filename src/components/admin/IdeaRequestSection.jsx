@@ -11,6 +11,7 @@ import {
 import '@xyflow/react/dist/style.css'
 import { nodeTypes } from '../roadmap/nodeTypes'
 import InvisibleEdge from '../roadmap/InvisibleEdge'
+import TrashZone from '../roadmap/TrashZone'
 import { useRoadmapStore } from '../../stores/useRoadmapStore'
 import { mountIrBoard, unmountIrBoard } from '../../services/irBoardSession'
 import { findProximityConnection } from '../../utils/findProximityConnection'
@@ -32,6 +33,9 @@ export default function IdeaRequestSection() {
   const [ready, setReady] = useState(false)
   const [error, setError] = useState(null)
   const tokenRef = useRef(null)
+  const trashRef = useRef(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isOverTrash, setIsOverTrash] = useState(false)
   const nodes = useRoadmapStore((s) => s.nodes)
   const edges = useRoadmapStore((s) => s.edges)
   const setNodes = useRoadmapStore((s) => s.setNodes)
@@ -39,6 +43,8 @@ export default function IdeaRequestSection() {
   const addNode = useRoadmapStore((s) => s.addNode)
   const connect = useRoadmapStore((s) => s.connect)
   const detachNode = useRoadmapStore((s) => s.detachNode)
+  const removeNode = useRoadmapStore((s) => s.removeNode)
+  const removeEdge = useRoadmapStore((s) => s.removeEdge)
   const syncStatus = useRoadmapStore((s) => s.syncStatus)
 
   useEffect(() => {
@@ -71,22 +77,57 @@ export default function IdeaRequestSection() {
     (changes) => setEdges(applyEdgeChanges(changes, edges)),
     [edges, setEdges],
   )
+  const onNodesDelete = useCallback(
+    (deleted) => deleted.forEach((n) => removeNode(n.id)),
+    [removeNode],
+  )
+  const onEdgesDelete = useCallback(
+    (deleted) => deleted.forEach((e) => removeEdge(e.id)),
+    [removeEdge],
+  )
 
   // Dragging a block detaches it from all connections so it can be re-snapped elsewhere.
   const onNodeDragStart = useCallback(
-    (_event, node) => detachNode(node.id),
+    (_event, node) => {
+      detachNode(node.id)
+      setIsDragging(true)
+    },
     [detachNode],
   )
-  // On drop, snap dot-to-dot when a dot pair is within threshold — no line is drawn.
+  const onNodeDrag = useCallback((event) => {
+    if (!trashRef.current) return
+    const rect = trashRef.current.getBoundingClientRect()
+    const over =
+      event.clientX >= rect.left &&
+      event.clientX <= rect.right &&
+      event.clientY >= rect.top &&
+      event.clientY <= rect.bottom
+    setIsOverTrash(over)
+  }, [])
+  // On drop: if pointer is over the trash zone, delete the node; otherwise snap/connect.
   const onNodeDragStop = useCallback(
-    (_event, node) => {
+    (event, node) => {
+      setIsDragging(false)
+      setIsOverTrash(false)
+      if (trashRef.current) {
+        const rect = trashRef.current.getBoundingClientRect()
+        if (
+          event.clientX >= rect.left &&
+          event.clientX <= rect.right &&
+          event.clientY >= rect.top &&
+          event.clientY <= rect.bottom
+        ) {
+          removeNode(node.id)
+          return
+        }
+      }
       const others = nodes.filter((n) => n.id !== node.id)
       const match = findProximityConnection(node, others, SNAP_THRESHOLD)
       if (!match) return
       setNodes(nodes.map((n) => (n.id === node.id ? { ...n, position: match.position } : n)))
       setEdges(addEdge(match.connection, edges))
     },
-    [nodes, edges, setNodes, setEdges],
+    [nodes, edges, setNodes, setEdges, removeNode],
   )
 
   if (error) return <p className="p-6 text-sm text-red-600">IR Board: {error}</p>
@@ -115,9 +156,13 @@ export default function IdeaRequestSection() {
           edgeTypes={edgeTypes}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
+          onNodesDelete={onNodesDelete}
+          onEdgesDelete={onEdgesDelete}
           onConnect={(c) => connect(c)}
           onNodeDragStart={onNodeDragStart}
+          onNodeDrag={onNodeDrag}
           onNodeDragStop={onNodeDragStop}
+          deleteKeyCode={['Backspace', 'Delete']}
           connectionMode="loose"
           fitView
           className="w-full h-full"
@@ -126,6 +171,7 @@ export default function IdeaRequestSection() {
           <Controls />
         </ReactFlow>
       </ReactFlowProvider>
+      <TrashZone ref={trashRef} visible={isDragging} over={isOverTrash} />
     </div>
   )
 }

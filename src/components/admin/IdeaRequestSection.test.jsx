@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, waitFor } from '@testing-library/react'
+import { render, waitFor, screen } from '@testing-library/react'
+import { forwardRef } from 'react'
 
 let captured = null
 vi.mock('@xyflow/react', () => ({
@@ -20,6 +21,12 @@ vi.mock('../../services/irBoardSession', () => ({
   unmountIrBoard: vi.fn().mockResolvedValue(undefined),
 }))
 vi.mock('../roadmap/nodeTypes', () => ({ nodeTypes: {} }))
+vi.mock('../roadmap/TrashZone', () => ({
+  default: forwardRef(function TrashZoneStub({ visible }, ref) {
+    if (!visible) return null
+    return <div ref={ref} data-testid="trash-zone" aria-label="Trash zone — drop block here to delete" />
+  }),
+}))
 
 // Two 128×128 process blocks 10px apart: a's right dot (428,164) is within
 // the 40px threshold of b's left dot (438,164).
@@ -34,6 +41,8 @@ const storeState = {
   addNode: vi.fn(),
   connect: vi.fn(),
   detachNode: vi.fn(),
+  removeNode: vi.fn(),
+  removeEdge: vi.fn(),
   syncStatus: 'idle',
 }
 vi.mock('../../stores/useRoadmapStore', () => ({
@@ -49,6 +58,8 @@ describe('IdeaRequestSection snap connections', () => {
     storeState.setNodes.mockClear()
     storeState.setEdges.mockClear()
     storeState.detachNode.mockClear()
+    storeState.removeNode.mockClear()
+    storeState.removeEdge.mockClear()
   })
 
   it('hides edge lines by registering InvisibleEdge as the default edge type', async () => {
@@ -82,6 +93,29 @@ describe('IdeaRequestSection snap connections', () => {
     await waitFor(() => expect(captured).not.toBeNull())
     captured.onNodeDragStop({}, { id: 'a', type: 'process', position: { x: 900, y: 900 } })
     expect(storeState.setNodes).not.toHaveBeenCalled()
+    expect(storeState.setEdges).not.toHaveBeenCalled()
+  })
+
+  it('wires Delete/Backspace to remove selected blocks and their edges', async () => {
+    render(<IdeaRequestSection />)
+    await waitFor(() => expect(captured).not.toBeNull())
+    expect(captured.deleteKeyCode).toEqual(['Backspace', 'Delete'])
+    captured.onNodesDelete([{ id: 'a' }])
+    expect(storeState.removeNode).toHaveBeenCalledWith('a')
+    captured.onEdgesDelete([{ id: 'e1' }])
+    expect(storeState.removeEdge).toHaveBeenCalledWith('e1')
+  })
+
+  it('deletes a block dropped on the trash zone instead of snapping it', async () => {
+    render(<IdeaRequestSection />)
+    await waitFor(() => expect(captured).not.toBeNull())
+    captured.onNodeDragStart({}, { id: 'a' })
+    const trash = await waitFor(() =>
+      document.querySelector('[data-testid="trash-zone"]') ?? screen.getByLabelText(/trash|ลบ/i),
+    )
+    trash.getBoundingClientRect = () => ({ left: 0, top: 0, right: 100, bottom: 100 })
+    captured.onNodeDragStop({ clientX: 50, clientY: 50 }, storeState.nodes[0])
+    expect(storeState.removeNode).toHaveBeenCalledWith('a')
     expect(storeState.setEdges).not.toHaveBeenCalled()
   })
 })
