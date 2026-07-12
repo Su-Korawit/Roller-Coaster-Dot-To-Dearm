@@ -4,33 +4,95 @@ import { render, screen } from '@testing-library/react'
 
 let sourceConnections = []
 let targetConnections = []
+let nodeId = 'a'
+let connectionState = { inProgress: false, fromNode: null, fromHandle: null }
+
 vi.mock('@xyflow/react', () => ({
   Position: { Top: 'top', Bottom: 'bottom', Left: 'left', Right: 'right' },
-  Handle: ({ className }) => <div data-testid="dot" className={className} />,
+  Handle: ({ className, id, position }) => (
+    <div data-testid={`dot-${id ?? position}`} className={className} />
+  ),
+  useNodeId: () => nodeId,
+  // Real hook with handleId:null returns every connection of that role on the node.
   useNodeConnections: ({ handleType }) =>
     handleType === 'source' ? sourceConnections : targetConnections,
+  useConnection: (selector) => selector(connectionState),
 }))
 
 const { default: ConnectionDot } = await import('./ConnectionDot')
+
+function ProcessStyleDots() {
+  return (
+    <>
+      <ConnectionDot type="target" position="left" />
+      <ConnectionDot id="top" type="source" position="top" />
+      <ConnectionDot type="source" position="right" />
+      <ConnectionDot id="bottom" type="source" position="bottom" />
+    </>
+  )
+}
+
+function dotClass(handleKey) {
+  return screen.getByTestId(`dot-${handleKey}`).className
+}
 
 describe('ConnectionDot', () => {
   beforeEach(() => {
     sourceConnections = []
     targetConnections = []
+    nodeId = 'a'
+    connectionState = { inProgress: false, fromNode: null, fromHandle: null }
   })
 
   it('glows green when this dot holds a connection', () => {
-    targetConnections = [{ source: 'a', target: 'b' }]
+    targetConnections = [{ source: 'x', target: 'a', targetHandle: null }]
     render(<ConnectionDot type="target" position="left" />)
-    const cls = screen.getByTestId('dot').className
+    const cls = dotClass('left')
     expect(cls).toContain('!bg-green-400')
     expect(cls).toContain('shadow-[0_0_8px_2px_rgba(74,222,128,0.8)]')
   })
 
   it('stays grey with no glow while free', () => {
     render(<ConnectionDot type="target" position="left" />)
-    const cls = screen.getByTestId('dot').className
+    const cls = dotClass('left')
     expect(cls).toContain('!bg-gray-300')
     expect(cls).not.toContain('shadow-[0_0_8px_2px_rgba(74,222,128,0.8)]')
+  })
+
+  it('does NOT glow an id-less dot when the connection is via a different handle', () => {
+    sourceConnections = [
+      { source: 'a', sourceHandle: 'top', target: 'b', targetHandle: null },
+    ]
+    render(<ProcessStyleDots />)
+
+    expect(dotClass('right')).toContain('!bg-gray-300')
+    expect(dotClass('right')).not.toContain('!bg-green-400')
+    expect(dotClass('top')).toContain('!bg-green-400')
+    expect(dotClass('bottom')).toContain('!bg-gray-300')
+  })
+
+  it('glows the id-less dot when the connection really uses it', () => {
+    sourceConnections = [
+      { source: 'a', sourceHandle: null, target: 'b', targetHandle: null },
+    ]
+    render(<ProcessStyleDots />)
+
+    expect(dotClass('right')).toContain('!bg-green-400')
+    expect(dotClass('top')).toContain('!bg-gray-300')
+    expect(dotClass('bottom')).toContain('!bg-gray-300')
+  })
+
+  it('focus-highlights only the origin dot during an in-progress connection drag', () => {
+    connectionState = {
+      inProgress: true,
+      fromNode: { id: 'a' },
+      fromHandle: { id: 'top' },
+    }
+    render(<ProcessStyleDots />)
+
+    expect(dotClass('top')).toContain('!bg-brand')
+    expect(dotClass('top')).toContain('ring-2')
+    expect(dotClass('right')).not.toContain('!bg-brand')
+    expect(dotClass('right')).toContain('!bg-gray-300')
   })
 })
