@@ -1,5 +1,9 @@
 import { isIdeaStatus, defaultReportData } from '../constants/irBoard.js'
 
+// Distinguishes report ids minted within the same millisecond (e.g. appending
+// in a loop) — Date.now() alone would collide.
+let reportSeq = 0
+
 function undirectedAdj(edges) {
   const map = new Map()
   for (const e of edges) {
@@ -71,8 +75,9 @@ export function appendReportNode({ nodes, edges, ideaId, type, summary }) {
       (edges ?? []).some((e) => e.source === ideaId && e.target === n.id),
   ).length
 
-  const reportId = `node-ir-${Date.now()}`
-  const edgeId = `edge-ir-${Date.now()}`
+  const uid = `${Date.now()}-${++reportSeq}`
+  const reportId = `node-ir-${uid}`
+  const edgeId = `edge-ir-${uid}`
   const report = {
     id: reportId,
     type,

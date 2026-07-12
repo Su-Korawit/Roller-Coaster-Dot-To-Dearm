@@ -20,7 +20,7 @@ description: Verify tests, push main on success, and report Update/Success Block
      (this also sets status `in-progress`)
    - Stop. Leave `current.json` in place.
 4. **If all green:**
-   - Commit any remaining uncommitted work only if the user already asked for commits during /ilovetask; otherwise commit with a clear message covering the idea title.
+   - Commit any remaining uncommitted work in logical chunks, with clear messages covering the idea title.
    - `git push origin main` (ADR: direct to main — no PR).
    - Run:
      `GOOGLE_APPLICATION_CREDENTIALS=./serviceAccountKey.json node scripts/irReport.mjs append-success <ideaId> <summary>`
