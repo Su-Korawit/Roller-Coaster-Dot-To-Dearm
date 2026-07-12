@@ -13,6 +13,9 @@ function getHandles(node) {
   const { x, y } = node.position
   switch (node.type) {
     case 'process':
+    case 'ideaRoot':
+    case 'update':
+    case 'success':
       return [
         { role: 'target', id: null, x, y: y + h / 2 },
         { role: 'source', id: null, x: x + w, y: y + h / 2 },

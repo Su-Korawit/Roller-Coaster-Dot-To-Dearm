@@ -69,4 +69,26 @@ describe('findProximityConnection', () => {
       position: { x: 300, y: 100 },
     })
   })
+
+  it('snaps a dragged update block onto an ideaRoot right dot', () => {
+    // ideaRoot 128×128 at (100,100): right-source dot at (228,164).
+    // dragged update at (238,100): left-target dot at (238,164) — 10px away.
+    const root = { id: 'root', type: 'ideaRoot', position: { x: 100, y: 100 } }
+    const upd = { id: 'upd', type: 'update', position: { x: 238, y: 100 } }
+    expect(findProximityConnection(upd, [root], 40)).toEqual({
+      connection: { source: 'root', target: 'upd', sourceHandle: null, targetHandle: null },
+      position: { x: 228, y: 100 },
+    })
+  })
+
+  it('snaps a dragged success top dot onto an update bottom dot', () => {
+    // update 128×128 at (100,100): bottom-source dot at (164,228).
+    // dragged success at (100,220): top-source dot at (164,220) — 8px away.
+    const upd = { id: 'upd', type: 'update', position: { x: 100, y: 100 } }
+    const succ = { id: 'succ', type: 'success', position: { x: 100, y: 220 } }
+    expect(findProximityConnection(succ, [upd], 40)).toEqual({
+      connection: { source: 'succ', target: 'upd', sourceHandle: 'top', targetHandle: 'bottom' },
+      position: { x: 100, y: 228 },
+    })
+  })
 })
