@@ -306,7 +306,6 @@ export default function RoadmapPage({ onClose, backPath }) {
           onNodeDrag={onNodeDrag}
           onNodeDragStop={onNodeDragStop}
           onSelectionChange={onSelectionChange}
-          multiSelectionKeyCode="Shift"
           nodesDraggable={canEdit}
           nodesConnectable={canEdit}
           elementsSelectable={canEdit}
