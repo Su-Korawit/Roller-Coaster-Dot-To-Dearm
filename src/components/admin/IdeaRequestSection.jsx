@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useState, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -15,6 +16,8 @@ import TrashZone from '../roadmap/TrashZone'
 import { useRoadmapStore } from '../../stores/useRoadmapStore'
 import { mountIrBoard, unmountIrBoard } from '../../services/irBoardSession'
 import { findProximityConnection } from '../../utils/findProximityConnection'
+import { computeDropPosition } from '../../utils/computeDropPosition'
+import { useLongPressDrag } from '../../hooks/useLongPressDrag'
 
 const IR_PALETTE = [
   { type: 'ideaRoot', label: 'Idea Root' },
@@ -33,6 +36,7 @@ export default function IdeaRequestSection() {
   const [ready, setReady] = useState(false)
   const [error, setError] = useState(null)
   const tokenRef = useRef(null)
+  const rfRef = useRef(null)
   const trashRef = useRef(null)
   const [isDragging, setIsDragging] = useState(false)
   const [isOverTrash, setIsOverTrash] = useState(false)
@@ -130,17 +134,33 @@ export default function IdeaRequestSection() {
     [nodes, edges, setNodes, setEdges, removeNode],
   )
 
+  const onCanvasDragOver = useCallback((e) => { e.preventDefault() }, [])
+  const onCanvasDrop = useCallback((e) => {
+    e.preventDefault()
+    const type = e.dataTransfer.getData('application/roadmap-node-type')
+    if (!type || !rfRef.current) return
+    addNode(type, computeDropPosition({ clientX: e.clientX, clientY: e.clientY }, rfRef.current.screenToFlowPosition, type))
+  }, [addNode])
+  const onTouchDrop = useCallback((type, { clientX, clientY }) => {
+    if (!rfRef.current) return
+    addNode(type, computeDropPosition({ clientX, clientY }, rfRef.current.screenToFlowPosition, type))
+  }, [addNode])
+  const { dragState, getHandlers } = useLongPressDrag(onTouchDrop)
+
   if (error) return <p className="p-6 text-sm text-red-600">IR Board: {error}</p>
   if (!ready) return <p className="p-6 text-sm text-ink-soft">Loading IR Board…</p>
 
   return (
-    <div className="relative w-full h-full min-h-[480px] bg-surface">
+    <div className="relative w-full h-full min-h-[480px] bg-surface" onDragOver={onCanvasDragOver} onDrop={onCanvasDrop}>
       <div className="absolute top-3 left-3 z-10 flex flex-wrap gap-2">
         {IR_PALETTE.map((p) => (
           <button
             key={p.type}
             type="button"
-            className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-ink/20 bg-white hover:border-brand"
+            draggable="true"
+            onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', p.type)}
+            {...getHandlers(p.type)}
+            className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-ink/20 bg-white hover:border-brand cursor-grab active:cursor-grabbing"
             onClick={() => addNode(p.type, { x: 120 + Math.random() * 80, y: 120 + Math.random() * 80 })}
           >
             + {p.label}
@@ -154,6 +174,7 @@ export default function IdeaRequestSection() {
           edges={edges}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
+          onInit={(instance) => { rfRef.current = instance }}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onNodesDelete={onNodesDelete}
@@ -172,6 +193,22 @@ export default function IdeaRequestSection() {
         </ReactFlow>
       </ReactFlowProvider>
       <TrashZone ref={trashRef} visible={isDragging} over={isOverTrash} />
+
+      {/* Ghost preview for a touch long-press drag, portalled to
+          document.body: the toolbar lives inside React Flow's transformed
+          viewport, so a `fixed` child positioned via clientX/clientY here
+          would otherwise inherit that transform (scaled/offset) instead of
+          tracking the real screen position (same reasoning as the portal
+          in ImagePickerModal.jsx). */}
+      {dragState && createPortal(
+        <div
+          className="fixed z-50 pointer-events-none flex items-center justify-center rounded-xl border-2 border-brand/60 bg-brand/20 backdrop-blur-sm"
+          style={{ left: dragState.x - 24, top: dragState.y - 24, width: 48, height: 48 }}
+        >
+          <span className="pixel-font text-[7px] text-brand">{dragState.type}</span>
+        </div>,
+        document.body,
+      )}
     </div>
   )
 }
