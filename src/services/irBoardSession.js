@@ -20,9 +20,18 @@ export async function ensureIrBoardDoc() {
   return data
 }
 
+// Overlapping mount/unmount pairs happen in dev (React StrictMode runs the IR
+// tab effect twice, so two mounts race the same await). Only the newest mount
+// may hydrate the store, and only that mount's token may later restore it —
+// otherwise a stale unmount could re-arm the user's sheet sync while the
+// visible board still edits the IR sheet.
+let mountSeq = 0
+let liveToken = null
+
 export async function mountIrBoard() {
   const prev = useRoadmapStore.getState()
   const token = {
+    seq: ++mountSeq,
     sheets: prev.sheets,
     activeSheetId: prev.activeSheetId,
   }
@@ -31,9 +40,10 @@ export async function mountIrBoard() {
   try {
     data = await ensureIrBoardDoc()
   } catch (err) {
-    if (token.activeSheetId) armRoadmapSheetSync(token.activeSheetId)
+    if (token.seq === mountSeq && token.activeSheetId) armRoadmapSheetSync(token.activeSheetId)
     throw err
   }
+  if (token.seq !== mountSeq) return token
   const irSheet = {
     id: IR_SHEET_ID,
     name: data.name ?? 'IR Board',
@@ -48,17 +58,21 @@ export async function mountIrBoard() {
     irSheet,
   ]
   useRoadmapStore.getState().hydrateSheets(sheets, IR_SHEET_ID)
+  useRoadmapStore.setState({ irReturnSheetId: token.activeSheetId })
   armRoadmapSheetSync(IR_SHEET_ID)
+  liveToken = token
   return token
 }
 
 export async function unmountIrBoard(token) {
-  if (!token) return
+  if (!token || token !== liveToken) return
+  liveToken = null
   disarmRoadmapSheetSync()
   const sheets = (token.sheets ?? []).filter((s) => s.id !== IR_SHEET_ID)
   const activeSheetId = token.activeSheetId === IR_SHEET_ID
     ? (sheets[0]?.id ?? null)
     : token.activeSheetId
   useRoadmapStore.getState().hydrateSheets(sheets, activeSheetId)
+  useRoadmapStore.setState({ irReturnSheetId: null })
   if (activeSheetId) armRoadmapSheetSync(activeSheetId)
 }

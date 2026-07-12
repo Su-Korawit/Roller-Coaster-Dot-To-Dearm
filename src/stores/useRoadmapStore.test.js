@@ -496,4 +496,26 @@ describe('persist partialize', () => {
     expect(partial.nodes).not.toEqual(irNodes)
     expect(partial.edges).not.toEqual(irEdges)
   })
+
+  it('restores the sheet the user had open before the IR board, not sheets[0]', () => {
+    const partial = roadmapStorePartialize({
+      myUid: 'alice',
+      sheets: [
+        { id: 'sheet-1', name: 'First', nodes: [], edges: [], timeline: null },
+        { id: 'sheet-2', name: 'Open before IR', nodes: [{ id: 'n2' }], edges: [], timeline: null },
+        { id: 'admin-idea-board', name: 'IR Board', nodes: [], edges: [], timeline: null },
+      ],
+      activeSheetId: 'admin-idea-board',
+      irReturnSheetId: 'sheet-2',
+      nodes: [],
+      edges: [],
+      timeline: null,
+      setpoint: null,
+      selection: [],
+      syncStatus: 'idle',
+    })
+
+    expect(partial.activeSheetId).toBe('sheet-2')
+    expect(partial.nodes).toEqual([{ id: 'n2' }])
+  })
 })

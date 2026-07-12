@@ -12,7 +12,7 @@ export function roadmapStorePartialize(state) {
   const sheets = state.sheets.filter((s) => s.id !== IR_SHEET_ID)
   const activeSheetId =
     state.activeSheetId === IR_SHEET_ID
-      ? (sheets[0]?.id ?? 'local-default')
+      ? (state.irReturnSheetId ?? sheets[0]?.id ?? 'local-default')
       : state.activeSheetId
 
   let nodes = state.nodes
@@ -74,6 +74,9 @@ export const useRoadmapStore = create(
       setpoint: null,
       selection: [],
       syncStatus: 'idle',
+      // Sheet to return to (and persist as active) while the IR Board is
+      // mounted over the user's session — session-only, never persisted.
+      irReturnSheetId: null,
 
       setRoadmapMyUid: (uid) => set({ myUid: uid }),
       hydrateSheets: (sheets, activeSheetId) =>

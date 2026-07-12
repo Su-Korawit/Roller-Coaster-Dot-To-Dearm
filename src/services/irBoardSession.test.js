@@ -74,9 +74,11 @@ describe('irBoardSession', () => {
     expect(m.disarmRoadmapSheetSync).toHaveBeenCalled()
     expect(m.armRoadmapSheetSync).toHaveBeenCalledWith(IR_SHEET_ID)
     expect(token).toEqual({
+      seq: expect.any(Number),
       sheets: [{ id: 'sheet-1', name: 'My Roadmap', nodes: [], edges: [], ownerUid: 'alice', myRole: 'owner' }],
       activeSheetId: 'sheet-1',
     })
+    expect(useRoadmapStore.getState().irReturnSheetId).toBe('sheet-1')
   })
 
   it('unmountIrBoard restores prior sheets and activeSheetId', async () => {
@@ -88,6 +90,30 @@ describe('irBoardSession', () => {
     expect(activeSheetId).toBe('sheet-1')
     expect(m.disarmRoadmapSheetSync).toHaveBeenCalled()
     expect(m.armRoadmapSheetSync).toHaveBeenLastCalledWith('sheet-1')
+    expect(useRoadmapStore.getState().irReturnSheetId).toBe(null)
+  })
+
+  it('ignores a superseded mount and its unmount (StrictMode double-mount race)', async () => {
+    let resolveFirst
+    m.getDoc.mockImplementationOnce(() => new Promise((res) => { resolveFirst = res }))
+
+    const mount1 = mountIrBoard() // pending on the deferred getDoc
+    const mount2 = mountIrBoard() // resolves via the default mock
+    const token2 = await mount2
+    resolveFirst({
+      exists: () => true,
+      data: () => ({ name: 'IR Board', nodes: [], edges: [], ownerUid: ADMIN_UID }),
+    })
+    const token1 = await mount1
+
+    // mount1 was superseded — its late unmount (StrictMode cleanup) must not
+    // restore user sheets while the live mount still shows the board.
+    await unmountIrBoard(token1)
+    expect(useRoadmapStore.getState().activeSheetId).toBe(IR_SHEET_ID)
+
+    await unmountIrBoard(token2)
+    expect(useRoadmapStore.getState().activeSheetId).toBe('sheet-1')
+    expect(useRoadmapStore.getState().sheets.find((s) => s.id === IR_SHEET_ID)).toBeUndefined()
   })
 
   it('re-arms prior sheet sync when ensureIrBoardDoc fails after disarm', async () => {
