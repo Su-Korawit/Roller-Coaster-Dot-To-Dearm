@@ -6,11 +6,14 @@ import {
   Controls,
   applyNodeChanges,
   applyEdgeChanges,
+  addEdge,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { nodeTypes } from '../roadmap/nodeTypes'
+import InvisibleEdge from '../roadmap/InvisibleEdge'
 import { useRoadmapStore } from '../../stores/useRoadmapStore'
 import { mountIrBoard, unmountIrBoard } from '../../services/irBoardSession'
+import { findProximityConnection } from '../../utils/findProximityConnection'
 
 const IR_PALETTE = [
   { type: 'ideaRoot', label: 'Idea Root' },
@@ -19,6 +22,11 @@ const IR_PALETTE = [
   { type: 'update', label: 'Update' },
   { type: 'success', label: 'Success' },
 ]
+
+const SNAP_THRESHOLD = 40
+
+// Blocks snap edge-to-edge — the default edge renders no line.
+const edgeTypes = { default: InvisibleEdge }
 
 export default function IdeaRequestSection() {
   const [ready, setReady] = useState(false)
@@ -30,6 +38,7 @@ export default function IdeaRequestSection() {
   const setEdges = useRoadmapStore((s) => s.setEdges)
   const addNode = useRoadmapStore((s) => s.addNode)
   const connect = useRoadmapStore((s) => s.connect)
+  const detachNode = useRoadmapStore((s) => s.detachNode)
   const syncStatus = useRoadmapStore((s) => s.syncStatus)
 
   useEffect(() => {
@@ -63,6 +72,23 @@ export default function IdeaRequestSection() {
     [edges, setEdges],
   )
 
+  // Dragging a block detaches it from all connections so it can be re-snapped elsewhere.
+  const onNodeDragStart = useCallback(
+    (_event, node) => detachNode(node.id),
+    [detachNode],
+  )
+  // On drop, snap dot-to-dot when a dot pair is within threshold — no line is drawn.
+  const onNodeDragStop = useCallback(
+    (_event, node) => {
+      const others = nodes.filter((n) => n.id !== node.id)
+      const match = findProximityConnection(node, others, SNAP_THRESHOLD)
+      if (!match) return
+      setNodes(nodes.map((n) => (n.id === node.id ? { ...n, position: match.position } : n)))
+      setEdges(addEdge(match.connection, edges))
+    },
+    [nodes, edges, setNodes, setEdges],
+  )
+
   if (error) return <p className="p-6 text-sm text-red-600">IR Board: {error}</p>
   if (!ready) return <p className="p-6 text-sm text-ink-soft">Loading IR Board…</p>
 
@@ -86,9 +112,12 @@ export default function IdeaRequestSection() {
           nodes={nodes}
           edges={edges}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={(c) => connect(c)}
+          onNodeDragStart={onNodeDragStart}
+          onNodeDragStop={onNodeDragStop}
           connectionMode="loose"
           fitView
           className="w-full h-full"

@@ -16,7 +16,7 @@ export default function ConnectionDot({ type, position, id }) {
       type={type}
       position={position}
       id={id}
-      className={`!w-3 !h-3 !border-white !border-2 ${connected ? '!bg-green-400' : '!bg-gray-300'}`}
+      className={`!w-3 !h-3 !border-white !border-2 ${connected ? '!bg-green-400 shadow-[0_0_8px_2px_rgba(74,222,128,0.8)]' : '!bg-gray-300'}`}
     />
   )
 }

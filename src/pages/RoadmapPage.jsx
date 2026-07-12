@@ -26,13 +26,10 @@ import { computeDropPosition } from '../utils/computeDropPosition'
 import { toSchema, selectSubset } from '../utils/roadmapExport'
 import { useLongPressDrag } from '../hooks/useLongPressDrag'
 import AnnotationEdge from '../components/roadmap/AnnotationEdge'
+import InvisibleEdge from '../components/roadmap/InvisibleEdge'
 
 const SNAP_THRESHOLD = 40
 
-// Blocks snap edge-to-edge, so connection lines are never drawn.
-function InvisibleEdge() {
-  return null
-}
 const edgeTypes = { default: InvisibleEdge, annotation: AnnotationEdge }
 
 export default function RoadmapPage({ onClose, backPath }) {

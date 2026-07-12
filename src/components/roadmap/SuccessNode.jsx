@@ -13,7 +13,7 @@ export default function SuccessNode({ id, data, selected }) {
 
   return (
     <div
-      className={`relative w-40 min-h-24 rounded-xl border-2 bg-emerald-50 p-2.5 flex flex-col gap-1 ${
+      className={`relative w-32 h-32 rounded-xl border-2 bg-emerald-50 p-2.5 flex flex-col gap-1 ${
         selected ? 'border-emerald-500 shadow-hard-sm' : 'border-emerald-300'
       }`}
     >
