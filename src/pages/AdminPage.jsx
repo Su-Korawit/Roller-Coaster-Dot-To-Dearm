@@ -12,7 +12,7 @@ import FarmDataSection from '../components/admin/FarmDataSection'
 import IdeaRequestSection from '../components/admin/IdeaRequestSection'
 import { ToastProvider } from '../components/admin/Toast'
 import { useAuthStore } from '../stores/useAuthStore'
-import { ADMIN_DISPLAY_NAME, getAdminSections } from '../constants/admin'
+import { ADMIN_DISPLAY_NAME, ADMIN_ROLES, getAdminSections } from '../constants/admin'
 
 const IR_TAB = { id: 'idea-request', label: 'Idea-Request' }
 
@@ -35,9 +35,13 @@ const ALL_TABS = [
 export default function AdminPage() {
   const user = useAuthStore((s) => s.user)
   const sections = getAdminSections(user?.email)
+  // IR tab is for every ADMIN_ROLES email regardless of section scope (ADR
+  // 0013) — an admin with no sections yet must still see it, so gate on
+  // membership, not on sections.length.
+  const isAdmin = Boolean(ADMIN_ROLES[user?.email?.toLowerCase() ?? ''])
   const tabs = [
     ...ALL_TABS.filter((t) => sections.includes(t.id)),
-    ...(sections.length > 0 ? [IR_TAB] : []),
+    ...(isAdmin ? [IR_TAB] : []),
   ]
   const [tab, setTab] = useState(() => tabs[0]?.id ?? null)
 

@@ -1,8 +1,15 @@
+import { useCallback } from 'react'
 import { Position } from '@xyflow/react'
+import { useRoadmapStore } from '../../stores/useRoadmapStore'
 import ConnectionDot from './ConnectionDot'
 
-export default function SuccessNode({ data, selected }) {
-  const summary = data.summary ?? ''
+export default function SuccessNode({ id, data, selected }) {
+  const updateNodeData = useRoadmapStore((s) => s.updateNodeData)
+
+  const onSummaryChange = useCallback(
+    (e) => updateNodeData(id, { summary: e.target.value }),
+    [id, updateNodeData],
+  )
 
   return (
     <div
@@ -13,9 +20,12 @@ export default function SuccessNode({ data, selected }) {
       <ConnectionDot type="target" position={Position.Left} />
       <ConnectionDot id="top" type="source" position={Position.Top} />
       <p className="pixel-font text-[8px] text-emerald-700">SUCCESS</p>
-      <p className="text-[11px] text-ink leading-tight whitespace-pre-wrap">
-        {summary || <span className="text-ink-soft/50">Summary</span>}
-      </p>
+      <textarea
+        className="w-full flex-1 text-[11px] text-ink bg-transparent outline-none resize-none placeholder:text-ink-soft/50 focus:placeholder:text-ink-soft leading-tight"
+        placeholder="Summary"
+        value={data.summary ?? ''}
+        onChange={onSummaryChange}
+      />
       {data.timestamp && (
         <p className="text-[9px] text-ink-soft mt-auto">{data.timestamp}</p>
       )}
