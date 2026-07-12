@@ -14,6 +14,7 @@
     "test:rules:emu": "firebase emulators:exec --only firestore,database,storage --project demo-rcdtd \"npm run test:rules\"",
     "upload-assets": "node scripts/uploadAssets.mjs",
     "reset-farm-data": "node scripts/resetFarmData.mjs",
+    "ir-report": "node scripts/irReport.mjs",
     "refresh-tcas-snapshot": "node scripts/refreshTcasSnapshot.mjs"
   },
   "dependencies": {

@@ -248,6 +248,55 @@ describe('Roadmap Sheets rules (roadmapSheets/{sheetId})', () => {
   })
 })
 
+describe('IR Board sheet (roadmapSheets/admin-idea-board)', () => {
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore()
+      await setDoc(doc(db, 'roadmapSheets/admin-idea-board'), {
+        ownerUid: 'IaltEhO0mPVfK3ng8npr4CdqnEE3',
+        name: 'IR Board',
+        nodes: [],
+        edges: [],
+        order: 0,
+        collaborators: {},
+        collaboratorUids: [],
+      })
+    })
+  })
+
+  it('lets a maps-section admin read and update nodes', async () => {
+    const mapsAdmin = testEnv.authenticatedContext('maps-uid', {
+      email: 'takadaoni07@gmail.com',
+    }).firestore()
+    await assertSucceeds(getDoc(doc(mapsAdmin, 'roadmapSheets/admin-idea-board')))
+    await assertSucceeds(updateDoc(doc(mapsAdmin, 'roadmapSheets/admin-idea-board'), {
+      nodes: [{ id: 'r1', type: 'ideaRoot' }],
+    }))
+  })
+
+  it('BLOCKS a non-admin from reading the IR Board', async () => {
+    const rando = testEnv.authenticatedContext('rando').firestore()
+    await assertFails(getDoc(doc(rando, 'roadmapSheets/admin-idea-board')))
+  })
+
+  it('does not grant non-admins access to ordinary sheets', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore()
+      await setDoc(doc(db, 'roadmapSheets/sheet-1'), {
+        ownerUid: 'alice',
+        name: 'Roadmap',
+        nodes: [],
+        edges: [],
+        order: 0,
+        collaborators: {},
+        collaboratorUids: [],
+      })
+    })
+    const rando = testEnv.authenticatedContext('rando').firestore()
+    await assertFails(getDoc(doc(rando, 'roadmapSheets/sheet-1')))
+  })
+})
+
 describe('tcasEvents rules', () => {
   it('allows anyone (even unauthenticated) to read events — public news site (ADR-0012)', async () => {
     await testEnv.withSecurityRulesDisabled(async (ctx) => {

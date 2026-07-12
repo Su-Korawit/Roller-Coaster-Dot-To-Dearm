@@ -9,9 +9,12 @@ import ShopSection from '../components/admin/ShopSection'
 import FinanceSection from '../components/admin/FinanceSection'
 import WelcomeSection from '../components/admin/WelcomeSection'
 import FarmDataSection from '../components/admin/FarmDataSection'
+import IdeaRequestSection from '../components/admin/IdeaRequestSection'
 import { ToastProvider } from '../components/admin/Toast'
 import { useAuthStore } from '../stores/useAuthStore'
 import { ADMIN_DISPLAY_NAME, getAdminSections } from '../constants/admin'
+
+const IR_TAB = { id: 'idea-request', label: 'Idea-Request' }
 
 // Every admin tab + its section key. AdminPage shows only the tabs the signed-in
 // admin's email is allowed to edit (getAdminSections), so a scoped admin sees just
@@ -32,7 +35,10 @@ const ALL_TABS = [
 export default function AdminPage() {
   const user = useAuthStore((s) => s.user)
   const sections = getAdminSections(user?.email)
-  const tabs = ALL_TABS.filter((t) => sections.includes(t.id))
+  const tabs = [
+    ...ALL_TABS.filter((t) => sections.includes(t.id)),
+    ...(sections.length > 0 ? [IR_TAB] : []),
+  ]
   const [tab, setTab] = useState(() => tabs[0]?.id ?? null)
 
   return (
@@ -67,7 +73,7 @@ export default function AdminPage() {
         </div>
 
         {/* Content */}
-        <main className="max-w-5xl mx-auto px-6 py-8">
+        <main className={tab === 'idea-request' ? 'h-[calc(100vh-8rem)]' : 'max-w-5xl mx-auto px-6 py-8'}>
           {tab === 'analytics'  && <AnalyticsSection />}
           {tab === 'users'      && <UserManagementSection />}
           {tab === 'characters' && <CharactersGrid />}
@@ -83,6 +89,7 @@ export default function AdminPage() {
           {tab === 'finance'    && <FinanceSection />}
           {tab === 'welcome'    && <WelcomeSection />}
           {tab === 'farm'       && <FarmDataSection />}
+          {tab === 'idea-request' && <IdeaRequestSection />}
         </main>
       </div>
     </ToastProvider>

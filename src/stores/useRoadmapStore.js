@@ -4,8 +4,39 @@ import { addEdge } from '@xyflow/react'
 import { computeSnapPosition } from '../utils/computeSnapPosition'
 import { fromSchema } from '../utils/roadmapExport'
 import { DEFAULT_STAGES } from '../components/roadmap/StageBands'
+import { IR_SHEET_ID, defaultIdeaRootData, defaultReportData } from '../constants/irBoard'
 
 const IMPORT_GAP = 80
+
+export function roadmapStorePartialize(state) {
+  const sheets = state.sheets.filter((s) => s.id !== IR_SHEET_ID)
+  const activeSheetId =
+    state.activeSheetId === IR_SHEET_ID
+      ? (sheets[0]?.id ?? 'local-default')
+      : state.activeSheetId
+
+  let nodes = state.nodes
+  let edges = state.edges
+  let timeline = state.timeline
+  if (state.activeSheetId === IR_SHEET_ID) {
+    const userSheet = sheets.find((s) => s.id === activeSheetId)
+    nodes = userSheet?.nodes ?? []
+    edges = userSheet?.edges ?? []
+    timeline = userSheet?.timeline ?? null
+  }
+
+  return {
+    myUid: state.myUid,
+    sheets,
+    activeSheetId,
+    nodes,
+    edges,
+    timeline,
+    setpoint: state.setpoint,
+    selection: state.selection,
+    syncStatus: state.syncStatus,
+  }
+}
 
 let _counter = 0
 function nextId() {
@@ -149,7 +180,11 @@ export const useRoadmapStore = create(
       addNode: (type, position = { x: 100, y: 100 }) =>
         set((state) => {
           const id = nextId()
-          const data = type === 'start' ? { journeyRef: null } : { label: '', note: '', color: null }
+          const data =
+            type === 'start' ? { journeyRef: null }
+            : type === 'ideaRoot' ? defaultIdeaRootData()
+            : type === 'update' || type === 'success' ? defaultReportData('')
+            : { label: '', note: '', color: null }
           return { setpoint: id, ...applyToActive(state, { nodes: [...state.nodes, { id, type, position, data }] }) }
         }),
       addSticker: (url, position = { x: 120, y: 120 }) => {
@@ -223,6 +258,9 @@ export const useRoadmapStore = create(
           })
         }),
     }),
-    { name: 'rc-roadmap-store' },
+    {
+      name: 'rc-roadmap-store',
+      partialize: roadmapStorePartialize,
+    },
   ),
 )

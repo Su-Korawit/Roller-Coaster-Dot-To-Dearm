@@ -10,6 +10,9 @@ import StageLabelNode from './StageLabelNode'
 import ImageNode from './ImageNode'
 import VideoNode from './VideoNode'
 import StartNode from './StartNode'
+import IdeaRootNode from './IdeaRootNode'
+import UpdateNode from './UpdateNode'
+import SuccessNode from './SuccessNode'
 
 export const nodeTypes = {
   process: ProcessNode,
@@ -18,4 +21,7 @@ export const nodeTypes = {
   image: ImageNode,
   video: VideoNode,
   start: StartNode,
+  ideaRoot: IdeaRootNode,
+  update: UpdateNode,
+  success: SuccessNode,
 }
