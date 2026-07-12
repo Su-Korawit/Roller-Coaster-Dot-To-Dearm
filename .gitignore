@@ -40,3 +40,5 @@ serviceAccountKey.json
 
 coverage/
 *.aseprite
+
+.iloveskill/
