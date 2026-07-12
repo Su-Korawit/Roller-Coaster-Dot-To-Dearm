@@ -55,4 +55,16 @@ describe('computeSnapPosition', () => {
     // x = sx + sw = 0 + 128 = 128; y = sy + sh/2 - th/2 = 0 + 64 - 64 = 0
     expect(result).toEqual({ x: 128, y: 0 })
   })
+
+  it('snaps an update block flush right of an ideaRoot using 128×128 sizes', () => {
+    const root = { id: 'r', type: 'ideaRoot', position: { x: 100, y: 100 } }
+    const upd = { id: 'u', type: 'update', position: { x: 0, y: 0 } }
+    expect(computeSnapPosition(root, upd, null)).toEqual({ x: 228, y: 100 })
+  })
+
+  it('snaps a success block flush below an update using 128×128 sizes', () => {
+    const upd = { id: 'u', type: 'update', position: { x: 100, y: 100 } }
+    const succ = { id: 's', type: 'success', position: { x: 0, y: 0 } }
+    expect(computeSnapPosition(upd, succ, 'bottom')).toEqual({ x: 100, y: 228 })
+  })
 })

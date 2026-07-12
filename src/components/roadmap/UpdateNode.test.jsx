@@ -42,4 +42,9 @@ describe('UpdateNode', () => {
 
     expect(updateNodeData).toHaveBeenCalledWith('u1', { summary: 'blocked on rules deploy' })
   })
+
+  it('is a 128×128 block like Process/Image', () => {
+    const { container } = render(<UpdateNode id="u1" data={{ summary: '' }} selected={false} />)
+    expect(container.firstChild.className).toContain('w-32 h-32')
+  })
 })

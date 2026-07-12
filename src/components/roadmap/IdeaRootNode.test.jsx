@@ -42,4 +42,9 @@ describe('IdeaRootNode', () => {
       status: 'planned',
     })
   })
+
+  it('is a 128×128 block like Process/Image', () => {
+    const { container } = render(<IdeaRootNode id="i1" data={{ title: '', status: 'idea' }} selected={false} />)
+    expect(container.firstChild.className).toContain('w-32 h-32')
+  })
 })

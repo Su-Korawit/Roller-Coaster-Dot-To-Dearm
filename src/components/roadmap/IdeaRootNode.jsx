@@ -17,7 +17,7 @@ export default function IdeaRootNode({ id, data, selected }) {
 
   return (
     <div
-      className={`relative w-40 min-h-32 rounded-xl border-2 bg-brand-soft p-2.5 flex flex-col gap-1 ${
+      className={`relative w-32 h-32 rounded-xl border-2 bg-brand-soft p-2.5 flex flex-col gap-1 ${
         selected ? 'border-brand shadow-hard-sm' : 'border-brand/40'
       }`}
     >
