@@ -1,4 +1,5 @@
 import { isIdeaStatus, defaultReportData } from '../constants/irBoard.js'
+import { computeSnapPosition } from '../utils/computeSnapPosition.js'
 
 // Distinguishes report ids minted within the same millisecond (e.g. appending
 // in a loop) — Date.now() alone would collide.
@@ -67,13 +68,12 @@ export function appendReportNode({ nodes, edges, ideaId, type, summary }) {
   if (type !== 'update' && type !== 'success') {
     throw new Error(`invalid report type: ${type}`)
   }
-  const root = (nodes ?? []).find((n) => n.id === ideaId && n.type === 'ideaRoot')
-  if (!root) throw new Error(`ideaRoot not found: ${ideaId}`)
+  const { root, nodes: subNodes } = collectIdeaSubtree(ideaId, nodes, edges)
 
-  const existingReports = (nodes ?? []).filter(
-    (n) => (n.type === 'update' || n.type === 'success') &&
-      (edges ?? []).some((e) => e.source === ideaId && e.target === n.id),
-  ).length
+  const reports = subNodes.filter((n) => n.type === 'update' || n.type === 'success')
+  const tail = reports.length
+    ? reports.reduce((lowest, n) => (n.position.y > lowest.position.y ? n : lowest))
+    : root
 
   const uid = `${Date.now()}-${++reportSeq}`
   const reportId = `node-ir-${uid}`
@@ -81,15 +81,15 @@ export function appendReportNode({ nodes, edges, ideaId, type, summary }) {
   const report = {
     id: reportId,
     type,
-    position: {
-      x: (root.position?.x ?? 0) + 180,
-      y: (root.position?.y ?? 0) + 40 + existingReports * 120,
-    },
+    position: computeSnapPosition(tail, { type }, 'bottom'),
     data: defaultReportData(summary),
   }
   return {
     nodes: [...(nodes ?? []), report],
-    edges: [...(edges ?? []), { id: edgeId, source: ideaId, target: reportId }],
+    edges: [
+      ...(edges ?? []),
+      { id: edgeId, source: tail.id, target: reportId, sourceHandle: 'bottom', targetHandle: 'top' },
+    ],
     reportId,
   }
 }
