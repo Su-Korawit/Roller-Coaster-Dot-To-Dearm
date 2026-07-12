@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { getDownloadURL } from 'firebase/storage'
 import { X, Upload, Loader } from 'lucide-react'
-import { listFlat, uploadAsset } from '../../utils/storageOps'
+import { listFlat } from '../../utils/storageOps'
+import { uploadRoadmapImage } from '../../utils/uploadRoadmapImage'
 import { tcasLogoUrl } from '../../hooks/useMytcas'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useUserStore } from '../../stores/useUserStore'
@@ -53,7 +54,7 @@ export default function ImagePickerModal({ nodeId, onClose }) {
     if (!file || !uid) return
     setUploading(true)
     try {
-      const url = await uploadAsset(`users/${uid}/roadmap/${nodeId}-${Date.now()}`, file, { contentType: file.type })
+      const url = await uploadRoadmapImage(uid, nodeId, file)
       appendImage(url)
     } catch {
       // swallow — the upload button below returns to its resting state

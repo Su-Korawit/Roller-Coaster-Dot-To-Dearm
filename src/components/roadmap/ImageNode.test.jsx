@@ -1,9 +1,21 @@
 // @vitest-environment jsdom
 import { useState } from 'react'
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { DEFAULT_IMAGE_OFFSET } from '../../utils/normalizeImageNodeData'
+
+const uploadRoadmapImageMock = vi.fn().mockResolvedValue('https://x/new')
+vi.mock('../../utils/uploadRoadmapImage', () => ({
+  uploadRoadmapImage: (...args) => uploadRoadmapImageMock(...args),
+}))
+
+let authState
+vi.mock('../../stores/useAuthStore', () => ({
+  useAuthStore: (sel) => sel(authState),
+}))
 
 let updateNodeDataSpy
+let mockUpdateNodeData
 vi.mock('../../stores/useRoadmapStore', () => ({
   useRoadmapStore: (sel) => sel({ updateNodeData: (...args) => updateNodeDataSpy(...args) }),
 }))
@@ -17,13 +29,24 @@ vi.mock('./MediaLightbox', () => ({
 
 const { default: ImageNode } = await import('./ImageNode')
 
-function Harness({ initialData }) {
+const pngFile = new File(['x'], 'p.png', { type: 'image/png' })
+
+function Harness({ initialData, selected = false }) {
   const [data, setData] = useState(initialData)
-  updateNodeDataSpy = (id, patch) => setData((d) => ({ ...d, ...patch }))
-  return <ImageNode id="n1" data={data} selected={false} />
+  updateNodeDataSpy = (id, patch) => {
+    mockUpdateNodeData(id, patch)
+    setData((d) => ({ ...d, ...patch }))
+  }
+  return <ImageNode id="n1" data={data} selected={selected} />
 }
 
 describe('ImageNode', () => {
+  beforeEach(() => {
+    authState = { user: { uid: 'u1' } }
+    mockUpdateNodeData = vi.fn()
+    uploadRoadmapImageMock.mockClear()
+  })
+
   it('shows the empty state and opens the picker when tapped', () => {
     render(<Harness initialData={{}} />)
     expect(screen.getByText('tap to choose')).toBeTruthy()
@@ -61,5 +84,32 @@ describe('ImageNode', () => {
     render(<Harness initialData={{ images: [{ url: 'a.png' }, { url: 'b.png' }], activeIndex: 0 }} />)
     fireEvent.click(screen.getByRole('button', { name: 'ขยายรูป' }))
     expect(screen.getByTestId('lightbox').dataset.count).toBe('2')
+  })
+
+  it('uploads and appends a dropped image file', async () => {
+    render(<Harness initialData={{}} />)
+    const nodeRoot = screen.getByRole('button', { name: 'Choose image' }).parentElement
+    fireEvent.drop(nodeRoot, { dataTransfer: { files: [pngFile] } })
+    await waitFor(() => expect(mockUpdateNodeData).toHaveBeenCalled())
+    expect(mockUpdateNodeData).toHaveBeenCalledWith('n1', {
+      images: [{ url: 'https://x/new', offset: DEFAULT_IMAGE_OFFSET }],
+      activeIndex: 0,
+    })
+  })
+
+  it('uploads and appends a pasted image while the node is selected', async () => {
+    render(<Harness initialData={{}} selected />)
+    fireEvent.paste(window, { clipboardData: { files: [pngFile] } })
+    await waitFor(() => expect(mockUpdateNodeData).toHaveBeenCalled())
+    expect(mockUpdateNodeData).toHaveBeenCalledWith('n1', {
+      images: [{ url: 'https://x/new', offset: DEFAULT_IMAGE_OFFSET }],
+      activeIndex: 0,
+    })
+  })
+
+  it('ignores paste when the node is not selected', () => {
+    render(<Harness initialData={{}} selected={false} />)
+    fireEvent.paste(window, { clipboardData: { files: [pngFile] } })
+    expect(uploadRoadmapImageMock).not.toHaveBeenCalled()
   })
 })
