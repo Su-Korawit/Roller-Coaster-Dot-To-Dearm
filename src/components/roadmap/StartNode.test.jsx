@@ -21,6 +21,7 @@ vi.mock('../../stores/useRoadmapStore', () => ({
 vi.mock('../../stores/useUserStore', () => ({
   useUserStore: (sel) => sel(userState),
 }))
+vi.mock('./ConnectionDot', () => ({ default: () => null }))
 
 const { default: StartNode } = await import('./StartNode')
 
