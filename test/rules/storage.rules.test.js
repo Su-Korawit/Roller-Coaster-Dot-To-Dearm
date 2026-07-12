@@ -86,6 +86,16 @@ describe('owner-scoped paths', () => {
     await assertSucceeds(uploadBytes(ref(ctx('alice'), 'users/alice/roadmap/n1'), PNG, META))
     await assertFails(uploadBytes(ref(ctx('bob'), 'users/alice/roadmap/n2'), PNG, META))
   })
+
+  it('owner writes their own roadmap-file; a stranger cannot', async () => {
+    await assertSucceeds(uploadBytes(ref(ctx('alice'), 'users/alice/roadmap-file/n1-doc.pdf'), PNG, META))
+    await assertFails(uploadBytes(ref(ctx('bob'), 'users/alice/roadmap-file/n2-doc.pdf'), PNG, META))
+  })
+
+  it('owner writes their own roadmap-video; a stranger cannot', async () => {
+    await assertSucceeds(uploadBytes(ref(ctx('alice'), 'users/alice/roadmap-video/n1'), PNG, META))
+    await assertFails(uploadBytes(ref(ctx('bob'), 'users/alice/roadmap-video/n2'), PNG, META))
+  })
 })
 
 describe('public read', () => {
