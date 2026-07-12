@@ -43,10 +43,18 @@ describe('VideoPickerModal', () => {
     const onClose = vi.fn()
     render(<VideoPickerModal nodeId="n1" onClose={onClose} />)
 
-    const thumb = await screen.findByRole('button', { name: 'เลือกวิดีโอนี้' })
+    // 5s timeout: the thumbnail appears only after listFlat + getDownloadURL
+    // resolve, which can exceed findByRole's 1s default under full-suite load.
+    const thumb = await screen.findByRole(
+      'button',
+      { name: 'เลือกวิดีโอนี้' },
+      { timeout: 5000 },
+    )
     fireEvent.click(thumb)
 
-    expect(updateNodeDataSpy).toHaveBeenCalledWith('n1', { url: 'https://cdn/clip.mp4' })
+    await waitFor(() =>
+      expect(updateNodeDataSpy).toHaveBeenCalledWith('n1', { url: 'https://cdn/clip.mp4' }),
+    )
     expect(onClose).toHaveBeenCalled()
   })
 
