@@ -13,6 +13,7 @@ export default function LandingShell({
   toolPath,
   toolLabel,
   benefits,
+  screenshot,
   screenshotLabel,
   children,
 }) {
@@ -51,9 +52,22 @@ export default function LandingShell({
           </div>
 
           <div className="neo-card overflow-hidden">
-            <div className="pixel-checker flex h-52 items-center justify-center md:h-72">
-              <p className="thai-font text-sm text-ink-soft">{screenshotLabel}</p>
-            </div>
+            {screenshot ? (
+              <div className="h-52 md:h-72">
+                <img
+                  src={screenshot}
+                  alt={screenshotLabel || ''}
+                  width={1280}
+                  height={800}
+                  loading="lazy"
+                  className="h-full w-full object-cover object-top"
+                />
+              </div>
+            ) : (
+              <div className="pixel-checker flex h-52 items-center justify-center md:h-72">
+                <p className="thai-font text-sm text-ink-soft">{screenshotLabel}</p>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -81,7 +95,7 @@ export default function LandingShell({
       {/* Closing CTA */}
       <section className="border-t-2 border-ink bg-surface">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-12 text-center md:px-6">
-          <p className="thai-font text-lg font-bold text-ink">พร้อมเริ่มหรือยัง? ใช้ฟรี ไม่ต้องสมัคร</p>
+          <p className="thai-font text-lg font-bold text-ink">พร้อมเริ่มไหม? ใช้ฟรี ไม่ต้องสมัคร</p>
           <Link
             to={toolPath}
             className="neo-btn thai-font inline-flex items-center gap-2 rounded-lg bg-brand-strong px-6 py-3 text-base font-semibold text-white"

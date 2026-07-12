@@ -14,6 +14,7 @@ export default function SchoolLanding() {
       toolPath="/app"
       toolLabel="เปิดระบบโรงเรียน"
       benefits={BENEFITS}
+      screenshot="/assets/screenshots/school.png"
       screenshotLabel="ตัวอย่างหน้าจอ School System"
     />
   )

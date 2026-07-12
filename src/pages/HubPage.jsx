@@ -13,16 +13,23 @@ const TOOL_ICONS = {
   school: NotebookPen,
 }
 
+const TOOL_SHOTS = {
+  roadmap: '/assets/screenshots/roadmap.png',
+  tcas: '/assets/screenshots/tcas.png',
+  news: '/assets/screenshots/news.png',
+  school: '/assets/screenshots/school.png',
+}
+
 const STEPS = [
   {
     icon: LockOpen,
     title: 'เปิดแล้วใช้ได้เลย',
-    text: 'ทุกเครื่องมือใช้ฟรี ไม่ต้องสมัคร ไม่ต้องล็อกอิน ไม่มีลิมิต',
+    text: 'เปิดลิงก์แล้วทำงานได้ทันที ไม่บังคับสมัครหรือล็อกอิน',
   },
   {
     icon: HardDriveDownload,
     title: 'งานเก็บในเครื่องอัตโนมัติ',
-    text: 'ปิดแท็บแล้วกลับมา งานยังอยู่ครบ — ไม่ต้องกดเซฟ',
+    text: 'ปิดแท็บแล้วกลับมา งานยังอยู่ครบ ไม่ต้องกดเซฟ',
   },
   {
     icon: CloudUpload,
@@ -35,17 +42,27 @@ function ToolCard({ siteKey }) {
   const site = SITES[siteKey]
   const Icon = TOOL_ICONS[siteKey]
   return (
-    <a href={siteHref(siteKey)} className="neo-card neo-btn group flex flex-col p-6 text-left">
-      <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg border-2 border-ink bg-brand-soft">
-        <Icon size={24} strokeWidth={2.5} className="text-brand-strong" aria-hidden="true" />
-      </span>
-      <span className="pixel-font mb-2 text-[10px] uppercase text-brand-strong">{site.pixelName}</span>
-      <h3 className="thai-font mb-1.5 text-lg font-bold leading-snug text-ink">{site.h1}</h3>
-      <p className="thai-font mb-4 flex-1 text-sm leading-relaxed text-ink-soft">{site.description}</p>
-      <span className="thai-font inline-flex items-center gap-1.5 text-sm font-semibold text-brand-strong">
-        เปิดเครื่องมือ
-        <ArrowRight size={16} strokeWidth={2.5} className="transition-transform group-hover:translate-x-1" aria-hidden="true" />
-      </span>
+    <a href={siteHref(siteKey)} className="neo-card neo-btn group flex flex-col overflow-hidden text-left">
+      <img
+        src={TOOL_SHOTS[siteKey]}
+        alt=""
+        width={640}
+        height={400}
+        loading="lazy"
+        className="aspect-[16/10] w-full object-cover object-top border-b-2 border-ink"
+      />
+      <div className="flex flex-1 flex-col p-6">
+        <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg border-2 border-ink bg-brand-soft">
+          <Icon size={24} strokeWidth={2.5} className="text-brand-strong" aria-hidden="true" />
+        </span>
+        <span className="pixel-font mb-2 text-[10px] uppercase text-brand-strong">{site.pixelName}</span>
+        <h3 className="thai-font mb-1.5 text-lg font-bold leading-snug text-ink">{site.h1}</h3>
+        <p className="thai-font mb-4 flex-1 text-sm leading-relaxed text-ink-soft">{site.description}</p>
+        <span className="thai-font inline-flex items-center gap-1.5 text-sm font-semibold text-brand-strong">
+          เปิดเครื่องมือ
+          <ArrowRight size={16} strokeWidth={2.5} className="transition-transform group-hover:translate-x-1" aria-hidden="true" />
+        </span>
+      </div>
     </a>
   )
 }
@@ -100,7 +117,7 @@ export default function HubPage() {
           <div>
             <p className="pixel-font pixel-title-dark mb-3 text-sm md:text-base">PLAY YOUR PATH</p>
             <p className="thai-font max-w-xl text-base text-white/85">
-              เส้นทางสอบติดไม่ต้องน่าเบื่อ — เข้าแอปเต็มรูปแบบ เลี้ยงฟาร์ม เก็บเหรียญ
+              อยากเล่นไปด้วยระหว่างเตรียมสอบ? เข้าแอปเต็ม เลี้ยงฟาร์ม เก็บเหรียญ
               ทำภารกิจรายวัน และหาเพื่อนเป้าหมายเดียวกัน
             </p>
           </div>
@@ -118,7 +135,7 @@ export default function HubPage() {
       {/* Trust strip */}
       <section className="border-b-2 border-ink bg-surface">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-10 gap-y-3 px-4 py-6 md:px-6">
-          {['ฟรี 100% ไม่มีค่าใช้จ่ายแอบแฝง', 'ข้อมูลคณะจาก MyTCAS', 'ใช้ได้โดยไม่ต้องสมัครสมาชิก'].map((line) => (
+          {['ฟรี ไม่มีค่าใช้จ่ายแอบแฝง', 'ข้อมูลคณะจาก MyTCAS', 'ใช้ได้โดยไม่ต้องสมัครสมาชิก'].map((line) => (
             <p key={line} className="thai-font inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft">
               <Check size={16} strokeWidth={2.5} className="text-good" aria-hidden="true" />
               {line}
