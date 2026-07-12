@@ -36,17 +36,34 @@ export default function WelcomeNav() {
             : 'bg-transparent'
         }`}
       >
-        {/* Hamburger */}
-        <button
-          onClick={() => setOpen((v) => !v)}
-          aria-label="เปิดเมนู"
-          aria-expanded={open}
-          className="flex flex-col gap-1.5 p-2 group"
-        >
-          <span className={`block w-5 h-0.5 bg-white transition-transform duration-200 origin-center ${open ? 'rotate-45 translate-y-2' : ''}`} />
-          <span className={`block w-5 h-0.5 bg-white transition-opacity duration-200 ${open ? 'opacity-0' : ''}`} />
-          <span className={`block w-5 h-0.5 bg-white transition-transform duration-200 origin-center ${open ? '-rotate-45 -translate-y-2' : ''}`} />
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Hamburger */}
+          <button
+            onClick={() => setOpen((v) => !v)}
+            aria-label="เปิดเมนู"
+            aria-expanded={open}
+            className="flex flex-col gap-1.5 p-2 group"
+          >
+            <span className={`block w-5 h-0.5 bg-white transition-transform duration-200 origin-center ${open ? 'rotate-45 translate-y-2' : ''}`} />
+            <span className={`block w-5 h-0.5 bg-white transition-opacity duration-200 ${open ? 'opacity-0' : ''}`} />
+            <span className={`block w-5 h-0.5 bg-white transition-transform duration-200 origin-center ${open ? '-rotate-45 -translate-y-2' : ''}`} />
+          </button>
+
+          <a
+            href="/"
+            className="flex items-center gap-2 rounded-sm focus-visible:ring-2 focus-visible:ring-brand"
+            aria-label="I LOVE TCAS"
+          >
+            <img
+              src="/brand/logo-96.png"
+              alt=""
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded border-2 border-white/80"
+            />
+            <span className="pixel-font hidden text-[10px] text-white sm:inline">I LOVE TCAS</span>
+          </a>
+        </div>
 
         {/* CTA buttons */}
         <div className="flex items-center gap-2">

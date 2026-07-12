@@ -20,10 +20,17 @@ export default function SiteNav({ currentKey = 'hub' }) {
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 md:px-6">
         <a
           href={siteHref('hub')}
-          className="pixel-font pixel-title text-[11px] md:text-[13px] shrink-0 focus-visible:ring-2 focus-visible:ring-brand rounded-sm"
+          className="flex shrink-0 items-center gap-2 rounded-sm focus-visible:ring-2 focus-visible:ring-brand"
           aria-label="I LOVE TCAS — หน้าแรก"
         >
-          I LOVE TCAS
+          <img
+            src="/brand/logo-96.png"
+            alt=""
+            width={32}
+            height={32}
+            className="h-8 w-8 rounded border-2 border-ink"
+          />
+          <span className="pixel-font pixel-title text-[11px] md:text-[13px]">I LOVE TCAS</span>
         </a>
 
         <div className="hidden md:flex items-center gap-1">
