@@ -20,7 +20,7 @@ export default function DonateSection() {
     <section className="px-6 py-14 text-center">
       <h2 className="pixel-font text-sm md:text-lg text-ink mb-3">SUPPORT US</h2>
       <p className="thai-font mx-auto mb-6 max-w-md text-sm text-ink/70">
-        ถ้าชอบโปรเจกต์นี้ สามารถสนับสนุนเราผ่าน PromptPay ได้เลย ขอบคุณมาก 💜
+        ถ้าชอบโปรเจกต์นี้ สนับสนุนผ่าน PromptPay ได้ ขอบคุณมากครับ
       </p>
       <button
         onClick={() => setOpen(true)}

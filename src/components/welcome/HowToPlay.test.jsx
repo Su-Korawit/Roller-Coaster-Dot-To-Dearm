@@ -8,7 +8,7 @@ describe('HowToPlay', () => {
     render(<HowToPlay />)
     expect(screen.getByText('1')).toBeTruthy()
     expect(screen.getByText('5')).toBeTruthy()
-    expect(screen.getByText(/Roadmap ให้อัตโนมัติ/)).toBeTruthy()
+    expect(screen.getByText(/ช่วยร่าง Roadmap/)).toBeTruthy()
     expect(screen.getByText(/Personal Map ของเพื่อน/)).toBeTruthy()
   })
 })

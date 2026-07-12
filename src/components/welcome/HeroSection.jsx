@@ -54,7 +54,7 @@ export default function HeroSection({ gamePreview, loading }) {
           I LOVE TCAS
         </h1>
         <p className="thai-font mt-4 text-sm md:text-base text-white/70 whitespace-nowrap">
-          วางแผนอนาคต · เชื่อมต่อเพื่อน · เรียนรู้ผ่านเกม
+          วางแผนเข้ามหาลัย พบเพื่อน เล่นไปด้วย
         </p>
         <button
           onClick={onPlay}
