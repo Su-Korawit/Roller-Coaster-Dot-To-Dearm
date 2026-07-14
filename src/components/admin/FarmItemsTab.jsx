@@ -117,14 +117,14 @@ export default function FarmItemsTab() {
       {editing && (
         <div className="rounded-2xl border-2 border-brand/30 bg-white p-5 shadow-sm space-y-4">
           <p className="font-semibold text-gray-800">{editing === 'new' ? '➕ ไอเทมใหม่' : `✏️ แก้ไข ${editing}`}</p>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {editing === 'new' && (
-              <label className="flex flex-col gap-1 col-span-2">
+              <label className="flex flex-col gap-1 col-span-full">
                 <span className="text-xs text-gray-500">Item ID</span>
                 <input value={form.id} onChange={e => patch('id', e.target.value)} placeholder="เช่น turnip_seed" className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand focus:outline-none font-mono" />
               </label>
             )}
-            <label className="flex flex-col gap-1 col-span-2">
+            <label className="flex flex-col gap-1 col-span-full">
               <span className="text-xs text-gray-500">ชื่อ</span>
               <input value={form.name} onChange={e => patch('name', e.target.value)} placeholder="เช่น เมล็ดผักกาด" className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand focus:outline-none" />
             </label>
@@ -173,7 +173,7 @@ export default function FarmItemsTab() {
         </div>
       )}
 
-      <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+      <div className="rounded-2xl border border-gray-200 bg-white overflow-x-auto">
         {Object.values(items).length === 0 ? (
           <div className="py-16 text-center text-gray-400 text-sm">ยังไม่มีไอเทม</div>
         ) : (

@@ -47,24 +47,24 @@ export default function AdminPage() {
 
   return (
     <ToastProvider>
-      <div className="min-h-screen bg-[#F4F7FC]">
+      <div className="relative min-h-screen bg-[#F4F7FC] flex flex-col">
         {/* Header */}
-        <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-3 sm:px-6 py-4 flex items-center justify-between flex-shrink-0">
           <div>
             <h1 className="pixel-font text-[11px] text-ink">Admin Dashboard</h1>
             <p className="text-xs text-gray-500 mt-0.5">{ADMIN_DISPLAY_NAME} · {user?.email}</p>
           </div>
-          <a href="/home" className="text-xs text-brand hover:underline">← Back to app</a>
+          <a href="/home" className="text-xs text-brand hover:underline flex-shrink-0">← Back to app</a>
         </header>
 
-        {/* Tab switcher */}
-        <div className="border-b border-gray-200 bg-white px-6">
-          <div className="flex gap-1 -mb-px">
+        {/* Tab switcher — horizontally swipeable on narrow viewports */}
+        <div className="border-b border-gray-200 bg-white px-3 sm:px-6 flex-shrink-0">
+          <div className="flex gap-1 -mb-px overflow-x-auto no-scrollbar">
             {tabs.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-colors ${
+                className={`flex-shrink-0 whitespace-nowrap flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-colors ${
                   tab === t.id
                     ? 'border-brand text-brand'
                     : 'border-transparent text-gray-500 hover:text-gray-800'
@@ -77,7 +77,13 @@ export default function AdminPage() {
         </div>
 
         {/* Content */}
-        <main className={tab === 'idea-request' ? 'h-[calc(100vh-8rem)]' : 'max-w-5xl mx-auto px-6 py-8'}>
+        <main
+          className={
+            tab === 'idea-request'
+              ? 'flex-1 min-h-0 flex flex-col'
+              : 'max-w-5xl mx-auto w-full px-3 sm:px-6 py-4 sm:py-8'
+          }
+        >
           {tab === 'analytics'  && <AnalyticsSection />}
           {tab === 'users'      && <UserManagementSection />}
           {tab === 'characters' && <CharactersGrid />}

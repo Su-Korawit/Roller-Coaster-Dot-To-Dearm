@@ -165,7 +165,7 @@ export default function FarmShopsTab() {
         </div>
       )}
 
-      <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+      <div className="rounded-2xl border border-gray-200 bg-white overflow-x-auto">
         {Object.values(shops).length === 0 ? (
           <div className="py-16 text-center text-gray-400 text-sm">ยังไม่มีร้าน</div>
         ) : (

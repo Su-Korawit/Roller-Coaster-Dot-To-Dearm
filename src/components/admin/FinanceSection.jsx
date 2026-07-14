@@ -111,7 +111,7 @@ export default function FinanceSection() {
       {data && (
         <>
           {/* KPI cards */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="rounded-2xl border border-gray-200 bg-white p-5 text-center shadow-sm">
               <p className="text-xs text-gray-500 mb-1">รายได้รวม (THB)</p>
               <p className="text-2xl font-bold text-brand">

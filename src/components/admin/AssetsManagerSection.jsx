@@ -284,7 +284,7 @@ function FileGrid({ folderPath, onFilesChanged }) {
       ) : files.length === 0 ? (
         <p className="text-gray-400 text-sm">ยังไม่มีไฟล์ — อัปโหลดได้เลย</p>
       ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
           {files.map((path) => (
             <FileCard
               key={path}

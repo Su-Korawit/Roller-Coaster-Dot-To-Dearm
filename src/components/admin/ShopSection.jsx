@@ -120,8 +120,8 @@ export default function ShopSection() {
       {editing && (
         <div className="rounded-2xl border-2 border-brand/30 bg-white p-5 shadow-sm space-y-4">
           <p className="font-semibold text-gray-800">{editing === 'new' ? '➕ สินค้าใหม่' : '✏️ แก้ไขสินค้า'}</p>
-          <div className="grid grid-cols-2 gap-4">
-            <label className="flex flex-col gap-1 col-span-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <label className="flex flex-col gap-1 col-span-full">
               <span className="text-xs text-gray-500">ชื่อสินค้า</span>
               <input
                 value={form.name}
@@ -179,7 +179,7 @@ export default function ShopSection() {
                 className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-brand focus:outline-none"
               />
             </label>
-            <label className="flex items-center gap-2 col-span-2">
+            <label className="flex items-center gap-2 col-span-full">
               <input
                 type="checkbox"
                 checked={form.active}
@@ -211,7 +211,7 @@ export default function ShopSection() {
       {products.length === 0 ? (
         <div className="py-16 text-center text-gray-400 text-sm">ยังไม่มีสินค้า กด "+ เพิ่มสินค้า" เพื่อเริ่ม</div>
       ) : (
-        <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
