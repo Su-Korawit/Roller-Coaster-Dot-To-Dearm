@@ -167,7 +167,7 @@ export default function UpdateAssetsSection() {
       )}
 
       {phase === 'done' && (
-        <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 space-y-3">
+        <div className="neo-card p-4 space-y-3">
           <div className="flex items-center gap-2 text-sm font-medium text-ink">
             {failed.length === 0 ? (
               <><span>✅</span> อัปเดตสำเร็จ — {total} ไฟล์</>

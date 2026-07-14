@@ -208,7 +208,7 @@ function UploadPanel({ existingKeys, maxOrder, adminUid, onDone, onCancel }) {
   const busy = phase === 'validating' || phase === 'uploading'
 
   return (
-    <div className="mt-4 p-4 rounded-2xl bg-white border border-brand/30 shadow-sm space-y-4">
+    <div className="mt-4 p-4 neo-card space-y-4 border-brand">
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-gray-800">อัปโหลดแมพใหม่</p>
         <button onClick={onCancel} disabled={busy} className="text-gray-400 hover:text-gray-700 text-xl leading-none">×</button>
@@ -399,7 +399,7 @@ export default function MapDashboard() {
             const isDeleting = deletingKey === map.key
             const isPendingDelete = deleteKey === map.key
             return (
-              <div key={map.key} className="rounded-2xl bg-white shadow-sm border border-gray-100">
+              <div key={map.key} className="neo-card">
                 <div className="flex items-center gap-4 p-4">
                   {/* Info */}
                   <div className="flex-1 min-w-0">

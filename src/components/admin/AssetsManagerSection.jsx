@@ -135,7 +135,7 @@ function FileCard({ path, onRename, onMove, onDelete }) {
   }, [path, isImage])
 
   return (
-    <div className="relative flex flex-col items-center gap-2 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm">
+    <div className="relative flex flex-col items-center gap-2 p-3 neo-card">
       {isImage && thumbUrl ? (
         <img
           src={thumbUrl}
@@ -435,7 +435,7 @@ function TrashView({ onFilesChanged, onTrashCountChange }) {
             const original = fromTrashPath(trashPath)
             const name     = trashPath.split('/').pop()
             return (
-              <div key={trashPath} className="flex items-center gap-3 px-3 py-2 rounded-xl bg-white border border-gray-100 shadow-sm">
+              <div key={trashPath} className="flex items-center gap-3 px-3 py-2 neo-slab">
                 <span className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-gray-800 truncate">{name}</p>
                   <p className="text-[10px] text-gray-400 font-mono truncate">→ {original}</p>

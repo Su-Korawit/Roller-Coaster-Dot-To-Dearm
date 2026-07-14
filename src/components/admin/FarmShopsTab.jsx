@@ -82,7 +82,7 @@ export default function FarmShopsTab() {
       </div>
 
       {editing && (
-        <div className="rounded-2xl border-2 border-brand/30 bg-white p-5 shadow-sm space-y-4">
+        <div className="neo-card p-5 space-y-4 border-brand">
           <p className="font-semibold text-gray-800">{editing === 'new' ? '➕ ร้านใหม่' : `✏️ แก้ไข ${editing}`}</p>
 
           {editing === 'new' && (
@@ -165,7 +165,7 @@ export default function FarmShopsTab() {
         </div>
       )}
 
-      <div className="rounded-2xl border border-gray-200 bg-white overflow-x-auto">
+      <div className="neo-card overflow-x-auto">
         {Object.values(shops).length === 0 ? (
           <div className="py-16 text-center text-gray-400 text-sm">ยังไม่มีร้าน</div>
         ) : (

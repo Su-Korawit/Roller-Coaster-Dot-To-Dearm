@@ -185,7 +185,7 @@ export function CharactersGrid({ onStatus }) {
             const inCloud = uploaded.has(`${code}.png`)
             const busy = busyCode === code
             return (
-              <div key={code} className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white shadow-sm border border-gray-100">
+              <div key={code} className="flex flex-col items-center gap-2 p-3 neo-card">
                 <SpritePreview code={code} cloudUrl={cloudUrls[code]} />
                 <div className="flex items-center gap-1.5">
                   <span className="pixel-font text-[9px] text-gray-700">{code}</span>

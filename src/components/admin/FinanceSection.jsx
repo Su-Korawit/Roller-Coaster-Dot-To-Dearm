@@ -112,17 +112,17 @@ export default function FinanceSection() {
         <>
           {/* KPI cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 text-center shadow-sm">
+            <div className="neo-card p-5 text-center">
               <p className="text-xs text-gray-500 mb-1">รายได้รวม (THB)</p>
               <p className="text-2xl font-bold text-brand">
                 {data.totalRevenue.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ฿
               </p>
             </div>
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 text-center shadow-sm">
+            <div className="neo-card p-5 text-center">
               <p className="text-xs text-gray-500 mb-1">เหรียญที่ขายได้</p>
               <p className="text-2xl font-bold text-amber-500">🪙 {data.totalCoins.toLocaleString('th-TH')}</p>
             </div>
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 text-center shadow-sm">
+            <div className="neo-card p-5 text-center">
               <p className="text-xs text-gray-500 mb-1">ออเดอร์สำเร็จ</p>
               <p className="text-2xl font-bold text-emerald-600">{data.orderCount}</p>
             </div>
@@ -130,7 +130,7 @@ export default function FinanceSection() {
 
           {/* Revenue by day */}
           {data.revenueByDay.length > 0 && (
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm space-y-3">
+            <div className="neo-card p-5 space-y-3">
               <h3 className="font-semibold text-gray-800 text-sm">รายได้รายวัน (30 วันล่าสุด)</h3>
               <div className="space-y-1.5">
                 {data.revenueByDay.map(([day, v]) => (
@@ -142,7 +142,7 @@ export default function FinanceSection() {
 
           {/* Revenue by product */}
           {data.revenueByProduct.length > 0 && (
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm space-y-3">
+            <div className="neo-card p-5 space-y-3">
               <h3 className="font-semibold text-gray-800 text-sm">รายได้ตาม Product ID</h3>
               <div className="space-y-1.5">
                 {data.revenueByProduct.map(([id, v]) => (
