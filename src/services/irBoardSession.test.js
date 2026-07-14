@@ -7,6 +7,8 @@ const m = vi.hoisted(() => ({
   setDoc: vi.fn(),
   armRoadmapSheetSync: vi.fn(),
   disarmRoadmapSheetSync: vi.fn(),
+  attach: vi.fn(),
+  detach: vi.fn(),
 }))
 
 vi.mock('firebase/firestore', () => ({
@@ -28,6 +30,9 @@ vi.mock('../lib/db', () => ({
 vi.mock('../lib/syncManager', () => ({
   armRoadmapSheetSync: (...a) => m.armRoadmapSheetSync(...a),
   disarmRoadmapSheetSync: (...a) => m.disarmRoadmapSheetSync(...a),
+}))
+vi.mock('../lib/firestoreListener', () => ({
+  createFirestoreListener: () => ({ attach: (...a) => m.attach(...a), detach: (...a) => m.detach(...a) }),
 }))
 
 vi.stubGlobal('localStorage', { getItem: () => null, setItem: () => {}, removeItem: () => {} })
@@ -136,5 +141,38 @@ describe('irBoardSession', () => {
       expect.objectContaining({ name: 'IR Board', ownerUid: ADMIN_UID, order: -1 }),
     )
     expect(data).toMatchObject({ name: 'IR Board', ownerUid: ADMIN_UID })
+  })
+
+  it('mountIrBoard attaches a real-time listener on the admin-idea-board doc', async () => {
+    await mountIrBoard()
+    expect(m.attach).toHaveBeenCalledWith({ _path: `roadmapSheets/${IR_SHEET_ID}` }, expect.any(Function))
+  })
+
+  it('the listener ignores the local echo of our own pending write', async () => {
+    await mountIrBoard()
+    const handler = m.attach.mock.calls[0][1]
+    handler({
+      metadata: { hasPendingWrites: true },
+      data: () => ({ nodes: [{ id: 'from-remote' }], edges: [] }),
+    })
+    expect(useRoadmapStore.getState().nodes).not.toEqual([{ id: 'from-remote' }])
+  })
+
+  it('the listener applies a genuine remote snapshot (a script write) into the live IR sheet', async () => {
+    await mountIrBoard()
+    const handler = m.attach.mock.calls[0][1]
+    handler({
+      metadata: { hasPendingWrites: false },
+      data: () => ({ nodes: [{ id: 'from-script' }], edges: [] }),
+    })
+    const { nodes, sheets } = useRoadmapStore.getState()
+    expect(nodes).toEqual([{ id: 'from-script' }])
+    expect(sheets.find((s) => s.id === IR_SHEET_ID).nodes).toEqual([{ id: 'from-script' }])
+  })
+
+  it('unmountIrBoard detaches the listener', async () => {
+    const token = await mountIrBoard()
+    await unmountIrBoard(token)
+    expect(m.detach).toHaveBeenCalled()
   })
 })

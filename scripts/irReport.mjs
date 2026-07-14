@@ -43,15 +43,21 @@ async function loadBoard(db) {
   return snap.data()
 }
 
-async function saveBoard(db, data) {
-  await docRef(db).set(
-    {
-      nodes: data.nodes,
-      edges: data.edges,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    },
-    { merge: true },
-  )
+// Wrap a read-modify-write in a Firestore transaction so a concurrent writer
+// (the admin's browser, autosaving via roadmapSheetSync's 1s-debounced
+// setDoc(merge:true)) can never be silently clobbered by a stale read:
+// tx.get() re-reads the doc fresh at commit time and `mutate` computes off
+// THAT data — never off whatever an earlier loadBoard() call returned.
+export async function runInTransaction(db, mutate) {
+  const ref = docRef(db)
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref)
+    if (!snap.exists) {
+      throw new Error('IR Board missing — run: node scripts/irReport.mjs ensure')
+    }
+    const { nodes, edges } = mutate(snap.data())
+    tx.set(ref, { nodes, edges, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true })
+  })
 }
 
 async function ensureBoard(db) {
@@ -91,35 +97,38 @@ export async function runCommand(parsed, { db } = {}) {
       return
     }
     case 'set-status': {
-      const board = await loadBoard(firestore)
-      const nodes = setIdeaStatus(board.nodes, parsed.ideaId, parsed.status)
-      await saveBoard(firestore, { nodes, edges: board.edges ?? [] })
+      await runInTransaction(firestore, (board) => ({
+        nodes: setIdeaStatus(board.nodes, parsed.ideaId, parsed.status),
+        edges: board.edges ?? [],
+      }))
       return
     }
     case 'append-update': {
-      const board = await loadBoard(firestore)
-      let { nodes, edges } = appendReportNode({
-        nodes: board.nodes,
-        edges: board.edges,
-        ideaId: parsed.ideaId,
-        type: 'update',
-        summary: parsed.summary,
+      await runInTransaction(firestore, (board) => {
+        let { nodes, edges } = appendReportNode({
+          nodes: board.nodes,
+          edges: board.edges,
+          ideaId: parsed.ideaId,
+          type: 'update',
+          summary: parsed.summary,
+        })
+        nodes = setIdeaStatus(nodes, parsed.ideaId, 'in-progress')
+        return { nodes, edges }
       })
-      nodes = setIdeaStatus(nodes, parsed.ideaId, 'in-progress')
-      await saveBoard(firestore, { nodes, edges })
       return
     }
     case 'append-success': {
-      const board = await loadBoard(firestore)
-      let { nodes, edges } = appendReportNode({
-        nodes: board.nodes,
-        edges: board.edges,
-        ideaId: parsed.ideaId,
-        type: 'success',
-        summary: parsed.summary,
+      await runInTransaction(firestore, (board) => {
+        let { nodes, edges } = appendReportNode({
+          nodes: board.nodes,
+          edges: board.edges,
+          ideaId: parsed.ideaId,
+          type: 'success',
+          summary: parsed.summary,
+        })
+        nodes = setIdeaStatus(nodes, parsed.ideaId, 'done')
+        return { nodes, edges }
       })
-      nodes = setIdeaStatus(nodes, parsed.ideaId, 'done')
-      await saveBoard(firestore, { nodes, edges })
       return
     }
     default:

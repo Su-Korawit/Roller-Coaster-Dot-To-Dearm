@@ -4,6 +4,7 @@ import { IR_SHEET_ID } from '../constants/irBoard'
 import { ADMIN_UID } from '../constants/admin'
 import { useRoadmapStore } from '../stores/useRoadmapStore'
 import { armRoadmapSheetSync, disarmRoadmapSheetSync } from '../lib/syncManager'
+import { createFirestoreListener } from '../lib/firestoreListener'
 
 export async function ensureIrBoardDoc() {
   const ref = refs.roadmapSheet(IR_SHEET_ID)
@@ -27,6 +28,17 @@ export async function ensureIrBoardDoc() {
 // visible board still edits the IR sheet.
 let mountSeq = 0
 let liveToken = null
+
+// admin-idea-board is the ONLY roadmapSheets doc a live browser session and
+// scripts/irReport.mjs (Claude Code/Cursor's iloveskill workflow) can write
+// concurrently — every other Roadmap sheet is per-user and the script never
+// touches it. roadmapSheetSync is otherwise a one-shot hydrate + a
+// 1s-debounced write with no listener (CLAUDE.md: debounced writes only) —
+// this real-time listener is scoped to that single document so an admin's
+// open IR tab picks up a script's append/status write live instead of only
+// on the next remount, and so the browser's own next debounced write carries
+// the script's change forward instead of blindly overwriting it.
+const irListener = createFirestoreListener()
 
 export async function mountIrBoard() {
   const prev = useRoadmapStore.getState()
@@ -61,12 +73,31 @@ export async function mountIrBoard() {
   useRoadmapStore.setState({ irReturnSheetId: token.activeSheetId })
   armRoadmapSheetSync(IR_SHEET_ID)
   liveToken = token
+
+  // Skip the local echo of our own pending write (hasPendingWrites) so this
+  // never races the admin's own debounced save; only apply a snapshot while
+  // this mount is still the live one and the IR sheet is still the one open.
+  irListener.attach(refs.roadmapSheet(IR_SHEET_ID), (snap) => {
+    if (token.seq !== mountSeq || snap.metadata.hasPendingWrites) return
+    if (useRoadmapStore.getState().activeSheetId !== IR_SHEET_ID) return
+    const remote = snap.data()
+    if (!remote) return
+    useRoadmapStore.setState((state) => ({
+      nodes: remote.nodes ?? [],
+      edges: remote.edges ?? [],
+      sheets: state.sheets.map((sh) =>
+        sh.id === IR_SHEET_ID ? { ...sh, nodes: remote.nodes ?? [], edges: remote.edges ?? [] } : sh,
+      ),
+    }))
+  })
+
   return token
 }
 
 export async function unmountIrBoard(token) {
   if (!token || token !== liveToken) return
   liveToken = null
+  irListener.detach()
   disarmRoadmapSheetSync()
   const sheets = (token.sheets ?? []).filter((s) => s.id !== IR_SHEET_ID)
   const activeSheetId = token.activeSheetId === IR_SHEET_ID
