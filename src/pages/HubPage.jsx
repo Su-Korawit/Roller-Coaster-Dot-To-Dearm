@@ -2,6 +2,7 @@ import { Map, GraduationCap, Newspaper, NotebookPen, Gamepad2, ArrowRight, HardD
 import { SITES } from '../constants/sites'
 import SiteNav, { siteHref } from '../components/landing/SiteNav'
 import WelcomeFooter from '../components/welcome/WelcomeFooter'
+import { useGamePreviewMedia } from '../hooks/useGamePreviewMedia'
 
 // Hub anatomy per design.md §13: nav → text-only outcome hero → tool grid
 // (the hero product) → 3-step "work your way" strip → dark app band → trust
@@ -68,6 +69,8 @@ function ToolCard({ siteKey }) {
 }
 
 export default function HubPage() {
+  const { mediaUrl, mediaType } = useGamePreviewMedia()
+
   return (
     <main data-testid="hub-page" className="min-h-dvh w-full overflow-x-hidden bg-mist">
       <SiteNav currentKey="hub" />
@@ -113,22 +116,45 @@ export default function HubPage() {
 
       {/* App band — the one dark moment on the page (§15) */}
       <section className="bg-ink">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-14 text-center md:flex-row md:justify-between md:px-6 md:text-left">
-          <div>
-            <p className="pixel-font pixel-title-dark mb-3 text-sm md:text-base">PLAY YOUR PATH</p>
-            <p className="thai-font max-w-xl text-base text-white/85">
-              อยากเล่นไปด้วยระหว่างเตรียมสอบ? เข้าแอปเต็ม เลี้ยงฟาร์ม เก็บเหรียญ
-              ทำภารกิจรายวัน และหาเพื่อนเป้าหมายเดียวกัน
-            </p>
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-14 text-center md:flex-row md:items-center md:gap-10 md:px-6 md:text-left">
+          {mediaUrl ? (
+            <div className="neo-card w-full max-w-md shrink-0 overflow-hidden md:w-[min(42%,24rem)]">
+              {mediaType === 'video' ? (
+                <video
+                  src={mediaUrl}
+                  className="aspect-[16/10] w-full object-cover"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  aria-hidden="true"
+                />
+              ) : (
+                <img
+                  src={mediaUrl}
+                  alt=""
+                  className="aspect-[16/10] w-full object-cover"
+                />
+              )}
+            </div>
+          ) : null}
+          <div className="flex min-w-0 flex-1 flex-col items-center gap-6 md:flex-row md:justify-between">
+            <div>
+              <p className="pixel-font pixel-title-dark mb-3 text-sm md:text-base">CREATE YOUR VIBE SPACE</p>
+              <p className="thai-font max-w-xl text-base text-white/85">
+                รวมทุก Feature ที่ใช้เตรียมสอบ ไว้ในโลกเกมเดียว เลี้ยงฟาร์ม เก็บเหรียญ
+                ทำภารกิจรายวัน และหาเพื่อนเป้าหมายเดียวกัน
+              </p>
+            </div>
+            <a
+              href={siteHref('app')}
+              className="neo-btn thai-font inline-flex shrink-0 items-center gap-2 rounded-lg border-2 border-surface bg-brand-strong px-6 py-3 text-base font-semibold text-white"
+              style={{ boxShadow: '4px 4px 0 0 var(--color-surface)' }}
+            >
+              <Gamepad2 size={20} strokeWidth={2.5} aria-hidden="true" />
+              เข้าแอป + เกม
+            </a>
           </div>
-          <a
-            href={siteHref('app')}
-            className="neo-btn thai-font inline-flex shrink-0 items-center gap-2 rounded-lg border-2 border-surface bg-brand-strong px-6 py-3 text-base font-semibold text-white"
-            style={{ boxShadow: '4px 4px 0 0 var(--color-surface)' }}
-          >
-            <Gamepad2 size={20} strokeWidth={2.5} aria-hidden="true" />
-            เข้าแอป + เกม
-          </a>
         </div>
       </section>
 
