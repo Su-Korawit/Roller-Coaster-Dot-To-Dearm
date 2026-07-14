@@ -1,9 +1,11 @@
 import { useRef, useState } from 'react'
-import { X, ChevronLeft, ChevronRight, Plus, BookOpen, ClipboardCheck, CalendarDays, Download, Upload, FolderDown } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Plus, BookOpen, ClipboardCheck, CalendarDays, Download, Upload, FolderDown, FolderPlus } from 'lucide-react'
 import { useSchoolStore } from '../../stores/useSchoolStore'
 import { useUserStore } from '../../stores/useUserStore'
+import { useAuthStore } from '../../stores/useAuthStore'
 import { appointmentsDueOn, isOverdue, noteFor } from '../../utils/schoolDayView'
 import { toNotebookSchema, fromNotebookSchema } from '../../utils/notebookExport'
+import { saveBlobToBag } from '../../services/fileBag'
 import TimetableTemplateSheet from './TimetableTemplateSheet'
 
 export const HOMEWORK_REWARD_COINS = 5
@@ -29,6 +31,7 @@ export default function SchoolPanel({ onClose, onOpenSubject, initialDate, today
   const upsertNote = useSchoolStore((s) => s.upsertNote)
   const importNotes = useSchoolStore((s) => s.importNotes)
   const addCoins = useUserStore((s) => s.addCoins)
+  const uid = useAuthStore((s) => s.user?.uid)
 
   const [date, setDate] = useState(
     initialDate ?? new Date().toISOString().slice(0, 10),
@@ -60,6 +63,21 @@ export default function SchoolPanel({ onClose, onOpenSubject, initialDate, today
     a.download = 'notebook.json'
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  async function handleSaveNotebookToBag() {
+    if (!uid) {
+      window.alert('เข้าสู่ระบบเพื่อบันทึกไป File Bag')
+      return
+    }
+    try {
+      const blob = new Blob([JSON.stringify(toNotebookSchema(notes), null, 2)], { type: 'application/json' })
+      await saveBlobToBag({ uid, blob, fileName: 'notebook.json', source: 'notebook-export' })
+      window.alert('บันทึกไป File Bag แล้ว')
+    } catch (err) {
+      if (err?.code === 'BAG_QUOTA_EXCEEDED') window.alert('พื้นที่ File Bag เต็ม — อัปเกรดที่ bag.ilovetcas.com')
+      else window.alert('บันทึกไม่สำเร็จ')
+    }
   }
 
   async function handleImportNotebookFile(e) {
@@ -112,6 +130,9 @@ export default function SchoolPanel({ onClose, onOpenSubject, initialDate, today
               />
               <button onClick={handleExportNotebook} aria-label="ส่งออก Notebook" className="text-ink-soft hover:text-ink p-2">
                 <Download size={16} />
+              </button>
+              <button onClick={handleSaveNotebookToBag} aria-label="บันทึก Notebook ไป File Bag" className="text-ink-soft hover:text-ink p-2">
+                <FolderPlus size={16} />
               </button>
               <button
                 onClick={onClose}

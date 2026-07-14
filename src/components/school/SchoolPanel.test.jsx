@@ -11,6 +11,12 @@ const addCoins = vi.fn()
 vi.mock('../../stores/useUserStore', () => ({
   useUserStore: (sel) => sel({ addCoins }),
 }))
+vi.mock('../../stores/useAuthStore', () => ({
+  useAuthStore: (sel) => sel({ user: { uid: 'u1' } }),
+}))
+vi.mock('../../services/fileBag', () => ({
+  saveBlobToBag: vi.fn().mockResolvedValue('bag-id'),
+}))
 
 vi.mock('./TimetableTemplateSheet', () => ({
   default: ({ onClose }) => <div data-testid="template-sheet"><button onClick={onClose}>close-sheet</button></div>,

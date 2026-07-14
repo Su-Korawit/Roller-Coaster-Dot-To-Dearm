@@ -5,6 +5,7 @@ import { X, Upload, Loader, FileText } from 'lucide-react'
 import { listFlat, uploadAsset } from '../../utils/storageOps'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useRoadmapStore } from '../../stores/useRoadmapStore'
+import { registerBagItem } from '../../services/fileBag'
 
 const ACCEPT = '.pdf,.md,.txt,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx'
 
@@ -46,11 +47,24 @@ export default function FilePickerModal({ nodeId, onClose }) {
     if (!file || !uid) return
     setUploading(true)
     try {
+      const storagePath = `users/${uid}/roadmap-file/${nodeId}-${Date.now()}-${file.name}`
       const url = await uploadAsset(
-        `users/${uid}/roadmap-file/${nodeId}-${Date.now()}-${file.name}`,
+        storagePath,
         file,
         { contentType: file.type || 'application/octet-stream' },
       )
+      try {
+        await registerBagItem({
+          ownerUid: uid,
+          storagePath,
+          name: file.name,
+          kind: 'file',
+          source: 'roadmap-file',
+          sizeBytes: file.size ?? 0,
+        })
+      } catch (err) {
+        console.warn('[fileBag] register roadmap file failed', err)
+      }
       updateNodeData(nodeId, { url, name: file.name })
       onClose()
     } catch {

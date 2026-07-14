@@ -5,6 +5,7 @@ import { X, Upload, Loader } from 'lucide-react'
 import { listFlat, uploadAsset } from '../../utils/storageOps'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useRoadmapStore } from '../../stores/useRoadmapStore'
+import { registerBagItem } from '../../services/fileBag'
 
 // Asset picker for a Video block: previously uploaded roadmap videos and a
 // fresh upload. Unlike ImagePickerModal there is no "App images" tab (no
@@ -40,7 +41,20 @@ export default function VideoPickerModal({ nodeId, onClose }) {
     if (!file || !uid) return
     setUploading(true)
     try {
-      const url = await uploadAsset(`users/${uid}/roadmap-video/${nodeId}-${Date.now()}`, file, { contentType: file.type })
+      const storagePath = `users/${uid}/roadmap-video/${nodeId}-${Date.now()}`
+      const url = await uploadAsset(storagePath, file, { contentType: file.type })
+      try {
+        await registerBagItem({
+          ownerUid: uid,
+          storagePath,
+          name: file.name || 'video',
+          kind: 'video',
+          source: 'roadmap-video',
+          sizeBytes: file.size ?? 0,
+        })
+      } catch (err) {
+        console.warn('[fileBag] register roadmap video failed', err)
+      }
       updateNodeData(nodeId, { url })
       onClose()
     } catch {

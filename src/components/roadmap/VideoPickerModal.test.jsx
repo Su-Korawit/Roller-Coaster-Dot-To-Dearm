@@ -11,6 +11,9 @@ vi.mock('../../utils/storageOps', () => ({
   listFlat: vi.fn(),
   uploadAsset: vi.fn(),
 }))
+vi.mock('../../services/fileBag', () => ({
+  registerBagItem: vi.fn().mockResolvedValue('bag-id'),
+}))
 
 let authState
 vi.mock('../../stores/useAuthStore', () => ({

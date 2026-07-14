@@ -11,8 +11,9 @@ import {
   addEdge,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { ArrowLeft, X, Download, Upload } from 'lucide-react'
+import { ArrowLeft, X, Download, Upload, FolderPlus } from 'lucide-react'
 import { useRoadmapStore } from '../stores/useRoadmapStore'
+import { useAuthStore } from '../stores/useAuthStore'
 import { nodeTypes } from '../components/roadmap/nodeTypes'
 import TrashZone from '../components/roadmap/TrashZone'
 import RoadmapToolbar, { ROADMAP_PALETTE_ITEMS } from '../components/roadmap/RoadmapToolbar'
@@ -28,6 +29,7 @@ import { useLongPressDrag } from '../hooks/useLongPressDrag'
 import { useRoadmapShortcuts } from '../hooks/useRoadmapShortcuts'
 import AnnotationEdge from '../components/roadmap/AnnotationEdge'
 import InvisibleEdge from '../components/roadmap/InvisibleEdge'
+import { saveBlobToBag } from '../services/fileBag'
 
 const SNAP_THRESHOLD = 40
 
@@ -65,6 +67,7 @@ export default function RoadmapPage({ onClose, backPath }) {
   const canEdit = (sheets.find((s) => s.id === activeSheetId)?.myRole ?? 'owner') !== 'view'
   const syncStatus = useRoadmapStore((s) => s.syncStatus)
   const setSyncStatus = useRoadmapStore((s) => s.setSyncStatus)
+  const uid = useAuthStore((s) => s.user?.uid)
   const fileInputRef = useRef(null)
 
   // "Saved" is a transient confirmation — auto-revert to idle (hiding the
@@ -236,6 +239,21 @@ export default function RoadmapPage({ onClose, backPath }) {
     downloadSchema(toSchema(nodes, edges), 'roadmap.json')
   }, [nodes, edges, downloadSchema])
 
+  const handleSaveToBag = useCallback(async () => {
+    if (!uid) {
+      alert('เข้าสู่ระบบเพื่อบันทึกไป File Bag')
+      return
+    }
+    try {
+      const blob = new Blob([JSON.stringify(toSchema(nodes, edges), null, 2)], { type: 'application/json' })
+      await saveBlobToBag({ uid, blob, fileName: 'roadmap.json', source: 'roadmap-export' })
+      alert('บันทึกไป File Bag แล้ว')
+    } catch (err) {
+      if (err?.code === 'BAG_QUOTA_EXCEEDED') alert('พื้นที่ File Bag เต็ม — อัปเกรดที่ bag.ilovetcas.com')
+      else alert('บันทึกไม่สำเร็จ')
+    }
+  }, [uid, nodes, edges])
+
   // Export only the current Selection (internal edges kept, dangling dropped).
   const handleExportSelected = useCallback(() => {
     const subset = selectSubset(nodes, edges, selection)
@@ -282,6 +300,13 @@ export default function RoadmapPage({ onClose, backPath }) {
             className="w-9 h-9 rounded-xl flex items-center justify-center text-ink-soft hover:bg-brand-soft active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             <Download size={18} strokeWidth={2} />
+          </button>
+          <button
+            onClick={handleSaveToBag}
+            aria-label="บันทึกไป File Bag"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-ink-soft hover:bg-brand-soft active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          >
+            <FolderPlus size={18} strokeWidth={2} />
           </button>
           <input
             ref={fileInputRef}
