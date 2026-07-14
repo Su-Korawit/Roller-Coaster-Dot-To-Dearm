@@ -7,6 +7,7 @@ const m = vi.hoisted(() => ({
   setDoc: vi.fn(),
   armRoadmapSheetSync: vi.fn(),
   disarmRoadmapSheetSync: vi.fn(),
+  hasPendingRoadmapSheetSync: vi.fn(() => false),
   attach: vi.fn(),
   detach: vi.fn(),
 }))
@@ -30,6 +31,7 @@ vi.mock('../lib/db', () => ({
 vi.mock('../lib/syncManager', () => ({
   armRoadmapSheetSync: (...a) => m.armRoadmapSheetSync(...a),
   disarmRoadmapSheetSync: (...a) => m.disarmRoadmapSheetSync(...a),
+  hasPendingRoadmapSheetSync: (...a) => m.hasPendingRoadmapSheetSync(...a),
 }))
 vi.mock('../lib/firestoreListener', () => ({
   createFirestoreListener: () => ({ attach: (...a) => m.attach(...a), detach: (...a) => m.detach(...a) }),
@@ -168,6 +170,33 @@ describe('irBoardSession', () => {
     const { nodes, sheets } = useRoadmapStore.getState()
     expect(nodes).toEqual([{ id: 'from-script' }])
     expect(sheets.find((s) => s.id === IR_SHEET_ID).nodes).toEqual([{ id: 'from-script' }])
+  })
+
+  it('the listener skips a genuine snapshot while a local edit is still debounced (unflushed)', async () => {
+    await mountIrBoard()
+    const handler = m.attach.mock.calls[0][1]
+
+    // User has just typed into a Process block's note field — a local edit
+    // sitting in useRoadmapStore, not yet flushed (roadmapSheetSync debounces
+    // 1000ms, so Firestore has no idea this edit exists yet). This mirrors
+    // updateNodeData's effect on the store plus the armed debounce timer it
+    // triggers in syncManager.
+    useRoadmapStore.setState({
+      nodes: [{ id: 'n1', type: 'process', data: { label: '', note: 'hello wor' } }],
+    })
+    m.hasPendingRoadmapSheetSync.mockReturnValue(true)
+
+    // A snapshot lands that's genuinely not our own pending write (e.g. the
+    // ack of an EARLIER debounced save, or a script write) — but it can only
+    // reflect a state older than the edit still sitting in the debounce
+    // window above, so it must not be applied.
+    handler({
+      metadata: { hasPendingWrites: false },
+      data: () => ({ nodes: [{ id: 'n1', type: 'process', data: { label: '', note: 'hello wo' } }], edges: [] }),
+    })
+
+    const note = useRoadmapStore.getState().nodes.find((n) => n.id === 'n1').data.note
+    expect(note).toBe('hello wor') // the 'r' the user just typed must survive
   })
 
   it('unmountIrBoard detaches the listener', async () => {

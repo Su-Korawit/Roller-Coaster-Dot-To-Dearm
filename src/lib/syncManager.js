@@ -124,7 +124,16 @@ export function createFirestoreSync({ store, logName, toDoc, fromDoc, changed, n
     })
   }
 
-  return { push, hydrate, setSyncUser }
+  // True while a local mutation is debounced and not yet sent — the store is
+  // ahead of whatever Firestore currently holds. Callers with a real-time
+  // listener on the same doc (e.g. the IR Board) must skip an incoming
+  // snapshot while this is true: it can only reflect a state older than the
+  // edit still sitting in this debounce window.
+  function isPending() {
+    return timer != null
+  }
+
+  return { push, hydrate, setSyncUser, isPending }
 }
 
 // ── Tasks ────────────────────────────────────────────────────────────────────
@@ -214,6 +223,7 @@ export async function hydrateRoadmapSheetFromFirestore(sheetId) {
 }
 export const armRoadmapSheetSync = (sheetId) => roadmapSheetSync.setSyncUser(sheetId)
 export const disarmRoadmapSheetSync = () => roadmapSheetSync.setSyncUser(null)
+export const hasPendingRoadmapSheetSync = () => roadmapSheetSync.isPending()
 
 export const syncPortfolioToFirestore = portfolioSync.push
 export const hydratePortfolioFromFirestore = portfolioSync.hydrate

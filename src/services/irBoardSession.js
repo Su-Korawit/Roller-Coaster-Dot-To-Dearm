@@ -3,7 +3,7 @@ import { refs, shapes } from '../lib/db'
 import { IR_SHEET_ID } from '../constants/irBoard'
 import { ADMIN_UID } from '../constants/admin'
 import { useRoadmapStore } from '../stores/useRoadmapStore'
-import { armRoadmapSheetSync, disarmRoadmapSheetSync } from '../lib/syncManager'
+import { armRoadmapSheetSync, disarmRoadmapSheetSync, hasPendingRoadmapSheetSync } from '../lib/syncManager'
 import { createFirestoreListener } from '../lib/firestoreListener'
 
 export async function ensureIrBoardDoc() {
@@ -77,9 +77,17 @@ export async function mountIrBoard() {
   // Skip the local echo of our own pending write (hasPendingWrites) so this
   // never races the admin's own debounced save; only apply a snapshot while
   // this mount is still the live one and the IR sheet is still the one open.
+  // hasPendingWrites alone isn't enough: every debounced save writes
+  // updatedAt: serverTimestamp(), so its ack arrives as a second, genuinely
+  // non-pending snapshot shortly after — but if the admin typed more in that
+  // round-trip window, that keystroke is sitting in a NEW (not yet fired)
+  // debounce timer, invisible to Firestore. Applying the ack here would blow
+  // it away. hasPendingRoadmapSheetSync() covers exactly that window: an
+  // armed debounce timer means the store is already ahead of this snapshot.
   irListener.attach(refs.roadmapSheet(IR_SHEET_ID), (snap) => {
     if (token.seq !== mountSeq || snap.metadata.hasPendingWrites) return
     if (useRoadmapStore.getState().activeSheetId !== IR_SHEET_ID) return
+    if (hasPendingRoadmapSheetSync()) return
     const remote = snap.data()
     if (!remote) return
     useRoadmapStore.setState((state) => ({
