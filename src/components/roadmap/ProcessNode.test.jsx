@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 
 const updateNodeData = vi.fn()
 vi.mock('../../stores/useRoadmapStore', () => ({
@@ -28,5 +28,12 @@ describe('ProcessNode', () => {
       <ProcessNode id="n1" data={{ label: '', note: '', color: '#ff0000' }} selected={false} />,
     )
     expect(container.firstChild.style.borderColor).toBe('')
+  })
+
+  it('has an expand button that opens the editor modal', () => {
+    render(<ProcessNode id="n1" data={{ label: 'Step', note: 'a long note' }} selected={false} />)
+    expect(screen.queryByTestId('process-editor-backdrop')).toBeNull()
+    fireEvent.click(screen.getByLabelText('ขยายดู/แก้ไข'))
+    expect(screen.getByTestId('process-editor-backdrop')).toBeTruthy()
   })
 })

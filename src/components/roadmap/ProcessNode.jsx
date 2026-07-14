@@ -1,10 +1,13 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { Position } from '@xyflow/react'
+import { Maximize2 } from 'lucide-react'
 import { useRoadmapStore } from '../../stores/useRoadmapStore'
 import ConnectionDot from './ConnectionDot'
+import ProcessEditorModal from './ProcessEditorModal'
 
 export default function ProcessNode({ id, data, selected }) {
   const updateNodeData = useRoadmapStore((s) => s.updateNodeData)
+  const [expanded, setExpanded] = useState(false)
 
   const onLabelChange = useCallback(
     (e) => updateNodeData(id, { label: e.target.value }),
@@ -37,8 +40,22 @@ export default function ProcessNode({ id, data, selected }) {
         onChange={onNoteChange}
       />
 
+      <button
+        type="button"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => { e.stopPropagation(); setExpanded(true) }}
+        aria-label="ขยายดู/แก้ไข"
+        className="nodrag absolute bottom-1 right-1 w-6 h-6 rounded-lg bg-surface border-2 border-ink flex items-center justify-center text-ink-soft hover:text-brand"
+      >
+        <Maximize2 size={13} />
+      </button>
+
       <ConnectionDot type="source" position={Position.Right} />
       <ConnectionDot id="bottom" type="source" position={Position.Bottom} />
+
+      {expanded && (
+        <ProcessEditorModal nodeId={id} data={data} onClose={() => setExpanded(false)} />
+      )}
     </div>
   )
 }
