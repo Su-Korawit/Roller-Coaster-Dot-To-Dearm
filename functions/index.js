@@ -212,3 +212,81 @@ exports.purchaseEntitlement = onCall(async (req) => {
     return { ok: true, newBalance, itemId }
   })
 })
+
+// ── File Bag quota (ADR-0016) ─────────────────────────────────────────────────
+const FREE_BAG_BYTES = 1 * 1024 * 1024 * 1024 // 1 GB
+const ADMIN_BAG_BYTES = 1024 * 1024 * 1024 * 1024 // 1 TB
+const ADMIN_EMAILS = new Set([
+  'o.korawitt@gmail.com',
+  'takadaoni07@gmail.com',
+  'play198725@gmail.com',
+  'itcity9476@gmail.com',
+])
+
+function computeBagQuotaBytes(user) {
+  const email = (user?.email ?? '').toLowerCase()
+  if (ADMIN_EMAILS.has(email)) return ADMIN_BAG_BYTES
+  const entitlements = user?.entitlements ?? {}
+  let extra = 0
+  for (const e of Object.values(entitlements)) {
+    if (e?.kind === 'storage-quota') extra += Number(e.payload?.extraBytes ?? 0)
+  }
+  return FREE_BAG_BYTES + extra
+}
+
+// Reserve quota before a Bag-native upload. Increments fileBagUsageBytes
+// transactionally if under quota; client then uploads to Storage.
+exports.reserveBagUpload = onCall(async (req) => {
+  const uid = req.auth?.uid
+  if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.')
+  const sizeBytes = Number(req.data?.sizeBytes)
+  if (!Number.isFinite(sizeBytes) || sizeBytes <= 0) {
+    throw new HttpsError('invalid-argument', 'sizeBytes must be a positive number.')
+  }
+
+  const userRef = db.collection('users').doc(uid)
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(userRef)
+    if (!snap.exists) throw new HttpsError('not-found', 'User not found.')
+    const user = snap.data()
+    const used = Number(user.fileBagUsageBytes ?? 0)
+    const quota = computeBagQuotaBytes(user)
+    if (used + sizeBytes > quota) {
+      throw new HttpsError('resource-exhausted', 'BAG_QUOTA_EXCEEDED')
+    }
+    tx.update(userRef, {
+      fileBagUsageBytes: used + sizeBytes,
+    })
+    return { ok: true, used: used + sizeBytes, quota }
+  })
+})
+
+// Storage delete on bag-native objects releases reserved quota and best-effort
+// cleans orphaned fileBagItems docs that still point at the path.
+const { onObjectDeleted } = require('firebase-functions/v2/storage')
+exports.onBagObjectDeleted = onObjectDeleted(async (event) => {
+  const name = event.data?.name // users/{uid}/bag/{fileId}
+  if (!name || !name.startsWith('users/')) return
+  const parts = name.split('/')
+  if (parts.length < 4 || parts[2] !== 'bag') return
+  const uid = parts[1]
+  const sizeBytes = Number(event.data?.size ?? 0)
+
+  const userRef = db.collection('users').doc(uid)
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(userRef)
+    if (!snap.exists) return
+    const used = Number(snap.data().fileBagUsageBytes ?? 0)
+    tx.update(userRef, {
+      fileBagUsageBytes: Math.max(0, used - (Number.isFinite(sizeBytes) ? sizeBytes : 0)),
+    })
+  })
+
+  const orphans = await db.collection('fileBagItems')
+    .where('ownerUid', '==', uid)
+    .where('storagePath', '==', name)
+    .get()
+  const batch = db.batch()
+  orphans.docs.forEach((d) => batch.delete(d.ref))
+  if (!orphans.empty) await batch.commit()
+})

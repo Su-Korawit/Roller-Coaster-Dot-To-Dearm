@@ -268,3 +268,27 @@ describe('shapes.newRoadmapSheet', () => {
     expect(result.order).toBe(0)
   })
 })
+
+describe('file bag refs/cols/shapes (ADR-0016)', () => {
+  it('points item/folder/settings refs at the top-level collections', () => {
+    expect(refs.fileBagItem('i1')).toEqual({ _path: 'fileBagItems/i1' })
+    expect(refs.fileBagFolder('f1')).toEqual({ _path: 'fileBagFolders/f1' })
+    expect(refs.bagSettings('uid1')).toEqual({ _path: 'bagSettings/uid1' })
+    expect(cols.fileBagItems).toEqual({ _col: 'fileBagItems' })
+    expect(cols.fileBagFolders).toEqual({ _col: 'fileBagFolders' })
+  })
+
+  it('shapes.fileBagItem stamps createdAt and defaults folderId/position', () => {
+    const result = shapes.fileBagItem({
+      ownerUid: 'alice',
+      storagePath: 'users/alice/bag/x',
+      name: 'a.png',
+      kind: 'image',
+      source: 'bag-upload',
+      sizeBytes: 10,
+    })
+    expect(result.folderId).toBeNull()
+    expect(result.position).toEqual({ x: 80, y: 80 })
+    expect(result.createdAt).toEqual({ _type: 'serverTimestamp' })
+  })
+})

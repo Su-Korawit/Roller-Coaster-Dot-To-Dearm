@@ -96,6 +96,11 @@ describe('owner-scoped paths', () => {
     await assertSucceeds(uploadBytes(ref(ctx('alice'), 'users/alice/roadmap-video/n1'), PNG, META))
     await assertFails(uploadBytes(ref(ctx('bob'), 'users/alice/roadmap-video/n2'), PNG, META))
   })
+
+  it('owner reads/writes their own bag path; stranger cannot', async () => {
+    await assertSucceeds(uploadBytes(ref(ctx('alice'), 'users/alice/bag/file1'), PNG, META))
+    await assertFails(uploadBytes(ref(ctx('bob'), 'users/alice/bag/file2'), PNG, META))
+  })
 })
 
 describe('public read', () => {

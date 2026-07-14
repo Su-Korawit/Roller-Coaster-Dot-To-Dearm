@@ -46,13 +46,14 @@ service cloud.firestore {
     match /users/{uid} {
       allow get, list: if isSignedIn();
       allow create: if isSignedIn() && (request.auth.uid == uid || isSuperAdmin());
-      // Owners may update their own doc freely EXCEPT the `coins` and
-      // `entitlements` fields — those are written only by Cloud Functions
-      // (Admin SDK bypasses rules). Cross-user updates are restricted to ONLY
-      // the four social array fields.
+      // Owners may update their own doc freely EXCEPT the `coins`,
+      // `entitlements`, and `fileBagUsageBytes` fields — those are written
+      // only by Cloud Functions (Admin SDK bypasses rules). Cross-user updates
+      // are restricted to ONLY the four social array fields.
       allow update: if isSignedIn() && (
         (request.auth.uid == uid &&
-          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['coins', 'entitlements'])) ||
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['coins', 'entitlements', 'fileBagUsageBytes'])) ||
         request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['followRequests', 'followers', 'following', 'sentRequests'])
       );
@@ -223,6 +224,28 @@ service cloud.firestore {
     match /entitlementCatalog/{itemId} {
       allow read: if isSignedIn();
       allow write: if isSuperAdmin();
+    }
+
+    // File Bag — personal file manager (ADR-0016). Owner-only read/write.
+    match /fileBagItems/{itemId} {
+      allow read: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid;
+      allow delete: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    match /fileBagFolders/{folderId} {
+      allow read: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid;
+      allow delete: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // Per-user Bag UI prefs (visible left-rail categories).
+    match /bagSettings/{uid} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
     }
   }
 }

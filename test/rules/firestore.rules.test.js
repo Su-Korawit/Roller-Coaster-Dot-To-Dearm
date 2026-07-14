@@ -443,3 +443,56 @@ describe('entitlements protection', () => {
     await assertSucceeds(setDoc(doc(admin, 'entitlementCatalog/item2'), { name: 'y', priceCoins: 99, active: true }))
   })
 })
+
+describe('File Bag rules (ADR-0016)', () => {
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore()
+      await setDoc(doc(db, 'fileBagItems/item-1'), {
+        ownerUid: 'alice',
+        storagePath: 'users/alice/bag/x',
+        name: 'a.png',
+        kind: 'image',
+        source: 'bag-upload',
+        folderId: null,
+        sizeBytes: 10,
+      })
+      await setDoc(doc(db, 'fileBagFolders/fold-1'), {
+        ownerUid: 'alice',
+        name: 'Pics',
+        parentId: null,
+      })
+    })
+  })
+
+  it('owner can read/update/delete their fileBagItems; stranger cannot', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    await assertSucceeds(getDoc(doc(alice, 'fileBagItems/item-1')))
+    await assertSucceeds(updateDoc(doc(alice, 'fileBagItems/item-1'), { name: 'b.png' }))
+    await assertFails(getDoc(doc(bob, 'fileBagItems/item-1')))
+    await assertFails(updateDoc(doc(bob, 'fileBagItems/item-1'), { name: 'hack' }))
+  })
+
+  it('owner can create fileBagItems with their own ownerUid; cannot create as someone else', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(setDoc(doc(alice, 'fileBagItems/item-2'), {
+      ownerUid: 'alice', storagePath: 'users/alice/bag/y', name: 'y', kind: 'file', source: 'bag-upload', folderId: null, sizeBytes: 1,
+    }))
+    await assertFails(setDoc(doc(alice, 'fileBagItems/item-3'), {
+      ownerUid: 'bob', storagePath: 'users/bob/bag/z', name: 'z', kind: 'file', source: 'bag-upload', folderId: null, sizeBytes: 1,
+    }))
+  })
+
+  it('owner can manage bagSettings; stranger cannot', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    await assertSucceeds(setDoc(doc(alice, 'bagSettings/alice'), { visibleCategories: ['images'] }))
+    await assertFails(setDoc(doc(bob, 'bagSettings/alice'), { visibleCategories: ['videos'] }))
+  })
+
+  it('BLOCKS client writes to fileBagUsageBytes on the user doc', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(updateDoc(doc(alice, 'users/alice'), { fileBagUsageBytes: 999 }))
+  })
+})

@@ -33,6 +33,9 @@ export const refs = {
   welcomeGamePreview: ()        => doc(db, 'welcomeConfig', 'gamePreview'),
   welcomeStats:       ()        => doc(db, 'welcomeConfig', 'stats'),
   welcomeNewsPost:    (id)     => doc(db, 'welcomeConfig', 'news', 'items', id),
+  fileBagItem:   (id)  => doc(db, 'fileBagItems', id),
+  fileBagFolder: (id)  => doc(db, 'fileBagFolders', id),
+  bagSettings:    (uid) => doc(db, 'bagSettings', uid),
 }
 
 // ── Collection refs ───────────────────────────────────────────────────────────
@@ -53,6 +56,9 @@ export const cols = {
   tcasEvents:   collection(db, 'tcasEvents'),
   timetableTemplates: collection(db, 'timetableTemplates'),
   entitlementCatalog: collection(db, 'entitlementCatalog'),
+  fileBagItems:   collection(db, 'fileBagItems'),
+  fileBagFolders: collection(db, 'fileBagFolders'),
+  bagSettings:     collection(db, 'bagSettings'),
   chatMessages: (chatId) => collection(db, 'chats', chatId, 'messages'),
   userMatches:  (uid)    => collection(db, 'users', uid, 'matches'),
   userCredits:  (uid)    => collection(db, 'users', uid, 'receivedCredits'),
@@ -100,6 +106,13 @@ export const queries = {
     limit(20),
   ),
   activeEntitlements: () => query(cols.entitlementCatalog, where('active', '==', true)),
+  fileBagItemsByOwner: (uid) => query(cols.fileBagItems, where('ownerUid', '==', uid)),
+  fileBagItemsByFolder: (uid, folderId) => query(
+    cols.fileBagItems,
+    where('ownerUid', '==', uid),
+    where('folderId', '==', folderId),
+  ),
+  fileBagFoldersByOwner: (uid) => query(cols.fileBagFolders, where('ownerUid', '==', uid)),
 }
 
 // ── Document shapes ───────────────────────────────────────────────────────────
@@ -208,6 +221,46 @@ export const shapes = {
     refreshToken,
     spotifyUserId: spotifyUserId ?? null,
     connectedAt: serverTimestamp(),
+  }),
+
+  // File Bag item — Firestore pointer to a Storage object (or reference duplicate).
+  fileBagItem: ({
+    ownerUid,
+    storagePath,
+    name,
+    kind,
+    source,
+    folderId = null,
+    sizeBytes = 0,
+    position = { x: 80, y: 80 },
+  }) => ({
+    ownerUid,
+    storagePath,
+    name,
+    kind,
+    source,
+    folderId,
+    sizeBytes,
+    position,
+    createdAt: serverTimestamp(),
+  }),
+
+  fileBagFolder: ({
+    ownerUid,
+    name,
+    parentId = null,
+    position = { x: 80, y: 80 },
+  }) => ({
+    ownerUid,
+    name,
+    parentId,
+    position,
+    createdAt: serverTimestamp(),
+  }),
+
+  bagSettings: ({ visibleCategories }) => ({
+    visibleCategories: visibleCategories ?? ['images', 'videos', 'files', 'exports', 'trash'],
+    updatedAt: serverTimestamp(),
   }),
 }
 

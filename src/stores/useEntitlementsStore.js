@@ -22,6 +22,11 @@ export const useEntitlementsStore = create((set, get) => ({
     FREE_AI_DAILY + owned(get().entitlements, 'ai-quota').reduce((sum, e) => sum + (e.payload?.dailyBonus ?? 0), 0),
   ownedStickers: () =>
     owned(get().entitlements, 'sticker-pack').flatMap((e) => e.payload?.stickers ?? []),
+  extraStorageBytes: () =>
+    owned(get().entitlements, 'storage-quota').reduce(
+      (sum, e) => sum + (e.payload?.extraBytes ?? 0),
+      0,
+    ),
 
   loadCatalog: async () => {
     set({ catalogLoading: true })
