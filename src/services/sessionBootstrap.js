@@ -156,6 +156,7 @@ export async function bootstrapSession(firebaseUser) {
   // ensureUserDoc already read (no second round-trip).
   const serverCoins = userData?.coins ?? 0
   if (serverCoins > 0) useUserStore.getState().setCoins(serverCoins)
+  useUserStore.getState().setFileBagUsageBytes(userData?.fileBagUsageBytes ?? 0)
 
   // Entitlements — Functions-owned, read from the same user-doc fetch.
   useEntitlementsStore.getState().hydrateEntitlements(userData?.entitlements ?? {})

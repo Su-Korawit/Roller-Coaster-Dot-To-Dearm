@@ -19,6 +19,7 @@ export const useUserStore = create(
     (set, get) => ({
       user: null,
       coins: 0,
+      fileBagUsageBytes: 0,
       streak: 0,
       lastStreakDate: null, // 'YYYY-MM-DD' of the last day that counted toward the streak
       bestStreak: 0,
@@ -46,6 +47,7 @@ export const useUserStore = create(
         set((state) => ({ uiVisibility: { ...state.uiVisibility, [key]: value } })),
       addCoins: (amount) => set((state) => ({ coins: state.coins + amount })),
       setCoins: (amount) => set({ coins: amount }),
+      setFileBagUsageBytes: (n) => set({ fileBagUsageBytes: Number(n) || 0 }),
       setStreak: (streak) => set({ streak }),
       incrementStacks: () => set((state) => ({ totalStacks: state.totalStacks + 1 })),
 

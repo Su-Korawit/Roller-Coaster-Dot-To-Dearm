@@ -28,6 +28,7 @@ const SchoolLanding = lazy(() => import('./pages/landing/SchoolLanding'))
 const NewsHomePage = lazy(() => import('./pages/landing/NewsHomePage'))
 const TcasExplorerPage = lazy(() => import('./pages/landing/TcasExplorerPage'))
 const SchoolAppPage = lazy(() => import('./pages/SchoolAppPage'))
+const BagPage = lazy(() => import('./pages/BagPage'))
 const FeatureLayout = lazy(() => import('./components/FeatureLayout'))
 
 function LoadingScreen() {
@@ -200,6 +201,26 @@ function SchoolSiteRoutes() {
   )
 }
 
+// File Bag is auth-gated (ADR-0016 exception to ADR-0012 guest mode).
+function BagSiteRoutes() {
+  return (
+    <Routes>
+      <Route path="/auth" element={<AuthPage />} />
+      <Route element={<RequireAuth />}>
+        <Route
+          path="/"
+          element={(
+            <FeatureLayout>
+              <BagPage />
+            </FeatureLayout>
+          )}
+        />
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}
+
 function SiteRoutes() {
   switch (currentSite) {
     case 'hub':
@@ -212,6 +233,8 @@ function SiteRoutes() {
       return <NewsSiteRoutes />
     case 'school':
       return <SchoolSiteRoutes />
+    case 'bag':
+      return <BagSiteRoutes />
   }
   return <AppSiteRoutes />
 }

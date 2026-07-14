@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../stores/useAuthStore'
+import { currentSite } from '../lib/site'
 import Button from '../components/ui/Button'
 
 const STARS = Array.from({ length: 50 }, (_, i) => {
@@ -48,7 +49,7 @@ export default function AuthPage() {
   const signIn = useAuthStore((s) => s.signIn)
 
   useEffect(() => {
-    if (user) navigate('/home', { replace: true })
+    if (user) navigate(currentSite === 'bag' ? '/' : '/home', { replace: true })
   }, [user, navigate])
 
   function switchMode(m) {

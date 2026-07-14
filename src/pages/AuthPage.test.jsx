@@ -7,6 +7,7 @@ let authState
 vi.mock('../stores/useAuthStore', () => ({
   useAuthStore: (sel) => sel(authState),
 }))
+vi.mock('../lib/site', () => ({ currentSite: 'app' }))
 
 const { default: AuthPage } = await import('./AuthPage')
 

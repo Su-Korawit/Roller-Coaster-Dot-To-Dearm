@@ -21,6 +21,7 @@ const m = vi.hoisted(() => ({
   disarmSchoolSync: vi.fn(),
   hydrateEntitlements: vi.fn(),
   setCoins: vi.fn(),
+  setFileBagUsageBytes: vi.fn(),
   setMapOwner: vi.fn(),
   resetPlans: vi.fn(),
   getDoc: vi.fn(),
@@ -64,7 +65,7 @@ vi.mock('../utils/migrateLegacyRoadmap', () => ({
   migrateLegacyRoadmap: (...a) => m.migrateLegacyRoadmap(...a),
 }))
 vi.mock('../stores/useUserStore', () => ({
-  useUserStore: { getState: () => ({ setCoins: m.setCoins }) },
+  useUserStore: { getState: () => ({ setCoins: m.setCoins, setFileBagUsageBytes: m.setFileBagUsageBytes }) },
 }))
 vi.mock('../stores/useEntitlementsStore', () => ({
   useEntitlementsStore: { getState: () => ({ hydrateEntitlements: m.hydrateEntitlements }) },
