@@ -84,6 +84,12 @@ export const queries = {
   activeProducts:  () => query(cols.shopProducts, where('active', '==', true)),
   purchasesByUser: (uid) => query(cols.purchases, where('uid', '==', uid)),
   sheetsSharedWithMe: (uid) => query(cols.roadmapSheets, where('collaboratorUids', 'array-contains', uid)),
+  sheetByShareId: (shareId) => query(
+    cols.roadmapSheets,
+    where('shareId', '==', shareId),
+    where('public', '==', true),
+    limit(1),
+  ),
   appUpdatesByDate: () => query(cols.appUpdates, orderBy('createdAt', 'desc')),
   tcasEventsByDate: () => query(cols.tcasEvents, orderBy('date', 'asc')),
   latestTemplates: () => query(cols.timetableTemplates, orderBy('createdAt', 'desc'), limit(20)),

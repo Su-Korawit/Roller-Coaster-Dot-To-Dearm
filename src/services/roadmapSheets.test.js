@@ -4,6 +4,7 @@ const m = vi.hoisted(() => ({
   setDoc: vi.fn(),
   updateDoc: vi.fn(),
   deleteDoc: vi.fn(),
+  getDoc: vi.fn(),
   arrayUnion: vi.fn((v) => ({ _arrayUnion: v })),
   arrayRemove: vi.fn((v) => ({ _arrayRemove: v })),
   armRoadmapSheetSync: vi.fn(),
@@ -13,6 +14,7 @@ vi.mock('firebase/firestore', () => ({
   setDoc: (...a) => m.setDoc(...a),
   updateDoc: (...a) => m.updateDoc(...a),
   deleteDoc: (...a) => m.deleteDoc(...a),
+  getDoc: (...a) => m.getDoc(...a),
   arrayUnion: (...a) => m.arrayUnion(...a),
   arrayRemove: (...a) => m.arrayRemove(...a),
 }))
@@ -41,6 +43,8 @@ const {
   renameSheetAndSync,
   deleteSheetAndSync,
   shareSheet,
+  setSheetPublic,
+  buildPublicShareUrl,
 } = await import('./roadmapSheets')
 
 describe('roadmapSheets service', () => {
@@ -119,5 +123,40 @@ describe('roadmapSheets service', () => {
 
     await expect(shareSheet('sheet-1', 'bob', 'edit')).rejects.toThrow()
     expect(m.updateDoc).not.toHaveBeenCalled()
+  })
+
+  describe('setSheetPublic / buildPublicShareUrl', () => {
+    it('mints a shareId on first enable', async () => {
+      m.getDoc.mockResolvedValue({ exists: () => true, data: () => ({}) })
+      const shareId = await setSheetPublic('sheet-1', true)
+      expect(shareId).toBeTruthy()
+      expect(m.updateDoc).toHaveBeenCalledWith({ _path: 'roadmapSheets/sheet-1' }, { public: true, shareId })
+    })
+
+    it('reuses an existing shareId instead of minting a new one', async () => {
+      m.getDoc.mockResolvedValue({ exists: () => true, data: () => ({ shareId: 'existing-id' }) })
+      const shareId = await setSheetPublic('sheet-1', true)
+      expect(shareId).toBe('existing-id')
+      expect(m.updateDoc).toHaveBeenCalledWith({ _path: 'roadmapSheets/sheet-1' }, { public: true })
+    })
+
+    it('turning off just flips public, keeping shareId untouched', async () => {
+      m.getDoc.mockResolvedValue({ exists: () => true, data: () => ({ shareId: 'existing-id', public: true }) })
+      const shareId = await setSheetPublic('sheet-1', false)
+      expect(shareId).toBe('existing-id')
+      expect(m.updateDoc).toHaveBeenCalledWith({ _path: 'roadmapSheets/sheet-1' }, { public: false })
+    })
+
+    it('throws when the caller is not the owner', async () => {
+      useRoadmapStore.setState((s) => ({
+        sheets: s.sheets.map((sh) => (sh.id === 'sheet-1' ? { ...sh, myRole: 'edit' } : sh)),
+      }))
+      await expect(setSheetPublic('sheet-1', true)).rejects.toThrow()
+      expect(m.updateDoc).not.toHaveBeenCalled()
+    })
+
+    it('builds the canonical roadmap.ilovetcas.com view URL', () => {
+      expect(buildPublicShareUrl('abc123')).toBe('https://roadmap.ilovetcas.com/view/abc123')
+    })
   })
 })

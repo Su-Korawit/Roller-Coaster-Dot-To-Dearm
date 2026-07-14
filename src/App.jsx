@@ -14,6 +14,7 @@ const HomePage = lazy(() => import('./pages/HomePage'))
 const AdminPage = lazy(() => import('./pages/AdminPage'))
 const AuthPage = lazy(() => import('./pages/AuthPage'))
 const RoadmapPage = lazy(() => import('./pages/RoadmapPage'))
+const RoadmapPublicView = lazy(() => import('./pages/RoadmapPublicView'))
 const WelcomePage = lazy(() => import('./pages/WelcomePage'))
 const NewsPostPage = lazy(() => import('./pages/NewsPostPage'))
 const MusicCallback = lazy(() => import('./pages/MusicCallback'))
@@ -147,6 +148,14 @@ function RoadmapSiteRoutes() {
         element={(
           <FeatureLayout>
             <RoadmapPage backPath="/" />
+          </FeatureLayout>
+        )}
+      />
+      <Route
+        path="/view/:shareId"
+        element={(
+          <FeatureLayout>
+            <RoadmapPublicView />
           </FeatureLayout>
         )}
       />
