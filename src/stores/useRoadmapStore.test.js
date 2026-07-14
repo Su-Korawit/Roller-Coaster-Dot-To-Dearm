@@ -12,7 +12,7 @@ const { useRoadmapStore, roadmapStorePartialize } = await import('./useRoadmapSt
 describe('useRoadmapStore', () => {
   beforeEach(() => {
     useRoadmapStore.setState({
-      nodes: [], edges: [], setpoint: null, selection: [], syncStatus: 'idle',
+      nodes: [], edges: [], setpoint: null, selection: [], clipboard: null, syncStatus: 'idle',
       sheets: [{ id: 'local-default', name: 'Roadmap', nodes: [], edges: [], ownerUid: null, myRole: 'owner' }],
       activeSheetId: 'local-default',
       myUid: null,
@@ -257,6 +257,50 @@ describe('useRoadmapStore', () => {
     useRoadmapStore.getState().duplicateSelection()
     const { edges } = useRoadmapStore.getState()
     expect(edges).toHaveLength(1) // original edge preserved, no new edge for external target
+  })
+
+  it('copySelectionToClipboard snapshots selected nodes and internal edges', () => {
+    useRoadmapStore.getState().setNodes([
+      { id: 'a', type: 'process', position: { x: 0, y: 0 }, data: { label: 'A' } },
+      { id: 'b', type: 'process', position: { x: 100, y: 0 }, data: { label: 'B' } },
+    ])
+    useRoadmapStore.getState().setEdges([{ id: 'e1', source: 'a', target: 'b' }])
+    useRoadmapStore.getState().setSelection(['a', 'b'])
+    useRoadmapStore.getState().copySelectionToClipboard()
+    const { clipboard } = useRoadmapStore.getState()
+    expect(clipboard.nodes.map((n) => n.id)).toEqual(['a', 'b'])
+    expect(clipboard.edges).toHaveLength(1)
+  })
+
+  it('copySelectionToClipboard does nothing when nothing is selected', () => {
+    useRoadmapStore.getState().copySelectionToClipboard()
+    expect(useRoadmapStore.getState().clipboard).toBeNull()
+  })
+
+  it('pasteClipboard adds new nodes with regenerated ids and an offset position', () => {
+    useRoadmapStore.getState().setNodes([{ id: 'a', type: 'process', position: { x: 0, y: 0 }, data: { label: 'A' } }])
+    useRoadmapStore.getState().setSelection(['a'])
+    useRoadmapStore.getState().copySelectionToClipboard()
+    useRoadmapStore.getState().pasteClipboard()
+    const { nodes } = useRoadmapStore.getState()
+    expect(nodes).toHaveLength(2)
+    const pasted = nodes.find((n) => n.id !== 'a')
+    expect(pasted.data.label).toBe('A')
+    expect(pasted.position).toEqual({ x: 60, y: 60 })
+  })
+
+  it('pasteClipboard can be invoked repeatedly to paste multiple copies', () => {
+    useRoadmapStore.getState().setNodes([{ id: 'a', type: 'process', position: { x: 0, y: 0 }, data: {} }])
+    useRoadmapStore.getState().setSelection(['a'])
+    useRoadmapStore.getState().copySelectionToClipboard()
+    useRoadmapStore.getState().pasteClipboard()
+    useRoadmapStore.getState().pasteClipboard()
+    expect(useRoadmapStore.getState().nodes).toHaveLength(3)
+  })
+
+  it('pasteClipboard is a no-op with an empty clipboard', () => {
+    useRoadmapStore.getState().pasteClipboard()
+    expect(useRoadmapStore.getState().nodes).toHaveLength(0)
   })
 
   it('duplicateSelection makes copies the new selection', () => {

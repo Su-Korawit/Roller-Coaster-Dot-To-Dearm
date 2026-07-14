@@ -73,6 +73,7 @@ export const useRoadmapStore = create(
       timeline: null,
       setpoint: null,
       selection: [],
+      clipboard: null,
       syncStatus: 'idle',
       // Sheet to return to (and persist as active) while the IR Board is
       // mounted over the user's session — session-only, never persisted.
@@ -176,6 +177,36 @@ export const useRoadmapStore = create(
           const newEdges = state.edges
             .filter((e) => selectedIds.has(e.source) && selectedIds.has(e.target))
             .map((e) => ({ ...e, id: nextId(), source: idMap.get(e.source), target: idMap.get(e.target) }))
+          const nodes = [...state.nodes.map((n) => ({ ...n, selected: false })), ...newNodes]
+          const edges = [...state.edges, ...newEdges]
+          return { selection: newNodes.map((n) => n.id), ...applyToActive(state, { nodes, edges }) }
+        }),
+      // In-memory clipboard for Ctrl/Cmd+C/V (Idea: "ทำ Short Cut Tool"). Never
+      // touches the OS clipboard and never persists (omitted from
+      // roadmapStorePartialize and from the Firestore sync toDoc/fromDoc) —
+      // it's a short-lived, session-only buffer, same lifetime as `selection`.
+      copySelectionToClipboard: () =>
+        set((state) => {
+          const ids = new Set(state.selection)
+          if (ids.size === 0) return {}
+          const nodes = state.nodes.filter((n) => ids.has(n.id))
+          const edges = state.edges.filter((e) => ids.has(e.source) && ids.has(e.target))
+          return { clipboard: { nodes, edges } }
+        }),
+      pasteClipboard: () =>
+        set((state) => {
+          if (!state.clipboard || state.clipboard.nodes.length === 0) return {}
+          const OFFSET = 60
+          const idMap = new Map(state.clipboard.nodes.map((n) => [n.id, nextId()]))
+          const newNodes = state.clipboard.nodes.map((n) => ({
+            ...n,
+            id: idMap.get(n.id),
+            position: { x: n.position.x + OFFSET, y: n.position.y + OFFSET },
+            selected: true,
+          }))
+          const newEdges = state.clipboard.edges.map((e) => ({
+            ...e, id: nextId(), source: idMap.get(e.source), target: idMap.get(e.target),
+          }))
           const nodes = [...state.nodes.map((n) => ({ ...n, selected: false })), ...newNodes]
           const edges = [...state.edges, ...newEdges]
           return { selection: newNodes.map((n) => n.id), ...applyToActive(state, { nodes, edges }) }

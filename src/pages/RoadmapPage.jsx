@@ -25,6 +25,7 @@ import { computeCenteredPosition } from '../utils/computeCenteredPosition'
 import { computeDropPosition } from '../utils/computeDropPosition'
 import { toSchema, selectSubset } from '../utils/roadmapExport'
 import { useLongPressDrag } from '../hooks/useLongPressDrag'
+import { useRoadmapShortcuts } from '../hooks/useRoadmapShortcuts'
 import AnnotationEdge from '../components/roadmap/AnnotationEdge'
 import InvisibleEdge from '../components/roadmap/InvisibleEdge'
 
@@ -54,6 +55,8 @@ export default function RoadmapPage({ onClose, backPath }) {
   const clearSelection = useRoadmapStore((s) => s.clearSelection)
   const removeSelection = useRoadmapStore((s) => s.removeSelection)
   const duplicateSelection = useRoadmapStore((s) => s.duplicateSelection)
+  const copySelectionToClipboard = useRoadmapStore((s) => s.copySelectionToClipboard)
+  const pasteClipboard = useRoadmapStore((s) => s.pasteClipboard)
   const importRoadmap = useRoadmapStore((s) => s.importRoadmap)
   const sheets = useRoadmapStore((s) => s.sheets)
   const activeSheetId = useRoadmapStore((s) => s.activeSheetId)
@@ -162,6 +165,14 @@ export default function RoadmapPage({ onClose, backPath }) {
     },
     [setSelection],
   )
+
+  useRoadmapShortcuts({
+    enabled: canEdit,
+    hasSelection: selection.length > 0,
+    onDuplicate: duplicateSelection,
+    onCopy: copySelectionToClipboard,
+    onPaste: pasteClipboard,
+  })
 
   // Selecting a block: mobile select mode toggles membership; otherwise pan to centre.
   const onNodeClick = useCallback((_event, node) => {
