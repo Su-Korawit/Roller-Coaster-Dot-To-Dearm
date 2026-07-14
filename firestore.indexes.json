@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "roadmapSheets",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "shareId", "order": "ASCENDING" },
+        { "fieldPath": "public", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

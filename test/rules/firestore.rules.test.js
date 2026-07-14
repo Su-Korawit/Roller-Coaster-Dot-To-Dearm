@@ -246,6 +246,38 @@ describe('Roadmap Sheets rules (roadmapSheets/{sheetId})', () => {
     const q = query(collection(eve, 'roadmapSheets'), where('collaboratorUids', 'array-contains', 'eve'))
     await assertSucceeds(getDocs(q))
   })
+
+  it('allows an unauthenticated visitor to read a sheet with public:true', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'roadmapSheets/sheet-1'), { public: true, shareId: 'share-abc' }, { merge: true })
+    })
+    const anon = testEnv.unauthenticatedContext().firestore()
+    await assertSucceeds(getDoc(doc(anon, 'roadmapSheets/sheet-1')))
+  })
+
+  it('BLOCKS an unauthenticated visitor when the sheet is not public', async () => {
+    const anon = testEnv.unauthenticatedContext().firestore()
+    await assertFails(getDoc(doc(anon, 'roadmapSheets/sheet-1')))
+  })
+
+  it('lets an unauthenticated visitor run the shareId lookup query when scoped to public docs', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'roadmapSheets/sheet-1'), { public: true, shareId: 'share-abc' }, { merge: true })
+    })
+    const anon = testEnv.unauthenticatedContext().firestore()
+    const q = query(collection(anon, 'roadmapSheets'), where('shareId', '==', 'share-abc'), where('public', '==', true))
+    await assertSucceeds(getDocs(q))
+  })
+
+  it('lets the owner toggle public sharing', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(updateDoc(doc(alice, 'roadmapSheets/sheet-1'), { public: true, shareId: 'share-xyz' }))
+  })
+
+  it('BLOCKS an edit-collaborator from turning on public sharing', async () => {
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    await assertFails(updateDoc(doc(bob, 'roadmapSheets/sheet-1'), { public: true, shareId: 'x' }))
+  })
 })
 
 describe('IR Board sheet (roadmapSheets/admin-idea-board)', () => {
