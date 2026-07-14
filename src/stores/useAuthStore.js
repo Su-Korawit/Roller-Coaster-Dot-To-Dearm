@@ -12,12 +12,21 @@ import { bootstrapSession, teardownSession } from '../services/sessionBootstrap'
 
 export const useAuthStore = create((set) => {
   onAuthStateChanged(auth, async (firebaseUser) => {
-    if (firebaseUser) {
-      await bootstrapSession(firebaseUser)
-    } else {
-      teardownSession()
+    // A throw anywhere in bootstrap/teardown must never leave `loading` stuck
+    // at true — every gate in the app (RequireAuth/RequireAdmin) blocks on it,
+    // so a stuck true renders an infinite spinner or, for RequireAdmin, a
+    // silent blank page.
+    try {
+      if (firebaseUser) {
+        await bootstrapSession(firebaseUser)
+      } else {
+        teardownSession()
+      }
+    } catch (e) {
+      console.error('[useAuthStore] session bootstrap/teardown failed:', e)
+    } finally {
+      set({ user: firebaseUser ?? null, loading: false })
     }
-    set({ user: firebaseUser ?? null, loading: false })
   })
 
   return {

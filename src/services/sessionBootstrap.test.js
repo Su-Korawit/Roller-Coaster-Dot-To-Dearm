@@ -232,6 +232,17 @@ describe('bootstrapSession', () => {
     expect(m.setTaskSyncUser).not.toHaveBeenCalled()
   })
 
+  it('resolves and still hydrates entitlements even when setFileBagUsageBytes throws', async () => {
+    m.setFileBagUsageBytes.mockImplementation(() => {
+      throw new Error('bag boom')
+    })
+
+    await expect(bootstrapSession({ uid: 'u1' })).resolves.toBeUndefined()
+
+    expect(m.hydrateEntitlements).toHaveBeenCalledWith({})
+    expect(m.armRoadmapSheetSync).toHaveBeenCalledWith('sheet-1')
+  })
+
   it('migrates the legacy roadmap field into sheet #1 when roadmapSheetIds is missing', async () => {
     m.getDoc.mockImplementation((ref) =>
       ref._path === 'users/u1'

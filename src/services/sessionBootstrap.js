@@ -153,13 +153,21 @@ export async function bootstrapSession(firebaseUser) {
   ])
 
   // Coins — authoritative value set by Cloud Functions, taken from the doc
-  // ensureUserDoc already read (no second round-trip).
+  // ensureUserDoc already read (no second round-trip). Isolated via step() like
+  // every other write here: a throw must never block loading from resolving
+  // (useAuthStore awaits this whole function before clearing `loading`).
   const serverCoins = userData?.coins ?? 0
-  if (serverCoins > 0) useUserStore.getState().setCoins(serverCoins)
-  useUserStore.getState().setFileBagUsageBytes(userData?.fileBagUsageBytes ?? 0)
+  await step('set coins', async () => {
+    if (serverCoins > 0) useUserStore.getState().setCoins(serverCoins)
+  })
+  await step('set file bag usage', async () => {
+    useUserStore.getState().setFileBagUsageBytes(userData?.fileBagUsageBytes ?? 0)
+  })
 
   // Entitlements — Functions-owned, read from the same user-doc fetch.
-  useEntitlementsStore.getState().hydrateEntitlements(userData?.entitlements ?? {})
+  await step('hydrate entitlements', async () => {
+    useEntitlementsStore.getState().hydrateEntitlements(userData?.entitlements ?? {})
+  })
 
   // Wave 2 — independent per-store hydrations; each arms its debounced
   // writer only after its own hydrate succeeded.
