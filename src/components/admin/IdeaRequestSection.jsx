@@ -13,19 +13,14 @@ import '@xyflow/react/dist/style.css'
 import { nodeTypes } from '../roadmap/nodeTypes'
 import InvisibleEdge from '../roadmap/InvisibleEdge'
 import TrashZone from '../roadmap/TrashZone'
+import RoadmapToolbar, { IR_PALETTE_ITEMS } from '../roadmap/RoadmapToolbar'
 import { useRoadmapStore } from '../../stores/useRoadmapStore'
 import { mountIrBoard, unmountIrBoard } from '../../services/irBoardSession'
 import { findProximityConnection } from '../../utils/findProximityConnection'
 import { computeDropPosition } from '../../utils/computeDropPosition'
+import { computeCenteredPosition } from '../../utils/computeCenteredPosition'
+import { toSchema, selectSubset } from '../../utils/roadmapExport'
 import { useLongPressDrag } from '../../hooks/useLongPressDrag'
-
-const IR_PALETTE = [
-  { type: 'ideaRoot', label: 'Idea Root' },
-  { type: 'process', label: 'Process' },
-  { type: 'image', label: 'Image' },
-  { type: 'update', label: 'Update' },
-  { type: 'success', label: 'Success' },
-]
 
 const SNAP_THRESHOLD = 40
 
@@ -35,8 +30,10 @@ const edgeTypes = { default: InvisibleEdge }
 export default function IdeaRequestSection() {
   const [ready, setReady] = useState(false)
   const [error, setError] = useState(null)
+  const [mobileSelectMode, setMobileSelectMode] = useState(false)
   const tokenRef = useRef(null)
   const rfRef = useRef(null)
+  const canvasRef = useRef(null)
   const trashRef = useRef(null)
   const [isDragging, setIsDragging] = useState(false)
   const [isOverTrash, setIsOverTrash] = useState(false)
@@ -49,6 +46,11 @@ export default function IdeaRequestSection() {
   const detachNode = useRoadmapStore((s) => s.detachNode)
   const removeNode = useRoadmapStore((s) => s.removeNode)
   const removeEdge = useRoadmapStore((s) => s.removeEdge)
+  const selection = useRoadmapStore((s) => s.selection)
+  const setSelection = useRoadmapStore((s) => s.setSelection)
+  const clearSelection = useRoadmapStore((s) => s.clearSelection)
+  const removeSelection = useRoadmapStore((s) => s.removeSelection)
+  const duplicateSelection = useRoadmapStore((s) => s.duplicateSelection)
   const syncStatus = useRoadmapStore((s) => s.syncStatus)
 
   useEffect(() => {
@@ -89,6 +91,20 @@ export default function IdeaRequestSection() {
     (deleted) => deleted.forEach((e) => removeEdge(e.id)),
     [removeEdge],
   )
+
+  const onSelectionChange = useCallback(
+    ({ nodes: selected }) => {
+      setSelection(selected.map((n) => n.id))
+    },
+    [setSelection],
+  )
+
+  const onNodeClick = useCallback((_event, node) => {
+    if (!mobileSelectMode) return
+    setNodes(nodes.map((n) =>
+      n.id === node.id ? { ...n, selected: !n.selected } : n,
+    ))
+  }, [mobileSelectMode, nodes, setNodes])
 
   // Dragging a block detaches it from all connections so it can be re-snapped elsewhere.
   const onNodeDragStart = useCallback(
@@ -134,6 +150,15 @@ export default function IdeaRequestSection() {
     [nodes, edges, setNodes, setEdges, removeNode],
   )
 
+  const addAtCenter = useCallback((type) => {
+    const rect = canvasRef.current?.getBoundingClientRect()
+    const center = rfRef.current && rect
+      ? rfRef.current.screenToFlowPosition({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 })
+      : { x: 200, y: 200 }
+    const jitter = (nodes.length % 8) * 14
+    addNode(type, computeCenteredPosition({ x: center.x + jitter, y: center.y + jitter }, type))
+  }, [addNode, nodes.length])
+
   const onCanvasDragOver = useCallback((e) => { e.preventDefault() }, [])
   const onCanvasDrop = useCallback((e) => {
     e.preventDefault()
@@ -147,27 +172,29 @@ export default function IdeaRequestSection() {
   }, [addNode])
   const { dragState, getHandlers } = useLongPressDrag(onTouchDrop)
 
+  const handleExportSelected = useCallback(() => {
+    const subset = selectSubset(nodes, edges, selection)
+    const blob = new Blob([JSON.stringify(toSchema(subset.nodes, subset.edges), null, 2)], {
+      type: 'application/json',
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'ir-selection.json'
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [nodes, edges, selection])
+
   if (error) return <p className="p-6 text-sm text-red-600">IR Board: {error}</p>
   if (!ready) return <p className="p-6 text-sm text-ink-soft">Loading IR Board…</p>
 
   return (
-    <div className="relative w-full h-full min-h-[480px] bg-surface" onDragOver={onCanvasDragOver} onDrop={onCanvasDrop}>
-      <div className="absolute top-3 left-3 z-10 flex flex-wrap gap-2">
-        {IR_PALETTE.map((p) => (
-          <button
-            key={p.type}
-            type="button"
-            draggable="true"
-            onDragStart={(e) => e.dataTransfer.setData('application/roadmap-node-type', p.type)}
-            {...getHandlers(p.type)}
-            className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-ink/20 bg-white hover:border-brand cursor-grab active:cursor-grabbing"
-            onClick={() => addNode(p.type, { x: 120 + Math.random() * 80, y: 120 + Math.random() * 80 })}
-          >
-            + {p.label}
-          </button>
-        ))}
-        <span className="text-[10px] text-ink-soft self-center ml-2">sync: {syncStatus}</span>
-      </div>
+    <div
+      ref={canvasRef}
+      className="relative w-full h-full min-h-0 flex-1 bg-surface"
+      onDragOver={onCanvasDragOver}
+      onDrop={onCanvasDrop}
+    >
       <ReactFlowProvider>
         <ReactFlow
           nodes={nodes}
@@ -180,16 +207,50 @@ export default function IdeaRequestSection() {
           onNodesDelete={onNodesDelete}
           onEdgesDelete={onEdgesDelete}
           onConnect={(c) => connect(c)}
+          onNodeClick={onNodeClick}
           onNodeDragStart={onNodeDragStart}
           onNodeDrag={onNodeDrag}
           onNodeDragStop={onNodeDragStop}
+          onSelectionChange={onSelectionChange}
           deleteKeyCode={['Backspace', 'Delete']}
           connectionMode="loose"
           fitView
           className="w-full h-full"
         >
           <Background gap={20} color="#e2e8f0" />
-          <Controls />
+          <Controls className="rf-touch-controls" />
+          <RoadmapToolbar
+            paletteItems={IR_PALETTE_ITEMS}
+            onAddType={addAtCenter}
+            getHandlers={getHandlers}
+            mobileSelectMode={mobileSelectMode}
+            onToggleSelectMode={() => {
+              if (mobileSelectMode) {
+                setMobileSelectMode(false)
+                clearSelection()
+                setNodes(nodes.map((n) => ({ ...n, selected: false })))
+              } else {
+                setMobileSelectMode(true)
+              }
+            }}
+            selectionCount={selection.length}
+            onDuplicate={duplicateSelection}
+            onExport={handleExportSelected}
+            onDelete={() => {
+              removeSelection()
+              setMobileSelectMode(false)
+            }}
+            onCancel={() => {
+              clearSelection()
+              setNodes(nodes.map((n) => ({ ...n, selected: false })))
+              setMobileSelectMode(false)
+            }}
+            paletteExtra={
+              <span className="text-[10px] text-ink-soft self-center ml-1 flex-shrink-0 whitespace-nowrap">
+                sync: {syncStatus}
+              </span>
+            }
+          />
         </ReactFlow>
       </ReactFlowProvider>
       <TrashZone ref={trashRef} visible={isDragging} over={isOverTrash} />

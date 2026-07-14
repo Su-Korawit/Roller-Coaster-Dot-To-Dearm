@@ -29,6 +29,7 @@ async function writeToLocal(dirHandle, relativePath, blob) {
 
 export default function UpdateAssetsSection() {
   const toast = useToast()
+  const canPickDirectory = typeof window !== 'undefined' && 'showDirectoryPicker' in window
 
   const [phase,    setPhase]    = useState('idle')  // idle | listing | downloading | done | error
   const [total,    setTotal]    = useState(0)
@@ -120,13 +121,21 @@ export default function UpdateAssetsSection() {
       </div>
 
       {phase === 'idle' && (
-        <button
-          onClick={handleUpdate}
-          className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-medium text-white active:opacity-80"
-        >
-          <span>⬇️</span>
-          Update Assets from Firebase
-        </button>
+        <div className="space-y-2">
+          <button
+            onClick={handleUpdate}
+            disabled={!canPickDirectory}
+            className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-medium text-white active:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span>⬇️</span>
+            Update Assets from Firebase
+          </button>
+          {!canPickDirectory && (
+            <p className="text-xs text-ink-soft">
+              Chrome/Edge desktop only — browser นี้ไม่รองรับ File System Access API
+            </p>
+          )}
+        </div>
       )}
 
       {(phase === 'listing' || phase === 'downloading') && (

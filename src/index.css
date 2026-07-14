@@ -208,3 +208,11 @@ html {
   .animate-block-fill { animation: none; opacity: 1; }
   .animate-scroll-hint { animation: none; }
 }
+
+/* React Flow Controls — larger tap targets for touch (admin IR + student Roadmap) */
+.rf-touch-controls .react-flow__controls-button {
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  min-width: 2.5rem !important;
+  min-height: 2.5rem !important;
+}

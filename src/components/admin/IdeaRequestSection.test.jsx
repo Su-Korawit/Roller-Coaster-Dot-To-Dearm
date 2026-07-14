@@ -27,6 +27,10 @@ vi.mock('../roadmap/TrashZone', () => ({
     return <div ref={ref} data-testid="trash-zone" aria-label="Trash zone — drop block here to delete" />
   }),
 }))
+vi.mock('../roadmap/RoadmapToolbar', () => ({
+  default: () => <div data-testid="roadmap-toolbar" />,
+  IR_PALETTE_ITEMS: [],
+}))
 
 // Two 128×128 process blocks 10px apart: a's right dot (428,164) is within
 // the 40px threshold of b's left dot (438,164).
@@ -43,6 +47,11 @@ const storeState = {
   detachNode: vi.fn(),
   removeNode: vi.fn(),
   removeEdge: vi.fn(),
+  selection: [],
+  setSelection: vi.fn(),
+  clearSelection: vi.fn(),
+  removeSelection: vi.fn(),
+  duplicateSelection: vi.fn(),
   syncStatus: 'idle',
 }
 vi.mock('../../stores/useRoadmapStore', () => ({
