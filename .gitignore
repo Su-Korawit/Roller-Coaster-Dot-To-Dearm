@@ -42,3 +42,6 @@ coverage/
 *.aseprite
 
 .iloveskill/
+
+# Personal learning notes, not project documentation
+when_ai_gone.md
