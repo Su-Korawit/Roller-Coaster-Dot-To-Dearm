@@ -71,6 +71,18 @@ describe('IdeaRequestSection snap connections', () => {
     storeState.removeEdge.mockClear()
   })
 
+  // Regression: the admin shell sizes this section with min-h-screen + flex-1,
+  // which is an *indefinite* CSS height — ReactFlow's own h-full would resolve
+  // to 0px and render a blank board (reactflow.dev/error#004). The canvas must
+  // therefore sit in an absolutely-positioned wrapper, which sizes against the
+  // relative root's laid-out height instead. jsdom can't measure layout, so the
+  // wrapper's positioning classes are the closest testable proxy.
+  it('renders the canvas inside an absolute inset-0 wrapper (indefinite-height shell)', async () => {
+    const { container } = render(<IdeaRequestSection />)
+    await waitFor(() => expect(captured).not.toBeNull())
+    expect(container.querySelector('.absolute.inset-0')).not.toBeNull()
+  })
+
   it('hides edge lines by registering InvisibleEdge as the default edge type', async () => {
     render(<IdeaRequestSection />)
     await waitFor(() => expect(captured).not.toBeNull())

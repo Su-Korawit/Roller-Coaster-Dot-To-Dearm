@@ -196,62 +196,69 @@ export default function IdeaRequestSection() {
       onDrop={onCanvasDrop}
     >
       <ReactFlowProvider>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          onInit={(instance) => { rfRef.current = instance }}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onNodesDelete={onNodesDelete}
-          onEdgesDelete={onEdgesDelete}
-          onConnect={(c) => connect(c)}
-          onNodeClick={onNodeClick}
-          onNodeDragStart={onNodeDragStart}
-          onNodeDrag={onNodeDrag}
-          onNodeDragStop={onNodeDragStop}
-          onSelectionChange={onSelectionChange}
-          deleteKeyCode={['Backspace', 'Delete']}
-          connectionMode="loose"
-          fitView
-          className="w-full h-full"
-        >
-          <Background gap={20} color="#e2e8f0" />
-          <Controls className="rf-touch-controls" />
-          <RoadmapToolbar
-            paletteItems={IR_PALETTE_ITEMS}
-            onAddType={addAtCenter}
-            getHandlers={getHandlers}
-            mobileSelectMode={mobileSelectMode}
-            onToggleSelectMode={() => {
-              if (mobileSelectMode) {
+        {/* The admin shell (min-h-screen + flex-1) gives this section a real
+            flexed height but an *indefinite* CSS height, so ReactFlow's own
+            h-full would resolve to 0px and the board renders blank
+            (reactflow.dev/error#004). Absolute positioning sizes against the
+            relative root's laid-out height instead of the indefinite chain. */}
+        <div className="absolute inset-0">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            onInit={(instance) => { rfRef.current = instance }}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onNodesDelete={onNodesDelete}
+            onEdgesDelete={onEdgesDelete}
+            onConnect={(c) => connect(c)}
+            onNodeClick={onNodeClick}
+            onNodeDragStart={onNodeDragStart}
+            onNodeDrag={onNodeDrag}
+            onNodeDragStop={onNodeDragStop}
+            onSelectionChange={onSelectionChange}
+            deleteKeyCode={['Backspace', 'Delete']}
+            connectionMode="loose"
+            fitView
+            className="w-full h-full"
+          >
+            <Background gap={20} color="#e2e8f0" />
+            <Controls className="rf-touch-controls" />
+            <RoadmapToolbar
+              paletteItems={IR_PALETTE_ITEMS}
+              onAddType={addAtCenter}
+              getHandlers={getHandlers}
+              mobileSelectMode={mobileSelectMode}
+              onToggleSelectMode={() => {
+                if (mobileSelectMode) {
+                  setMobileSelectMode(false)
+                  clearSelection()
+                  setNodes(nodes.map((n) => ({ ...n, selected: false })))
+                } else {
+                  setMobileSelectMode(true)
+                }
+              }}
+              selectionCount={selection.length}
+              onDuplicate={duplicateSelection}
+              onExport={handleExportSelected}
+              onDelete={() => {
+                removeSelection()
                 setMobileSelectMode(false)
+              }}
+              onCancel={() => {
                 clearSelection()
                 setNodes(nodes.map((n) => ({ ...n, selected: false })))
-              } else {
-                setMobileSelectMode(true)
+                setMobileSelectMode(false)
+              }}
+              paletteExtra={
+                <span className="text-[10px] text-ink-soft self-center ml-1 flex-shrink-0 whitespace-nowrap">
+                  sync: {syncStatus}
+                </span>
               }
-            }}
-            selectionCount={selection.length}
-            onDuplicate={duplicateSelection}
-            onExport={handleExportSelected}
-            onDelete={() => {
-              removeSelection()
-              setMobileSelectMode(false)
-            }}
-            onCancel={() => {
-              clearSelection()
-              setNodes(nodes.map((n) => ({ ...n, selected: false })))
-              setMobileSelectMode(false)
-            }}
-            paletteExtra={
-              <span className="text-[10px] text-ink-soft self-center ml-1 flex-shrink-0 whitespace-nowrap">
-                sync: {syncStatus}
-              </span>
-            }
-          />
-        </ReactFlow>
+            />
+          </ReactFlow>
+        </div>
       </ReactFlowProvider>
       <TrashZone ref={trashRef} visible={isDragging} over={isOverTrash} />
 
