@@ -8,13 +8,14 @@ Read `CONTEXT.md` first. It is the authoritative project glossary and architectu
 
 | Tool | Role |
 |------|------|
-| **Claude Code (terminal)** | Planning, ADRs, scripts, tests, Firestore migrations, Firebase rules |
-| **Cursor IDE** | React components, JSX, Tailwind styling, UI wiring |
+| **Claude Code (terminal)** | Planning, ADRs, scripts, tests, Firestore migrations, Firebase rules; implements Ideas whose executor is `claude`; bug fixing (`/ihatefix`) |
+| **Cursor IDE** | React components, JSX, Tailwind styling, UI wiring; implements Ideas whose executor is `cursor` |
 
-**Workflow:**
-1. Claude Code reads relevant files, writes a plan or ADR
-2. Cursor implements the plan in the IDE
-3. Claude Code runs tests and verifies the result
+**Workflow (korawit skills — see ADR 0017 and UBIQUITOUS_LANGUAGE.md):**
+1. `/iloveplan` (Claude Code) picks IR Ideas, writes a plan per idea, and assigns each an executor — `claude` or `cursor`
+2. `/ilovetask` implements each segment of the queue in its owning tool
+3. `/ilovefinish` (Claude Code) runs tests, pushes main, reports to the IR Board, and hands the queue to the next executor
+4. Bugs skip planning: `/ihatefix` diagnoses and fixes, then lands on the same `/ilovefinish` gate
 
 ---
 
