@@ -20,10 +20,13 @@ export function readCurrent(baseDir = process.cwd()) {
   return JSON.parse(fs.readFileSync(abs, 'utf8'))
 }
 
-export function writeCurrent({ ideaId, ideaTitle, planPath }, baseDir = process.cwd()) {
+export function writeCurrent(
+  { ideaId, ideaTitle, planPath, executor = 'cursor' },
+  baseDir = process.cwd(),
+) {
   const abs = filePath(CURRENT_PATH, baseDir)
   ensureParentDir(abs)
-  const data = { ideaId, ideaTitle, planPath }
+  const data = { ideaId, ideaTitle, planPath, executor }
   fs.writeFileSync(abs, JSON.stringify(data, null, 2))
   return data
 }
@@ -67,9 +70,12 @@ function writeQueue(queue, baseDir) {
   return queue
 }
 
-export function enqueueIdea({ ideaId, ideaTitle, planPath }, baseDir = process.cwd()) {
+export function enqueueIdea(
+  { ideaId, ideaTitle, planPath, executor = 'cursor' },
+  baseDir = process.cwd(),
+) {
   const queue = readQueue(baseDir)
-  queue.items.push({ ideaId, ideaTitle, planPath })
+  queue.items.push({ ideaId, ideaTitle, planPath, executor })
   return writeQueue(queue, baseDir)
 }
 

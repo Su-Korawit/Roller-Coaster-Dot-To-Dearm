@@ -41,15 +41,24 @@ describe('iloveskillState paths', () => {
 })
 
 describe('current idea state', () => {
-  it('round-trips writeCurrent and readCurrent', () => {
+  it('round-trips writeCurrent and readCurrent with an executor', () => {
     const data = {
       ideaId: 'idea-1',
       ideaTitle: 'IR Board',
       planPath: 'docs/plans/2026-07-12-ir-board.md',
+      executor: 'claude',
     }
     writeCurrent(data, tmpDir)
     expect(readCurrent(tmpDir)).toEqual(data)
     expect(fs.existsSync(path.join(tmpDir, CURRENT_PATH))).toBe(true)
+  })
+
+  it('writeCurrent defaults executor to cursor when omitted', () => {
+    writeCurrent(
+      { ideaId: 'idea-1', ideaTitle: 'IR Board', planPath: 'docs/plans/x.md' },
+      tmpDir,
+    )
+    expect(readCurrent(tmpDir).executor).toBe('cursor')
   })
 
   it('clearCurrent deletes the file', () => {
@@ -86,24 +95,35 @@ describe('multitask idea queue', () => {
     expect(readQueue(tmpDir)).toEqual({ items: [] })
   })
 
-  it('enqueueIdea appends ideas in order', () => {
-    enqueueIdea({ ideaId: 'a', ideaTitle: 'Alpha', planPath: 'docs/plans/a.md' }, tmpDir)
+  it('enqueueIdea appends ideas in order, keeping executor (default cursor)', () => {
+    enqueueIdea(
+      { ideaId: 'a', ideaTitle: 'Alpha', planPath: 'docs/plans/a.md', executor: 'claude' },
+      tmpDir,
+    )
     enqueueIdea({ ideaId: 'b', ideaTitle: 'Beta', planPath: 'docs/plans/b.md' }, tmpDir)
     expect(readQueue(tmpDir)).toEqual({
       items: [
-        { ideaId: 'a', ideaTitle: 'Alpha', planPath: 'docs/plans/a.md' },
-        { ideaId: 'b', ideaTitle: 'Beta', planPath: 'docs/plans/b.md' },
+        { ideaId: 'a', ideaTitle: 'Alpha', planPath: 'docs/plans/a.md', executor: 'claude' },
+        { ideaId: 'b', ideaTitle: 'Beta', planPath: 'docs/plans/b.md', executor: 'cursor' },
       ],
     })
   })
 
   it('dequeueNext pops the front item and rewrites the rest', () => {
-    enqueueIdea({ ideaId: 'a', ideaTitle: 'Alpha', planPath: 'docs/plans/a.md' }, tmpDir)
+    enqueueIdea(
+      { ideaId: 'a', ideaTitle: 'Alpha', planPath: 'docs/plans/a.md', executor: 'claude' },
+      tmpDir,
+    )
     enqueueIdea({ ideaId: 'b', ideaTitle: 'Beta', planPath: 'docs/plans/b.md' }, tmpDir)
     const next = dequeueNext(tmpDir)
-    expect(next).toEqual({ ideaId: 'a', ideaTitle: 'Alpha', planPath: 'docs/plans/a.md' })
+    expect(next).toEqual({
+      ideaId: 'a',
+      ideaTitle: 'Alpha',
+      planPath: 'docs/plans/a.md',
+      executor: 'claude',
+    })
     expect(readQueue(tmpDir)).toEqual({
-      items: [{ ideaId: 'b', ideaTitle: 'Beta', planPath: 'docs/plans/b.md' }],
+      items: [{ ideaId: 'b', ideaTitle: 'Beta', planPath: 'docs/plans/b.md', executor: 'cursor' }],
     })
   })
 
