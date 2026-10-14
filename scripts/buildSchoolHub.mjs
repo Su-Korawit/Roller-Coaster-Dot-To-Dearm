@@ -130,8 +130,8 @@ function roof(L, b) {
     let set
     if (r === 0) set = [ROOF.TL, ROOF.T, ROOF.TR]
     else if (r === 1) set = [ROOF.TL2, ROOF.T2, ROOF.TR2]
-    else if (r === rows - 1) set = [ROOF.BL, ROOF.B, ROOF.BR]
-    else if (r === rows - 2) set = [ROOF.BL2, ROOF.B2, ROOF.BR2]
+    else if (r === rows - 1) set = [ROOF.ML, ROOF.M, ROOF.MR]   // opaque: the eave tiles are half transparent and showed the floor
+    else if (r === rows - 2) set = [ROOF.ML, ROOF.M, ROOF.MR]
     else set = [ROOF.ML, ROOF.M, ROOF.MR]
     for (let c = 0; c < w; c++) {
       L.roof[idx(x + c, top + r)] = c === 0 ? set[0] : c === w - 1 ? set[2] : set[1]
