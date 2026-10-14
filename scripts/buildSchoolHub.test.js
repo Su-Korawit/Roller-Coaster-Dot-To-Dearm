@@ -140,18 +140,30 @@ describe('school_hub visual layers (production polish)', () => {
     }
   })
 
-  it('every building has a roof from one row above its top wall down to the row above the front wall', () => {
+  const isOpening = (b, x) => (b.door != null && x === b.door) || (b.doorway && x >= b.doorway[0] && x <= b.doorway[1])
+
+  it('every building has a roof from one row above its top wall down onto the front wall row (the eave)', () => {
     for (const b of buildings) {
       for (let x = b.x; x < b.x + b.w; x++) {
         expect(at('Roof', x, b.y - 1), `roof top ${x},${b.y - 1}`).toBeGreaterThan(0)
         expect(at('Roof', x, b.y + b.h - 2), `roof bottom ${x}`).toBeGreaterThan(0)
+        if (!isOpening(b, x)) expect(at('Roof', x, b.y + b.h - 1), `eave ${x}`).toBeGreaterThan(0)
       }
     }
   })
 
-  it('roofs leave the front wall visible: no roof on the door row, so doors and the library doorway show', () => {
+  it('doors and the library doorway stay open in the roof so they can be seen and entered', () => {
     for (const b of buildings) {
-      for (let x = b.x; x < b.x + b.w; x++) expect(at('Roof', x, b.y + b.h - 1)).toBe(0)
+      for (let x = b.x; x < b.x + b.w; x++) if (isOpening(b, x)) expect(at('Roof', x, b.y + b.h - 1)).toBe(0)
+    }
+  })
+
+  it('each roof has exactly one ridge band row (the pack draws one; repeating it stripes the roof)', () => {
+    for (const b of buildings) {
+      const mid = b.x + 1
+      const ridges = []
+      for (let y = b.y - 1; y <= b.y + b.h - 1; y++) if (at('Roof', mid, y) === 101) ridges.push(y)
+      expect(ridges, b.name ?? 'building').toHaveLength(1)
     }
   })
 
@@ -165,10 +177,11 @@ describe('school_hub visual layers (production polish)', () => {
     const roofCells = layerData('Roof').map((g, i) => (g ? i : -1)).filter((i) => i >= 0)
     const inside = (i) => {
       const x = i % W, y = Math.floor(i / W)
-      return buildings.some((b) => x >= b.x && x < b.x + b.w && y >= b.y - 1 && y <= b.y + b.h - 2)
+      return buildings.some((b) => x >= b.x && x < b.x + b.w && y >= b.y - 1 && y <= b.y + b.h - 1)
     }
     expect(roofCells.every(inside)).toBe(true)
-    expect(roofCells.length).toBe(buildings.reduce((n, b) => n + b.w * b.h, 0))
+    const openings = buildings.reduce((n, b) => n + (b.door != null ? 1 : b.doorway[1] - b.doorway[0] + 1), 0)
+    expect(roofCells.length).toBe(buildings.reduce((n, b) => n + b.w * (b.h + 1), 0) - openings)
   })
 
   it('every tree canopy tile sits directly above a trunk tile on the Object layer (walk-behind, not floating)', () => {

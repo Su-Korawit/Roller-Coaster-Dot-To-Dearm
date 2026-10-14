@@ -120,21 +120,28 @@ function house(L, b) {
   if (b.doorway) for (let cx = b.doorway[0]; cx <= b.doorway[1]; cx++) wall[idx(cx, bottom)] = 0
 }
 
-// Roof: one row above the top wall down to the row above the front wall, so the
-// front wall (door, doorway, windows) stays visible. Walking in under it fades it.
+// Roof, built the way the Sprout Lands pack draws it: a 5-row piece (scalloped top edge, shingles,
+// ONE ridge band, shingles, scalloped bottom edge). Extra height repeats shingle rows only - never the
+// band row, which would stripe the roof. The scalloped bottom edge is half transparent on purpose: it
+// overhangs the plank front wall, so the roof runs from one row above the top wall down onto the front
+// wall row, leaving only the door / doorway cells open.
 function roof(L, b) {
   const { x, y, w, h } = b
   const top = y - 1
-  const rows = h                       // y-1 .. y+h-2
+  const rows = h + 1                    // y-1 .. y+h-1
+  const ridge = Math.floor((rows - 1) / 2)
   for (let r = 0; r < rows; r++) {
     let set
     if (r === 0) set = [ROOF.TL, ROOF.T, ROOF.TR]
-    else if (r === 1) set = [ROOF.TL2, ROOF.T2, ROOF.TR2]
-    else if (r === rows - 1) set = [ROOF.ML, ROOF.M, ROOF.MR]   // opaque: the eave tiles are half transparent and showed the floor
-    else if (r === rows - 2) set = [ROOF.ML, ROOF.M, ROOF.MR]
-    else set = [ROOF.ML, ROOF.M, ROOF.MR]
+    else if (r === rows - 1) set = [ROOF.BL, ROOF.B, ROOF.BR]
+    else if (r === ridge) set = [ROOF.ML, ROOF.M, ROOF.MR]
+    else if (r < ridge) set = [ROOF.TL2, ROOF.T2, ROOF.TR2]
+    else set = [ROOF.BL2, ROOF.B2, ROOF.BR2]
     for (let c = 0; c < w; c++) {
-      L.roof[idx(x + c, top + r)] = c === 0 ? set[0] : c === w - 1 ? set[2] : set[1]
+      const cx = x + c
+      const front = r === rows - 1
+      if (front && ((b.door != null && cx === b.door) || (b.doorway && cx >= b.doorway[0] && cx <= b.doorway[1]))) continue
+      L.roof[idx(cx, top + r)] = c === 0 ? set[0] : c === w - 1 ? set[2] : set[1]
     }
   }
 }
