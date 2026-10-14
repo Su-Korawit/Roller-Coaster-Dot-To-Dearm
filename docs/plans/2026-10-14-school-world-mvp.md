@@ -32,7 +32,7 @@ Tracked as its own Idea; the MVP must not ship publicly without it.
 Files: `src/lib/presence.js`, `src/game/worldScenes.js`, `src/components/GameCanvas.jsx`, tests.
 - [x] Add idle state: change-only writes + one `idle: true` write after 60s unchanged (no heartbeat needed).
 - [x] Phaser: reduce target FPS (e.g. 10) on `visibilitychange` hidden or idle; restore on input.
-- [x] Remote players with `idle: true` render as static sitting sprite, no tween.
+- [ ] Remote players with `idle: true` render as static sitting sprite, no tween. (deferred: see afk-cost-notes item 5)
 - [x] Write `docs/plans/afk-cost-notes.md` (write counts measured in test; bandwidth estimated). **Open: real-RTDB measurement before pilot.**
 - [x] Tests extend `presence.test.js` (idle throttle).
 
