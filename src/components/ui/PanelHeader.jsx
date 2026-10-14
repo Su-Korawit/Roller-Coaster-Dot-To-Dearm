@@ -3,7 +3,7 @@ import { X } from 'lucide-react'
 // Shared chrome header for all full-screen panels.
 export default function PanelHeader({ title, leftIcon, rightActions, onClose }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-b-2 border-ink bg-paper shrink-0">
+    <div className="rpg-plank flex items-center justify-between px-4 py-3 shrink-0">
       <div className="flex items-center gap-2 min-w-0">
         {leftIcon && <span className="shrink-0" aria-hidden="true">{leftIcon}</span>}
         <h2 className="pixel-font text-[12px] uppercase text-ink truncate">{title}</h2>

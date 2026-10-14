@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSchoolWorldStore } from '../../../stores/useSchoolWorldStore'
 import { confirmFocus } from '../../../services/schoolWorld'
-import { msUntilCheckIn } from '../../../services/focus'
+import { msUntilCheckIn, CHECKIN_PROMPT_MS } from '../../../services/focus'
 import { formatDuration } from '../../../utils/formatFocus'
 
 // Always-visible pill while a Focus session runs, so the student can leave the
@@ -32,6 +32,12 @@ export default function FocusHud() {
         {due ? 'ยังอยู่ไหม? แตะเพื่อยืนยัน' : `ยืนยันใน ${formatDuration(left)}`}
         <span className="text-brand-strong">+{focus.xpThisSession}</span>
       </button>
+      <div
+        className="rpg-bar rpg-bar--heart mt-1.5 mx-1" style={{ '--pct': Math.round(100 - (left / CHECKIN_PROMPT_MS) * 100), height: '8px' }}
+        aria-hidden="true"
+      >
+        <i />
+      </div>
     </div>
   )
 }

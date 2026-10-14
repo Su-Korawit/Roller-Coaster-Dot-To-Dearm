@@ -167,6 +167,9 @@ export async function bootstrapSession(firebaseUser) {
   await step('set coins', async () => {
     if (serverCoins > 0) useUserStore.getState().setCoins(serverCoins)
   })
+  await step('set focus xp', async () => {
+    useUserStore.getState().setFocusXp(userData?.focusXp ?? 0)
+  })
   await step('set file bag usage', async () => {
     useUserStore.getState().setFileBagUsageBytes(userData?.fileBagUsageBytes ?? 0)
   })

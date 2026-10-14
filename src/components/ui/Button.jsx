@@ -29,7 +29,7 @@ export default function Button({
   }
 
   const variants = {
-    primary: 'neo-btn bg-brand-strong text-white',
+    primary: 'neo-btn rpg-btn-primary',
     secondary: 'neo-btn bg-surface text-ink',
     ghost: 'text-brand-strong',
   }

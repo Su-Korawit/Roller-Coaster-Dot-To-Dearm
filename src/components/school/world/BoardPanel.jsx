@@ -14,7 +14,7 @@ function Row({ title, sub, link }) {
       {sub && <div className="thai-font text-xs text-ink/60 line-clamp-2">{sub}</div>}
     </>
   )
-  const cls = 'block px-3 py-2 border-2 border-ink rounded-lg bg-surface'
+  const cls = 'neo-slab block px-3 py-2'
   return link
     ? <a href={link} target="_blank" rel="noopener noreferrer" className={cls}>{body}</a>
     : <div className={cls}>{body}</div>

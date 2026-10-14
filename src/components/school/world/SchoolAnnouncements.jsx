@@ -71,7 +71,7 @@ export default function SchoolAnnouncements({ schoolId, user, isTeacher }) {
             className="thai-font text-sm border-2 border-ink rounded-lg px-2 py-1.5 bg-surface"
           />
           {formError && <p role="alert" className="thai-font text-xs text-accent-pink">{formError}</p>}
-          <button type="submit" disabled={busy} className="neo-btn bg-brand text-white pixel-font text-[10px] py-2 rounded-lg disabled:opacity-50">
+          <button type="submit" disabled={busy} className="neo-btn rpg-btn-primary pixel-font text-[10px] py-2 rounded-lg disabled:opacity-50">
             {busy ? 'กำลังโพสต์…' : 'โพสต์ประกาศ'}
           </button>
         </form>
@@ -84,7 +84,7 @@ export default function SchoolAnnouncements({ schoolId, user, isTeacher }) {
         <p className="thai-font text-sm text-ink/60">ยังไม่มีประกาศจากโรงเรียน</p>
       )}
       {state.posts.map((p) => (
-        <article key={p.id} className="px-3 py-2 border-2 border-ink rounded-lg bg-brand-soft">
+        <article key={p.id} className="neo-card px-3 py-2">
           <div className="flex items-start justify-between gap-2">
             <h4 className="thai-font text-sm font-bold text-ink">{p.title}</h4>
             <span className="thai-font text-[10px] text-ink/50 shrink-0">{fmtDate(p.createdAt)}</span>

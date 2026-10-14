@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { Calendar, MessageCircle, Map, Newspaper, Trophy, Flame, Music, Gamepad2, GraduationCap } from 'lucide-react'
+import LevelBadge from '../components/hud/LevelBadge'
 import { useUserStore } from '../stores/useUserStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { APP_VIEWS, shouldShowNav } from '../constants/appViews'
@@ -52,6 +53,7 @@ function HomePage() {
 
   const profilePhotoURL = useUserStore((s) => s.profilePhotoURL)
   const authUser = useAuthStore((s) => s.user)
+  const focusXp = useUserStore((s) => s.focusXp)
   const coins = useUserStore((state) => state.coins)
   const totalStacks = useUserStore((s) => s.totalStacks)
   const gold = useInventoryStore((s) => s.gold)
@@ -202,10 +204,7 @@ function HomePage() {
       <div className="absolute inset-0 z-0">
         <Suspense
           fallback={
-            <div
-              className="w-full h-full"
-              style={{ background: 'linear-gradient(160deg, #0f0824 0%, #1a1035 50%, #0d1f3c 100%)' }}
-            />
+            <div className="w-full h-full px-sky-bg" />
           }
         >
           <GameCanvas active={activeTab === APP_VIEWS.HOME && activePopup !== 'calendar'} onOpenView={handleTabChange} />
@@ -223,7 +222,8 @@ function HomePage() {
         {/* Left side: Avatar pill + Music pill */}
         <div className="flex items-center gap-2 min-w-0 flex-1">
 
-          {/* Avatar button */}
+          {/* Avatar button + MMO-style level coin / XP bar */}
+          <div className="relative shrink-0">
           <button
             onClick={() => handleTabChange(APP_VIEWS.PROFILE)}
             aria-label="โปรไฟล์"
@@ -234,6 +234,8 @@ function HomePage() {
               : <Gamepad2 size={18} strokeWidth={2.5} className="text-ink" />
             }
           </button>
+          <LevelBadge xp={focusXp} />
+          </div>
 
           {/* Music status pill */}
           {uiVisibility.musicPill && (

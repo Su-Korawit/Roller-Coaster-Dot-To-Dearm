@@ -20,6 +20,7 @@ export const useUserStore = create(
       user: null,
       coins: 0,
       fileBagUsageBytes: 0,
+      focusXp: 0,        // lifetime Focus XP (Functions-owned; mirrored here for the HUD level badge)
       streak: 0,
       lastStreakDate: null, // 'YYYY-MM-DD' of the last day that counted toward the streak
       bestStreak: 0,
@@ -48,6 +49,8 @@ export const useUserStore = create(
       addCoins: (amount) => set((state) => ({ coins: state.coins + amount })),
       setCoins: (amount) => set({ coins: amount }),
       setFileBagUsageBytes: (n) => set({ fileBagUsageBytes: Number(n) || 0 }),
+      setFocusXp: (n) => set({ focusXp: Math.max(0, Number(n) || 0) }),
+      addFocusXp: (n) => set((s) => ({ focusXp: Math.max(0, s.focusXp + (Number(n) || 0)) })),
       setStreak: (streak) => set({ streak }),
       incrementStacks: () => set((state) => ({ totalStacks: state.totalStacks + 1 })),
 
@@ -167,6 +170,7 @@ export const useUserStore = create(
         set({
           user: null,
           coins: 0,
+          focusXp: 0,
           streak: 0,
           lastStreakDate: null,
           bestStreak: 0,

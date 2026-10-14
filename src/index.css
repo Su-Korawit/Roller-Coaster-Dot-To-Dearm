@@ -3,21 +3,30 @@
 
 /* ── Design tokens ─────────────────────────────────────────────────────────── */
 @theme {
-  --color-brand:        #a78bda;
-  --color-brand-strong: #7c3aed;
-  --color-brand-soft:   #f0eeff;
-  --color-accent-pink:  #d93d8c;
-  --color-ink:          #1a1035;
-  --color-surface:      #ffffff;
-  --color-paper:        #fdf6ec;
-  --color-hud:          #fffdf8;
-  --color-ink-soft:     #6b6284;
-  --color-good:         #3f9e58;
-  --color-warn:         #e0a53c;
-  --color-danger:       #d9534f;
-  --color-mist:         #f4f7fc;
-  --shadow-hard:        4px 4px 0 0 #1a1035;
-  --shadow-hard-sm:     3px 3px 0 0 #1a1035;
+  /* Sprout Lands UI palette (Cup Nooble) — warm parchment panels, plum outlines,
+     heart-purple brand, leaf-green progress. Names are kept from the old theme so
+     every existing class re-skins without edits. */
+  --color-brand:        #8a4a70;   /* heart purple */
+  --color-brand-strong: #713970;
+  --color-brand-soft:   #f0dfd8;
+  --color-accent-pink:  #bd757e;
+  --color-ink:          #4b3340;   /* deep plum-brown text */
+  --color-surface:      #f8efd6;   /* light parchment (inputs, cards) */
+  --color-paper:        #f3e5c2;   /* sheets / pages */
+  --color-hud:          #e8cfa6;   /* HUD slabs */
+  --color-ink-soft:     #8c7369;
+  --color-good:         #7ea04a;
+  --color-warn:         #d99b3b;
+  --color-danger:       #b4533f;
+  --color-mist:         #f3e5c2;
+  --color-edge:         #90625d;   /* panel outline */
+  --color-wood-light:   #f3e5c2;
+  --color-wood:         #dcb98a;
+  --color-wood-dark:    #c49a6c;
+  --color-wood-edge:    #aa7959;
+  --color-lime:         #c0d470;
+  --shadow-hard:        0 4px 0 0 #90625d;
+  --shadow-hard-sm:     0 3px 0 0 #90625d;
 }
 
 /* ── Public-site checker texture (design.md §15) ──────────────────────────────
@@ -127,62 +136,136 @@ html {
   font-family: 'Noto Sans Thai', sans-serif;
 }
 
-/* ── Welcome page: neo-brutalist "pixel kawaii" surface language ───────────── */
+/* ── Surface language: Sprout Lands "wooden parchment" panels ───────────────
+   Class names (neo-*) are historical; they now draw chamfer-ish parchment panels:
+   plum outline, light inner ring, darker bottom ledge, hard drop ledge. Metrics
+   (2px border) are unchanged from the old look, so no layout shifts. */
 .neo-card {
-  border: 2px solid var(--color-ink);
-  border-radius: 1rem;
+  border: 2px solid var(--color-edge);
+  border-radius: 8px;
   background: var(--color-surface);
-  box-shadow: 4px 4px 0 0 var(--color-ink);
+  box-shadow:
+    inset 0 0 0 2px var(--color-wood-light),
+    inset 0 -4px 0 0 #e8cfa6,
+    0 4px 0 0 var(--color-edge);
 }
 .neo-btn {
-  border: 2px solid var(--color-ink);
-  box-shadow: 4px 4px 0 0 var(--color-ink);
+  border: 2px solid var(--color-edge);
+  border-radius: 6px;
+  box-shadow:
+    inset 0 2px 0 0 rgb(255 255 255 / 0.35),
+    inset 0 -3px 0 0 rgb(75 51 64 / 0.18),
+    0 4px 0 0 var(--color-edge);
   transition: transform 120ms steps(2), box-shadow 120ms steps(2);
 }
 .neo-btn:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 0 var(--color-ink);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 2px 0 0 rgb(255 255 255 / 0.35),
+    inset 0 -3px 0 0 rgb(75 51 64 / 0.18),
+    0 6px 0 0 var(--color-edge);
 }
 .neo-btn:active {
-  transform: translate(4px, 4px);
-  box-shadow: 0 0 0 0 var(--color-ink);
+  transform: translateY(4px);
+  box-shadow:
+    inset 0 2px 0 0 rgb(75 51 64 / 0.2),
+    0 0 0 0 var(--color-edge);
 }
 @media (prefers-reduced-motion: reduce) {
   .neo-btn { transition: none; }
   .neo-btn:hover, .neo-btn:active { transform: none; }
 }
 
-/* ── Cartridge HUD surface system (see design.md §4) ───────────────────────── */
+/* ── HUD surface system (see design.md §4) ─────────────────────────────────── */
 .neo-slab {
-  border: 2px solid var(--color-ink);
-  border-radius: 0.75rem;
+  border: 2px solid var(--color-edge);
+  border-radius: 8px;
   background: var(--color-hud);
-  box-shadow: 3px 3px 0 0 var(--color-ink);
+  box-shadow:
+    inset 0 2px 0 0 var(--color-wood-light),
+    inset 0 -3px 0 0 var(--color-wood-dark),
+    0 3px 0 0 var(--color-edge);
 }
 .neo-sheet {
-  border: 2px solid var(--color-ink);
+  border: 2px solid var(--color-edge);
   border-bottom: none;
-  border-radius: 1rem 1rem 0 0;
+  border-radius: 12px 12px 0 0;
   background: var(--color-paper);
+  box-shadow: inset 0 2px 0 0 #fbf3dd, 0 -3px 0 0 rgb(75 51 64 / 0.25);
 }
 .neo-pressed {
-  transform: translate(2px, 2px);
-  box-shadow: none;
+  transform: translateY(2px);
+  box-shadow: inset 0 2px 0 0 rgb(75 51 64 / 0.2);
   background: var(--color-brand-soft);
 }
 .neo-input {
-  border: 2px solid var(--color-ink);
-  border-radius: 0.5rem;
-  background: var(--color-surface);
+  border: 2px solid var(--color-edge);
+  border-radius: 6px;
+  background: #fbf3dd;
+  box-shadow: inset 0 2px 0 0 rgb(107 75 91 / 0.18);
 }
 .neo-input:focus {
   outline: none;
-  box-shadow: 3px 3px 0 0 var(--color-brand);
+  box-shadow: inset 0 2px 0 0 rgb(107 75 91 / 0.18), 0 0 0 3px var(--color-lime);
 }
 
+/* ── RPG chrome (cozy pixel RPG) ─────────────────────────────────────────────── */
+/* Wooden title plank: header strip of every panel. */
+.rpg-plank {
+  background: var(--color-wood);
+  border-bottom: 2px solid var(--color-edge);
+  box-shadow: inset 0 2px 0 0 var(--color-wood-light), inset 0 -3px 0 0 var(--color-wood-dark);
+}
+/* XP / HP style bar: --pct is 0-100. Dark plum trough, lime (or plum) fill. */
+.rpg-bar {
+  position: relative;
+  flex-shrink: 0;
+  height: 14px;
+  padding: 1px;
+  border: 2px solid var(--color-edge);
+  border-radius: 5px;
+  background: #6b4b5b;
+  box-shadow: inset 0 2px 0 0 rgb(0 0 0 / 0.28);
+}
+.rpg-bar > i {
+  display: block;
+  height: 100%;
+  width: calc(var(--pct, 0) * 1%);
+  min-width: 0;
+  border-radius: 3px;
+  background: linear-gradient(#dbe99b, #c0d470 45%, #9db557);
+  box-shadow: inset 0 2px 0 0 rgb(255 255 255 / 0.5);
+  transition: width 240ms steps(6);
+}
+.rpg-bar--heart > i { background: linear-gradient(#c9889a, #a35b70 45%, #8a4a70); }
+@media (prefers-reduced-motion: reduce) { .rpg-bar > i { transition: none; } }
+/* Primary action: leaf-green button. */
+.rpg-btn-primary {
+  background: linear-gradient(#cfe08a, #b6cb68);
+  color: var(--color-ink);
+  border-color: #6f8a3a;
+}
+.rpg-btn-danger { background: linear-gradient(#d98a78, #b4533f); color: #fff8ee; border-color: #7a3326; }
+/* Level badge: round wooden coin. */
+.rpg-coin {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 2rem; height: 2rem; padding: 0 0.4rem;
+  border: 2px solid var(--color-edge); border-radius: 999px;
+  background: radial-gradient(circle at 35% 30%, #f3e5c2, #dcb98a 70%);
+  box-shadow: inset 0 -3px 0 0 var(--color-wood-dark), 0 3px 0 0 var(--color-edge);
+}
+/* Pop-in for panels/toasts: stepped scale, no blur. */
+@keyframes pxPop { 0% { transform: scale(0.9); opacity: 0; } 60% { transform: scale(1.03); opacity: 1; } 100% { transform: scale(1); } }
+.animate-pop { animation: pxPop 200ms steps(5); }
+@media (prefers-reduced-motion: reduce) { .animate-pop { animation: none; } }
+/* Title-screen scenery: slow stepped cloud drift. */
+@keyframes cloudDrift { from { transform: translateX(-30vw); } to { transform: translateX(130vw); } }
+.px-cloud { position: absolute; image-rendering: pixelated; animation: cloudDrift 90s steps(240) infinite; opacity: 0.9; }
+@media (prefers-reduced-motion: reduce) { .px-cloud { animation: none; left: 12%; } }
+
 /* ── Headline treatment — replaces gradient-clipped text (design.md §5) ────── */
-.pixel-title      { color: var(--color-ink); text-shadow: 3px 3px 0 var(--color-accent-pink); }
-.pixel-title-dark { color: #ffffff;          text-shadow: 3px 3px 0 var(--color-brand-strong); }
+.pixel-title      { color: var(--color-ink); text-shadow: 2px 2px 0 var(--color-wood); }
+.pixel-title-dark { color: #fff8ee;          text-shadow: 3px 3px 0 #6b4b5b; }
 
 /* ── Stepped motion (design.md §7) ─────────────────────────────────────────── */
 @keyframes sheetUp {
@@ -235,3 +318,12 @@ html {
 @media (prefers-reduced-motion: reduce) {
   .rain-layer { animation: none; }
 }
+
+/* Cozy scrollbars: thin wooden thumb on a parchment track (Firefox + Chromium). */
+* { scrollbar-width: thin; scrollbar-color: #aa7959 #ecd9b3; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: #ecd9b3; }
+*::-webkit-scrollbar-thumb { background: #aa7959; border: 2px solid #ecd9b3; border-radius: 6px; }
+
+/* Sky-to-meadow wash behind loading screens and the game canvas while it boots. */
+.px-sky-bg { background: linear-gradient(180deg, #8ec9d8 0%, #bfe0c8 55%, #c0d470 100%); }

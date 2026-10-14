@@ -3,6 +3,8 @@ import { SITES } from '../constants/sites'
 import SiteNav, { siteHref } from '../components/landing/SiteNav'
 import WelcomeFooter from '../components/welcome/WelcomeFooter'
 import { useGamePreviewMedia } from '../hooks/useGamePreviewMedia'
+import SceneBackdrop from '../components/landing/SceneBackdrop'
+import CharacterSprite from '../components/ui/CharacterSprite'
 
 // Hub anatomy per design.md §13: nav → text-only outcome hero → tool grid
 // (the hero product) → 3-step "work your way" strip → dark app band → trust
@@ -76,15 +78,24 @@ export default function HubPage() {
       <SiteNav currentKey="hub" />
 
       {/* Hero — text only; the tool grid right below is the real hero (§13) */}
-      <header className="pixel-checker border-b-2 border-ink bg-surface">
-        <div className="mx-auto max-w-6xl px-4 py-14 text-center md:px-6 md:py-20">
-          <p className="pixel-font pixel-title mb-5 text-[10px] md:text-xs">I LOVE TCAS</p>
-          <h1 className="thai-font mx-auto max-w-3xl text-3xl font-extrabold leading-tight text-ink md:text-5xl">
-            {SITES.hub.h1}
-          </h1>
-          <p className="thai-font mx-auto mt-4 max-w-xl text-base text-ink-soft md:text-lg">
-            {SITES.hub.intro}
-          </p>
+      <header className="relative overflow-hidden border-b-2 border-edge">
+        <SceneBackdrop position="center 40%" shade={0.35} />
+        <div className="relative z-10 mx-auto max-w-6xl px-4 pt-12 pb-28 text-center md:px-6 md:pt-16 md:pb-32">
+          <div className="neo-card mx-auto max-w-3xl px-3 py-7 animate-pop sm:px-6 md:px-10 md:py-10">
+            <p className="pixel-font pixel-title mb-5 text-[10px] md:text-xs">I LOVE TCAS</p>
+            <h1 className="thai-font mx-auto max-w-3xl text-[1.65rem] font-extrabold leading-tight text-ink sm:text-3xl md:text-5xl">
+              {SITES.hub.h1}
+            </h1>
+            <p className="thai-font mx-auto mt-4 max-w-xl text-base text-ink-soft md:text-lg">
+              {SITES.hub.intro}
+            </p>
+          </div>
+        </div>
+        {/* The cast, strolling along the bottom edge of the hero. */}
+        <div className="absolute inset-x-0 bottom-0 z-10 flex justify-center gap-1 sm:gap-6" aria-hidden="true">
+          {['INTJ', 'ENFP', 'ISTP', 'ESFJ', 'INFP'].map((code) => (
+            <CharacterSprite key={code} code={code} scale={2} />
+          ))}
         </div>
       </header>
 

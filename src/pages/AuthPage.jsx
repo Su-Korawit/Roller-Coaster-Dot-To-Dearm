@@ -3,19 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../stores/useAuthStore'
 import { currentSite } from '../lib/site'
 import Button from '../components/ui/Button'
+import CharacterSprite from '../components/ui/CharacterSprite'
+import SceneBackdrop from '../components/landing/SceneBackdrop'
 import { markConsentPending, clearPendingConsent } from '../services/consent'
 import { LEGAL_PATHS } from '../constants/legal'
-
-const STARS = Array.from({ length: 50 }, (_, i) => {
-  const seed = i * 2654435761
-  return {
-    width: `${((seed % 3) + 1)}px`,
-    height: `${((seed % 3) + 1)}px`,
-    top: `${((seed * 7) % 100)}%`,
-    left: `${((seed * 13) % 100)}%`,
-    opacity: ((seed % 6) + 3) / 10,
-  }
-})
 
 const ERROR_MESSAGES = {
   'auth/email-already-in-use': 'อีเมลนี้ถูกใช้งานแล้ว',
@@ -103,40 +94,20 @@ export default function AuthPage() {
   return (
     <section
       className="relative h-full overflow-hidden flex flex-col items-center justify-center px-6"
-      style={{ background: 'linear-gradient(160deg, #0f0824 0%, #1a1035 50%, #0d1f3c 100%)' }}
     >
-      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        {STARS.map((s, i) => (
-          <div key={i} className="absolute rounded-full bg-white" style={s} />
-        ))}
-      </div>
+      <SceneBackdrop />
 
-      <div
-        className="absolute pointer-events-none rounded-full"
-        style={{
-          width: '320px',
-          height: '320px',
-          top: '10%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: 'radial-gradient(circle, rgba(167,139,218,0.12) 0%, transparent 70%)',
-        }}
-        aria-hidden="true"
-      />
-
-      <div className="relative z-10 flex flex-col items-center mb-7">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center neo-card bg-surface">
-          <span className="pixel-font text-xl text-brand-strong" aria-hidden="true">ILT</span>
+      <div className="relative z-10 flex flex-col items-center mb-5">
+        <div className="neo-card px-7 pt-4 pb-5 text-center animate-pop">
+          <h1 className="pixel-font pixel-title text-xl leading-relaxed tracking-wide">I LOVE TCAS</h1>
+          <p className="thai-font mt-1 text-sm md:text-base text-ink-soft">เส้นทางสู่ความสำเร็จของคุณ</p>
         </div>
-        <h1 className="pixel-font pixel-title-dark text-xl text-center leading-relaxed tracking-wide">
-          I LOVE TCAS
-        </h1>
-        <p className="thai-font mt-2 text-sm md:text-base text-white/70">
-          เส้นทางสู่ความสำเร็จของคุณ
-        </p>
+        <div className="-mt-1" aria-hidden="true">
+          <CharacterSprite code="INFP" scale={3} />
+        </div>
       </div>
 
-      <div className="relative z-10 w-full max-w-md md:max-w-lg neo-card bg-paper p-5 md:p-6">
+      <div className="relative z-10 w-full max-w-md md:max-w-lg neo-card bg-paper p-5 md:p-6 animate-pop">
         <fieldset className="mb-4 space-y-2 thai-font text-xs text-ink">
             <legend className="sr-only">ข้อกำหนดและความยินยอม</legend>
             <label className="flex items-start gap-2">
@@ -178,7 +149,7 @@ export default function AuthPage() {
         </div>
 
         <div
-          className="flex rounded-xl border-2 border-ink p-0.5 mb-4 bg-surface"
+          className="flex rounded-xl border-2 border-edge p-0.5 mb-4 bg-surface"
           role="tablist"
           aria-label="เลือกโหมด"
         >
@@ -190,7 +161,7 @@ export default function AuthPage() {
               onClick={() => switchMode(m)}
               className={`flex-1 py-2.5 rounded-lg thai-font text-sm transition-colors
                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand
-                ${mode === m ? 'neo-pressed text-ink font-semibold border-2 border-ink' : 'text-ink-soft hover:text-ink border-2 border-transparent'}`}
+                ${mode === m ? 'neo-pressed text-ink font-semibold border-2 border-edge' : 'text-ink-soft hover:text-ink border-2 border-transparent'}`}
             >
               {m === 'login' ? 'เข้าสู่ระบบ' : 'สมัครสมาชิก'}
             </button>
@@ -232,7 +203,7 @@ export default function AuthPage() {
         </form>
       </div>
 
-      <p className="relative z-10 mt-5 thai-font text-xs text-center text-white/30">
+      <p className="relative z-10 mt-5 thai-font text-xs text-center text-white/70">
         I LOVE TCAS · v0.1
       </p>
     </section>

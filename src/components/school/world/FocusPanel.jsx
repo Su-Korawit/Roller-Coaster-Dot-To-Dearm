@@ -6,6 +6,8 @@ import { beginFocus, confirmFocus, finishFocus } from '../../../services/schoolW
 import { CHECKIN_PROMPT_MS, msUntilCheckIn } from '../../../services/focus'
 import { formatDuration, formatVerified, focusMessage } from '../../../utils/formatFocus'
 import { TEMPERAMENTS } from '../../../constants/temperaments'
+import { useUserStore } from '../../../stores/useUserStore'
+import { levelProgress } from '../../../utils/level'
 
 // Opens when the student walks up to a Library seat. The server owns all time
 // and XP; this panel only asks and displays (see services/schoolWorld.js).
@@ -22,6 +24,8 @@ export default function FocusPanel({ seatId, onClose }) {
   const active = focus.status === 'active'
   const due = active && msUntilCheckIn(focus.lastCheckInAt, now) === 0
   const message = focusMessage(focus.lastResult, focus.error)
+  const focusXp = useUserStore((s) => s.focusXp)
+  const level = levelProgress(focusXp)
   const perk = TEMPERAMENTS[focus.temperament] ?? null
   const perkActive = (focus.lastResult?.multiplier ?? 1) > 1
 
@@ -39,7 +43,7 @@ export default function FocusPanel({ seatId, onClose }) {
             <button
               onClick={beginFocus}
               disabled={focus.busy}
-              className="neo-btn bg-brand text-white pixel-font text-[11px] py-3 rounded-lg disabled:opacity-50"
+              className="neo-btn rpg-btn-primary pixel-font text-[11px] py-3 rounded-lg disabled:opacity-50"
             >
               {focus.busy ? 'กำลังเริ่ม…' : 'เริ่มอ่านหนังสือ'}
             </button>
@@ -59,16 +63,30 @@ export default function FocusPanel({ seatId, onClose }) {
               </div>
             </div>
 
+            {focusXp > 0 && (
+              <div className="flex items-center gap-2" data-testid="focus-level">
+                <span className="rpg-coin pixel-font text-[10px]" aria-label={`เลเวล ${level.level}`}>{level.level}</span>
+                <div className="rpg-bar flex-1" style={{ '--pct': Math.round(level.ratio * 100) }}><i /></div>
+              </div>
+            )}
+
             <div className="thai-font text-sm text-ink text-center" data-testid="focus-next">
               {due
                 ? 'ถึงเวลายืนยันแล้ว กดปุ่มด้านล่างเพื่อนับเวลาต่อ'
                 : `ยืนยันครั้งถัดไปในอีก ${formatDuration(msUntilCheckIn(focus.lastCheckInAt, now))}`}
             </div>
+            <div
+              className="rpg-bar rpg-bar--heart"
+              style={{ '--pct': Math.round(100 - (msUntilCheckIn(focus.lastCheckInAt, now) / CHECKIN_PROMPT_MS) * 100) }}
+              role="progressbar" aria-label="เวลาก่อนยืนยันครั้งถัดไป" aria-valuemin={0} aria-valuemax={100}
+            >
+              <i />
+            </div>
 
             <button
               onClick={confirmFocus}
               disabled={focus.busy}
-              className={`neo-btn pixel-font text-[11px] py-3 rounded-lg disabled:opacity-50 ${due ? 'bg-brand text-white animate-pulse' : 'bg-surface text-ink'}`}
+              className={`neo-btn pixel-font text-[11px] py-3 rounded-lg disabled:opacity-50 ${due ? 'rpg-btn-primary animate-pulse' : 'bg-surface text-ink'}`}
             >
               ฉันยังอยู่ ✓
             </button>

@@ -100,7 +100,7 @@ export default function SchoolWorldLayer({ gameRef, onOpenView, active = true })
           <button
             onClick={() => enterSchoolHub(uid)}
             disabled={enterStatus === 'entering'}
-            className="pointer-events-auto neo-btn bg-hud text-ink pixel-font text-[10px] px-3 py-2 rounded-lg disabled:opacity-60"
+            className="pointer-events-auto neo-btn rpg-btn-primary pixel-font text-[10px] px-3 py-2 rounded-lg disabled:opacity-60"
           >
             🏫 {enterStatus === 'entering' ? 'กำลังเข้า…' : 'เข้าโรงเรียน'}
           </button>

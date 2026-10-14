@@ -5,6 +5,7 @@ import { useAuthStore } from './stores/useAuthStore'
 import { getAdminSections } from './constants/admin'
 import OnboardingModal from './components/onboarding/OnboardingModal'
 import ConsentGate from './components/ConsentGate'
+import LoadingScene from './components/ui/LoadingScene'
 import { useConsentStore } from './stores/useConsentStore'
 import { currentSite } from './lib/site'
 import { SITES } from './constants/sites'
@@ -22,6 +23,8 @@ const NewsPostPage = lazy(() => import('./pages/NewsPostPage'))
 const MusicCallback = lazy(() => import('./pages/MusicCallback'))
 const PrivacyPage = lazy(() => import('./pages/legal/PrivacyPage'))
 const TermsPage = lazy(() => import('./pages/legal/TermsPage'))
+// Dev-only style guide; the import is tree-shaken from production builds.
+const DevUiKit = import.meta.env.DEV ? lazy(() => import('./pages/DevUiKit')) : null
 const MiniPlayer = lazy(() => import('./components/music/MiniPlayer'))
 
 // Feature-site pages — separate lazy chunks so hub/roadmap/tcas/news/school
@@ -36,24 +39,7 @@ const BagPage = lazy(() => import('./pages/BagPage'))
 const FeatureLayout = lazy(() => import('./components/FeatureLayout'))
 
 function LoadingScreen() {
-  return (
-    <div
-      className="h-full flex flex-col items-center justify-center"
-      style={{ background: 'linear-gradient(160deg, #0f0824 0%, #1a1035 50%, #0d1f3c 100%)' }}
-    >
-      <span className="text-5xl mb-5" aria-hidden="true">🎢</span>
-      <span className="pixel-font text-[10px] text-purple-300 mb-4">Loading...</span>
-      <div className="flex gap-1" role="progressbar" aria-label="กำลังโหลด" aria-busy="true">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <span
-            key={i}
-            className="w-6 h-3 border-2 border-ink/60 bg-brand animate-block-fill"
-            style={{ animationDelay: `${i * 0.18}s` }}
-          />
-        ))}
-      </div>
-    </div>
-  )
+  return <LoadingScene />
 }
 
 function RequireAuth() {
@@ -73,7 +59,7 @@ function MobileLayout() {
   return (
     // Full-viewport flex column — fills the screen on every device (phone → desktop).
     // Pages own their own max-width/centering; the game can now go truly fullscreen.
-    <div className="h-dvh w-full bg-[#F4F7FC] relative overflow-x-hidden flex flex-col">
+    <div className="h-dvh w-full bg-mist relative overflow-x-hidden flex flex-col">
       {/* flex-1 so h-full pages get a definite height; overflow-hidden clips panels */}
       <main className="flex-1 relative overflow-hidden">
         <Outlet />
@@ -120,6 +106,7 @@ function AppSiteRoutes() {
       <Route path="/" element={<WelcomePage />} />
       <Route path="/news/:id" element={<NewsPostPage />} />
       <Route path="/auth" element={<AuthPage />} />
+      {DevUiKit && <Route path="/dev/ui" element={<DevUiKit />} />}
 
       <Route element={<MobileLayout />}>
         <Route element={<RequireAuth />}>

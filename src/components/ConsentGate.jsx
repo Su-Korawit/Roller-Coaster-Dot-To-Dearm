@@ -3,6 +3,7 @@ import { useAuthStore } from '../stores/useAuthStore'
 import { recordConsent } from '../services/consent'
 import { LEGAL_PATHS } from '../constants/legal'
 import DeleteAccountSheet from './DeleteAccountSheet'
+import SceneBackdrop from './landing/SceneBackdrop'
 
 // Blocks the app for a signed-in user who has not accepted the CURRENT Privacy
 // Policy and Terms (everyone who signed up before consent existed, and everyone
@@ -35,10 +36,10 @@ export default function ConsentGate() {
       role="dialog"
       aria-modal="true"
       aria-label="ขอความยินยอม"
-      className="relative h-dvh w-full flex items-center justify-center p-5 thai-font"
-      style={{ background: 'linear-gradient(160deg, #0f0824 0%, #1a1035 50%, #0d1f3c 100%)' }}
+      className="relative h-dvh w-full overflow-hidden flex items-center justify-center p-5 thai-font"
     >
-      <div className="neo-card bg-paper w-full max-w-md p-5 flex flex-col gap-3 text-sm text-ink">
+      <SceneBackdrop />
+      <div className="relative z-10 neo-card bg-paper w-full max-w-md p-5 flex flex-col gap-3 text-sm text-ink animate-pop">
         <h1 className="pixel-font text-[12px] text-brand-strong">ก่อนใช้งานต่อ</h1>
         <p>
           เรามีการปรับนโยบายความเป็นส่วนตัวและข้อกำหนดการใช้งาน กรุณาอ่านและยืนยันเพื่อใช้ I LOVE TCAS ต่อ

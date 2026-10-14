@@ -7,6 +7,7 @@ import { refs } from '../lib/db'
 import { chooseRoom, SCHOOL_HUB_MAP_KEY } from '../lib/schoolRoom'
 import { useWorldStore } from '../stores/useWorldStore'
 import { useFarmStore } from '../stores/useFarmStore'
+import { useUserStore } from '../stores/useUserStore'
 import { useSchoolWorldStore } from '../stores/useSchoolWorldStore'
 import { returnHome } from '../lib/syncManager'
 import { startFocus, checkInFocus, endFocus } from './focus'
@@ -89,13 +90,19 @@ export const beginFocus = () =>
   }))
 
 export const confirmFocus = () =>
-  runFocus(checkInFocus, (r) => world().setFocus({
-    lastCheckInAt: r.lastCheckInAt, verifiedMs: r.verifiedMs, lastResult: r,
-    xpThisSession: world().focus.xpThisSession + (r.xpGained ?? 0),
-  }))
+  runFocus(checkInFocus, (r) => {
+    useUserStore.getState().addFocusXp(r.xpGained ?? 0)   // keep the HUD level badge live
+    world().setFocus({
+      lastCheckInAt: r.lastCheckInAt, verifiedMs: r.verifiedMs, lastResult: r,
+      xpThisSession: world().focus.xpThisSession + (r.xpGained ?? 0),
+    })
+  })
 
 export const finishFocus = () =>
-  runFocus(endFocus, (r) => world().setFocus({
-    status: 'idle', lastResult: r, verifiedMs: r.verifiedMs, lastCheckInAt: null, startedAt: null,
-    xpThisSession: world().focus.xpThisSession + (r.xpGained ?? 0),
-  }))
+  runFocus(endFocus, (r) => {
+    useUserStore.getState().addFocusXp(r.xpGained ?? 0)
+    world().setFocus({
+      status: 'idle', lastResult: r, verifiedMs: r.verifiedMs, lastCheckInAt: null, startedAt: null,
+      xpThisSession: world().focus.xpThisSession + (r.xpGained ?? 0),
+    })
+  })

@@ -19,6 +19,7 @@ import { isRoomOwnerUid, SCHOOL_HUB_MAP_KEY } from '../lib/schoolRoom'
 import { returnHome } from '../lib/syncManager'
 import { useSchoolWorldStore } from '../stores/useSchoolWorldStore'
 import SchoolWorldLayer from './school/world/SchoolWorldLayer'
+import LoadingScene from './ui/LoadingScene'
 import { MapScene, loadSceneData } from '../game/worldScenes'
 import { createIdleGovernor, setFpsLimit, IDLE_FPS } from '../game/idleGovernor'
 import { listMapConfigs, pickEntryKey } from '../utils/mapConfig'
@@ -440,41 +441,25 @@ export default function GameCanvas({ active = true, onOpenView }) {
         style={{ width: '100%', height: '100%', overflow: 'hidden' }}
       />
       {bootError && (
-        <div
-          className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-4"
-          style={{ background: 'linear-gradient(160deg, #0f0824 0%, #1a1035 50%, #0d1f3c 100%)' }}
-        >
-          <span className="text-5xl" aria-hidden="true">🛠️</span>
-          <span className="pixel-font text-[10px] text-purple-300 text-center leading-relaxed px-8">
-            โหลดแผนที่ไม่สำเร็จ — เซิร์ฟเวอร์ asset อาจไม่พร้อมใช้งานชั่วคราว
-          </span>
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="pixel-font text-[10px] px-4 py-2 rounded border border-purple-400/50 text-purple-200 hover:bg-purple-400/10"
-          >
-            ลองใหม่
-          </button>
+        <div className="absolute inset-0 z-50 flex items-center justify-center px-6 px-sky-bg">
+          <div className="neo-card px-6 py-6 flex flex-col items-center gap-4 max-w-sm text-center animate-pop">
+            <span className="text-4xl" aria-hidden="true">🛠️</span>
+            <span className="thai-font text-sm text-ink leading-relaxed">
+              โหลดแผนที่ไม่สำเร็จ — เซิร์ฟเวอร์ asset อาจไม่พร้อมใช้งานชั่วคราว
+            </span>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="neo-btn rpg-btn-primary pixel-font text-[10px] px-5 py-2.5 rounded-lg"
+            >
+              ลองใหม่
+            </button>
+          </div>
         </div>
       )}
       {isBooting && !bootError && (
-        <div
-          className="absolute inset-0 z-50 flex flex-col items-center justify-center"
-          style={{ background: 'linear-gradient(160deg, #0f0824 0%, #1a1035 50%, #0d1f3c 100%)' }}
-        >
-          <span className="text-5xl mb-5" aria-hidden="true">🚀</span>
-          <span className="pixel-font text-[10px] text-purple-300 mb-4">Loading...</span>
-          <div
-            className="w-48 h-1.5 rounded-full overflow-hidden bg-white/10"
-            role="progressbar"
-            aria-label="กำลังโหลด"
-            aria-busy="true"
-          >
-            <div
-              className="h-full w-1/3 rounded-full animate-loading-slide"
-              style={{ background: 'linear-gradient(90deg, transparent, var(--color-brand), var(--color-accent-pink), transparent)' }}
-            />
-          </div>
+        <div className="absolute inset-0 z-50">
+          <LoadingScene />
         </div>
       )}
       {isSwitchingMap && !isBooting && (
