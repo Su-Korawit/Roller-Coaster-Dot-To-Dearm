@@ -21,6 +21,7 @@ export const refs = {
   spotifyAuth: (uid)            => doc(db, 'users', uid, 'private', 'spotify'),
   mapConfig:   (key)            => doc(db, 'mapConfigs', key),
   school:      (schoolId)       => doc(db, 'schools', schoolId),
+  schoolPost:  (schoolId, postId) => doc(db, 'schoolBoards', schoolId, 'posts', postId),
   focusActive: (uid)            => doc(db, 'focusActive', uid),
   leaderboardMeta: ()           => doc(db, 'leaderboardMeta', 'current'),
   schoolWeek:  (schoolId, week) => doc(db, 'schoolWeeks', `${schoolId}_${week}`),
@@ -110,6 +111,9 @@ export const queries = {
   ),
   appUpdatesByDate: () => query(cols.appUpdates, orderBy('createdAt', 'desc')),
   tcasEventsByDate: () => query(cols.tcasEvents, orderBy('date', 'asc')),
+  schoolPostsRecent: (schoolId, n = 20) => query(
+    collection(db, 'schoolBoards', schoolId, 'posts'), orderBy('createdAt', 'desc'), limit(n),
+  ),
   latestTemplates: () => query(cols.timetableTemplates, orderBy('createdAt', 'desc'), limit(20)),
   templatesBySchool: (term) => query(
     cols.timetableTemplates,

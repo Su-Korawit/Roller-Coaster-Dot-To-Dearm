@@ -821,7 +821,7 @@ export class MapScene extends Phaser.Scene {
         if (this.anims.exists(animKey) && entry.sprite.anims.currentAnim?.key !== animKey) {
           entry.sprite.play(animKey)
         }
-        entry.label.setText(name)
+        entry.label.setText(state.badge === 'teacher' ? `🎓 ${name}` : name)
         this._syncBubble(entry, state.emote)
       } else {
         const spriteMbti = this.textures.exists(mbti) ? mbti : MBTI_TYPES[0]
@@ -830,7 +830,7 @@ export class MapScene extends Phaser.Scene {
         sprite.setDepth(8)
         if (this.anims.exists(animKey)) sprite.play(animKey)
 
-        const label = this.add.text(x, y - 24 * scale, name, {
+        const label = this.add.text(x, y - 24 * scale, state.badge === 'teacher' ? `🎓 ${name}` : name, {
           fontSize: '8px',
           color: '#ffffff',
           stroke: '#000000',
@@ -900,6 +900,9 @@ export class MapScene extends Phaser.Scene {
       // RTDB set() throws on undefined, so only include the key while an emote is active.
       const emote = this.registry.get('selfEmote')
       if (emote) payload.emote = emote
+      // Teacher badge: the rules only accept it from a real `teacher` claim.
+      const badge = this.registry.get('selfBadge')
+      if (badge) payload.badge = badge
       updateSelf(ownerUid, this.mapKey, selfUid, payload)
     }
   }

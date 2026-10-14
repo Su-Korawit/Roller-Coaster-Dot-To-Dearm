@@ -47,13 +47,13 @@ service cloud.firestore {
       allow get, list: if isSignedIn();
       allow create: if isSignedIn() && (request.auth.uid == uid || isSuperAdmin());
       // Owners may update their own doc freely EXCEPT the `coins`,
-      // `entitlements`, `fileBagUsageBytes` and `focusXp` fields — those are
+      // `entitlements`, `fileBagUsageBytes`, `focusXp` and `teacherSchoolId` fields — those are
       // written only by Cloud Functions (Admin SDK bypasses rules). Cross-user
       // updates are restricted to ONLY the four social array fields.
       allow update: if isSignedIn() && (
         (request.auth.uid == uid &&
           !request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['coins', 'entitlements', 'fileBagUsageBytes', 'focusXp'])) ||
+            .hasAny(['coins', 'entitlements', 'fileBagUsageBytes', 'focusXp', 'teacherSchoolId'])) ||
         request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['followRequests', 'followers', 'following', 'sentRequests'])
       );
@@ -222,6 +222,31 @@ service cloud.firestore {
     match /focusSessions/{sessionId} {
       allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
       allow write: if false;
+    }
+
+    // School announcement board (ADR 0018). Members of a school read; only a verified
+    // teacher of THAT school (custom claims set by grantTeacherBadge) may post.
+    match /schoolBoards/{schoolId}/posts/{postId} {
+      function isMemberOfSchool() {
+        return isSignedIn() &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId == schoolId;
+      }
+      function isTeacherHere() {
+        return isSignedIn() && request.auth.token.teacher == true &&
+          request.auth.token.teacherSchoolId == schoolId;
+      }
+      allow read: if isMemberOfSchool() || isTeacherHere() || isSuperAdmin();
+      allow create: if isTeacherHere()
+        && request.resource.data.keys().hasOnly(['title', 'body', 'authorUid', 'authorName', 'schoolId', 'createdAt'])
+        && request.resource.data.authorUid == request.auth.uid
+        && request.resource.data.schoolId == schoolId
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 100
+        && request.resource.data.body is string && request.resource.data.body.size() <= 1000
+        && request.resource.data.authorName is string && request.resource.data.authorName.size() <= 60
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if isSuperAdmin() || (isTeacherHere() && resource.data.authorUid == request.auth.uid);
     }
 
     // Weekly school leaderboard (ADR 0018): school-level aggregates only, no

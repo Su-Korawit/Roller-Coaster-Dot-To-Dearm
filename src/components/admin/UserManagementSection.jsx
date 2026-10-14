@@ -3,6 +3,7 @@ import { deleteDoc, getDocs, limit, query } from 'firebase/firestore'
 import { cols, refs, shapes } from '../../lib/db'
 import { useTcasUniversities } from '../../hooks/useMytcas'
 import { useToast } from './Toast'
+import { setTeacherBadge } from '../../services/schoolBoard'
 
 // Reads the `users` collection client-side (admin-only writes; reads are
 // signed-in). Capped at LIST_LIMIT as a safety valve — same posture as
@@ -52,6 +53,27 @@ export default function UserManagementSection() {
     } catch (err) {
       console.error('[UserManagementSection] delete', err)
       toast?.error('ลบไม่สำเร็จ (เฉพาะผู้ดูแลระบบหลักเท่านั้น)')
+    } finally {
+      setBusyId(null)
+    }
+  }, [toast])
+
+  // Teacher badge (ADR 0018): the super-admin verifies the person out of band, then grants
+  // the claim for the school the user declared. The callable itself rejects everyone else.
+  const handleTeacher = useCallback(async (u, revoke) => {
+    const who = u.displayName || u.email || u.id
+    const msg = revoke
+      ? `ถอน badge ครูของ ${who}?`
+      : `ให้ badge ครูแก่ ${who} ของ ${u.schoolName || u.schoolId}? (ยืนยันตัวตนแล้วเท่านั้น)`
+    if (!window.confirm(msg)) return
+    setBusyId(u.id)
+    try {
+      await setTeacherBadge({ uid: u.id, schoolId: u.schoolId, revoke })
+      setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, teacherSchoolId: revoke ? null : u.schoolId } : x)))
+      toast?.success(revoke ? 'ถอน badge แล้ว' : 'ให้ badge ครูแล้ว (ผู้ใช้ต้องล็อกอินใหม่หรือรอสักครู่)')
+    } catch (err) {
+      console.error('[UserManagementSection] teacher badge', err)
+      toast?.error('ไม่สำเร็จ (เฉพาะผู้ดูแลระบบหลักเท่านั้น)')
     } finally {
       setBusyId(null)
     }
@@ -129,6 +151,7 @@ export default function UserManagementSection() {
               <th className="px-4 py-3 font-semibold">หลักสูตร</th>
               <th className="px-4 py-3 font-semibold">มหาวิทยาลัย</th>
               <th className="px-4 py-3 font-semibold">สมัครเมื่อ</th>
+              <th className="px-4 py-3 font-semibold">ครู</th>
               <th className="px-4 py-3 font-semibold text-right">จัดการ</th>
             </tr>
           </thead>
@@ -153,6 +176,29 @@ export default function UserManagementSection() {
                   <td className="px-4 py-3 text-gray-600">{program ? `#${program}` : '—'}</td>
                   <td className="px-4 py-3 text-gray-600 max-w-[12rem] truncate">{uni ? (uniNames.get(String(uni)) ?? uni) : '—'}</td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{created}</td>
+                  <td className="px-4 py-3">
+                    {u.teacherSchoolId
+                      ? (
+                        <button
+                          onClick={() => handleTeacher(u, true)}
+                          disabled={busyId === u.id}
+                          className="px-2 py-1 rounded-lg bg-brand-soft text-brand-strong text-xs font-semibold disabled:opacity-50"
+                          title="คลิกเพื่อถอน badge"
+                        >
+                          🎓 ครู
+                        </button>
+                      )
+                      : (
+                        <button
+                          onClick={() => handleTeacher(u, false)}
+                          disabled={busyId === u.id || !u.schoolId}
+                          title={u.schoolId ? 'ให้ badge ครู' : 'ผู้ใช้ยังไม่ได้เลือกโรงเรียน'}
+                          className="px-2 py-1 rounded-lg border border-gray-200 text-gray-500 text-xs hover:bg-gray-50 disabled:opacity-40"
+                        >
+                          ให้ badge
+                        </button>
+                      )}
+                  </td>
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => handleDelete(u)}
@@ -166,7 +212,7 @@ export default function UserManagementSection() {
               )
             })}
             {filtered.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-400 text-sm">ไม่พบผู้ใช้</td></tr>
+              <tr><td colSpan={7} className="px-4 py-10 text-center text-gray-400 text-sm">ไม่พบผู้ใช้</td></tr>
             )}
           </tbody>
         </table>

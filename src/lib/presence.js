@@ -77,7 +77,7 @@ export function _resetThrottleForTest() {
 // byte-identical frame to frame.
 function signature(p) {
   return JSON.stringify([
-    Math.round(p.x ?? 0), Math.round(p.y ?? 0), p.dir, !!p.moving, p.mbti, p.name, p.emote ?? null,
+    Math.round(p.x ?? 0), Math.round(p.y ?? 0), p.dir, !!p.moving, p.mbti, p.name, p.emote ?? null, p.badge ?? null,
   ])
 }
 

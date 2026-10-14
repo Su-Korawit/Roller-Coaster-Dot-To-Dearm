@@ -22,6 +22,7 @@
                 "name": { ".validate": "newData.isString() && newData.val().length <= 60" },
                 "photoURL": { ".validate": "newData.isString() && newData.val().length <= 500" },
                 "idle": { ".validate": "newData.isBoolean()" },
+                "badge": { ".validate": "newData.val() === 'teacher' && auth.token.teacher === true" },
                 "emote": { ".validate": "newData.isString() && newData.val().matches(/^[a-z]{1,12}$/)" },
                 "$other": { ".validate": false }
               }

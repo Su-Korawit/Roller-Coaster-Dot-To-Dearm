@@ -17,6 +17,14 @@ const svc = {
   beginFocus: vi.fn(), confirmFocus: vi.fn(), finishFocus: vi.fn(),
 }
 vi.mock('../../../services/schoolWorld', () => svc)
+const board = {
+  readTeacherClaims: vi.fn(async () => null),
+  isTeacherOf: (c, id) => !!c && c.teacherSchoolId === id,
+  subscribeSchoolPosts: vi.fn(() => () => {}),
+  createSchoolPost: vi.fn(async () => ({ id: 'new' })),
+  deleteSchoolPost: vi.fn(async () => {}),
+}
+vi.mock('../../../services/schoolBoard', async (orig) => ({ ...(await orig().catch(() => ({}))), ...board }))
 const fetchLeaderboard = vi.fn()
 vi.mock('../../../services/leaderboard', async (orig) => ({ ...(await orig()), fetchLeaderboard: (...a) => fetchLeaderboard(...a) }))
 vi.mock('../../../utils/shareRoomImage', () => ({ shareRoomImage: vi.fn(async () => ({ ok: true, via: 'download' })) }))
@@ -26,6 +34,7 @@ const { default: SchoolWorldLayer } = await import('./SchoolWorldLayer')
 const { default: FocusPanel } = await import('./FocusPanel')
 const { default: LeaderboardPanel } = await import('./LeaderboardPanel')
 const { default: BoardPanel } = await import('./BoardPanel')
+const { default: SchoolAnnouncements } = await import('./SchoolAnnouncements')
 
 const renderLayer = (props = {}) => {
   const registry = { set: vi.fn() }
@@ -39,6 +48,9 @@ const renderLayer = (props = {}) => {
 
 beforeEach(() => {
   Object.values(svc).forEach((f) => f.mockReset())
+  board.readTeacherClaims.mockReset().mockResolvedValue(null)
+  board.subscribeSchoolPosts.mockReset().mockImplementation(() => () => {})
+  board.createSchoolPost.mockClear(); board.deleteSchoolPost.mockClear()
   fetchLeaderboard.mockReset()
   useSchoolWorldStore.setState({
     inHub: false, room: null, enterStatus: 'idle', enterError: null, panel: null,
@@ -186,6 +198,79 @@ describe('LeaderboardPanel', () => {
     fetchLeaderboard.mockRejectedValueOnce(new Error('x'))
     render(<LeaderboardPanel mySchoolId="Z" onClose={() => {}} />)
     await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy())
+  })
+})
+
+describe('Teacher badge in the layer', () => {
+  const inHub = { inHub: true, room: { kind: 'school', shard: 1, ownerUid: 'school:S1:1', schoolId: 'S1' } }
+
+  it('a teacher claim puts the badge on presence; a student gets none', async () => {
+    board.readTeacherClaims.mockResolvedValue({ teacherSchoolId: 'S1' })
+    useSchoolWorldStore.setState(inHub)
+    const { registry } = renderLayer()
+    await waitFor(() => expect(registry.set).toHaveBeenCalledWith('selfBadge', 'teacher'))
+    cleanup()
+
+    board.readTeacherClaims.mockResolvedValue(null)
+    const second = renderLayer()
+    await waitFor(() => expect(second.registry.set).toHaveBeenCalledWith('selfBadge', null))
+    expect(second.registry.set).not.toHaveBeenCalledWith('selfBadge', 'teacher')
+  })
+
+  it('the canteen board shows school announcements for the room school', async () => {
+    useSchoolWorldStore.setState({ ...inHub, panel: { type: 'board', id: 'news' } })
+    renderLayer()
+    expect(screen.getByLabelText('ประกาศจากโรงเรียน')).toBeTruthy()
+    expect(board.subscribeSchoolPosts).toHaveBeenCalledWith('S1', expect.any(Function), expect.any(Function))
+  })
+})
+
+describe('SchoolAnnouncements', () => {
+  const posts = [
+    { id: 'p1', title: 'สอบกลางภาค', body: 'วันจันทร์', authorUid: 't1', authorName: 'ครูสมชาย' },
+    { id: 'p2', title: 'งดเรียน', body: '', authorUid: 'other', authorName: 'ครูสมศรี' },
+  ]
+  const withPosts = () => board.subscribeSchoolPosts.mockImplementation((_s, next) => { next(posts); return () => {} })
+
+  it('lists posts; only the author sees a delete button', () => {
+    withPosts()
+    render(<SchoolAnnouncements schoolId="S1" user={{ uid: 't1', displayName: 'ครูสมชาย' }} isTeacher={false} />)
+    expect(screen.getByText('สอบกลางภาค')).toBeTruthy()
+    expect(screen.getAllByText('ลบ')).toHaveLength(1)
+    fireEvent.click(screen.getByText('ลบ'))
+    expect(board.deleteSchoolPost).toHaveBeenCalledWith('S1', 'p1')
+  })
+
+  it('students never see the composer; teachers do and can post', async () => {
+    withPosts()
+    const { unmount } = render(<SchoolAnnouncements schoolId="S1" user={{ uid: 's' }} isTeacher={false} />)
+    expect(screen.queryByLabelText('หัวข้อประกาศ')).toBeNull()
+    unmount()
+
+    render(<SchoolAnnouncements schoolId="S1" user={{ uid: 't1', displayName: 'ครู' }} isTeacher />)
+    fireEvent.change(screen.getByLabelText('หัวข้อประกาศ'), { target: { value: 'ประกาศใหม่' } })
+    fireEvent.click(screen.getByText('โพสต์ประกาศ'))
+    await waitFor(() => expect(board.createSchoolPost).toHaveBeenCalledWith(
+      expect.objectContaining({ schoolId: 'S1', title: 'ประกาศใหม่' }),
+    ))
+  })
+
+  it('an empty title is rejected locally with a Thai message, without calling the server', () => {
+    render(<SchoolAnnouncements schoolId="S1" user={{ uid: 't1' }} isTeacher />)
+    fireEvent.click(screen.getByText('โพสต์ประกาศ'))
+    expect(screen.getByRole('alert').textContent).toContain('ใส่หัวข้อ')
+    expect(board.createSchoolPost).not.toHaveBeenCalled()
+  })
+
+  it('a listener error (non-member) explains the restriction', () => {
+    board.subscribeSchoolPosts.mockImplementation((_s, _n, err) => { err(new Error('denied')); return () => {} })
+    render(<SchoolAnnouncements schoolId="S1" user={{ uid: 's' }} isTeacher={false} />)
+    expect(screen.getByText(/เฉพาะสมาชิกของโรงเรียน/)).toBeTruthy()
+  })
+
+  it('renders nothing without a school', () => {
+    const { container } = render(<SchoolAnnouncements schoolId={null} user={null} isTeacher={false} />)
+    expect(container.innerHTML).toBe('')
   })
 })
 

@@ -99,8 +99,12 @@ Files: `src/components/school/world/` (`SchoolWorldLayer`, `FocusPanel`, `FocusH
 - Not done: seat-zone auto-close on leaving the zone (panels are dismissed manually); idle remote avatars still animate.
 
 ### Task 7 — Teacher badge & board  `[claude + cursor]`
-- [ ] `[claude]` Callable `grantTeacherBadge(uid, schoolId)` admin-only, sets custom claim; `schoolBoards/{schoolId}/posts` rules: read authed, write `teacher` claim for that school or admin.
-- [ ] `[cursor]` Teacher post composer in BoardPanel, badge on avatar label; Admin Dashboard section to grant.
+- [x] `[claude]` Callable `grantTeacherBadge(uid, schoolId)` admin-only, sets custom claim; `schoolBoards/{schoolId}/posts` rules: read authed, write `teacher` claim for that school or admin.
+- [x] `[cursor]` Teacher post composer in BoardPanel, badge on avatar label; Admin Dashboard section to grant.
+- Built: `grantTeacherBadge` callable (super-admin only; sets `teacher` + `teacherSchoolId` custom claims, mirrors `users/{uid}.teacherSchoolId`, revoke supported); `schoolBoards/{schoolId}/posts` rules (members read; only a verified teacher of THAT school creates; author/super-admin delete; no edits; field/size/timestamp validated); presence `badge:'teacher'` accepted only with a real claim; 🎓 prefix on the avatar label; announcements section on the canteen board with a teacher-only composer; "ให้ badge" button in the admin Users table.
+- Verified on the emulators (Auth + Firestore + RTDB): the real `grantTeacherBadge` handler, and claim-based rules including cross-school teachers, forged authors/timestamps, oversize text, and self-granted `teacherSchoolId`.
+- Owner step: a student must be verified out of band before the admin presses "ให้ badge". The granted teacher needs a fresh ID token (re-login or wait up to an hour) before the composer appears.
+- `firebase.json` now declares the Auth emulator (port 9099) and `test:rules:emu` starts it.
 
 ### Task 8 — MBTI temperament stub  `[claude + cursor]`
 - [ ] `[claude]` `src/constants/temperaments.js`: NT/NF/SJ/SP -> one passive each (e.g. +10% Focus XP in matching Library seat theme). Server applies multiplier in `endFocus`.

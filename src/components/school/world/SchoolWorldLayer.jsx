@@ -9,6 +9,8 @@ import FocusPanel from './FocusPanel'
 import FocusHud from './FocusHud'
 import LeaderboardPanel from './LeaderboardPanel'
 import BoardPanel from './BoardPanel'
+import SchoolAnnouncements from './SchoolAnnouncements'
+import { readTeacherClaims, isTeacherOf } from '../../../services/schoolBoard'
 import EmoteWheel from './EmoteWheel'
 import AmbientOverlay from './AmbientOverlay'
 
@@ -23,7 +25,8 @@ const ENTER_ERRORS = {
 // useSchoolWorldStore (GameCanvas forwards them), tool doors through toolRequest.
 export default function SchoolWorldLayer({ gameRef, onOpenView, active = true }) {
   const navigate = useNavigate()
-  const uid = useAuthStore((s) => s.user?.uid ?? null)
+  const authUser = useAuthStore((s) => s.user ?? null)
+  const uid = authUser?.uid ?? null
   const inHub = useSchoolWorldStore((s) => s.inHub)
   const room = useSchoolWorldStore((s) => s.room)
   const enterStatus = useSchoolWorldStore((s) => s.enterStatus)
@@ -36,6 +39,23 @@ export default function SchoolWorldLayer({ gameRef, onOpenView, active = true })
   const [emoteOpen, setEmoteOpen] = useState(false)
   const [shareMsg, setShareMsg] = useState(null)
   const emoteTimer = useRef(null)
+  const [teacherClaims, setTeacherClaims] = useState(null)
+
+  // Teacher status comes from the verified token claims (never from user-editable data).
+  // The badge rides presence only when the claim exists; the rules enforce the same.
+  useEffect(() => {
+    if (!inHub || !uid) return undefined
+    let cancelled = false
+    const registry = gameRef.current?.registry
+    readTeacherClaims()
+      .then((claims) => {
+        if (cancelled) return
+        setTeacherClaims(claims)
+        registry?.set('selfBadge', claims ? 'teacher' : null)
+      })
+      .catch(() => {})
+    return () => { cancelled = true; registry?.set('selfBadge', null) }
+  }, [inHub, uid, gameRef])
 
   // Tool doors: '/path' -> router, 'view:x' -> the app's tab switcher.
   useEffect(() => {
@@ -117,7 +137,15 @@ export default function SchoolWorldLayer({ gameRef, onOpenView, active = true })
 
       {panel?.type === 'focus' && <FocusPanel seatId={panel.seatId} onClose={closePanel} />}
       {panel?.type === 'leaderboard' && <LeaderboardPanel mySchoolId={room?.schoolId ?? null} onClose={closePanel} />}
-      {panel?.type === 'board' && <BoardPanel boardId={panel.id} onClose={closePanel} />}
+      {panel?.type === 'board' && (
+        <BoardPanel
+          boardId={panel.id}
+          onClose={closePanel}
+          extra={panel.id === 'news' && room?.schoolId
+            ? <SchoolAnnouncements schoolId={room.schoolId} user={authUser} isTeacher={isTeacherOf(teacherClaims, room.schoolId)} />
+            : null}
+        />
+      )}
     </>
   )
 }

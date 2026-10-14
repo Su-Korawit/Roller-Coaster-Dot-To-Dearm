@@ -475,3 +475,39 @@ exports.rollupSchoolWeek = onSchedule(
   { schedule: 'every 60 minutes', timeZone: 'Asia/Bangkok' },
   async () => { await rollupWeek() },
 )
+
+// ── Teacher badge (ADR 0018) ─────────────────────────────────────────────────
+// Super-admin only. Sets { teacher, teacherSchoolId } custom claims (what the
+// rules trust) and mirrors teacherSchoolId onto users/{uid} for the admin list.
+// The teacher must refresh their ID token (getIdToken(true)) to see the change.
+const { nextClaims } = require('./teacherClaims')
+const SUPER_ADMIN_UID = 'IaltEhO0mPVfK3ng8npr4CdqnEE3'   // keep in step with src/constants/admin.js ADMIN_UID
+
+exports.grantTeacherBadge = onCall(async (req) => {
+  if (req.auth?.uid !== SUPER_ADMIN_UID) {
+    throw new HttpsError('permission-denied', 'Only the super-admin can manage teacher badges.')
+  }
+  const uid = req.data?.uid
+  if (typeof uid !== 'string' || !uid) throw new HttpsError('invalid-argument', 'uid is required.')
+  const revoke = req.data?.revoke === true
+
+  let user
+  try {
+    user = await admin.auth().getUser(uid)
+  } catch {
+    throw new HttpsError('not-found', 'User not found.')
+  }
+
+  let claims
+  try {
+    claims = nextClaims(user.customClaims, { schoolId: req.data?.schoolId, revoke })
+  } catch (e) {
+    throw new HttpsError('invalid-argument', e.message)
+  }
+
+  await admin.auth().setCustomUserClaims(uid, claims)
+  await db.collection('users').doc(uid).set({
+    teacherSchoolId: revoke ? admin.firestore.FieldValue.delete() : claims.teacherSchoolId,
+  }, { merge: true })
+  return { ok: true, teacherSchoolId: revoke ? null : claims.teacherSchoolId }
+})
