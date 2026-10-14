@@ -532,3 +532,26 @@ exports.grantTeacherBadge = onCall(async (req) => {
   }, { merge: true })
   return { ok: true, teacherSchoolId: revoke ? null : claims.teacherSchoolId }
 })
+
+// ── Account erasure (PDPA) ───────────────────────────────────────────────────
+// The signed-in user deletes their OWN account and data. Guards: must have
+// signed in within the last 5 minutes (the client re-authenticates first), must
+// send confirm:true, and the super-admin account is protected. Auth deletion is
+// the last step, so if anything fails the user can sign in and retry.
+const { eraseUser } = require('./accountDeletion')
+const REAUTH_WINDOW_MS = 5 * 60 * 1000
+
+exports.deleteMyAccount = onCall({ timeoutSeconds: 300 }, async (req) => {
+  const uid = req.auth?.uid
+  if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.')
+  if (uid === 'IaltEhO0mPVfK3ng8npr4CdqnEE3') {
+    throw new HttpsError('failed-precondition', 'ADMIN_PROTECTED')
+  }
+  if (req.data?.confirm !== true) throw new HttpsError('invalid-argument', 'CONFIRM_REQUIRED')
+  const authTimeMs = Number(req.auth.token?.auth_time) * 1000
+  if (!(authTimeMs > 0) || Date.now() - authTimeMs > REAUTH_WINDOW_MS) {
+    throw new HttpsError('failed-precondition', 'REAUTH_REQUIRED')
+  }
+  const counts = await eraseUser({ admin, db, uid })
+  return { ok: true, counts }
+})

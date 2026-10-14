@@ -1,5 +1,6 @@
 import { SITES } from '../../constants/sites'
 import { siteHref } from './SiteNav'
+import { LEGAL_PATHS } from '../../constants/legal'
 
 const TOOL_KEYS = ['roadmap', 'tcas', 'news', 'school']
 
@@ -83,6 +84,10 @@ export default function SiteFooter() {
       <div className="border-t-2 border-ink">
         <p className="thai-font mx-auto max-w-6xl px-4 py-4 text-center text-xs text-ink/50 md:px-6">
           © {year} I LOVE TCAS
+          {' · '}
+          <a href={LEGAL_PATHS.privacy} className="underline hover:text-brand-strong">นโยบายความเป็นส่วนตัว</a>
+          {' · '}
+          <a href={LEGAL_PATHS.terms} className="underline hover:text-brand-strong">ข้อกำหนดการใช้งาน</a>
         </p>
       </div>
     </footer>

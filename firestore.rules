@@ -249,6 +249,11 @@ service cloud.firestore {
       allow delete: if isSuperAdmin() || (isTeacherHere() && resource.data.authorUid == request.auth.uid);
     }
 
+    // Erasure log (PDPA): written only by deleteMyAccount, never readable by clients.
+    match /accountDeletions/{docId} {
+      allow read, write: if false;
+    }
+
     // Weekly school leaderboard (ADR 0018): school-level aggregates only, no
     // personal data, so it is public (shareable / SEO). Written by rollupSchoolWeek.
     match /schoolWeeks/{docId} {

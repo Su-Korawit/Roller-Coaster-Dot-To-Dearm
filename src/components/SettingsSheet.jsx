@@ -14,6 +14,8 @@ import { useNavigate } from 'react-router-dom'
 import Toggle from './ui/Toggle'
 import SegmentedTabs from './ui/SegmentedTabs'
 import Popup from './ui/Popup'
+import DeleteAccountSheet from './DeleteAccountSheet'
+import { LEGAL_PATHS } from '../constants/legal'
 
 const DEFAULT_PRIVACY = {
   mastery:    { public: false, followers: true },
@@ -46,6 +48,7 @@ const UI_VISIBILITY_ITEMS = [
 
 export default function SettingsSheet({ onClose, onProfileUpdated }) {
   const navigate = useNavigate()
+  const [deleteOpen, setDeleteOpen] = useState(false)
   const authUser = useAuthStore((s) => s.user)
   const signOut = useAuthStore((s) => s.signOut)
   const aiLanguage = useUserStore((s) => s.aiLanguage)
@@ -157,6 +160,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
   const initials = (displayName || authUser?.displayName || '?').charAt(0).toUpperCase()
 
   return (
+    <>
     <Popup variant="sheet" size="md" onClose={onClose}>
       <div
         className="flex flex-col h-full transition-transform duration-300 ease-out"
@@ -349,6 +353,20 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
             >
               Sign Out
             </button>
+
+            <div className="pt-3 mt-1 border-t border-ink/10 space-y-2">
+              <p className="pixel-font text-[8px] text-ink-soft">ความเป็นส่วนตัว</p>
+              <div className="flex gap-3 text-xs">
+                <a href={LEGAL_PATHS.privacy} target="_blank" rel="noopener noreferrer" className="underline text-brand-strong">นโยบายความเป็นส่วนตัว</a>
+                <a href={LEGAL_PATHS.terms} target="_blank" rel="noopener noreferrer" className="underline text-brand-strong">ข้อกำหนดการใช้งาน</a>
+              </div>
+              <button
+                onClick={() => setDeleteOpen(true)}
+                className="w-full rounded-xl border border-danger text-danger py-2 text-sm font-semibold hover:bg-danger/10 transition-colors"
+              >
+                ลบบัญชี
+              </button>
+            </div>
           </section>
           )}
 
@@ -372,5 +390,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
         </div>
       </div>
     </Popup>
+      {deleteOpen && <DeleteAccountSheet onClose={() => setDeleteOpen(false)} />}
+    </>
   )
 }

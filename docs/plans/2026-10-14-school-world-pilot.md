@@ -24,9 +24,10 @@ reachable on foot from spawn), and all UI components in jsdom.
 
 PDPA, because the users are minors:
 
-- [ ] Privacy Policy + Terms pages, linked at registration, stating: what is collected (name, school, study time), Gemini data use, retention, contact.
-- [ ] Consent at registration; for under-20s a parent/guardian consent path the school accepts.
-- [ ] Working "delete my account and data" (also delete `focusActive`, `focusDaily`, `focusSessions`, `users/{uid}`; `userSchool/{uid}` in RTDB). **Not built yet.**
+- [x] Privacy Policy + Terms pages (`/privacy`, `/terms` on every site, linked from sign-in, settings and the footer). **Drafted from the code, not reviewed by a lawyer** — have it reviewed (minors/guardian wording, retention periods, cross-border transfer). Confirm `CONTROLLER_NAME` and `CONTACT_EMAIL` in `src/constants/legal.js`.
+- [x] Consent at sign-up (terms + "20+ or guardian agreed" boxes) recorded on `users/{uid}.consent`; existing users are blocked by `ConsentGate` until they accept the current `CONSENT_VERSION`. Still open: a guardian path the school accepts (today it is a self-declared tick-box).
+- [x] Delete my account (Settings > General > ลบบัญชี): re-authentication, typed confirmation, `deleteMyAccount` Function erasing Firestore, Storage (incl. payment slips), RTDB and Auth; ledger rows kept de-identified. Verified end to end on the Auth+Firestore+RTDB+Storage emulators (see `test/rules/accountDeletion.test.js`). Deploy with `firebase deploy --only functions:deleteMyAccount,firestore:rules,firestore:indexes`.
+- [ ] **BLOCKER found while writing the policy:** `firestore.rules` lets any signed-in user read any `users/{uid}` document, and that document contains the sign-up **email** (plus school, MBTI…). Anyone can create an account, so anyone can harvest students' emails. Fix before the pilot: move `email` (and ideally school coordinates) to `users/{uid}/private/*` or a Functions-owned mirror, then delete the email mention in `src/data/legalContent.js` (marked OWNER).
 - [ ] Firebase on **Blaze** with a budget alert; Spark caps RTDB at 100 simultaneous connections.
 - [ ] Secrets off the client: `VITE_GEMINI_API_KEY` and the SlipOK/PromptPay values are still shipped to browsers (see the first strategy note). Not required for the School World itself, but do not open to the public with them as is.
 - [ ] Decide moderation owner: someone must read reports. There is **no report/block UI yet** — rooms are emote-only by design (no free text), so the exposure is names/avatars and teacher announcements.

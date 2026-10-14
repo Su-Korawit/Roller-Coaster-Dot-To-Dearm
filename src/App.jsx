@@ -4,6 +4,8 @@ import { Navigate, Outlet, Route, Routes, useParams } from 'react-router-dom'
 import { useAuthStore } from './stores/useAuthStore'
 import { getAdminSections } from './constants/admin'
 import OnboardingModal from './components/onboarding/OnboardingModal'
+import ConsentGate from './components/ConsentGate'
+import { useConsentStore } from './stores/useConsentStore'
 import { currentSite } from './lib/site'
 import { SITES } from './constants/sites'
 
@@ -18,6 +20,8 @@ const RoadmapPublicView = lazy(() => import('./pages/RoadmapPublicView'))
 const WelcomePage = lazy(() => import('./pages/WelcomePage'))
 const NewsPostPage = lazy(() => import('./pages/NewsPostPage'))
 const MusicCallback = lazy(() => import('./pages/MusicCallback'))
+const PrivacyPage = lazy(() => import('./pages/legal/PrivacyPage'))
+const TermsPage = lazy(() => import('./pages/legal/TermsPage'))
 const MiniPlayer = lazy(() => import('./components/music/MiniPlayer'))
 
 // Feature-site pages — separate lazy chunks so hub/roadmap/tcas/news/school
@@ -55,9 +59,12 @@ function LoadingScreen() {
 function RequireAuth() {
   const user = useAuthStore((s) => s.user)
   const loading = useAuthStore((s) => s.loading)
+  const consent = useConsentStore((s) => s.status)
 
   if (loading) return <LoadingScreen />
   if (!user) return <Navigate to="/auth" replace />
+  // PDPA: nothing past this point until the current Privacy Policy/Terms are accepted.
+  if (consent === 'needed') return <ConsentGate />
   return <Outlet />
 }
 
@@ -121,6 +128,8 @@ function AppSiteRoutes() {
           <Route path="/music/callback" element={<MusicCallback />} />
         </Route>
       </Route>
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
@@ -135,6 +144,8 @@ function HubSiteRoutes() {
       <Route path="/auth" element={<ExternalRedirect to="https://app.ilovetcas.com/auth" />} />
       <Route path="/admin" element={<ExternalRedirect to="https://app.ilovetcas.com/admin" />} />
       <Route path="/news/:id" element={<HubNewsRedirect />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
@@ -160,6 +171,8 @@ function RoadmapSiteRoutes() {
           </FeatureLayout>
         )}
       />
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
@@ -169,6 +182,8 @@ function TcasSiteRoutes() {
   return (
     <Routes>
       <Route path="/" element={<TcasExplorerPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
@@ -179,6 +194,8 @@ function NewsSiteRoutes() {
     <Routes>
       <Route path="/" element={<NewsHomePage />} />
       <Route path="/:id" element={<NewsPostPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
@@ -196,6 +213,8 @@ function SchoolSiteRoutes() {
           </FeatureLayout>
         )}
       />
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
@@ -216,6 +235,8 @@ function BagSiteRoutes() {
           )}
         />
       </Route>
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

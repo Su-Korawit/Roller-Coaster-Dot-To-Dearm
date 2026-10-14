@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../stores/useAuthStore'
 import { currentSite } from '../lib/site'
 import Button from '../components/ui/Button'
+import { markConsentPending, clearPendingConsent } from '../services/consent'
+import { LEGAL_PATHS } from '../constants/legal'
 
 const STARS = Array.from({ length: 50 }, (_, i) => {
   const seed = i * 2654435761
@@ -47,6 +49,11 @@ export default function AuthPage() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const signIn = useAuthStore((s) => s.signIn)
+  const [acceptTerms, setAcceptTerms] = useState(false)
+  const [confirmAge, setConfirmAge] = useState(false)
+  const consentGiven = acceptTerms && confirmAge
+  // Signing up (any method) and Google sign-in (which may create the account) need consent;
+  // email login is for existing accounts, which ConsentGate covers if they have none on file.
 
   useEffect(() => {
     if (user) navigate(currentSite === 'bag' ? '/' : '/home', { replace: true })
@@ -59,10 +66,13 @@ export default function AuthPage() {
 
   async function handleGoogle() {
     setError('')
+    if (!consentGiven) { setError('กรุณายอมรับข้อกำหนดและยืนยันอายุก่อนเข้าสู่ระบบ'); return }
+    markConsentPending()
     setBusy(true)
     try {
       await signIn('google')
     } catch (e) {
+      clearPendingConsent()   // a failed attempt must not leave consent behind for a different account
       console.error('[auth] google sign-in failed:', e.code, e.message)
       const msg = friendlyError(e.code)
       if (msg) setError(msg)
@@ -74,10 +84,15 @@ export default function AuthPage() {
   async function handleEmail(e) {
     e.preventDefault()
     setError('')
+    if (mode === 'register') {
+      if (!consentGiven) { setError('กรุณายอมรับข้อกำหนดและยืนยันอายุก่อนสมัครสมาชิก'); return }
+      markConsentPending()
+    }
     setBusy(true)
     try {
       await signIn(mode === 'register' ? 'register' : 'login', { email, password })
     } catch (e) {
+      clearPendingConsent()
       console.error('[auth] email sign-in failed:', e.code, e.message)
       setError(friendlyError(e.code))
     } finally {
@@ -122,6 +137,23 @@ export default function AuthPage() {
       </div>
 
       <div className="relative z-10 w-full max-w-md md:max-w-lg neo-card bg-paper p-5 md:p-6">
+        <fieldset className="mb-4 space-y-2 thai-font text-xs text-ink">
+            <legend className="sr-only">ข้อกำหนดและความยินยอม</legend>
+            <label className="flex items-start gap-2">
+              <input type="checkbox" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} className="mt-0.5" />
+              <span>
+                ฉันได้อ่านและยอมรับ{' '}
+                <a href={LEGAL_PATHS.terms} target="_blank" rel="noopener noreferrer" className="underline text-brand-strong">ข้อกำหนดการใช้งาน</a>
+                {' '}และ{' '}
+                <a href={LEGAL_PATHS.privacy} target="_blank" rel="noopener noreferrer" className="underline text-brand-strong">นโยบายความเป็นส่วนตัว</a>
+              </span>
+            </label>
+            <label className="flex items-start gap-2">
+              <input type="checkbox" checked={confirmAge} onChange={(e) => setConfirmAge(e.target.checked)} className="mt-0.5" />
+              <span>ฉันอายุ 20 ปีขึ้นไป หรือได้รับความยินยอมจากผู้ปกครองแล้ว</span>
+            </label>
+            <p className="text-ink-soft">ต้องยอมรับก่อนสมัครสมาชิก หรือเข้าสู่ระบบด้วย Google</p>
+        </fieldset>
         <button
           onClick={handleGoogle}
           disabled={busy}

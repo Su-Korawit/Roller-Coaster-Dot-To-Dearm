@@ -544,3 +544,20 @@ describe('focus collections + focusXp (ADR 0018)', () => {
     await assertFails(getDoc(doc(alice, 'focusDaily/bob_2026-10-14')))
   })
 })
+
+describe('consent record and erasure log (PDPA)', () => {
+  it('lets a student write their own consent record, but not anyone else’s', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(updateDoc(doc(alice, 'users/alice'), { consent: { version: '2026-10-14', ageOrGuardianConfirmed: true } }))
+    await assertFails(updateDoc(doc(alice, 'users/bob'), { consent: { version: '2026-10-14' } }))
+  })
+
+  it('clients can never read or write the erasure log', async () => {
+    await testEnv.withSecurityRulesDisabled((ctx) => setDoc(doc(ctx.firestore(), 'accountDeletions/a1'), { uidHash: 'x' }))
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(getDoc(doc(alice, 'accountDeletions/a1')))
+    await assertFails(setDoc(doc(alice, 'accountDeletions/a2'), { uidHash: 'y' }))
+    const admin = testEnv.authenticatedContext(SUPER_UID).firestore()
+    await assertFails(getDoc(doc(admin, 'accountDeletions/a1')))
+  })
+})

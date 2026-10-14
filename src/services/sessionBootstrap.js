@@ -27,6 +27,8 @@ import { usePlansStore } from '../stores/usePlansStore'
 import { hydrateSelectStoreFromFirestore } from '../utils/syncSelectToFirestore'
 import { hydrateFarmDataFromFirestore } from '../lib/farmDataSync.js'
 import { hydrateSpotify } from './spotifyConnect'
+import { resolveConsent } from './consent'
+import { useConsentStore } from '../stores/useConsentStore'
 import { migrateLegacyRoadmap } from '../utils/migrateLegacyRoadmap'
 import {
   captureGuestWork,
@@ -152,6 +154,11 @@ export async function bootstrapSession(firebaseUser) {
     step('hydrate farm data', () => hydrateFarmDataFromFirestore()),
   ])
 
+  // Privacy/Terms consent (PDPA): record it from the sign-in page's marker, or flag the
+  // user so ConsentGate asks. Isolated like every step; a failure leaves it 'unknown',
+  // and RequireAuth treats only 'needed' as blocking so an outage cannot lock anyone out.
+  await step('consent', () => resolveConsent(uid, userData))
+
   // Coins — authoritative value set by Cloud Functions, taken from the doc
   // ensureUserDoc already read (no second round-trip). Isolated via step() like
   // every other write here: a throw must never block loading from resolving
@@ -217,6 +224,7 @@ export async function bootstrapSession(firebaseUser) {
  * Stop the debounced sync writers on logout.
  */
 export function teardownSession() {
+  useConsentStore.getState().reset()
   // Auth is settled logged-out: store mutations from here on are guest work.
   enableGuestTracking()
   setPortfolioSyncUser(null)
