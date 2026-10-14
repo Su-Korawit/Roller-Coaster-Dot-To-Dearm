@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Plus, Trash2, CalendarDays, ExternalLink, Check } from 'lucide-react'
 import { useTcasEventsStore } from '../stores/useTcasEventsStore'
+import { eventsWithFallback } from '../data/tcas70'
 import { useSchoolStore } from '../stores/useSchoolStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { ADMIN_UID } from '../constants/admin'
@@ -60,7 +61,8 @@ function EventRow({ event, passed, expanded, onToggle, onAdd, added, isAdmin, on
 export default function TcasCalendarTab({ today, onGuestAction }) {
   const user = useAuthStore((s) => s.user)
   const isAdmin = user?.uid === ADMIN_UID
-  const events = useTcasEventsStore((s) => s.events)
+  const storedEvents = useTcasEventsStore((s) => s.events)
+  const events = eventsWithFallback(storedEvents)
   const addEvent = useTcasEventsStore((s) => s.addEvent)
   const deleteEvent = useTcasEventsStore((s) => s.deleteEvent)
   const addAppointment = useSchoolStore((s) => s.addAppointment)
@@ -105,7 +107,7 @@ export default function TcasCalendarTab({ today, onGuestAction }) {
       onToggle={() => setExpandedId((prev) => (prev === event.id ? null : event.id))}
       onAdd={() => handleAddToCalendar(event)}
       added={addedIds.has(event.id)}
-      isAdmin={isAdmin}
+      isAdmin={isAdmin && !event.builtIn}
       onDelete={deleteEvent}
     />
   )

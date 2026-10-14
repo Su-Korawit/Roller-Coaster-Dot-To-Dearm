@@ -292,6 +292,18 @@ describe('BoardPanel', () => {
     expect(screen.queryByText(/เก่า/)).toBeNull()
   })
 
+  it('news board leads with a countdown to the next milestone and falls back to the built-in TCAS70 calendar', () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-10-14T09:00:00Z'))
+    tcasState.events = []
+    render(<BoardPanel boardId="news" onClose={() => {}} />)
+    const card = screen.getByTestId('tcas-countdown')
+    expect(card.textContent).toMatch(/TCAS|TGAT|Portfolio|Quota|Admission|A-Level|myTCAS/)
+    expect(screen.queryByText('ยังไม่มีกำหนดการที่กำลังจะถึง')).toBeNull()
+    expect(screen.getByTestId('tcas-countdown').textContent).toContain('21')
+    vi.useRealTimers()
+  })
+
   it('contest board loads camps from /api/camphub and degrades gracefully', async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => [{ title: 'ค่าย A', link: 'https://x/a', small_description: 'd' }] })

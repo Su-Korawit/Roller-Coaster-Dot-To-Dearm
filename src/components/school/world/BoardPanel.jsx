@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Popup from '../../ui/Popup'
 import PanelHeader from '../../ui/PanelHeader'
 import { useTcasEventsStore } from '../../../stores/useTcasEventsStore'
+import { eventsWithFallback, nextMilestone } from '../../../data/tcas70'
 
 const TITLES = { news: 'บอร์ดข่าวโรงอาหาร', contest: 'บอร์ดประกวดและค่าย' }
 
@@ -20,15 +21,36 @@ function Row({ title, sub, link }) {
     : <div className={cls}>{body}</div>
 }
 
+// The big number the board leads with: how long until the next TCAS milestone.
+function Countdown({ event, days }) {
+  return (
+    <div data-testid="tcas-countdown" className="rpg-plank rounded-lg px-4 py-3 flex items-center gap-4">
+      <div className="text-center shrink-0 min-w-16">
+        <div className="pixel-font text-3xl leading-none text-ink">{days === 0 ? 'วันนี้' : days}</div>
+        {days > 0 && <div className="thai-font text-xs text-ink/70 mt-1">วัน</div>}
+      </div>
+      <div className="min-w-0">
+        <div className="pixel-font text-[9px] text-ink/60">เหตุการณ์ TCAS ถัดไป</div>
+        <div className="thai-font text-sm text-ink font-bold">{event.title}</div>
+        <div className="thai-font text-xs text-ink/70 line-clamp-2">{event.description}</div>
+      </div>
+    </div>
+  )
+}
+
 function NewsBoard({ extra }) {
-  const events = useTcasEventsStore((s) => s.events)
+  const stored = useTcasEventsStore((s) => s.events)
   useEffect(() => useTcasEventsStore.getState().subscribeEvents(), [])
-  const upcoming = events.filter((e) => e.date >= todayKey()).slice(0, 8)
+  const events = eventsWithFallback(stored)
+  const next = nextMilestone(events, todayKey())
+  // the next milestone already leads the board as the countdown card, so the list starts after it
+  const upcoming = events.filter((e) => e.date >= todayKey() && e.id !== next?.event.id).slice(0, 8)
   return (
     <>
       {extra}
+      {next && <Countdown event={next.event} days={next.days} />}
       <h3 className="pixel-font text-[10px] text-ink/60">ปฏิทิน TCAS ที่กำลังจะถึง</h3>
-      {upcoming.length === 0 && <p className="thai-font text-sm text-ink/60">ยังไม่มีกำหนดการที่กำลังจะถึง</p>}
+      {!next && <p className="thai-font text-sm text-ink/60">ยังไม่มีกำหนดการที่กำลังจะถึง</p>}
       {upcoming.map((e) => (
         <Row key={e.id} title={`${e.date} · ${e.title}`} sub={e.description} link={e.link} />
       ))}
