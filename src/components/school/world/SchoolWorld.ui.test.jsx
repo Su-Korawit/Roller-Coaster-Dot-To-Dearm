@@ -12,6 +12,8 @@ vi.mock('../../../stores/useTcasEventsStore', () => ({
   useTcasEventsStore: Object.assign((sel) => sel(tcasState), { getState: () => tcasState }),
 }))
 
+const sfx = { playSound: vi.fn(), startRain: vi.fn(), stopRain: vi.fn() }
+vi.mock('../../../lib/sfx', () => sfx)
 const svc = {
   enterSchoolHub: vi.fn(), leaveSchoolHub: vi.fn(),
   beginFocus: vi.fn(), confirmFocus: vi.fn(), finishFocus: vi.fn(),
@@ -34,6 +36,8 @@ const { default: SchoolWorldLayer } = await import('./SchoolWorldLayer')
 const { default: FocusPanel } = await import('./FocusPanel')
 const { default: LeaderboardPanel } = await import('./LeaderboardPanel')
 const { default: BoardPanel } = await import('./BoardPanel')
+const { default: FocusHud } = await import('./FocusHud')
+const { useUserStore } = await import('../../../stores/useUserStore')
 const { default: SchoolAnnouncements } = await import('./SchoolAnnouncements')
 
 const renderLayer = (props = {}) => {
@@ -48,6 +52,8 @@ const renderLayer = (props = {}) => {
 
 beforeEach(() => {
   Object.values(svc).forEach((f) => f.mockReset())
+  Object.values(sfx).forEach((f) => f.mockReset())
+  useUserStore.setState({ sfxEnabled: true })
   board.readTeacherClaims.mockReset().mockResolvedValue(null)
   board.subscribeSchoolPosts.mockReset().mockImplementation(() => () => {})
   board.createSchoolPost.mockClear(); board.deleteSchoolPost.mockClear()
@@ -319,5 +325,54 @@ describe('FocusPanel temperament perk line', () => {
     useSchoolWorldStore.getState().setFocus({ temperament: 'SJ', lastResult: { multiplier: 1 } })
     render(<FocusPanel onClose={() => {}} />)
     expect(screen.getByTestId('focus-perk').textContent).not.toContain('โบนัสกำลังทำงาน')
+  })
+})
+
+describe('sound hooks in the School World UI', () => {
+  const inHub = { inHub: true, room: { kind: 'school', shard: 1, ownerUid: 'x', schoolId: 'S' } }
+
+  it('FocusHud chimes and rings the tab title when a check-in is due, and restores the title when done', () => {
+    document.title = 'I LOVE TCAS'
+    useSchoolWorldStore.getState().setFocus({ status: 'active', lastCheckInAt: Date.now() - 26 * 60000, xpThisSession: 0 })
+    const { unmount } = render(<FocusHud />)
+    expect(sfx.playSound).toHaveBeenCalledWith('chime')
+    expect(document.title).toContain('🔔')
+    unmount()
+    expect(document.title).toBe('I LOVE TCAS')
+  })
+
+  it('FocusHud stays silent while the next check-in is still ahead', () => {
+    useSchoolWorldStore.getState().setFocus({ status: 'active', lastCheckInAt: Date.now(), xpThisSession: 0 })
+    render(<FocusHud />)
+    expect(sfx.playSound).not.toHaveBeenCalled()
+  })
+
+  it('the ambience toggle starts the rain loop and turning it off (or leaving) stops it', () => {
+    useSchoolWorldStore.setState(inHub)
+    const { unmount } = renderLayer()
+    expect(sfx.startRain).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByLabelText('โหมดบรรยากาศกลางคืน'))
+    expect(sfx.startRain).toHaveBeenCalledTimes(1)
+    fireEvent.click(screen.getByLabelText('โหมดบรรยากาศกลางคืน'))
+    expect(sfx.stopRain).toHaveBeenCalled()
+    fireEvent.click(screen.getByLabelText('โหมดบรรยากาศกลางคืน'))
+    sfx.stopRain.mockClear()
+    unmount()
+    expect(sfx.stopRain).toHaveBeenCalled()
+  })
+
+  it('no rain when sound effects are switched off', () => {
+    useUserStore.setState({ sfxEnabled: false })
+    useSchoolWorldStore.setState({ ...inHub, ambient: true })
+    renderLayer()
+    expect(sfx.startRain).not.toHaveBeenCalled()
+  })
+
+  it('sending an emote plays its blip', () => {
+    useSchoolWorldStore.setState(inHub)
+    renderLayer()
+    fireEvent.click(screen.getByLabelText('อีโมจิ'))
+    fireEvent.click(screen.getByLabelText('สู้ ๆ'))
+    expect(sfx.playSound).toHaveBeenCalledWith('emote')
   })
 })

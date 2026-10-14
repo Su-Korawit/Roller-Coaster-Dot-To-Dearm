@@ -13,11 +13,15 @@ vi.mock('../lib/schoolRoom', () => ({
 vi.mock('../stores/useFarmStore', () => ({ useFarmStore: { setState: vi.fn() } }))
 const returnHome = vi.fn()
 vi.mock('../lib/syncManager', () => ({ returnHome: (...a) => returnHome(...a) }))
+const playSound = vi.fn()
+vi.mock('../lib/sfx', () => ({ playSound: (...a) => playSound(...a) }))
 const focusApi = { startFocus: vi.fn(), checkInFocus: vi.fn(), endFocus: vi.fn() }
 vi.mock('./focus', () => focusApi)
 
 const { useWorldStore } = await import('../stores/useWorldStore')
 const { useSchoolWorldStore } = await import('../stores/useSchoolWorldStore')
+const { useUserStore } = await import('../stores/useUserStore')
+const { useFxStore } = await import('../stores/useFxStore')
 const { enterSchoolHub, leaveSchoolHub, beginFocus, confirmFocus, finishFocus } = await import('./schoolWorld')
 
 const snap = (data) => ({ exists: () => data != null, data: () => data })
@@ -25,6 +29,9 @@ const snap = (data) => ({ exists: () => data != null, data: () => data })
 beforeEach(() => {
   getDoc.mockReset(); chooseRoom.mockReset(); returnHome.mockReset()
   Object.values(focusApi).forEach((f) => f.mockReset())
+  playSound.mockReset()
+  useFxStore.getState().clear()
+  useUserStore.setState({ focusXp: 0 })
   useSchoolWorldStore.setState({ inHub: false, room: null, enterStatus: 'idle', enterError: null, mapChangeRequest: null })
   useSchoolWorldStore.getState().resetFocus()
   useWorldStore.setState({ currentMapOwnerUid: 'me', currentMapKey: 'test3' })
@@ -134,5 +141,57 @@ describe('focus actions mirror the server answer', () => {
     expect(focusApi.startFocus).toHaveBeenCalledTimes(1)
     release({ startedAt: 1, lastCheckInAt: 1, verifiedMs: 0 })
     await first
+  })
+})
+
+describe('Focus feedback (sound + toasts + HUD XP)', () => {
+  it('starting a fresh session chimes; resuming one does not', async () => {
+    focusApi.startFocus.mockResolvedValue({ resumed: false, startedAt: 1, lastCheckInAt: 1, verifiedMs: 0 })
+    await beginFocus()
+    expect(playSound).toHaveBeenCalledWith('success')
+    playSound.mockReset()
+    focusApi.startFocus.mockResolvedValue({ resumed: true, startedAt: 1, lastCheckInAt: 2, verifiedMs: 5 })
+    await beginFocus()
+    expect(playSound).not.toHaveBeenCalled()
+  })
+
+  it('a check-in adds the XP to the HUD total and celebrates it', async () => {
+    focusApi.checkInFocus.mockResolvedValue({ verifiedMs: 1, lastCheckInAt: 9, xpGained: 25 })
+    await confirmFocus()
+    expect(useUserStore.getState().focusXp).toBe(25)
+    expect(playSound).toHaveBeenCalledWith('coin')
+    expect(useFxStore.getState().toasts[0]).toMatchObject({ kind: 'xp', text: '+25 XP' })
+  })
+
+  it('crossing a level boundary while checking in / ending triggers LEVEL UP', async () => {
+    useUserStore.setState({ focusXp: 55 })      // level 1; 60 XP is level 2
+    focusApi.checkInFocus.mockResolvedValue({ verifiedMs: 1, lastCheckInAt: 9, xpGained: 10 })
+    await confirmFocus()
+    expect(playSound).toHaveBeenCalledWith('levelup')
+    expect(useFxStore.getState().toasts[0].text).toBe('LEVEL UP! Lv 2')
+
+    useFxStore.getState().clear()
+    useUserStore.setState({ focusXp: 175 })     // level 2; 180 XP is level 3
+    focusApi.endFocus.mockResolvedValue({ verifiedMs: 1, xpGained: 6 })
+    await finishFocus()
+    expect(useFxStore.getState().toasts[0].text).toBe('LEVEL UP! Lv 3')
+  })
+
+  it('zero XP stays silent; a server error buzzes', async () => {
+    focusApi.checkInFocus.mockResolvedValue({ verifiedMs: 1, lastCheckInAt: 9, xpGained: 0 })
+    await confirmFocus()
+    expect(playSound).not.toHaveBeenCalled()
+    expect(useFxStore.getState().toasts).toHaveLength(0)
+
+    focusApi.checkInFocus.mockRejectedValue(new Error('NO_ACTIVE_SESSION'))
+    await confirmFocus()
+    expect(playSound).toHaveBeenCalledWith('error')
+  })
+
+  it('entering the school plays the door blip', async () => {
+    getDoc.mockImplementation(async (ref) => (ref === 'user:me' ? snap({ schoolId: 'S1' }) : snap({ memberCount: 40 })))
+    chooseRoom.mockResolvedValue({ kind: 'school', ownerUid: 'school:S1:1', mapKey: 'school_hub', shard: 1, full: false })
+    await enterSchoolHub('me')
+    expect(playSound).toHaveBeenCalledWith('open')
   })
 })

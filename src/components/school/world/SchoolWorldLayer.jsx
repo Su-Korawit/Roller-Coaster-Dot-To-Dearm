@@ -5,6 +5,8 @@ import { useSchoolWorldStore } from '../../../stores/useSchoolWorldStore'
 import { enterSchoolHub, leaveSchoolHub } from '../../../services/schoolWorld'
 import { EMOTE_DURATION_MS } from '../../../constants/emotes'
 import { shareRoomImage } from '../../../utils/shareRoomImage'
+import { playSound, startRain, stopRain } from '../../../lib/sfx'
+import { useUserStore } from '../../../stores/useUserStore'
 import FocusPanel from './FocusPanel'
 import FocusHud from './FocusHud'
 import LeaderboardPanel from './LeaderboardPanel'
@@ -36,6 +38,7 @@ export default function SchoolWorldLayer({ gameRef, onOpenView, active = true })
   const toolRequest = useSchoolWorldStore((s) => s.toolRequest)
   const closePanel = useSchoolWorldStore((s) => s.closePanel)
 
+  const sfxEnabled = useUserStore((s) => s.sfxEnabled)
   const [emoteOpen, setEmoteOpen] = useState(false)
   const [shareMsg, setShareMsg] = useState(null)
   const emoteTimer = useRef(null)
@@ -69,9 +72,17 @@ export default function SchoolWorldLayer({ gameRef, onOpenView, active = true })
 
   useEffect(() => () => clearTimeout(emoteTimer.current), [])
 
+  // Night-library rain: the ambience toggle drives both the tint and the audio loop.
+  useEffect(() => {
+    if (!(ambient && inHub && sfxEnabled !== false)) return undefined
+    startRain()
+    return () => stopRain()
+  }, [ambient, inHub, sfxEnabled])
+
   function sendEmote(id) {
     const reg = gameRef.current?.registry
     if (!reg) return
+    playSound('emote')
     reg.set('selfEmote', id)
     clearTimeout(emoteTimer.current)
     emoteTimer.current = setTimeout(() => reg.set('selfEmote', null), EMOTE_DURATION_MS)

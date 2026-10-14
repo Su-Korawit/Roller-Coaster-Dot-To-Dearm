@@ -9,6 +9,9 @@ import CharacterSprite from '../components/ui/CharacterSprite'
 import TemperamentCard from '../components/profile/TemperamentCard'
 import LoadingScene from '../components/ui/LoadingScene'
 import OnboardingIntro from '../components/onboarding/OnboardingIntro'
+import FxLayer from '../components/hud/FxLayer'
+import { SOUNDS, playSound, startRain, stopRain, isRaining } from '../lib/sfx'
+import { celebrateXp, fxToast } from '../services/fx'
 import ProductCard from '../components/shop/ProductCard'
 import PaymentStatusBadge from '../components/shop/PaymentStatusBadge'
 import QRPaymentCard from '../components/shop/QRPaymentCard'
@@ -46,7 +49,8 @@ export default function DevUiKit() {
   }, [])
 
   return (
-    <div className="bg-paper text-ink thai-font overflow-y-auto" style={{ height: '100dvh' }}>
+    <div className="bg-paper text-ink thai-font overflow-y-auto relative" style={{ height: '100dvh' }}>
+      <FxLayer />
       <div className="mx-auto max-w-3xl p-5">
         <h1 className="pixel-font pixel-title text-lg mb-6">UI KIT · Cozy Pixel RPG</h1>
 
@@ -167,6 +171,20 @@ export default function DevUiKit() {
               <input className="neo-input flex-1 px-3 py-2 text-sm" placeholder="พิมพ์ข้อความ..." />
               <button className="neo-btn rpg-btn-primary w-9 h-9 rounded-xl">➤</button>
             </div>
+          </div>
+        </Section>
+
+        <Section title="SOUND BOARD · FEEDBACK">
+          <div className="flex flex-wrap gap-2">
+            {Object.keys(SOUNDS).map((name) => (
+              <button key={name} className="neo-btn bg-hud px-3 py-2 pixel-font text-[9px]" onClick={() => playSound(name, { now: () => Date.now() + Math.random() })}>{name}</button>
+            ))}
+            <button className="neo-btn bg-hud px-3 py-2 pixel-font text-[9px]" onClick={() => (isRaining() ? stopRain() : startRain())}>rain on/off</button>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-3">
+            <button className="neo-btn rpg-btn-primary px-3 py-2 pixel-font text-[9px]" onClick={() => celebrateXp({ before: 10, gained: 25 })}>+25 XP</button>
+            <button className="neo-btn rpg-btn-primary px-3 py-2 pixel-font text-[9px]" onClick={() => celebrateXp({ before: 50, gained: 25 })}>level up</button>
+            <button className="neo-btn bg-hud px-3 py-2 pixel-font text-[9px]" onClick={() => fxToast('coin', '+10 🪙', 'coin')}>coin</button>
           </div>
         </Section>
 

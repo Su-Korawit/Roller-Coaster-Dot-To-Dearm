@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import DragHandle from './DragHandle'
 import { Z_SHEET, Z_MODAL } from '../../constants/zIndex'
 import { usePopupStore } from '../../stores/usePopupStore'
+import { playSound } from '../../lib/sfx'
 
 const SIZE_MAXW = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl' }
 const NAV_SAFE_PB = 'calc(env(safe-area-inset-bottom) + 96px)'
@@ -26,6 +27,12 @@ export default function Popup({
   const z = zIndex ?? (isSheet ? Z_SHEET : Z_MODAL)
   const clearNav = navSafe ?? isSheet
   const maxW = SIZE_MAXW[size] ?? SIZE_MAXW.md
+
+  // Every panel/sheet announces itself with a short blip going up, and one going down.
+  useEffect(() => {
+    playSound('open')
+    return () => playSound('close')
+  }, [])
 
   useEffect(() => {
     if (!id) return

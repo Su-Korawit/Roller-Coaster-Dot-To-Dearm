@@ -3,6 +3,7 @@ import { useSchoolWorldStore } from '../../../stores/useSchoolWorldStore'
 import { confirmFocus } from '../../../services/schoolWorld'
 import { msUntilCheckIn, CHECKIN_PROMPT_MS } from '../../../services/focus'
 import { formatDuration } from '../../../utils/formatFocus'
+import { playSound } from '../../../lib/sfx'
 
 // Always-visible pill while a Focus session runs, so the student can leave the
 // seat, keep the tab open all day, and still see (and one-tap) the next check-in.
@@ -16,9 +17,22 @@ export default function FocusHud() {
     return () => clearInterval(t)
   }, [focus.status])
 
-  if (focus.status !== 'active') return null
-  const left = msUntilCheckIn(focus.lastCheckInAt, now)
-  const due = left === 0
+  const active = focus.status === 'active'
+  const left = active ? msUntilCheckIn(focus.lastCheckInAt, now) : null
+  const due = active && left === 0
+
+  // A tab left open all day needs a nudge: a chime, and a bell in the tab title,
+  // exactly when a check-in becomes due (and again every minute while it is ignored).
+  useEffect(() => {
+    if (!due) return undefined
+    const original = document.title
+    document.title = '🔔 ยืนยันว่ายังอยู่ · ' + original
+    playSound('chime')
+    const t = setInterval(() => playSound('chime'), 60_000)
+    return () => { clearInterval(t); document.title = original }
+  }, [due])
+
+  if (!active) return null
 
   return (
     <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">

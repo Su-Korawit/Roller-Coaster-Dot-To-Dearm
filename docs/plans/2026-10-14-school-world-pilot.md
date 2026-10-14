@@ -62,6 +62,7 @@ Both accounts need a `schoolId` (pick the same school) — and the school needs 
 10. Exit portal (south end) returns to the normal world with the avatar in the right map; presence shows only in that map.
 11. Grant a teacher badge in Admin → Users (🎓), teacher re-logs in: composer appears on the canteen board, 🎓 shows on the avatar; a non-teacher sees no composer; a student of another school cannot read the announcements.
 12. Profile shows level, bar and the temperament perk.
+13. Sound (turn the volume up, click once first): clicks blip, sheets open/close with a blip, a check-in gives `+N XP` (and `LEVEL UP!` on a boundary), an unconfirmed check-in chimes and puts a bell in the tab title, 🌧 plays rain; Settings > General > Sound Effects mutes everything. Tune levels in `src/lib/sfx.js` (the `/dev/ui` Sound Board plays each effect).
 
 Anything that fails here is a real bug; send the console output.
 

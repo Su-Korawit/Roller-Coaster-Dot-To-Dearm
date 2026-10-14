@@ -6,6 +6,8 @@ import { getAdminSections } from './constants/admin'
 import OnboardingModal from './components/onboarding/OnboardingModal'
 import ConsentGate from './components/ConsentGate'
 import LoadingScene from './components/ui/LoadingScene'
+import FxLayer from './components/hud/FxLayer'
+import { installUiSounds } from './lib/sfx'
 import { useConsentStore } from './stores/useConsentStore'
 import { currentSite } from './lib/site'
 import { SITES } from './constants/sites'
@@ -70,6 +72,7 @@ function MobileLayout() {
         </Suspense>
       )}
       {user && <OnboardingModal />}
+      <FxLayer />
     </div>
   )
 }
@@ -248,6 +251,9 @@ function SiteRoutes() {
 }
 
 function App() {
+  // One delegated listener gives every button/link/tab the UI click blip.
+  useEffect(() => installUiSounds(), [])
+
   // SPA-side counterpart of the Phase 4 prerender: after hydration replaces
   // the static landing HTML, keep the head tags matching the current site.
   useEffect(() => {

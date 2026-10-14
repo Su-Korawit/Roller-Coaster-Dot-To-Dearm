@@ -11,6 +11,8 @@ import { useUserStore } from '../stores/useUserStore'
 import { useSchoolWorldStore } from '../stores/useSchoolWorldStore'
 import { returnHome } from '../lib/syncManager'
 import { startFocus, checkInFocus, endFocus } from './focus'
+import { celebrateXp, fxError } from './fx'
+import { playSound } from '../lib/sfx'
 
 const world = () => useSchoolWorldStore.getState()
 
@@ -43,6 +45,7 @@ export async function enterSchoolHub(uid) {
     })
     useFarmStore.setState({ plotsByMap: {}, plots: {} })
     world().setEntered({ kind: room.kind, shard: room.shard, ownerUid: room.ownerUid, schoolId })
+    playSound('open')
     world().requestMapChange(SCHOOL_HUB_MAP_KEY)
     return { ok: true, room }
   } catch (e) {
@@ -76,6 +79,7 @@ async function runFocus(action, apply) {
     return r
   } catch (e) {
     setFocus({ error: e?.message ?? 'FOCUS_FAILED' })
+    fxError()
     return null
   } finally {
     world().setFocus({ busy: false })
@@ -83,15 +87,20 @@ async function runFocus(action, apply) {
 }
 
 export const beginFocus = () =>
-  runFocus(startFocus, (r) => world().setFocus({
-    status: 'active', startedAt: r.startedAt, lastCheckInAt: r.lastCheckInAt,
-    verifiedMs: r.verifiedMs ?? 0, lastResult: r, temperament: r.temperament ?? null,
-    xpThisSession: r.resumed ? world().focus.xpThisSession : 0,
-  }))
+  runFocus(startFocus, (r) => {
+    if (!r.resumed) playSound('success')
+    world().setFocus({
+      status: 'active', startedAt: r.startedAt, lastCheckInAt: r.lastCheckInAt,
+      verifiedMs: r.verifiedMs ?? 0, lastResult: r, temperament: r.temperament ?? null,
+      xpThisSession: r.resumed ? world().focus.xpThisSession : 0,
+    })
+  })
 
 export const confirmFocus = () =>
   runFocus(checkInFocus, (r) => {
+    const before = useUserStore.getState().focusXp
     useUserStore.getState().addFocusXp(r.xpGained ?? 0)   // keep the HUD level badge live
+    celebrateXp({ before, gained: r.xpGained })
     world().setFocus({
       lastCheckInAt: r.lastCheckInAt, verifiedMs: r.verifiedMs, lastResult: r,
       xpThisSession: world().focus.xpThisSession + (r.xpGained ?? 0),
@@ -100,7 +109,9 @@ export const confirmFocus = () =>
 
 export const finishFocus = () =>
   runFocus(endFocus, (r) => {
+    const before = useUserStore.getState().focusXp
     useUserStore.getState().addFocusXp(r.xpGained ?? 0)
+    celebrateXp({ before, gained: r.xpGained })
     world().setFocus({
       status: 'idle', lastResult: r, verifiedMs: r.verifiedMs, lastCheckInAt: null, startedAt: null,
       xpThisSession: world().focus.xpThisSession + (r.xpGained ?? 0),

@@ -15,6 +15,7 @@ import Toggle from './ui/Toggle'
 import SegmentedTabs from './ui/SegmentedTabs'
 import Popup from './ui/Popup'
 import DeleteAccountSheet from './DeleteAccountSheet'
+import { playSound } from '../lib/sfx'
 import { LEGAL_PATHS } from '../constants/legal'
 
 const DEFAULT_PRIVACY = {
@@ -55,6 +56,10 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
   const setAiLanguage = useUserStore((s) => s.setAiLanguage)
   const controlMode = useUserStore((s) => s.controlMode)
   const setControlMode = useUserStore((s) => s.setControlMode)
+  const sfxEnabled = useUserStore((s) => s.sfxEnabled)
+  const setSfxEnabled = useUserStore((s) => s.setSfxEnabled)
+  const sfxVolume = useUserStore((s) => s.sfxVolume)
+  const setSfxVolume = useUserStore((s) => s.setSfxVolume)
   const resetUser = useUserStore((s) => s.resetUser)
   const setProfilePhotoURL = useUserStore((s) => s.setProfilePhotoURL)
   const uiVisibility = useUserStore((s) => s.uiVisibility)
@@ -338,6 +343,26 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="pixel-font text-[8px] text-ink-soft">Sound Effects</p>
+                <Toggle checked={sfxEnabled !== false} onChange={setSfxEnabled} label="เสียงเอฟเฟกต์" />
+              </div>
+              {sfxEnabled !== false && (
+                <label className="flex items-center gap-3 text-xs text-ink">
+                  <span className="shrink-0">ระดับเสียง</span>
+                  <input
+                    type="range" min="0" max="100" step="5"
+                    value={Math.round((sfxVolume ?? 0.5) * 100)}
+                    onChange={(e) => setSfxVolume(Number(e.target.value) / 100)}
+                    onPointerUp={() => playSound('coin')}
+                    aria-label="ระดับเสียงเอฟเฟกต์"
+                    className="flex-1 accent-brand"
+                  />
+                </label>
+              )}
             </div>
 
             <button
