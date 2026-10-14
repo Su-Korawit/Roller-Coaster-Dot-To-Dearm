@@ -118,3 +118,68 @@ describe('Focus callables (real handlers, emulator)', () => {
     expect(hist.docs[0].data().verifiedMs).toBe(0)
   })
 })
+
+describe('Temperament perks (real handlers, emulator)', () => {
+  const setMbti = (mbti) => db.collection('users').doc(UID).set({ uid: UID, schoolId: 'ChIJschool', profile: { mbti } })
+  const xpOf = async () => (await db.doc(`users/${UID}`).get()).data().focusXp ?? 0
+  const dailyMs = async (day) => (await db.doc(`focusDaily/${UID}_${day}`).get()).data()?.verifiedMs
+
+  it('no MBTI -> no bonus, multiplier 1', async () => {
+    await call(fns.startFocus)
+    at(25)
+    expect(await call(fns.checkInFocus)).toMatchObject({ multiplier: 1, xpGained: 25 })
+  })
+
+  it('NT: deep-focus bonus applies only after 50 verified minutes in the session', async () => {
+    await setMbti('INTJ')
+    expect(await call(fns.startFocus)).toMatchObject({ temperament: 'NT' })
+    at(25); expect(await call(fns.checkInFocus)).toMatchObject({ multiplier: 1, xpGained: 25 })
+    at(50); expect(await call(fns.checkInFocus)).toMatchObject({ multiplier: 1, xpGained: 25 })
+    at(75); expect(await call(fns.checkInFocus)).toMatchObject({ multiplier: expect.closeTo(1.1, 5), xpGained: 27 })
+    expect(await xpOf()).toBe(77)                              // 25 + 25 + floor(27.5)
+    expect(await dailyMs('2026-10-14')).toBe(75 * MIN)         // leaderboard time is NOT inflated by the perk
+  })
+
+  it('NF: night-owl bonus at 21:00 Bangkok, none at 10:00', async () => {
+    await setMbti('INFP')
+    vi.setSystemTime(Date.UTC(2026, 9, 14, 14, 0))             // 21:00 Bangkok
+    await call(fns.startFocus)
+    vi.setSystemTime(Date.UTC(2026, 9, 14, 14, 25))
+    expect(await call(fns.checkInFocus)).toMatchObject({ multiplier: expect.closeTo(1.1, 5), xpGained: 27 })
+    await call(fns.endFocus)
+
+    vi.setSystemTime(Date.UTC(2026, 9, 15, 3, 0))              // next morning, 10:00 Bangkok
+    await call(fns.startFocus)
+    vi.setSystemTime(Date.UTC(2026, 9, 15, 3, 25))
+    expect(await call(fns.checkInFocus)).toMatchObject({ multiplier: 1, xpGained: 25 })
+  })
+
+  it('SJ: routine bonus only if the student studied at least 20 minutes yesterday', async () => {
+    await setMbti('ISTJ')
+    await call(fns.startFocus)
+    at(25)
+    expect(await call(fns.checkInFocus)).toMatchObject({ multiplier: 1 })
+    await call(fns.endFocus)
+
+    // next day, after studying 30 min "yesterday" (the seeded day is 2026-10-14)
+    await db.doc(`focusDaily/${UID}_2026-10-14`).set({ uid: UID, day: '2026-10-14', verifiedMs: 30 * MIN })
+    vi.setSystemTime(Date.UTC(2026, 9, 15, 3, 0))
+    await call(fns.startFocus)
+    vi.setSystemTime(Date.UTC(2026, 9, 15, 3, 25))
+    expect(await call(fns.checkInFocus)).toMatchObject({ multiplier: expect.closeTo(1.1, 5), xpGained: 27 })
+  })
+
+  it('SP: sprint bonus covers the first 30 minutes of the day, then stops', async () => {
+    await setMbti('ESTP')
+    await call(fns.startFocus)
+    at(25); expect(await call(fns.checkInFocus)).toMatchObject({ multiplier: expect.closeTo(1.1, 5), xpGained: 27 })
+    at(50); expect(await call(fns.checkInFocus)).toMatchObject({ multiplier: expect.closeTo(1.1, 5) })   // daily was 25 < 30
+    at(75); expect(await call(fns.checkInFocus)).toMatchObject({ multiplier: 1, xpGained: 25 })           // daily 50 >= 30
+  })
+
+  it('a session started before perks existed (no weightedMs) still settles on its verified total', async () => {
+    await db.doc(`focusActive/${UID}`).set({ uid: UID, schoolId: 'ChIJschool', startedAt: T0, lastCheckInAt: T0, verifiedMs: 0 })
+    at(25)
+    expect(await call(fns.checkInFocus)).toMatchObject({ multiplier: 1, xpGained: 25 })
+  })
+})

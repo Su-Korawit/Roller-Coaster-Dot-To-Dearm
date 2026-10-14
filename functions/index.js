@@ -334,6 +334,7 @@ const {
   CHECKIN_WINDOW_MS, DAILY_CAP_MS, bangkokDay, settleSegment, xpDelta,
 } = require('./focusMath')
 const { normalizeSchoolId: normalizeFocusSchoolId } = require('./schoolMembers')
+const { temperamentOf, xpMultiplier, YESTERDAY_MIN_MS } = require('./temperaments')
 
 function requireUid(req) {
   const uid = req.auth?.uid
@@ -358,7 +359,19 @@ async function settleActive(uid, { end }) {
     const seg = settleSegment({ lastCheckInAt: active.lastCheckInAt, nowMs, dailyUsedMs: dailyUsed })
     const before = Number(active.verifiedMs ?? 0)
     const after = before + seg.creditedMs
-    const xpGained = xpDelta(before, after)
+    // Temperament perk (ADR 0018) scales XP only, never the verified time behind the
+    // leaderboard. XP is floor-of-weighted-total so no fraction is lost between calls;
+    // sessions started before perks existed fall back to their verified total.
+    const multiplier = xpMultiplier({
+      temperament: active.temperament ?? null,
+      sessionVerifiedMs: before,
+      dailyBeforeMs: dailyUsed,
+      nowMs,
+      studiedYesterday: active.studiedYesterday === true,
+    })
+    const weightedBefore = Number(active.weightedMs ?? before)
+    const weightedAfter = weightedBefore + seg.creditedMs * multiplier
+    const xpGained = xpDelta(weightedBefore, weightedAfter)
 
     if (seg.creditedMs > 0) {
       tx.set(dailyRef, {
@@ -378,7 +391,7 @@ async function settleActive(uid, { end }) {
         day, reason: 'ended',
       })
     } else if (!seg.tooSoon) {
-      tx.update(activeRef, { lastCheckInAt: nowMs, verifiedMs: after })
+      tx.update(activeRef, { lastCheckInAt: nowMs, verifiedMs: after, weightedMs: weightedAfter })
     }
 
     return {
@@ -387,6 +400,7 @@ async function settleActive(uid, { end }) {
       lastCheckInAt: seg.tooSoon || end ? active.lastCheckInAt : nowMs,
       creditedMs: seg.creditedMs,
       xpGained,
+      multiplier,
       lapsed: seg.lapsed,
       capped: seg.capped,
       tooSoon: seg.tooSoon,
@@ -403,14 +417,15 @@ exports.startFocus = onCall(async (req) => {
   const userRef = db.collection('users').doc(uid)
 
   return db.runTransaction(async (tx) => {
-    const [activeSnap, userSnap] = await Promise.all([tx.get(activeRef), tx.get(userRef)])
+    const yesterdayRef = db.collection('focusDaily').doc(`${uid}_${bangkokDay(nowMs - 24 * 60 * 60 * 1000)}`)
+    const [activeSnap, userSnap, yesterdaySnap] = await Promise.all([tx.get(activeRef), tx.get(userRef), tx.get(yesterdayRef)])
     if (!userSnap.exists) throw new HttpsError('not-found', 'User not found.')
 
     if (activeSnap.exists) {
       const a = activeSnap.data()
       if (nowMs - a.lastCheckInAt <= CHECKIN_WINDOW_MS) {
         // Idempotent: a second tab / a reload resumes the running session.
-        return { ok: true, resumed: true, startedAt: a.startedAt, lastCheckInAt: a.lastCheckInAt, verifiedMs: a.verifiedMs ?? 0 }
+        return { ok: true, resumed: true, startedAt: a.startedAt, lastCheckInAt: a.lastCheckInAt, verifiedMs: a.verifiedMs ?? 0, temperament: a.temperament ?? null }
       }
       // Stale: close it with nothing extra credited, then start fresh.
       tx.set(db.collection('focusSessions').doc(), {
@@ -420,8 +435,14 @@ exports.startFocus = onCall(async (req) => {
     }
 
     const schoolId = normalizeFocusSchoolId(userSnap.data())
-    tx.set(activeRef, { uid, schoolId, startedAt: nowMs, lastCheckInAt: nowMs, verifiedMs: 0 })
-    return { ok: true, resumed: false, startedAt: nowMs, lastCheckInAt: nowMs, verifiedMs: 0 }
+    const u = userSnap.data()
+    const temperament = temperamentOf(u.profile?.mbti ?? u.mbti)
+    const studiedYesterday = Number(yesterdaySnap.data()?.verifiedMs ?? 0) >= YESTERDAY_MIN_MS
+    tx.set(activeRef, {
+      uid, schoolId, startedAt: nowMs, lastCheckInAt: nowMs, verifiedMs: 0,
+      weightedMs: 0, temperament, studiedYesterday,
+    })
+    return { ok: true, resumed: false, startedAt: nowMs, lastCheckInAt: nowMs, verifiedMs: 0, temperament }
   })
 })
 

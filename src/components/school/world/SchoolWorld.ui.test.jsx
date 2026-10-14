@@ -300,3 +300,24 @@ describe('BoardPanel', () => {
     vi.unstubAllGlobals()
   })
 })
+
+describe('FocusPanel temperament perk line', () => {
+  it('shows the perk for the server-reported temperament and flags when the bonus is live', () => {
+    useSchoolWorldStore.getState().setFocus({
+      status: 'active', lastCheckInAt: Date.now(), temperament: 'NF', lastResult: { multiplier: 1.1 },
+    })
+    render(<FocusPanel onClose={() => {}} />)
+    expect(screen.getByTestId('focus-perk').textContent).toContain('นกฮูกกลางคืน')
+    expect(screen.getByTestId('focus-perk').textContent).toContain('โบนัสกำลังทำงาน')
+  })
+
+  it('omits the line without a temperament, and the live flag when the multiplier is 1', () => {
+    useSchoolWorldStore.getState().setFocus({ status: 'active', lastCheckInAt: Date.now(), temperament: null })
+    const { unmount } = render(<FocusPanel onClose={() => {}} />)
+    expect(screen.queryByTestId('focus-perk')).toBeNull()
+    unmount()
+    useSchoolWorldStore.getState().setFocus({ temperament: 'SJ', lastResult: { multiplier: 1 } })
+    render(<FocusPanel onClose={() => {}} />)
+    expect(screen.getByTestId('focus-perk').textContent).not.toContain('โบนัสกำลังทำงาน')
+  })
+})

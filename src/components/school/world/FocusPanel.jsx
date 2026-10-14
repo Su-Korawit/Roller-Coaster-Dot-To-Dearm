@@ -5,6 +5,7 @@ import { useSchoolWorldStore } from '../../../stores/useSchoolWorldStore'
 import { beginFocus, confirmFocus, finishFocus } from '../../../services/schoolWorld'
 import { CHECKIN_PROMPT_MS, msUntilCheckIn } from '../../../services/focus'
 import { formatDuration, formatVerified, focusMessage } from '../../../utils/formatFocus'
+import { TEMPERAMENTS } from '../../../constants/temperaments'
 
 // Opens when the student walks up to a Library seat. The server owns all time
 // and XP; this panel only asks and displays (see services/schoolWorld.js).
@@ -21,6 +22,8 @@ export default function FocusPanel({ seatId, onClose }) {
   const active = focus.status === 'active'
   const due = active && msUntilCheckIn(focus.lastCheckInAt, now) === 0
   const message = focusMessage(focus.lastResult, focus.error)
+  const perk = TEMPERAMENTS[focus.temperament] ?? null
+  const perkActive = (focus.lastResult?.multiplier ?? 1) > 1
 
   return (
     <Popup variant="sheet" size="sm" onClose={onClose}>
@@ -79,6 +82,12 @@ export default function FocusPanel({ seatId, onClose }) {
           </>
         )}
 
+        {perk && (
+          <p className="thai-font text-xs text-ink/70" data-testid="focus-perk">
+            {perk.emoji} {perk.perk}: {perk.description}
+            {perkActive && <strong className="text-brand-strong"> · โบนัสกำลังทำงาน +10%</strong>}
+          </p>
+        )}
         {message && <p role="status" className="thai-font text-xs text-accent-pink">{message}</p>}
         {seatId && <p className="thai-font text-[10px] text-ink/40">โต๊ะ {seatId}</p>}
       </div>

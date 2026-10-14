@@ -9,6 +9,7 @@ const IDLE_FOCUS = {
   lastCheckInAt: null,
   verifiedMs: 0,
   xpThisSession: 0,
+  temperament: null,       // 'NT' | 'NF' | 'SJ' | 'SP' | null — from the server, for the perk line
   lastResult: null,        // last server response (credited/lapsed/capped...) for HUD messages
   error: null,
   busy: false,

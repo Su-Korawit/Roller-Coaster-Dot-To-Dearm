@@ -107,12 +107,17 @@ Files: `src/components/school/world/` (`SchoolWorldLayer`, `FocusPanel`, `FocusH
 - `firebase.json` now declares the Auth emulator (port 9099) and `test:rules:emu` starts it.
 
 ### Task 8 — MBTI temperament stub  `[claude + cursor]`
-- [ ] `[claude]` `src/constants/temperaments.js`: NT/NF/SJ/SP -> one passive each (e.g. +10% Focus XP in matching Library seat theme). Server applies multiplier in `endFocus`.
-- [ ] `[cursor]` Show perk on profile; level from `focusXp` thresholds.
+- [x] `[claude]` `functions/temperaments.js` (server) + `src/constants/temperaments.js` (display): NT/NF/SJ/SP -> one +10% XP perk each. Applied in `checkInFocus`/`endFocus` via a weighted-ms total.
+- [x] `[cursor]` Show perk on profile; level from `focusXp` thresholds.
+- Perks (each +10% XP, never touches verified hours or the leaderboard): **NT** deep focus (session already >= 50 verified min), **NF** night owl (20:00-01:59 Bangkok), **SJ** routine (studied >= 20 min yesterday, decided at session start), **SP** sprint (first 30 min of the day). A test pins the client and server MBTI maps and quotes the server thresholds in the Thai copy so they cannot drift.
+- Level = `levelFromXp(focusXp)` with xpForLevel(n) = 30·n·(n-1), cap 50, exact on every boundary (tested). `TemperamentCard` on the profile shows level, progress bar and perk; the Focus panel shows the perk and flags when the bonus is live.
+- Verified: pure perk math, level math, and the real handlers on the emulator (each perk, a pre-perk active session, XP floor-of-weighted-total, daily verified time unchanged by perks).
+- Not done: 16 individual MBTI abilities (deferred by design), cosmetic unlocks per level.
 
 ### Task 9 — Pilot  `[owner]`
 - [ ] PDPA gate done. Pick 1–3 schools. 2–3 ambassadors each. Seed with NPC readers if under threshold.
 - [ ] Teacher outreach (guidance teacher verification path). Weekly leaderboard screenshot post.
+- Runbook written: [2026-10-14-school-world-pilot.md](2026-10-14-school-world-pilot.md) (gate, deploy order, 12-step staging smoke test, recruiting, metrics). All items are owner actions; none are automated.
 
 ## Order & dependencies
 

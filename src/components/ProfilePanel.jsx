@@ -8,6 +8,7 @@ import { usePopupStore } from '../stores/usePopupStore'
 import { refs } from '../lib/db'
 import SettingsSheet from './SettingsSheet'
 import JourneyManager from './profile/JourneyManager'
+import TemperamentCard from './profile/TemperamentCard'
 
 const RoadmapPreview = lazy(() => import('./profile/RoadmapPreview'))
 
@@ -110,6 +111,9 @@ export default function ProfilePanel({ onClose, onOpenRoadmap }) {
             </p>
           </div>
         )}
+
+        {/* Level (from Focus XP) + MBTI temperament perk — see ADR 0018 */}
+        <TemperamentCard mbti={mbti} focusXp={firestoreProfile?.focusXp ?? 0} />
 
         {/* Portfolio circles + Journey list + their modals */}
         <JourneyManager />

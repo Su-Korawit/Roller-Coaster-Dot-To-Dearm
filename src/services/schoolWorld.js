@@ -84,7 +84,7 @@ async function runFocus(action, apply) {
 export const beginFocus = () =>
   runFocus(startFocus, (r) => world().setFocus({
     status: 'active', startedAt: r.startedAt, lastCheckInAt: r.lastCheckInAt,
-    verifiedMs: r.verifiedMs ?? 0, lastResult: r,
+    verifiedMs: r.verifiedMs ?? 0, lastResult: r, temperament: r.temperament ?? null,
     xpThisSession: r.resumed ? world().focus.xpThisSession : 0,
   }))
 
