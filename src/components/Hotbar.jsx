@@ -1,124 +1,46 @@
 import React from 'react'
 import { ItemSprite } from './ItemSprite'
 
-export function Hotbar({ slots = [], selectedIndex = 0, gold = 0, onSelectSlot = () => {} }) {
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
-  const slotSize = isMobile ? 40 : 44
-  const gap = 4
-  const visibleSlots = 4
-  const maxScrollHeight = slotSize * visibleSlots + gap * (visibleSlots - 1) + 16
-
-  const styles = {
-    container: {
-      position: 'fixed',
-      right: 12,
-      top: '50%',
-      transform: 'translateY(-50%)',
-      pointerEvents: 'none',
-      zIndex: 1000,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      gap: 6,
-    },
-    goldDisplay: {
-      fontFamily: 'pixelFont-7, monospace',
-      fontSize: '11px',
-      fontWeight: 'bold',
-      color: '#f5c542',
-      textShadow: '1px 1px 0px rgba(0,0,0,0.5)',
-      textAlign: 'center',
-      lineHeight: 1.2,
-    },
-    slotsColumn: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: gap,
-      backgroundColor: '#c8a96e',
-      border: '3px solid #3d2b1f',
-      padding: 6,
-      overflowY: 'auto',
-      maxHeight: maxScrollHeight,
-      pointerEvents: 'auto',
-      scrollbarWidth: 'none',
-    },
-    slot: {
-      position: 'relative',
-      width: slotSize,
-      height: slotSize,
-      backgroundColor: '#a89968',
-      border: '2px solid #3d2b1f',
-      cursor: 'pointer',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
-      transition: 'all 0.1s',
-    },
-    slotSelected: {
-      border: '2px solid #f5e642',
-      boxShadow: 'inset 0 0 8px rgba(245, 230, 66, 0.5)',
-      backgroundColor: '#b8a978',
-    },
-    slotBg: {
-      position: 'absolute',
-      width: '100%',
-      height: '100%',
-      imageRendering: 'pixelated',
-      opacity: 0.8,
-    },
-    itemAbbr: {
-      position: 'relative',
-      fontFamily: 'pixelFont-7, monospace',
-      fontSize: '11px',
-      fontWeight: 'bold',
-      textAlign: 'center',
-      lineHeight: 1,
-      textShadow: '1px 1px 0px rgba(0,0,0,0.5)',
-      pointerEvents: 'none',
-      zIndex: 2,
-    },
-    countBadge: {
-      position: 'absolute',
-      bottom: 2,
-      right: 2,
-      fontFamily: 'pixelFont-7, monospace',
-      fontSize: '9px',
-      fontWeight: 'bold',
-      color: '#ffffff',
-      backgroundColor: 'rgba(0,0,0,0.6)',
-      padding: '1px 3px',
-      lineHeight: 1,
-      textShadow: '1px 1px 0px rgba(0,0,0,0.8)',
-      pointerEvents: 'none',
-      zIndex: 3,
-    },
-  }
-
+// Stardew-style quick bar: one horizontal wooden strip docked bottom-centre, above the music
+// player and nav. The selected slot gets a bright frame. Gold lives in the top HUD, not here.
+export function Hotbar({ slots = [], selectedIndex = 0, onSelectSlot = () => {} }) {
   return (
-    <div style={styles.container}>
-      <div style={styles.goldDisplay}>{gold}g</div>
-      <div style={styles.slotsColumn}>
-        {slots.map((slot, i) => (
-          <div
-            key={i}
-            style={{ ...styles.slot, ...(selectedIndex === i ? styles.slotSelected : {}) }}
-            onClick={() => onSelectSlot(i)}
-          >
-            <img
-              src="/assets/ui/emojis-free/Inventory_slot.png"
-              alt=""
-              style={styles.slotBg}
-              onError={(e) => { e.target.style.display = 'none' }}
-            />
-            {slot && (
-              <>
-                <ItemSprite itemId={slot.itemId} size={slotSize - 8} />
-                <span style={styles.countBadge}>{slot.count}</span>
-              </>
-            )}
-          </div>
-        ))}
+    <div
+      role="toolbar"
+      aria-label="ช่องเก็บของ"
+      data-testid="hotbar"
+      className="absolute left-1/2 -translate-x-1/2 z-30 pointer-events-none"
+      style={{ bottom: 'calc(env(safe-area-inset-bottom) + 156px)' }}
+    >
+      <div className="rpg-plank pointer-events-auto flex gap-1 p-1 rounded-md">
+        {slots.map((slot, i) => {
+          const selected = selectedIndex === i
+          return (
+            <button
+              key={i}
+              type="button"
+              aria-label={slot ? `ช่อง ${i + 1}: ${slot.itemId} x${slot.count}` : `ช่อง ${i + 1} (ว่าง)`}
+              aria-pressed={selected}
+              onClick={() => onSelectSlot(i)}
+              className={`relative flex items-center justify-center w-9 h-9 md:w-11 md:h-11 shrink-0 rounded-sm border-2 transition-colors ${
+                selected
+                  ? 'border-ink bg-wood-light shadow-[0_0_0_2px_var(--color-lime)]'
+                  : 'border-wood-edge bg-wood-dark/50 hover:bg-wood-light/60'
+              }`}
+            >
+              {slot && (
+                <>
+                  <ItemSprite itemId={slot.itemId} size={28} />
+                  {slot.count > 1 && (
+                    <span className="absolute bottom-0 right-0.5 pixel-font text-[8px] leading-none text-ink [text-shadow:1px_1px_0_var(--color-wood-light)]">
+                      {slot.count}
+                    </span>
+                  )}
+                </>
+              )}
+            </button>
+          )
+        })}
       </div>
     </div>
   )

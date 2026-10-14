@@ -470,7 +470,7 @@ export default function GameCanvas({ active = true, onOpenView }) {
         </div>
       )}
       {active && uiVisibility.hotbar && (
-        <Hotbar slots={hotbar} selectedIndex={selectedHotbarIndex} gold={gold} onSelectSlot={setSelectedHotbarIndex} />
+        <Hotbar slots={hotbar} selectedIndex={selectedHotbarIndex} onSelectSlot={setSelectedHotbarIndex} />
       )}
 
       {showGrowing && (

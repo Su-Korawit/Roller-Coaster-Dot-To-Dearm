@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
-import { Calendar, MessageCircle, Map, Newspaper, Trophy, Flame, Music, Gamepad2, GraduationCap } from 'lucide-react'
+import { Calendar, MessageCircle, Map, Newspaper, Trophy, Flame, Gamepad2, GraduationCap, Menu, X } from 'lucide-react'
 import LevelBadge from '../components/hud/LevelBadge'
 import { useUserStore } from '../stores/useUserStore'
 import { useAuthStore } from '../stores/useAuthStore'
@@ -58,6 +58,7 @@ function HomePage() {
   const totalStacks = useUserStore((s) => s.totalStacks)
   const gold = useInventoryStore((s) => s.gold)
   const uiVisibility = useUserStore((s) => s.uiVisibility)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   // Daily check-in — once per day, on entering Home.
   useEffect(() => {
@@ -219,7 +220,7 @@ function HomePage() {
       {/* ── TOP HEADER ── */}
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-3 pb-2 gap-2 pointer-events-none">
 
-        {/* Left side: Avatar pill + Music pill */}
+        {/* Left side: Avatar */}
         <div className="flex items-center gap-2 min-w-0 flex-1">
 
           {/* Avatar button + MMO-style level coin / XP bar */}
@@ -237,25 +238,6 @@ function HomePage() {
           <LevelBadge xp={focusXp} />
           </div>
 
-          {/* Music status pill */}
-          {uiVisibility.musicPill && (
-          <button
-            onClick={() => handleTabChange(APP_VIEWS.MUSIC)}
-            aria-label={isPlaying ? `กำลังเล่น: ${tracks[currentTrackIdx].title}` : 'เปิดรายการเพลง'}
-            className="pointer-events-auto neo-btn neo-slab flex items-center gap-1.5 h-10 px-3 overflow-hidden min-w-0 flex-1 max-w-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-          >
-            <Music size={14} strokeWidth={2.5} className="shrink-0 text-brand-strong" />
-            <span className="overflow-hidden flex-1">
-              <span
-                className={`block whitespace-nowrap pixel-font text-[10px] text-brand-strong ${
-                  isPlaying && tracks[currentTrackIdx].title.length > 14 ? 'animate-marquee' : ''
-                }`}
-              >
-                {isPlaying ? tracks[currentTrackIdx].title : 'Music'}
-              </span>
-            </span>
-          </button>
-          )}
         </div>
 
         {/* Streak + Coins + Gold */}
@@ -275,50 +257,48 @@ function HomePage() {
         </div>
       </div>
 
-      {/* ── QUICK RAIL (Calendar · Mastery · Roadmap · News) ── */}
+      {/* ── MENU (Calendar · Mastery · Roadmap · Schedule · News) — one button, opens a short list ── */}
       {uiVisibility.shortcuts && (
-      <div className="absolute top-20 left-4 z-20 flex flex-col gap-2">
+      <div className="absolute top-20 left-4 z-20">
         <button
-          onClick={handlePlannerTransition}
-          aria-label="เปิดปฏิทิน"
-          className="neo-btn w-12 h-12 rounded-lg bg-hud flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-label="เมนู"
+          aria-expanded={menuOpen}
+          className="relative neo-btn w-12 h-12 rounded-lg bg-hud flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
-          <Calendar size={22} strokeWidth={2.5} className="text-ink" />
+          {menuOpen ? <X size={22} strokeWidth={2.5} className="text-ink" /> : <Menu size={22} strokeWidth={2.5} className="text-ink" />}
+          {!newsRead && uiVisibility.newsButton && !menuOpen && (
+            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-danger border-2 border-ink" aria-hidden="true" />
+          )}
         </button>
-        <button
-          onClick={() => openPopup('mastery')}
-          aria-label="เปิด Mastery"
-          className="neo-btn w-12 h-12 rounded-lg bg-hud flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-        >
-          <Trophy size={22} strokeWidth={2.5} className="text-ink" />
-        </button>
-        <button
-          onClick={() => openPopup('roadmap')}
-          aria-label="เปิด Roadmap"
-          className="neo-btn w-12 h-12 rounded-lg bg-hud flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-        >
-          <Map size={22} strokeWidth={2.5} className="text-ink" />
-        </button>
-        <button
-          onClick={() => handleTabChange(APP_VIEWS.SCHOOL)}
-          aria-label="เปิดตารางเรียน"
-          className="neo-btn w-12 h-12 rounded-lg bg-hud flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-        >
-          <GraduationCap size={22} strokeWidth={2.5} className="text-ink" />
-        </button>
-        {uiVisibility.newsButton && (
-          <button
-            onClick={() => handleTabChange(APP_VIEWS.NEWS)}
-            aria-label="ข่าวสาร"
-            className="relative neo-btn w-12 h-12 rounded-lg bg-hud flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-          >
-            <Newspaper size={22} strokeWidth={2.5} className="text-ink" />
-            {!newsRead && (
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-danger border-2 border-ink text-white text-[10px] font-bold flex items-center justify-center" aria-hidden="true">
-                1
-              </span>
-            )}
-          </button>
+        {menuOpen && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} aria-hidden="true" />
+            <ul role="menu" className="relative z-20 mt-2 neo-slab p-1 w-44 flex flex-col">
+              {[
+                { icon: Calendar, label: 'ปฏิทิน', run: handlePlannerTransition },
+                { icon: Trophy, label: 'Mastery', run: () => openPopup('mastery') },
+                { icon: Map, label: 'Roadmap', run: () => openPopup('roadmap') },
+                { icon: GraduationCap, label: 'ตารางเรียน', run: () => handleTabChange(APP_VIEWS.SCHOOL) },
+                ...(uiVisibility.newsButton ? [{ icon: Newspaper, label: 'ข่าวสาร', run: () => handleTabChange(APP_VIEWS.NEWS), dot: !newsRead }] : []),
+              ].map(({ icon, label, run, dot }) => {
+                const MenuIcon = icon
+                return (
+                <li key={label} role="none">
+                  <button
+                    role="menuitem"
+                    onClick={() => { setMenuOpen(false); run() }}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md thai-font text-sm text-ink hover:bg-wood-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  >
+                    <MenuIcon size={18} strokeWidth={2.5} aria-hidden="true" />
+                    <span className="flex-1 text-left">{label}</span>
+                    {dot && <span className="w-2.5 h-2.5 rounded-full bg-danger border border-ink" aria-label="ใหม่" />}
+                  </button>
+                </li>
+                )
+              })}
+            </ul>
+          </>
         )}
       </div>
       )}

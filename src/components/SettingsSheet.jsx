@@ -41,9 +41,8 @@ const SETTINGS_TABS = [
 
 const UI_VISIBILITY_ITEMS = [
   { key: 'hotbar',     label: 'แถบไอเทมด่วน (Hotbar)' },
-  { key: 'shortcuts',  label: 'ปุ่มลัด ปฏิทิน/Roadmap' },
+  { key: 'shortcuts',  label: 'เมนูลัด ปฏิทิน/Roadmap' },
   { key: 'newsButton', label: 'ปุ่มข่าวสาร' },
-  { key: 'musicPill',  label: 'แถบเพลงด้านบน' },
   { key: 'contactFab', label: 'ปุ่มติดต่อผู้พัฒนา' },
 ]
 
