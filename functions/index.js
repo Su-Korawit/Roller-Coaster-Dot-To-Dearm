@@ -321,3 +321,108 @@ exports.syncUserSchool = onDocumentWritten('users/{uid}', async (event) => {
   }
   await batch.commit()
 })
+
+// ── Focus sessions (ADR 0018) ────────────────────────────────────────────────
+// The client may only say "start", "I'm here", "stop". Every timestamp, every
+// credited millisecond and every XP point is decided here from server time
+// (see focusMath.js). Data (all Functions-owned; clients may only read their own):
+//   focusActive/{uid}          the one running session
+//   focusDaily/{uid}_{day}     verified ms per Bangkok day (leaderboard source, Task 4)
+//   focusSessions/{autoId}     finished-session history
+//   users/{uid}.focusXp        running XP total
+const {
+  CHECKIN_WINDOW_MS, DAILY_CAP_MS, bangkokDay, settleSegment, xpDelta,
+} = require('./focusMath')
+const { normalizeSchoolId: normalizeFocusSchoolId } = require('./schoolMembers')
+
+function requireUid(req) {
+  const uid = req.auth?.uid
+  if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.')
+  return uid
+}
+
+// Shared body of checkIn/end. Reads first, writes last (Firestore transaction rule).
+async function settleActive(uid, { end }) {
+  const nowMs = Date.now()
+  const activeRef = db.collection('focusActive').doc(uid)
+  const userRef = db.collection('users').doc(uid)
+  const day = bangkokDay(nowMs)
+  const dailyRef = db.collection('focusDaily').doc(`${uid}_${day}`)
+
+  return db.runTransaction(async (tx) => {
+    const [activeSnap, dailySnap] = await Promise.all([tx.get(activeRef), tx.get(dailyRef)])
+    if (!activeSnap.exists) throw new HttpsError('failed-precondition', 'NO_ACTIVE_SESSION')
+    const active = activeSnap.data()
+    const dailyUsed = Number(dailySnap.data()?.verifiedMs ?? 0)
+
+    const seg = settleSegment({ lastCheckInAt: active.lastCheckInAt, nowMs, dailyUsedMs: dailyUsed })
+    const before = Number(active.verifiedMs ?? 0)
+    const after = before + seg.creditedMs
+    const xpGained = xpDelta(before, after)
+
+    if (seg.creditedMs > 0) {
+      tx.set(dailyRef, {
+        uid, day, schoolId: active.schoolId ?? null,
+        verifiedMs: dailyUsed + seg.creditedMs,
+      }, { merge: true })
+    }
+    if (xpGained > 0) {
+      tx.set(userRef, { focusXp: admin.firestore.FieldValue.increment(xpGained) }, { merge: true })
+    }
+
+    if (end) {
+      tx.delete(activeRef)
+      tx.set(db.collection('focusSessions').doc(), {
+        uid, schoolId: active.schoolId ?? null,
+        startedAt: active.startedAt, endedAt: nowMs, verifiedMs: after,
+        day, reason: 'ended',
+      })
+    } else if (!seg.tooSoon) {
+      tx.update(activeRef, { lastCheckInAt: nowMs, verifiedMs: after })
+    }
+
+    return {
+      ok: true,
+      verifiedMs: after,
+      creditedMs: seg.creditedMs,
+      xpGained,
+      lapsed: seg.lapsed,
+      capped: seg.capped,
+      tooSoon: seg.tooSoon,
+      dailyMs: dailyUsed + seg.creditedMs,
+      dailyCapMs: DAILY_CAP_MS,
+    }
+  })
+}
+
+exports.startFocus = onCall(async (req) => {
+  const uid = requireUid(req)
+  const nowMs = Date.now()
+  const activeRef = db.collection('focusActive').doc(uid)
+  const userRef = db.collection('users').doc(uid)
+
+  return db.runTransaction(async (tx) => {
+    const [activeSnap, userSnap] = await Promise.all([tx.get(activeRef), tx.get(userRef)])
+    if (!userSnap.exists) throw new HttpsError('not-found', 'User not found.')
+
+    if (activeSnap.exists) {
+      const a = activeSnap.data()
+      if (nowMs - a.lastCheckInAt <= CHECKIN_WINDOW_MS) {
+        // Idempotent: a second tab / a reload resumes the running session.
+        return { ok: true, resumed: true, startedAt: a.startedAt, verifiedMs: a.verifiedMs ?? 0 }
+      }
+      // Stale: close it with nothing extra credited, then start fresh.
+      tx.set(db.collection('focusSessions').doc(), {
+        uid, schoolId: a.schoolId ?? null, startedAt: a.startedAt, endedAt: nowMs,
+        verifiedMs: a.verifiedMs ?? 0, day: bangkokDay(nowMs), reason: 'lapsed',
+      })
+    }
+
+    const schoolId = normalizeFocusSchoolId(userSnap.data())
+    tx.set(activeRef, { uid, schoolId, startedAt: nowMs, lastCheckInAt: nowMs, verifiedMs: 0 })
+    return { ok: true, resumed: false, startedAt: nowMs, verifiedMs: 0 }
+  })
+})
+
+exports.checkInFocus = onCall(async (req) => settleActive(requireUid(req), { end: false }))
+exports.endFocus = onCall(async (req) => settleActive(requireUid(req), { end: true }))

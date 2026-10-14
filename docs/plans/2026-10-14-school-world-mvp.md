@@ -49,12 +49,15 @@ Files: `src/lib/presence.js`, new `src/lib/schoolRoom.js`(+test), `database.rule
 
 ### Task 3 — Focus sessions, server-authoritative  `[claude]`
 Files: `functions/index.js`, `src/lib/db.js`, `firestore.rules`, `firestore.indexes.json`, `src/services/focus.js`(+test).
-- [ ] Callables `startFocus`, `checkInFocus`, `endFocus`. Session doc `focusSessions/{id}`: `uid, schoolId, startedAt, lastCheckInAt, verifiedMs, day`.
-- [ ] Verify: a check-in counts only if `now - lastCheckInAt <= 35min`; verified time accrues only between valid check-ins; per-day cap 8h; one active session per uid.
-- [ ] Award `users/{uid}.focusXp` (Functions-owned, like Coins; never from client).
-- [ ] Reuse Capsule timer semantics where it fits; check `SkillPanel`/`useSkillStore` before duplicating.
-- [ ] Unit tests for the verification math (pure function, no Firebase).
-- [ ] Rules: clients read own sessions only; no client writes.
+- [x] Callables `startFocus`, `checkInFocus`, `endFocus`. Data: `focusActive/{uid}` (the running session), `focusDaily/{uid}_{day}` (verified ms per Bangkok day; the Task 4 leaderboard source), `focusSessions/{id}` (history). Deviation from the first draft: one active doc per user instead of a session doc with a status field.
+- [x] Verify: a check-in counts only if `now - lastCheckInAt <= 35min`; verified time accrues only between valid check-ins; per-day cap 8h; one active session per uid.
+- [x] Award `users/{uid}.focusXp` (Functions-owned, like Coins; never from client).
+- [x] Reuse Capsule timer semantics where it fits; check `SkillPanel`/`useSkillStore` before duplicating.
+- [x] Unit tests for the verification math (pure function, no Firebase).
+- [x] Rules: clients read own sessions only; no client writes.
+- [x] Real handlers are exercised against the Firestore emulator (`test/rules/focus.functions.test.js`, fake clock), not just the pure math.
+- Known gap: `users/{uid}.schoolId` is self-declared (client-writable), so a student can claim any school; leaderboard integrity relies on the 10-contributor minimum until school verification exists (Task 7 teacher badge is the path).
+- Known gap: no App Check on the callables yet.
 
 ### Task 4 — Weekly rollup & leaderboard  `[claude]`
 Files: `functions/index.js`, `src/lib/db.js`, rules, tests.

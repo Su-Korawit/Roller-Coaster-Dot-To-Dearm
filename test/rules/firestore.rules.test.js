@@ -515,3 +515,32 @@ describe('schools rules (ADR 0018)', () => {
     await assertFails(setDoc(doc(admin, 'schools/S1'), { name: 'x', memberCount: 9999 }))
   })
 })
+
+describe('focus collections + focusXp (ADR 0018)', () => {
+  it('BLOCKS a client from writing its own focusXp', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(updateDoc(doc(alice, 'users/alice'), { focusXp: 999999 }))
+  })
+
+  it('BLOCKS every client write to focusActive / focusDaily / focusSessions', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(setDoc(doc(alice, 'focusActive/alice'), { verifiedMs: 99999999 }))
+    await assertFails(setDoc(doc(alice, 'focusDaily/alice_2026-10-14'), { uid: 'alice', verifiedMs: 99999999 }))
+    await assertFails(setDoc(doc(alice, 'focusSessions/s1'), { uid: 'alice', verifiedMs: 99999999 }))
+  })
+
+  it('lets an owner read their own records but not someone else’s', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore()
+      await setDoc(doc(db, 'focusActive/alice'), { uid: 'alice' })
+      await setDoc(doc(db, 'focusActive/bob'), { uid: 'bob' })
+      await setDoc(doc(db, 'focusDaily/alice_2026-10-14'), { uid: 'alice', verifiedMs: 1 })
+      await setDoc(doc(db, 'focusDaily/bob_2026-10-14'), { uid: 'bob', verifiedMs: 1 })
+    })
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(getDoc(doc(alice, 'focusActive/alice')))
+    await assertFails(getDoc(doc(alice, 'focusActive/bob')))
+    await assertSucceeds(getDoc(doc(alice, 'focusDaily/alice_2026-10-14')))
+    await assertFails(getDoc(doc(alice, 'focusDaily/bob_2026-10-14')))
+  })
+})

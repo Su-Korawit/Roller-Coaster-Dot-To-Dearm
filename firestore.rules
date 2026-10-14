@@ -47,13 +47,13 @@ service cloud.firestore {
       allow get, list: if isSignedIn();
       allow create: if isSignedIn() && (request.auth.uid == uid || isSuperAdmin());
       // Owners may update their own doc freely EXCEPT the `coins`,
-      // `entitlements`, and `fileBagUsageBytes` fields — those are written
-      // only by Cloud Functions (Admin SDK bypasses rules). Cross-user updates
-      // are restricted to ONLY the four social array fields.
+      // `entitlements`, `fileBagUsageBytes` and `focusXp` fields — those are
+      // written only by Cloud Functions (Admin SDK bypasses rules). Cross-user
+      // updates are restricted to ONLY the four social array fields.
       allow update: if isSignedIn() && (
         (request.auth.uid == uid &&
           !request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['coins', 'entitlements', 'fileBagUsageBytes'])) ||
+            .hasAny(['coins', 'entitlements', 'fileBagUsageBytes', 'focusXp'])) ||
         request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['followRequests', 'followers', 'following', 'sentRequests'])
       );
@@ -206,6 +206,21 @@ service cloud.firestore {
     // Cloud Function (ADR 0018). Clients read memberCount to pick a presence room.
     match /schools/{schoolId} {
       allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // Focus sessions (ADR 0018): written only by the startFocus/checkInFocus/
+    // endFocus Cloud Functions. Owners may read their own records.
+    match /focusActive/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+    match /focusDaily/{docId} {
+      allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+    match /focusSessions/{sessionId} {
+      allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
       allow write: if false;
     }
 
