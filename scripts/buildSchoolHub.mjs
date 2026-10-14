@@ -207,7 +207,7 @@ export function buildSchoolHub() {
     obj('contest_board', door(LAYOUT.contest), [prop('action', 'board'), prop('boardId', 'contest')]),
     obj('leaderboard_board', { x: (SIGN.x - 1) * T, y: (SIGN.y + 1) * T, width: 3 * T, height: T }, [prop('action', 'board'), prop('boardId', 'leaderboard')]),
     obj('guidance_door', door(LAYOUT.guidance), [prop('action', 'tool'), prop('route', '/roadmap')]),
-    obj('hall_door', door(LAYOUT.hall), [prop('action', 'tool'), prop('route', '/profile')]),
+    obj('hall_door', door(LAYOUT.hall), [prop('action', 'tool'), prop('route', 'view:profile')]),
   ]
 
   // Labels render with a white stroke (worldScenes), so the fill must be dark to be legible.

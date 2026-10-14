@@ -216,3 +216,22 @@ html {
   min-width: 2.5rem !important;
   min-height: 2.5rem !important;
 }
+
+/* School World ambience (night library rain). The stripes run along (-0.259, 0.966),
+   so translating by a multiple of that vector leaves the pattern unchanged: the loop
+   restarts with no visible hop. Nothing animates under reduced-motion. */
+@keyframes rainFall {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(-26px, 97px); }
+}
+.rain-layer {
+  position: absolute;
+  inset: -150px;
+  background-image:
+    repeating-linear-gradient(105deg, rgba(190, 215, 255, 0.35) 0 1px, transparent 1px 38px),
+    repeating-linear-gradient(105deg, rgba(190, 215, 255, 0.2) 0 1px, transparent 1px 71px);
+  animation: rainFall 0.5s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rain-layer { animation: none; }
+}

@@ -77,7 +77,7 @@ describe('school_hub map', () => {
     const byAction = (a) => meta.interactions.filter((i) => i.action === a)
     expect(byAction('focusSeat')).toHaveLength(8)
     expect(byAction('board').map((b) => b.boardId).sort()).toEqual(['contest', 'leaderboard', 'news'])
-    expect(byAction('tool').map((t) => t.route).sort()).toEqual(['/profile', '/roadmap'])
+    expect(byAction('tool').map((t) => t.route).sort()).toEqual(['/roadmap', 'view:profile'])
     expect(new Set(byAction('focusSeat').map((s) => s.seatId)).size).toBe(8)
   })
 

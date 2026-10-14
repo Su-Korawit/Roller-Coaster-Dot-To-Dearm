@@ -15,6 +15,10 @@ import { NotificationContainer } from './NotificationContainer'
 import FarmActionButton from './FarmActionButton'
 import { isEditableTarget } from '../utils/isEditableTarget'
 import { joinWorld, leaveWorld, subscribeWorldPlayers } from '../lib/presence'
+import { isRoomOwnerUid, SCHOOL_HUB_MAP_KEY } from '../lib/schoolRoom'
+import { returnHome } from '../lib/syncManager'
+import { useSchoolWorldStore } from '../stores/useSchoolWorldStore'
+import SchoolWorldLayer from './school/world/SchoolWorldLayer'
 import { MapScene, loadSceneData } from '../game/worldScenes'
 import { createIdleGovernor, setFpsLimit, IDLE_FPS } from '../game/idleGovernor'
 import { listMapConfigs, pickEntryKey } from '../utils/mapConfig'
@@ -25,7 +29,7 @@ import { plantSeed, harvestAt } from '../systems/farmActions'
 import { moveToStorage, moveToHotbar, swapSlots } from '../systems/inventoryActions'
 import { buyItem, sellItem, sellAllProduce } from '../systems/shopActions'
 
-export default function GameCanvas({ active = true }) {
+export default function GameCanvas({ active = true, onOpenView }) {
   const containerRef = useRef(null)
   const [zoom, setZoom] = useState(null)
   const [showZoom, setShowZoom] = useState(false)
@@ -214,7 +218,15 @@ export default function GameCanvas({ active = true }) {
           if (activeScene?.cameras?.main) {
             game.registry.set('savedZoom', activeScene.cameras.main.zoom)
           }
-          useWorldStore.getState().setCurrentMapKey(mapKey)
+          // Walking out of the School Hub (e.g. its exit portal) returns the player to
+          // their own world; owner + map key flip together so presence joins one room.
+          const leavingHub = isRoomOwnerUid(useWorldStore.getState().currentMapOwnerUid) && mapKey !== SCHOOL_HUB_MAP_KEY
+          if (leavingHub) {
+            useSchoolWorldStore.getState().setLeft()
+            returnHome(useAuthStore.getState().user?.uid, mapKey)
+          } else {
+            useWorldStore.getState().setCurrentMapKey(mapKey)
+          }
           useFarmStore.getState().setCurrentMapKey(mapKey)
           game.scene.start('MapScene', { mapKey, spawn })
         } catch (e) {
@@ -230,6 +242,12 @@ export default function GameCanvas({ active = true }) {
       game.events.on('shopExited', () => setShopState(null))
       game.events.on('chestOpened', () => setChestOpen(true))
       game.events.on('chestClosed', () => setChestOpen(false))
+      // School Hub zones (ADR 0018) -> UI state; panels render in SchoolWorldLayer.
+      game.events.on('focusSeatEntered', ({ seatId }) => useSchoolWorldStore.getState().openPanel({ type: 'focus', seatId }))
+      game.events.on('boardEntered', ({ boardId }) => useSchoolWorldStore.getState().openPanel(
+        boardId === 'leaderboard' ? { type: 'leaderboard' } : { type: 'board', id: boardId },
+      ))
+      game.events.on('toolEntered', ({ route }) => useSchoolWorldStore.getState().requestTool(route))
     }
 
     // Resolve entry map configs + cloud URLs first, then let the ResizeObserver boot.
@@ -239,6 +257,7 @@ export default function GameCanvas({ active = true }) {
       const data = await loadSceneData(entryKey)
       if (cancelled) return
       assetUrlsRef.current = { ...data, mapKey: entryKey }
+      useSchoolWorldStore.getState().setEntryMapKey(entryKey)
       useWorldStore.getState().setCurrentMapKey(entryKey)
       useFarmStore.getState().setCurrentMapKey(entryKey)
       if (containerRef.current) {
@@ -270,6 +289,28 @@ export default function GameCanvas({ active = true }) {
       if (game) game.destroy(true)
       gameRef.current = null
     }
+  }, [])
+
+  // School World asks for map switches through the store (it has no handle on the
+  // Phaser game); forward them to the same event portals use.
+  const mapChangeRequest = useSchoolWorldStore((s) => s.mapChangeRequest)
+  useEffect(() => {
+    if (!mapChangeRequest) return
+    useSchoolWorldStore.getState().clearMapChangeRequest()
+    const game = gameRef.current
+    if (!game) return
+    const mapKey = mapChangeRequest.mapKey ?? assetUrlsRef.current?.mapKey
+    if (mapKey) game.events.emit('mapChangeRequested', { mapKey, spawn: null })
+  }, [mapChangeRequest])
+
+  // Leaving the Home screen while inside a school room must not strand the next
+  // boot in a room whose map is no longer loaded.
+  useEffect(() => () => {
+    const s = useSchoolWorldStore.getState()
+    if (!s.inHub) return
+    s.setLeft()
+    const uid = useAuthStore.getState().user?.uid
+    if (uid) returnHome(uid)
   }, [])
 
   // AFK: after 60s without input, cap Phaser at IDLE_FPS (battery/CPU for
@@ -473,6 +514,7 @@ export default function GameCanvas({ active = true }) {
           onClose={() => setChestOpen(false)}
         />
       )}
+      <SchoolWorldLayer gameRef={gameRef} onOpenView={onOpenView} active={active} />
       {active && <DayNightOverlay dayNight={null} />}
       {active && <NotificationContainer />}
       <div style={{

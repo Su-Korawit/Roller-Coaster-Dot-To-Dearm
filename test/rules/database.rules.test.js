@@ -123,3 +123,16 @@ describe('presence payload validation', () => {
     await assertFails(set(ref(self, node), { name: 'no position' }))
   })
 })
+
+describe('emote validation (ADR 0018)', () => {
+  const node = `worlds/${OWNER}/maps/${MAP}/players/${SELF}`
+
+  it('accepts a lowercase preset id and BLOCKS free text / markup / long strings', async () => {
+    const self = testEnv.authenticatedContext(SELF).database()
+    await assertSucceeds(set(ref(self, node), { x: 1, y: 2, emote: 'fight' }))
+    await assertFails(set(ref(self, node), { x: 1, y: 2, emote: 'สู้ ๆ' }))
+    await assertFails(set(ref(self, node), { x: 1, y: 2, emote: '<b>hi</b>' }))
+    await assertFails(set(ref(self, node), { x: 1, y: 2, emote: 'abcdefghijklmnop' }))
+    await assertFails(set(ref(self, node), { x: 1, y: 2, emote: 5 }))
+  })
+})

@@ -15,6 +15,9 @@ export const SCHOOL_ROOM_MIN_MEMBERS = 30
 export const ROOM_CAP = 50
 export const MAX_SHARDS = 20
 
+// True for the reserved presence-room owners (as opposed to a real user uid).
+export const isRoomOwnerUid = (uid) => typeof uid === 'string' && /^(school|commons):/.test(uid)
+
 const SAFE_ID = /^[A-Za-z0-9_-]{1,128}$/
 
 // Pure: pick the room family (not yet the shard).

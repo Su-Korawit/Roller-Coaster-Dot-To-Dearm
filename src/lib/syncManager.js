@@ -351,9 +351,14 @@ export async function visitMap(ownerUid) {
 }
 
 // Return to the signed-in user's own Personal Map.
-export async function returnHome(selfUid) {
+// `mapKey` (optional) switches the map key in the same state update, so presence
+// never briefly joins the user's own world under the previous map's key.
+export async function returnHome(selfUid, mapKey) {
   if (!selfUid) return
-  useWorldStore.setState({ currentMapOwnerUid: selfUid, objectsByMap: {}, mapObjects: [], editMode: false })
+  useWorldStore.setState({
+    currentMapOwnerUid: selfUid, objectsByMap: {}, mapObjects: [], editMode: false,
+    ...(mapKey ? { currentMapKey: mapKey } : {}),
+  })
   useFarmStore.setState({ plotsByMap: {}, plots: {} })
   await hydrateMapFromFirestore(selfUid)
   await hydrateFarmFromFirestore(selfUid)

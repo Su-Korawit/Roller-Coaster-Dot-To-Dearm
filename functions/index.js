@@ -384,6 +384,7 @@ async function settleActive(uid, { end }) {
     return {
       ok: true,
       verifiedMs: after,
+      lastCheckInAt: seg.tooSoon || end ? active.lastCheckInAt : nowMs,
       creditedMs: seg.creditedMs,
       xpGained,
       lapsed: seg.lapsed,
@@ -409,7 +410,7 @@ exports.startFocus = onCall(async (req) => {
       const a = activeSnap.data()
       if (nowMs - a.lastCheckInAt <= CHECKIN_WINDOW_MS) {
         // Idempotent: a second tab / a reload resumes the running session.
-        return { ok: true, resumed: true, startedAt: a.startedAt, verifiedMs: a.verifiedMs ?? 0 }
+        return { ok: true, resumed: true, startedAt: a.startedAt, lastCheckInAt: a.lastCheckInAt, verifiedMs: a.verifiedMs ?? 0 }
       }
       // Stale: close it with nothing extra credited, then start fresh.
       tx.set(db.collection('focusSessions').doc(), {
@@ -420,7 +421,7 @@ exports.startFocus = onCall(async (req) => {
 
     const schoolId = normalizeFocusSchoolId(userSnap.data())
     tx.set(activeRef, { uid, schoolId, startedAt: nowMs, lastCheckInAt: nowMs, verifiedMs: 0 })
-    return { ok: true, resumed: false, startedAt: nowMs, verifiedMs: 0 }
+    return { ok: true, resumed: false, startedAt: nowMs, lastCheckInAt: nowMs, verifiedMs: 0 }
   })
 })
 

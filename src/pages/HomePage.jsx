@@ -208,7 +208,7 @@ function HomePage() {
             />
           }
         >
-          <GameCanvas active={activeTab === APP_VIEWS.HOME && activePopup !== 'calendar'} />
+          <GameCanvas active={activeTab === APP_VIEWS.HOME && activePopup !== 'calendar'} onOpenView={handleTabChange} />
         </Suspense>
       </div>
 

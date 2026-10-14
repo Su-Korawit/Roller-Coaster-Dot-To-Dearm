@@ -82,14 +82,21 @@ Files: `scripts/buildSchoolHub.mjs` (new), `public/maps/school_hub.json`, `src/u
 - Deviation: labels use a dark fill (the scene strokes labels white, so white-on-white would be invisible).
 
 ### Task 6 — In-game UI  `[cursor]`
-Files: `src/components/school/` (new `FocusHud`, `LeaderboardPanel`, `BoardPanel`, `AfkToggle`), `GameCanvas.jsx` wiring, `src/index.css` tokens.
-- [ ] Interaction events -> panels: `focusSeat` opens Focus start; `board` opens Canteen/Contest board; `tool` navigates.
-- [ ] Focus HUD: timer, check-in prompt every 25 min (one tap), XP gained, daily cap state.
-- [ ] Leaderboard panel (top 20 schools + "your school" row, hours/member, week countdown).
-- [ ] Preset emote wheel (6–8 emotes) replacing free text in school rooms.
-- [ ] AFK toggle + "ambient" mode: night library, rain, lo-fi from existing Music panel.
-- [ ] Opt-in "Share my room" PNG: avatar + scene, no name/school by default.
-- [ ] Tailwind tokens only; mobile-first; reuse BottomSheet.
+Files: `src/components/school/world/` (`SchoolWorldLayer`, `FocusPanel`, `FocusHud`, `LeaderboardPanel`, `BoardPanel`, `EmoteWheel`, `AmbientOverlay`), `src/stores/useSchoolWorldStore.js`, `src/services/schoolWorld.js`, `GameCanvas.jsx` wiring, `src/index.css` tokens.
+- [x] Interaction events -> panels: `focusSeat` opens Focus start; `board` opens Canteen/Contest board; `tool` navigates.
+- [x] Focus HUD: timer, check-in prompt every 25 min (one tap), XP gained, daily cap state.
+- [x] Leaderboard panel (top 20 schools + "your school" row, hours/member, week countdown).
+- [x] Preset emote wheel (6–8 emotes) replacing free text in school rooms.
+- [x] AFK toggle + "ambient" mode: night library, rain, lo-fi from existing Music panel.
+- [x] Opt-in "Share my room" PNG: avatar + scene, no name/school by default.
+- [x] Tailwind tokens only; mobile-first; reuse BottomSheet.
+- Built by claude instead of cursor at the owner's request to finish the MVP end to end.
+- Flow: "เข้าโรงเรียน" button -> `enterSchoolHub` (reads schoolId + school memberCount, `chooseRoom`, flips presence owner + map key atomically, asks GameCanvas to load school_hub through a store request) -> zone events from Phaser -> store -> panels. Leaving (button, exit portal, or unmounting Home) returns the player to their own world in one state update.
+- Emotes: presence carries only a preset id (`emote`, validated `^[a-z]{1,12}$` in database.rules.json); the glyph is resolved locally; bubbles render over remote avatars and the local player.
+- Share image: opt-in 📷 button; other players' name labels are hidden during capture and restored in a `finally`; watermark is the brand only.
+- Ambience: CSS night tint + rain whose loop is seamless (translation along the stripe direction); static under prefers-reduced-motion.
+- Verified: 17 component tests (jsdom), service/store tests, rules tests for emotes, `vite build` succeeds. **Not verified: the running game inside a signed-in session** (no test account in this environment) — entering the hub, the Phaser bubbles and the share capture are untested end to end. Smoke-test those before the pilot.
+- Not done: seat-zone auto-close on leaving the zone (panels are dismissed manually); idle remote avatars still animate.
 
 ### Task 7 — Teacher badge & board  `[claude + cursor]`
 - [ ] `[claude]` Callable `grantTeacherBadge(uid, schoolId)` admin-only, sets custom claim; `schoolBoards/{schoolId}/posts` rules: read authed, write `teacher` claim for that school or admin.

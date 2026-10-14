@@ -5,6 +5,7 @@ import { MBTI_TYPES, GAME_ASSETS, GAME_ASSET_BY_KEY, localMapPath } from './asse
 import { cloudAsset } from '../utils/cloudAsset'
 import { getMapConfig, DEFAULT_MAP_CONFIGS } from '../utils/mapConfig'
 import { updateSelf } from '../lib/presence'
+import { EMOTE_BY_ID } from '../constants/emotes'
 import { parseMapMeta } from '../utils/tiledMapMeta'
 import { useFarmStore } from '../stores/useFarmStore'
 import { currentStage } from '../systems/farmLogic'
@@ -398,13 +399,24 @@ export class MapScene extends Phaser.Scene {
       this._reconcileRemotePlayers(players, selfUid)
     }
     this.game.events.on('remotePlayersChanged', onRemoteChanged)
+    // Share-image capture hides other players' name labels (privacy: no names by default).
+    this._namesVisible = true
+    const onNamesVisible = (visible) => {
+      this._namesVisible = !!visible
+      for (const entry of this._remoteAvatars.values()) entry.label.setVisible(this._namesVisible)
+    }
+    this.game.events.on('setNamesVisible', onNamesVisible)
     this.events.once('shutdown', () => {
       this.game.events.off('remotePlayersChanged', onRemoteChanged)
+      this.game.events.off('setNamesVisible', onNamesVisible)
       for (const entry of this._remoteAvatars.values()) {
         entry.sprite.destroy()
         entry.label.destroy()
+        entry.bubble?.destroy()
       }
       this._remoteAvatars.clear()
+      this._selfBubble?.destroy()
+      this._selfBubble = null
     })
 
     // Block portal re-fire for 500ms after (re)spawn so arriving on top of a
@@ -792,6 +804,7 @@ export class MapScene extends Phaser.Scene {
       if (!players[uid]) {
         entry.sprite.destroy()
         entry.label.destroy()
+        entry.bubble?.destroy()
         this._remoteAvatars.delete(uid)
       }
     }
@@ -809,6 +822,7 @@ export class MapScene extends Phaser.Scene {
           entry.sprite.play(animKey)
         }
         entry.label.setText(name)
+        this._syncBubble(entry, state.emote)
       } else {
         const spriteMbti = this.textures.exists(mbti) ? mbti : MBTI_TYPES[0]
         const sprite = this.add.sprite(x, y, spriteMbti)
@@ -824,10 +838,39 @@ export class MapScene extends Phaser.Scene {
         })
         label.setDepth(9)
         label.setOrigin(0.5, 1)
+        label.setVisible(this._namesVisible !== false)
 
-        this._remoteAvatars.set(uid, { sprite, label, targetX: x, targetY: y })
+        const entry = { sprite, label, bubble: null, targetX: x, targetY: y }
+        this._remoteAvatars.set(uid, entry)
+        this._syncBubble(entry, state.emote)
       }
     }
+  }
+
+  // Emote bubble above a remote avatar: created/updated/destroyed to match `emoteId`.
+  _syncBubble(entry, emoteId) {
+    const glyph = EMOTE_BY_ID[emoteId]?.glyph
+    if (!glyph) { entry.bubble?.destroy(); entry.bubble = null; return }
+    if (!entry.bubble) {
+      entry.bubble = this.add.text(entry.sprite.x, entry.sprite.y, glyph, { fontSize: `${14 * this._mapScale}px` })
+      entry.bubble.setOrigin(0.5, 1).setDepth(12)
+    } else if (entry.bubble.text !== glyph) {
+      entry.bubble.setText(glyph)
+    }
+  }
+
+  // Same bubble over the local player, driven by the 'selfEmote' registry key.
+  _tickSelfBubble() {
+    const glyph = EMOTE_BY_ID[this.registry.get('selfEmote')]?.glyph
+    if (!glyph) { this._selfBubble?.destroy(); this._selfBubble = null; return }
+    if (!this._selfBubble) {
+      this._selfBubble = this.add.text(0, 0, glyph, { fontSize: `${14 * this._mapScale}px` })
+      this._selfBubble.setOrigin(0.5, 1).setDepth(12)
+    } else if (this._selfBubble.text !== glyph) {
+      this._selfBubble.setText(glyph)
+    }
+    this._selfBubble.x = this.player.x
+    this._selfBubble.y = this.player.y - 26 * this._mapScale
   }
 
   // Runs at the top of update() every frame: lerps remote avatars and (only on
@@ -838,20 +881,26 @@ export class MapScene extends Phaser.Scene {
       entry.sprite.y = Phaser.Math.Linear(entry.sprite.y, entry.targetY, 0.2)
       entry.label.x  = entry.sprite.x
       entry.label.y  = entry.sprite.y - 24 * this._mapScale
+      if (entry.bubble) { entry.bubble.x = entry.sprite.x; entry.bubble.y = entry.label.y - 10 * this._mapScale }
     }
+    this._tickSelfBubble()
 
     if (!this._multiplayer) return
     const ownerUid = this.registry.get('ownerUid')
     const selfUid  = this.registry.get('selfUid')
     if (ownerUid && selfUid) {
-      updateSelf(ownerUid, this.mapKey, selfUid, {
+      const payload = {
         x:      this.player.x,
         y:      this.player.y,
         dir:    this._currentDir ?? 'down',
         moving: this.isMoving || this.usingWasd || this.joystickActive,
         mbti:   this.currentMbti,
         name:   this.registry.get('selfName') ?? '',
-      })
+      }
+      // RTDB set() throws on undefined, so only include the key while an emote is active.
+      const emote = this.registry.get('selfEmote')
+      if (emote) payload.emote = emote
+      updateSelf(ownerUid, this.mapKey, selfUid, payload)
     }
   }
 }
