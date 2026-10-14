@@ -61,9 +61,13 @@ Files: `functions/index.js`, `src/lib/db.js`, `firestore.rules`, `firestore.inde
 
 ### Task 4 — Weekly rollup & leaderboard  `[claude]`
 Files: `functions/index.js`, `src/lib/db.js`, rules, tests.
-- [ ] Scheduled `rollupSchoolWeek` (hourly): aggregate verified ms per school for current ISO week (Asia/Bangkok) into `schoolWeeks/{schoolId}_{isoWeek}` = `{ schoolId, schoolName, contributors, totalMs, avgHoursPerMember }`.
-- [ ] Only schools with `contributors >= 10` are ranked. Query: top 20 by `avgHoursPerMember`.
-- [ ] Public read of `schoolWeeks`, no client write. Pure rollup function with tests.
+- [x] Scheduled `rollupSchoolWeek` (hourly, full recompute so it self-heals): aggregate verified ms per school for current ISO week (Asia/Bangkok) into `schoolWeeks/{schoolId}_{isoWeek}` = `{ schoolId, schoolName, contributors, totalMs, avgHoursPerMember }`.
+- [x] Only schools with `contributors >= 10` are ranked. Query: top 20 by `avgHoursPerMember` (verified hours / REGISTERED members, floor = contributors; see leaderboardMath.js).
+- [x] Public read of `schoolWeeks`, no client write. Pure rollup function with tests.
+- [x] `leaderboardMeta/current` ({week, endsAtMs}) powers the UI countdown; client reader is `src/services/leaderboard.js` (`fetchLeaderboard`, `contributorsNeeded`).
+- [x] Real rollup + the exact client query run against the Firestore emulator (`test/rules/leaderboard.functions.test.js`). The emulator does NOT enforce composite indexes, so the `schoolWeeks` index in `firestore.indexes.json` is unverified until deployed.
+- Known gap: rollup cost is one read per user-day this week per run; revisit (incremental aggregation) past the pilot. School names come from the first joiner's self-declared `schoolName` (truncated to 80 chars), so a moderation hook is needed before a public leaderboard.
+- Rules suite now runs files serially (shared emulator DB).
 
 ### Task 5 — `school_hub` map skeleton  `[claude]`  (art polish: artist/Cursor)
 Files: `scripts/buildSchoolHub.mjs` (new), `public/maps/school_hub.json`, `src/utils/mapConfig.js`, `src/utils/tiledMapMeta.js`(+test).

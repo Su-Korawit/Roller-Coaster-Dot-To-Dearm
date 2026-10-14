@@ -7,6 +7,15 @@
         { "fieldPath": "shareId", "order": "ASCENDING" },
         { "fieldPath": "public", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "schoolWeeks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "week", "order": "ASCENDING" },
+        { "fieldPath": "ranked", "order": "ASCENDING" },
+        { "fieldPath": "avgHoursPerMember", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

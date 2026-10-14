@@ -426,3 +426,51 @@ exports.startFocus = onCall(async (req) => {
 
 exports.checkInFocus = onCall(async (req) => settleActive(requireUid(req), { end: false }))
 exports.endFocus = onCall(async (req) => settleActive(requireUid(req), { end: true }))
+
+// ── Weekly school leaderboard (ADR 0018) ─────────────────────────────────────
+// Recomputes the current ISO week (Asia/Bangkok) from focusDaily and writes
+//   schoolWeeks/{schoolId}_{week}   per-school totals + `ranked` flag
+//   leaderboardMeta/current         { week, endsAtMs, updatedAt } for the UI countdown
+// Full recompute each run (idempotent, self-healing, no counters to drift). Cost
+// is one read per user-day this week; switch to incremental aggregation if that
+// outgrows the pilot.
+const { onSchedule } = require('firebase-functions/v2/scheduler')
+const { weekInfo, aggregateSchools } = require('./leaderboardMath')
+
+async function rollupWeek(nowMs = Date.now()) {
+  const info = weekInfo(nowMs)
+  const first = info.days[0]
+  const last = info.days[6]
+
+  const snap = await db.collection('focusDaily')
+    .where('day', '>=', first).where('day', '<=', last).get()
+  const rows = snap.docs.map((d) => d.data())
+
+  const schoolIds = [...new Set(rows.map((r) => r.schoolId).filter(Boolean))]
+  const schools = {}
+  for (let i = 0; i < schoolIds.length; i += 300) {
+    const docs = await db.getAll(...schoolIds.slice(i, i + 300).map((id) => db.collection('schools').doc(id)))
+    docs.forEach((d) => { if (d.exists) schools[d.id] = d.data() })
+  }
+
+  const results = aggregateSchools(rows, schools)
+  for (let i = 0; i < results.length; i += 400) {
+    const batch = db.batch()
+    for (const r of results.slice(i, i + 400)) {
+      batch.set(db.collection('schoolWeeks').doc(`${r.schoolId}_${info.week}`), {
+        ...r, week: info.week, updatedAt: nowMs,
+      })
+    }
+    await batch.commit()
+  }
+  await db.collection('leaderboardMeta').doc('current').set({
+    week: info.week, endsAtMs: info.endsAtMs, updatedAt: nowMs,
+  })
+  return { week: info.week, schools: results.length, ranked: results.filter((r) => r.ranked).length }
+}
+
+exports._rollupWeek = rollupWeek
+exports.rollupSchoolWeek = onSchedule(
+  { schedule: 'every 60 minutes', timeZone: 'Asia/Bangkok' },
+  async () => { await rollupWeek() },
+)

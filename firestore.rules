@@ -224,6 +224,17 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Weekly school leaderboard (ADR 0018): school-level aggregates only, no
+    // personal data, so it is public (shareable / SEO). Written by rollupSchoolWeek.
+    match /schoolWeeks/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /leaderboardMeta/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /tcasEvents/{eventId} {
       allow read: if true;
       allow write: if isSuperAdmin();

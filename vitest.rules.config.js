@@ -6,6 +6,9 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     include: ['test/rules/**/*.test.js'],
+    // Every file shares ONE emulator database and several clear/delete it in
+    // beforeEach; run files one at a time or they wipe each other's seed data.
+    fileParallelism: false,
     testTimeout: 15000,
     // initializeTestEnvironment loads rules into the Firestore emulator, whose
     // rules-engine JVM can take >10s to warm up — the 10s default fails the

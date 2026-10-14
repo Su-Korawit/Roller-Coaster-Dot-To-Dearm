@@ -22,6 +22,8 @@ export const refs = {
   mapConfig:   (key)            => doc(db, 'mapConfigs', key),
   school:      (schoolId)       => doc(db, 'schools', schoolId),
   focusActive: (uid)            => doc(db, 'focusActive', uid),
+  leaderboardMeta: ()           => doc(db, 'leaderboardMeta', 'current'),
+  schoolWeek:  (schoolId, week) => doc(db, 'schoolWeeks', `${schoolId}_${week}`),
   focusDaily:  (uid, day)       => doc(db, 'focusDaily', `${uid}_${day}`),
   musicConfig: (docId)          => doc(db, 'musicConfig', docId),
   assetFolder: (id)             => doc(db, 'assetFolders', id),
@@ -74,6 +76,13 @@ export const cols = {
 export const prefixUpperBound = (term) => term + ''
 
 export const queries = {
+  topSchools:        (week, n = 20) => query(
+    collection(db, 'schoolWeeks'),
+    where('week', '==', week),
+    where('ranked', '==', true),
+    orderBy('avgHoursPerMember', 'desc'),
+    limit(n),
+  ),
   chatsByMember:     (uid)      => query(cols.chats, where('members', 'array-contains', uid)),
   messagesByChat:    (chatId)   => query(cols.chatMessages(chatId), orderBy('createdAt', 'asc')),
   nearbyUsers:       (schoolId) => query(cols.users, where('schoolId', '==', schoolId), limit(50)),
