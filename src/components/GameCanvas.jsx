@@ -185,6 +185,8 @@ export default function GameCanvas({ active = true, onOpenView }) {
       game.registry.set('controlMode', useUserStore.getState().controlMode)
       game.scene.start('MapScene', { mapKey: assetUrlsRef.current.mapKey, spawn: null })
       gameRef.current = game
+      // Dev-only QA handle (e.g. teleport the player from the console); stripped from production builds.
+      if (import.meta.env.DEV) window.__rcGame = game
       game.events.on('mapSceneReady', () => {
         setIsBooting(false)
         setIsSwitchingMap(false)

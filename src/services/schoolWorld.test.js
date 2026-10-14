@@ -71,6 +71,19 @@ describe('enterSchoolHub', () => {
     expect(chooseRoom).toHaveBeenCalledWith(expect.objectContaining({ memberCount: 0 }))
   })
 
+  it('still enters (via commons) when the school directory cannot be read', async () => {
+    getDoc.mockImplementation(async (ref) => {
+      if (ref === 'user:me') return snap({ schoolId: 'S1' })
+      throw Object.assign(new Error('Missing or insufficient permissions.'), { code: 'permission-denied' })
+    })
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    chooseRoom.mockResolvedValue({ kind: 'commons', ownerUid: 'commons:1', mapKey: 'school_hub', shard: 1, full: false })
+    const r = await enterSchoolHub('me')
+    expect(r.ok).toBe(true)
+    expect(chooseRoom).toHaveBeenCalledWith(expect.objectContaining({ memberCount: 0 }))
+    expect(useWorldStore.getState().currentMapOwnerUid).toBe('commons:1')
+  })
+
   it('reports ROOM_FULL and leaves the world untouched', async () => {
     stubDocs({ schoolId: 'S1' }, { memberCount: 42 })
     chooseRoom.mockResolvedValue({ kind: 'school', ownerUid: null, full: true })

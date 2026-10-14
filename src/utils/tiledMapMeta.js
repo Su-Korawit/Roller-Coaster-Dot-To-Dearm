@@ -53,6 +53,17 @@ function labelsFrom(map) {
     .filter((l) => l.text !== '')
 }
 
+// Ambient wildlife the scene spawns (not tiles): { kind, x, y, radius } in map px.
+function crittersFrom(map) {
+  const layer = objectLayer(map, 'Critters')
+  return (layer?.objects || []).map((o) => ({
+    kind: propValue(o, 'kind') ?? o.name,
+    x: o.x,
+    y: o.y,
+    radius: propValue(o, 'radius') ?? 32,
+  }))
+}
+
 export function parseMapMeta(map) {
   const tilesetNames = [...new Set((map.tilesets || []).map((t) => t.name))]
 
@@ -87,5 +98,6 @@ export function parseMapMeta(map) {
     farmTiles: farmTilesFrom(map),
     interactions: interactionsFrom(map),
     labels: labelsFrom(map),
+    critters: crittersFrom(map),
   }
 }

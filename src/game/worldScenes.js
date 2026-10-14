@@ -24,6 +24,17 @@ const JOYSTICK_SPRINT   = 60   // screen px — at/beyond this distance the avat
 const DEFAULT_CONTROL_MODE = 'joystick'
 
 const PLAYER_KEY = 'Basic_Charakter'
+
+// Layers drawn ABOVE the player so avatars pass behind tree canopies and roofs. They are
+// ignored by the "non-colliding tile covers a collider" rule (see applyCollision).
+const OVERHEAD_DEPTH = { Canopy: 20, Roof: 21 }
+const ROOF_FADED_ALPHA = 0.12
+
+// Ambient wildlife (maps with config.critters): spritesheets from public/assets/sprites/Characters.
+const CRITTER_SHEETS = {
+  chicken: { key: 'critter_chicken', file: 'Free_Chicken_Sprites.png', frame: 16, idle: [0, 1], walk: [4, 5, 6], speed: 9 },
+  cow:     { key: 'critter_cow',     file: 'Free_Cow_Sprites.png',     frame: 32, idle: [0],    walk: [0, 1, 2], speed: 6 },
+}
 export const getZoom = (w) => w < 768 ? 1.5 : w < 1024 ? 3 : 2.5
 
 // ── Asset helpers ─────────────────────────────────────────────────────────────
@@ -93,7 +104,7 @@ function applyCollision(scene, map, layerInfos, cfg, player) {
       let cover = -1
       for (let i = layerInfos.length - 1; i >= 0; i--) {
         const { name, layer } = layerInfos[i]
-        if (!layer || isColl(name) || layer.visible === false) continue
+        if (!layer || isColl(name) || layer.visible === false || OVERHEAD_DEPTH[name]) continue
         if (layer.getTileAt(x, y)) { cover = i; break }
       }
       if (cover < 0) continue
@@ -188,6 +199,14 @@ export class MapScene extends Phaser.Scene {
       })
     }
 
+    if (r.get('mapConfig')?.critters) {
+      Object.values(CRITTER_SHEETS).forEach((c) => {
+        if (!this.textures.exists(c.key)) {
+          this.load.spritesheet(c.key, `/assets/sprites/Characters/${c.file}`, { frameWidth: c.frame, frameHeight: c.frame })
+        }
+      })
+    }
+
     if (!this.textures.exists('crops')) {
       const cropsUrl = urlFor(this.registry, 'crops')
       if (cropsUrl) this.load.spritesheet('crops', cropsUrl, { frameWidth: 16, frameHeight: 16 })
@@ -215,7 +234,7 @@ export class MapScene extends Phaser.Scene {
     const layerInfos = map.layers.map((ld, i) => {
       const layer = map.createLayer(ld.name, tilesets, 0, 0)
       if (layer) {
-        layer.setDepth(i)
+        layer.setDepth(OVERHEAD_DEPTH[ld.name] ?? i)
         if (cfg.hidden?.[ld.name]) layer.setVisible(false)
       }
       return { name: ld.name, layer }
@@ -338,8 +357,9 @@ export class MapScene extends Phaser.Scene {
         const txt = this.add.text(lb.x * mapScale, lb.y * mapScale, lb.text, {
           fontSize: `${8 * mapScale}px`,
           color: lb.color,
-          stroke: '#ffffff',
-          strokeThickness: 1,
+          // Parchment name-plate so labels stay legible over lawns, paths and roofs.
+          backgroundColor: 'rgba(243, 229, 194, 0.94)',
+          padding: { x: 3 * mapScale, y: 1 * mapScale },
         })
         txt.setDepth(22)
         txt.setOrigin(0.5, 1)
@@ -363,6 +383,8 @@ export class MapScene extends Phaser.Scene {
     this.player.play(`${this.currentMbti}-idle`)
 
     applyCollision(this, map, layerInfos, cfg, this.player)
+    this._initRoofs(layerInfos, map)
+    this._spawnCritters(meta.critters ?? [], mapScale)
 
     this._decorGroup = this.add.group()
     this._mapScale = mapScale
@@ -565,9 +587,11 @@ export class MapScene extends Phaser.Scene {
     this.game.events.emit('mapSceneReady')
   }
 
-  update() {
+  update(_time, delta) {
     if (this.preview) return
     this._tickPresence()
+    this._tickRoofs()
+    this._tickCritters(delta ?? 16)
 
     // ── Farm tile detection + interaction zones (runs every frame unconditionally) ──
     this._farmTick = (this._farmTick ?? 0) + 1
@@ -788,8 +812,9 @@ export class MapScene extends Phaser.Scene {
       const txt = this.add.text(lb.x * mapScale, lb.y * mapScale, lb.text, {
         fontSize: `${8 * mapScale}px`,
         color: lb.color,
-        stroke: '#ffffff',
-        strokeThickness: 1,
+        // Parchment name-plate so labels stay legible over lawns, paths and roofs.
+        backgroundColor: 'rgba(243, 229, 194, 0.94)',
+        padding: { x: 3 * mapScale, y: 1 * mapScale },
       })
       txt.setDepth(depth)
       txt.setOrigin(0.5, 1)
@@ -843,6 +868,114 @@ export class MapScene extends Phaser.Scene {
         const entry = { sprite, label, bubble: null, targetX: x, targetY: y }
         this._remoteAvatars.set(uid, entry)
         this._syncBubble(entry, state.emote)
+      }
+    }
+  }
+
+  // Roofs: group the Roof layer's tiles into connected buildings; the one the player is standing
+  // under fades out (so the interior shows) and fades back in when they leave.
+  _initRoofs(layerInfos, map) {
+    this._roofs = []
+    const info = layerInfos.find((l) => l.name === 'Roof')
+    const layer = info?.layer
+    if (!layer || layer.visible === false) return
+    const W = map.width
+    const seen = new Set()
+    for (let y = 0; y < map.height; y++) {
+      for (let x = 0; x < W; x++) {
+        const key = y * W + x
+        if (seen.has(key) || !layer.getTileAt(x, y)) continue
+        const cells = new Set()
+        const tiles = []
+        const queue = [[x, y]]
+        seen.add(key)
+        while (queue.length) {
+          const [cx, cy] = queue.pop()
+          cells.add(cy * W + cx)
+          tiles.push(layer.getTileAt(cx, cy))
+          for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const nx = cx + dx
+            const ny = cy + dy
+            const nk = ny * W + nx
+            if (nx < 0 || ny < 0 || nx >= W || ny >= map.height || seen.has(nk) || !layer.getTileAt(nx, ny)) continue
+            seen.add(nk)
+            queue.push([nx, ny])
+          }
+        }
+        this._roofs.push({ cells, tiles, alpha: 1 })
+      }
+    }
+    this._roofMapW = W
+  }
+
+  _tickRoofs() {
+    if (!this._roofs?.length || !this.player) return
+    this._roofTick = (this._roofTick ?? 0) + 1
+    if (this._roofTick % 4 !== 0) return
+    const tx = Math.floor(this.player.x / this._mapScale / 16)
+    const ty = Math.floor(this.player.y / this._mapScale / 16)
+    const here = ty * this._roofMapW + tx
+    for (const roof of this._roofs) {
+      const target = roof.cells.has(here) ? ROOF_FADED_ALPHA : 1
+      if (Math.abs(roof.alpha - target) < 0.01) continue
+      roof.alpha += (target - roof.alpha) * 0.35
+      if (Math.abs(roof.alpha - target) < 0.02) roof.alpha = target
+      for (const t of roof.tiles) t.alpha = roof.alpha
+    }
+  }
+
+  // Ambient wildlife: slow wander around a home point; pauses, faces its heading.
+  _spawnCritters(list, mapScale) {
+    this._critters = []
+    for (const c of list) {
+      const def = CRITTER_SHEETS[c.kind]
+      if (!def || !this.textures.exists(def.key)) continue
+      const idleKey = def.key + '-idle'
+      const walkKey = def.key + '-walk'
+      if (!this.anims.exists(idleKey)) {
+        this.anims.create({ key: idleKey, frames: this.anims.generateFrameNumbers(def.key, { frames: def.idle }), frameRate: 2, repeat: -1 })
+      }
+      if (!this.anims.exists(walkKey)) {
+        this.anims.create({ key: walkKey, frames: this.anims.generateFrameNumbers(def.key, { frames: def.walk }), frameRate: 6, repeat: -1 })
+      }
+      const sprite = this.add.sprite(c.x * mapScale, c.y * mapScale, def.key)
+      sprite.setScale(mapScale).setDepth(9).play(idleKey)
+      this._critters.push({
+        def, sprite, idleKey, walkKey, mapScale,
+        homeX: c.x * mapScale, homeY: c.y * mapScale, radius: c.radius * mapScale,
+        target: null, wait: 500 + Math.random() * 3000,
+      })
+    }
+  }
+
+  _tickCritters(delta) {
+    if (!this._critters?.length) return
+    const dt = Math.min(delta, 100) / 1000
+    for (const c of this._critters) {
+      if (c.target) {
+        const dx = c.target.x - c.sprite.x
+        const dy = c.target.y - c.sprite.y
+        const dist = Math.hypot(dx, dy)
+        const step = c.def.speed * c.mapScale * dt
+        if (dist <= step) {
+          c.sprite.x = c.target.x
+          c.sprite.y = c.target.y
+          c.target = null
+          c.wait = 1500 + Math.random() * 4000
+          c.sprite.play(c.idleKey, true)
+        } else {
+          c.sprite.x += (dx / dist) * step
+          c.sprite.y += (dy / dist) * step
+          if (Math.abs(dx) > 0.5) c.sprite.setFlipX(dx < 0)
+        }
+      } else {
+        c.wait -= dt * 1000
+        if (c.wait <= 0) {
+          const a = Math.random() * Math.PI * 2
+          const r = Math.random() * c.radius
+          c.target = { x: c.homeX + Math.cos(a) * r, y: c.homeY + Math.sin(a) * r * 0.6 }
+          c.sprite.play(c.walkKey, true)
+        }
       }
     }
   }

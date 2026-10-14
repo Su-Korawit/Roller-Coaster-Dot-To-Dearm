@@ -47,6 +47,7 @@ export const DEFAULT_MAP_CONFIGS = {
     displayName: 'School Hub',
     multiplayer: true,
     editable: false,
+    critters: true,
     defaultSpawn: 'entry',
   },
   indoor: {
@@ -75,6 +76,7 @@ function withRegistryDefaults(key, data) {
     isEntry:      data.isEntry      ?? (key === 'test3'),
     defaultSpawn: data.defaultSpawn ?? base.defaultSpawn ?? null,
     multiplayer:  data.multiplayer  ?? base.multiplayer ?? (key === 'test3'),
+    critters:     data.critters     ?? base.critters ?? false,
     editable:     data.editable     ?? base.editable ?? (key === 'test3'),
   }
 }

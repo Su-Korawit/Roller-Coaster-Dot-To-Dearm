@@ -29,8 +29,15 @@ export async function enterSchoolHub(uid) {
       world().setEnterError('NO_SCHOOL')
       return { ok: false, error: 'NO_SCHOOL' }
     }
-    const schoolSnap = await getDoc(refs.school(schoolId))
-    const memberCount = schoolSnap.exists() ? schoolSnap.data().memberCount ?? 0 : 0
+    // The member count only decides school room vs commons. If it cannot be read (rules not yet
+    // deployed, offline, school never counted) the student still gets in, via the commons room.
+    let memberCount = 0
+    try {
+      const schoolSnap = await getDoc(refs.school(schoolId))
+      memberCount = schoolSnap.exists() ? schoolSnap.data().memberCount ?? 0 : 0
+    } catch (e) {
+      console.warn('[schoolWorld] school directory unreadable, using commons:', e?.code ?? e?.message)
+    }
 
     const room = await chooseRoom({ schoolId, memberCount, selfUid: uid })
     if (room.full) {

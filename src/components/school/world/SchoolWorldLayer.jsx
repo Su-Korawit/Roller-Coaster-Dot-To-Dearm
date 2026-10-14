@@ -106,7 +106,7 @@ export default function SchoolWorldLayer({ gameRef, onOpenView, active = true })
       {ambient && inHub && <AmbientOverlay />}
       {inHub && <FocusHud />}
 
-      <div className="absolute left-4 top-16 z-20 flex flex-col items-start gap-2 pointer-events-none">
+      <div className="absolute left-[4.75rem] top-20 z-20 flex flex-col items-start gap-2 pointer-events-none">
         {!inHub && uid && (
           <button
             onClick={() => enterSchoolHub(uid)}

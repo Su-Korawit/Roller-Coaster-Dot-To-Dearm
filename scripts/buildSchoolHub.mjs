@@ -9,6 +9,15 @@
 // Tile ids are Sprout Lands gids taken from public/maps/test3.json (same
 // tileset firstgids, so they stay valid). Path autotiling rules were derived
 // from test3's Path layer (Tilled_Dirt_Wide, gids 407-431 + 434/435/423/424).
+//
+// Layer stack (bottom to top):
+//   Grass   base meadow with texture variants
+//   Lawn    raised garden beds (Grass autotile 3x3)
+//   Path    autotiled dirt paths
+//   Decor   flowers, mushrooms (walk-through)
+//   Hill/Wall + Object   collision: walls, furniture, trunks, hedges, bushes, rocks
+//   Canopy  tree tops, drawn ABOVE the player so avatars walk behind trees
+//   Roof    building roofs, ABOVE the player; fades while the player is inside
 
 import { readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -27,7 +36,22 @@ const FLOOR = 97
 const WALL = { TL: 89, T: 90, TR: 91, L: 96, R: 98, BL: 103, B: 104, BR: 105, WINDOW: 83, DOOR: 92 }
 const PATH = { TL: 407, T: 408, TR: 409, L: 418, C: 419, R: 420, BL: 429, B: 430, BR: 431, C2: 463, NW: 435, NE: 434, SW: 424, SE: 423 }
 const TREES = [[577, 578, 586, 587], [579, 580, 588, 589]]   // [TL, TR, BL, BR]
-const FLOWERS = [600, 601, 602, 608, 609, 610]
+const GRASS_TUFTS = [56, 57, 58]
+const GRASS_PATCHES = [59, 60, 70, 71]
+const GRASS_FLOWERS = [61, 72]
+const LAWN = { TL: 1, T: 2, TR: 3, L: 12, C: 13, R: 14, BL: 23, B: 24, BR: 25 }
+const HEDGE_H = { L: 34, M: 35, R: 36 }
+const FLOWERS = [600, 601, 608, 609, 610]
+const MUSHROOMS = [581, 582, 583, 584]
+const BUSHES = [603, 604]
+const ROCKS = [592, 593, 617, 618]
+const STUMPS = [597, 598]
+const LOG = 599
+const SUNFLOWER = { top: 602, stem: 611 }
+const ROOF = {
+  TL: 86, T: 87, TR: 88, TL2: 93, T2: 94, TR2: 95, ML: 100, M: 101, MR: 102,
+  BL2: 107, B2: 108, BR2: 109, BL: 114, B: 115, BR: 116,
+}
 const F = { BOOKSHELF: 22, CHAIR_FRONT: 25, CHAIR_BACK: 26, TABLE: 31, PLANT: 5 }   // Basic_Furniture (firstgid 637 -> +636)
 const FURN = 636
 
@@ -50,6 +74,7 @@ function hash(x, y, salt = 0) {
   h = h ^ (h >>> 16)
   return ((h >>> 0) % 10000) / 10000
 }
+const pick = (arr, x, y, salt) => arr[Math.floor(hash(x, y, salt) * arr.length) % arr.length]
 
 // ── layout (tile coordinates) ───────────────────────────────────────────────
 export const LAYOUT = {
@@ -61,6 +86,21 @@ export const LAYOUT = {
 }
 const SPAWN = { x: 27, y: 34 }
 const SIGN = { x: 27, y: 20 }   // plaza notice board (leaderboard)
+
+// Raised garden beds (Lawn layer): x, y, w, h  (each at least 3x3)
+export const LAWNS = [
+  [6, 17, 6, 3], [13, 17, 6, 3], [36, 17, 6, 3], [43, 17, 6, 3],
+  [6, 34, 8, 3], [16, 34, 7, 3], [31, 34, 8, 3], [41, 34, 8, 3],
+  [17, 22, 3, 4], [36, 22, 3, 4],
+  // planters carved out of the plaza, leaving a promenade ring and a cross of open lanes
+  [23, 19, 3, 2], [29, 19, 3, 2], [23, 24, 3, 2], [29, 24, 3, 2],
+]
+const PLAZA_BEDS = [[23, 19, 3, 2], [29, 19, 3, 2], [23, 24, 3, 2], [29, 24, 3, 2]]
+// One-tile hedges (Object layer, collide) along building fronts. [x, y, length]
+const HEDGES_H = [
+  [9, 12, 5], [18, 12, 5], [29, 12, 3], [35, 12, 3], [44, 12, 2], [49, 12, 2],
+  [8, 28, 3], [14, 28, 3], [39, 28, 3], [45, 28, 3],
+]
 
 function house(L, b) {
   const { x, y, w, h } = b
@@ -80,11 +120,33 @@ function house(L, b) {
   if (b.doorway) for (let cx = b.doorway[0]; cx <= b.doorway[1]; cx++) wall[idx(cx, bottom)] = 0
 }
 
+// Roof: one row above the top wall down to the row above the front wall, so the
+// front wall (door, doorway, windows) stays visible. Walking in under it fades it.
+function roof(L, b) {
+  const { x, y, w, h } = b
+  const top = y - 1
+  const rows = h                       // y-1 .. y+h-2
+  for (let r = 0; r < rows; r++) {
+    let set
+    if (r === 0) set = [ROOF.TL, ROOF.T, ROOF.TR]
+    else if (r === 1) set = [ROOF.TL2, ROOF.T2, ROOF.TR2]
+    else if (r === rows - 1) set = [ROOF.BL, ROOF.B, ROOF.BR]
+    else if (r === rows - 2) set = [ROOF.BL2, ROOF.B2, ROOF.BR2]
+    else set = [ROOF.ML, ROOF.M, ROOF.MR]
+    for (let c = 0; c < w; c++) {
+      L.roof[idx(x + c, top + r)] = c === 0 ? set[0] : c === w - 1 ? set[2] : set[1]
+    }
+  }
+}
+
+// A 2x2 tree: trunk row collides (Object); the canopy row is drawn above the player.
 function tree(L, tx, ty, variant) {
   const [a, b, c, d] = TREES[variant]
-  const cells = [[tx, ty, a], [tx + 1, ty, b], [tx, ty + 1, c], [tx + 1, ty + 1, d]]
-  if (!cells.every(([cx, cy]) => inb(cx, cy) && !L.object[idx(cx, cy)])) return
-  for (const [cx, cy, g] of cells) L.object[idx(cx, cy)] = g
+  const cells = [[tx, ty], [tx + 1, ty], [tx, ty + 1], [tx + 1, ty + 1]]
+  if (!cells.every(([cx, cy]) => inb(cx, cy) && !L.object[idx(cx, cy)] && !L.canopy[idx(cx, cy)])) return false
+  L.canopy[idx(tx, ty)] = a; L.canopy[idx(tx + 1, ty)] = b
+  L.object[idx(tx, ty + 1)] = c; L.object[idx(tx + 1, ty + 1)] = d
+  return true
 }
 
 // 8-neighbour autotile over a boolean mask. Returns { layer, unresolved } where
@@ -122,11 +184,14 @@ export function buildSchoolHub() {
   const test3 = JSON.parse(readFileSync(join(root, 'public/maps/test3.json'), 'utf8'))
   const indoor = JSON.parse(readFileSync(join(root, 'public/maps/indoor.json'), 'utf8'))
 
-  const L = { grass: layer(), path: layer(), decor: layer(), wall: layer(), object: layer(), roof: layer() }
+  const L = {
+    grass: layer(), lawn: layer(), path: layer(), decor: layer(),
+    wall: layer(), object: layer(), canopy: layer(), roof: layer(),
+  }
   L.grass.fill(GRASS)
 
-  // Buildings
-  for (const b of Object.values(LAYOUT)) house(L, b)
+  // Buildings + roofs
+  for (const b of Object.values(LAYOUT)) { house(L, b); roof(L, b) }
 
   // ── Library interior (walkable): bookshelves, 4 tables with a chair on each side ──
   const lib = LAYOUT.library
@@ -165,10 +230,45 @@ export function buildSchoolHub() {
   rect(46, 12, 3, 2)      // contest stub
   rect(11, 28, 3, 2)      // guidance stub
   rect(42, 28, 3, 2)      // hall stub
+  for (const [bx, by, bw, bh] of PLAZA_BEDS) {   // planters: grass shows through the plaza
+    for (let y = by; y < by + bh; y++) for (let x = bx; x < bx + bw; x++) mask[idx(x, y)] = false
+  }
   const { layer: pathLayer, unresolved } = autotilePaths(mask)
   L.path = pathLayer
 
-  // ── Border trees (collision, Object layer) ──
+  // ── Ground texture: tufts, darker patches and tiny flowers on the base meadow ──
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (L.grass[idx(x, y)] !== GRASS) continue
+    const r = hash(x, y, 21)
+    if (r < 0.10) L.grass[idx(x, y)] = pick(GRASS_TUFTS, x, y, 22)
+    else if (r < 0.135) L.grass[idx(x, y)] = pick(GRASS_PATCHES, x, y, 23)
+    else if (r < 0.15) L.grass[idx(x, y)] = pick(GRASS_FLOWERS, x, y, 24)
+  }
+
+  // ── Raised garden beds (Lawn layer) with flowers inside ──
+  const lawnCells = new Set()
+  for (const [lx, ly, lw, lh] of LAWNS) {
+    for (let y = ly; y < ly + lh; y++) for (let x = lx; x < lx + lw; x++) {
+      if (mask[idx(x, y)] || L.wall[idx(x, y)] || L.object[idx(x, y)]) continue
+      const top = y === ly, bot = y === ly + lh - 1, left = x === lx, right = x === lx + lw - 1
+      L.lawn[idx(x, y)] = top ? (left ? LAWN.TL : right ? LAWN.TR : LAWN.T)
+        : bot ? (left ? LAWN.BL : right ? LAWN.BR : LAWN.B)
+        : left ? LAWN.L : right ? LAWN.R : LAWN.C
+      lawnCells.add(idx(x, y))
+      if (!top && !bot && !left && !right && hash(x, y, 31) < 0.5) L.decor[idx(x, y)] = pick(FLOWERS, x, y, 32)
+    }
+  }
+
+  // ── Hedges along building fronts (collide) ──
+  for (const [hx, hy, len] of HEDGES_H) {
+    for (let i = 0; i < len; i++) {
+      const x = hx + i
+      if (!inb(x, hy) || mask[idx(x, hy)] || L.wall[idx(x, hy)] || L.object[idx(x, hy)]) continue
+      L.object[idx(x, hy)] = i === 0 ? HEDGE_H.L : i === len - 1 ? HEDGE_H.R : HEDGE_H.M
+    }
+  }
+
+  // ── Border trees (canopy above the player, trunks collide) ──
   const v = (x, y) => (hash(x, y, 3) < 0.5 ? 0 : 1)
   for (let x = 0; x < W; x += 2) {
     tree(L, x, 0, v(x, 0)); tree(L, x, H - 2, v(x, 1))
@@ -182,16 +282,42 @@ export function buildSchoolHub() {
   // Plaza notice board (leaderboard): a cabinet reads as a board until the artist replaces it.
   L.object[idx(SIGN.x, SIGN.y)] = FURN + F.BOOKSHELF
 
-  // ── Flowers: non-colliding Decor, only on plain grass away from everything ──
-  const busy = (x, y) => {
-    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+  // ── Scatter: meadow props, kept clear of paths, buildings and the zones players must reach ──
+  const near = (x, y, r, pred) => {
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
       const cx = x + dx, cy = y + dy
-      if (inb(cx, cy) && (mask[idx(cx, cy)] || L.wall[idx(cx, cy)] || L.object[idx(cx, cy)] || L.grass[idx(cx, cy)] !== GRASS)) return true
+      if (inb(cx, cy) && pred(cx, cy)) return true
     }
     return false
   }
-  for (let y = 4; y < H - 4; y++) for (let x = 4; x < W - 4; x++) {
-    if (!busy(x, y) && hash(x, y, 11) < 0.045) L.decor[idx(x, y)] = FLOWERS[Math.floor(hash(x, y, 13) * FLOWERS.length)]
+  const solidish = (cx, cy) => mask[idx(cx, cy)] || L.wall[idx(cx, cy)] || L.object[idx(cx, cy)] || L.canopy[idx(cx, cy)]
+  const free = (x, y) => inb(x, y) && !solidish(x, y) && !lawnCells.has(idx(x, y)) && !L.decor[idx(x, y)]
+  const clearOfPaths = (x, y, r) => !near(x, y, r, (cx, cy) => mask[idx(cx, cy)] || L.wall[idx(cx, cy)])
+  const inBand = (x, y) => x >= 4 && x < W - 4 && y >= 4 && y < H - 4
+
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (!inBand(x, y) || !free(x, y)) continue
+    const r = hash(x, y, 41)
+    // walk-through ground cover
+    if (r < 0.05) { L.decor[idx(x, y)] = pick(FLOWERS, x, y, 42); continue }
+    if (r < 0.065) { L.decor[idx(x, y)] = pick(MUSHROOMS, x, y, 43); continue }
+    // solid props: keep 2 tiles clear of paths/buildings so no corridor is ever pinched
+    if (!clearOfPaths(x, y, 1) || near(x, y, 1, (cx, cy) => L.object[idx(cx, cy)] || L.canopy[idx(cx, cy)])) continue
+    if (r < 0.09) L.object[idx(x, y)] = pick(BUSHES, x, y, 44)
+    else if (r < 0.105) L.object[idx(x, y)] = pick(ROCKS, x, y, 45)
+    else if (r < 0.115) L.object[idx(x, y)] = pick(STUMPS, x, y, 46)
+    else if (r < 0.12) L.object[idx(x, y)] = LOG
+    else if (r < 0.135 && free(x, y + 1) && clearOfPaths(x, y + 1, 2)) {
+      L.decor[idx(x, y)] = SUNFLOWER.top
+      L.decor[idx(x, y + 1)] = SUNFLOWER.stem
+    }
+  }
+  // a few free-standing trees in the open meadows (3 tiles off any path)
+  for (let y = 5; y < H - 6; y += 3) for (let x = 4; x < W - 6; x += 3) {
+    if (hash(x, y, 51) > 0.45) continue
+    if (!clearOfPaths(x, y, 2)) continue
+    if (near(x, y, 2, (cx, cy) => lawnCells.has(idx(cx, cy)))) continue
+    tree(L, x, y, v(x, y + 1))
   }
 
   // ── Objects ──
@@ -213,19 +339,22 @@ export function buildSchoolHub() {
   // Labels render with a white stroke (worldScenes), so the fill must be dark to be legible.
   const label = (text, cx, cy, color = '#1a1035') => obj(`label_${text}`, { x: cx * T, y: cy * T }, [prop('text', text), prop('color', color)])
   const labels = [
-    label('ห้องสมุด', lib.x + lib.w / 2, lib.y),
-    label('โรงอาหาร / ข่าว', LAYOUT.canteen.x + LAYOUT.canteen.w / 2, LAYOUT.canteen.y),
-    label('ประกวด / ค่าย', LAYOUT.contest.x + LAYOUT.contest.w / 2, LAYOUT.contest.y),
-    label('ห้องแนะแนว', LAYOUT.guidance.x + LAYOUT.guidance.w / 2, LAYOUT.guidance.y),
-    label('ทำเนียบ', LAYOUT.hall.x + LAYOUT.hall.w / 2, LAYOUT.hall.y),
+    label('ห้องสมุด', lib.x + lib.w / 2, lib.y - 1),
+    label('โรงอาหาร / ข่าว', LAYOUT.canteen.x + LAYOUT.canteen.w / 2, LAYOUT.canteen.y - 1),
+    label('ประกวด / ค่าย', LAYOUT.contest.x + LAYOUT.contest.w / 2, LAYOUT.contest.y - 1),
+    label('ห้องแนะแนว', LAYOUT.guidance.x + LAYOUT.guidance.w / 2, LAYOUT.guidance.y - 1),
+    label('ทำเนียบ', LAYOUT.hall.x + LAYOUT.hall.w / 2, LAYOUT.hall.y - 1),
     label('อันดับโรงเรียน', SIGN.x + 0.5, SIGN.y),
   ]
 
   const spawns = [obj('entry', { x: SPAWN.x * T, y: SPAWN.y * T, width: T, height: T }, [prop('default', true, 'bool')])]
-  const portals = [obj('to_world', { x: 26 * T, y: 36 * T, width: 3 * T, height: T }, [prop('target', 'test3'), prop('targetSpawn', '')])]
-  // Tiled stores an unset string as '', which parseMapMeta would hand to the scene; keep the property
-  // out entirely so the scene falls back to the target map's default spawn.
-  portals[0].properties = portals[0].properties.filter((p) => p.name === 'target')
+  const portals = [obj('to_world', { x: 26 * T, y: 36 * T, width: 3 * T, height: T }, [prop('target', 'test3')])]
+
+  // Roamers: ambient wildlife the scene spawns (not tiles). Each wanders inside `radius` px of its start.
+  const critters = [
+    ['chicken', 20, 18.5], ['chicken', 38, 18.5], ['chicken', 10, 35], ['chicken', 36, 35.5],
+    ['chicken', 46, 35], ['cow', 8, 18.5], ['cow', 46, 18.5], ['cow', 19, 35],
+  ].map(([kind, tx, ty]) => obj(kind, { x: tx * T, y: ty * T, width: T, height: T }, [prop('kind', kind), prop('radius', 40, 'int')]))
 
   const tileLayer = (id, name, data, visible = true) => ({ data, height: H, id, name, opacity: 1, type: 'tilelayer', visible, width: W, x: 0, y: 0 })
   const objLayer = (id, name, objects) => ({ draworder: 'topdown', id, name, objects, opacity: 1, type: 'objectgroup', visible: true, x: 0, y: 0 })
@@ -239,17 +368,20 @@ export function buildSchoolHub() {
     compressionlevel: -1, height: H, infinite: false,
     layers: [
       tileLayer(1, 'Grass', L.grass),
-      tileLayer(2, 'Path', L.path),
-      tileLayer(3, 'Decor', L.decor),
-      tileLayer(4, 'Hill/Wall', L.wall),
-      tileLayer(5, 'Object', L.object),
-      tileLayer(6, 'Roof', L.roof, false),
-      objLayer(7, 'Portals', portals),
-      objLayer(8, 'Spawns', spawns),
-      objLayer(9, 'Interactions', interactions),
-      objLayer(10, 'Labels', labels),
+      tileLayer(2, 'Lawn', L.lawn),
+      tileLayer(3, 'Path', L.path),
+      tileLayer(4, 'Decor', L.decor),
+      tileLayer(5, 'Hill/Wall', L.wall),
+      tileLayer(6, 'Object', L.object),
+      tileLayer(7, 'Canopy', L.canopy),
+      tileLayer(8, 'Roof', L.roof),
+      objLayer(9, 'Portals', portals),
+      objLayer(10, 'Spawns', spawns),
+      objLayer(11, 'Interactions', interactions),
+      objLayer(12, 'Labels', labels),
+      objLayer(13, 'Critters', critters),
     ],
-    nextlayerid: 11, nextobjectid: nextId, orientation: 'orthogonal', renderorder: 'right-down',
+    nextlayerid: 14, nextobjectid: nextId, orientation: 'orthogonal', renderorder: 'right-down',
     tiledversion: '1.12.2', tileheight: T, tilesets, tilewidth: T, type: 'map', version: '1.10', width: W,
   }
   return { map, unresolvedPathCells: unresolved, seats }
