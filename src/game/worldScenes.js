@@ -446,7 +446,10 @@ export class MapScene extends Phaser.Scene {
       this.physics.world.enable(zone)
       zone.body.setAllowGravity(false)
       zone.body.moves = false
-      this._zoneDefs.push({ zone, action: it.action, shopId: it.shopId ?? null })
+      this._zoneDefs.push({
+        zone, action: it.action, shopId: it.shopId ?? null,
+        seatId: it.seatId ?? null, boardId: it.boardId ?? null, route: it.route ?? null,
+      })
     })
 
     this.marker = this.add.graphics()
@@ -573,10 +576,15 @@ export class MapScene extends Phaser.Scene {
             this._activeZones.add(def.zone)
             if (def.action === 'shop') this.game.events.emit('shopEntered', { shopId: def.shopId })
             else if (def.action === 'chest') this.game.events.emit('chestOpened')
+            else if (def.action === 'focusSeat') this.game.events.emit('focusSeatEntered', { seatId: def.seatId })
+            else if (def.action === 'board') this.game.events.emit('boardEntered', { boardId: def.boardId })
+            else if (def.action === 'tool') this.game.events.emit('toolEntered', { route: def.route })
           } else if (!overlapping && was) {
             this._activeZones.delete(def.zone)
             if (def.action === 'shop') this.game.events.emit('shopExited', { shopId: def.shopId })
             else if (def.action === 'chest') this.game.events.emit('chestClosed')
+            else if (def.action === 'focusSeat') this.game.events.emit('focusSeatExited', { seatId: def.seatId })
+            else if (def.action === 'board') this.game.events.emit('boardExited', { boardId: def.boardId })
           }
         }
       }

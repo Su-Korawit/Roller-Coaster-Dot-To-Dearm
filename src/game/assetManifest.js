@@ -33,6 +33,7 @@ export const GAME_ASSETS = [
   // Tilemaps
   { key: 'test3',  type: 'tilemapJSON', storagePath: 'maps/test3.json',  localPath: '/maps/test3.json' },
   { key: 'indoor', type: 'tilemapJSON', storagePath: 'maps/indoor.json', localPath: '/maps/indoor.json' },
+  { key: 'school_hub', type: 'tilemapJSON', storagePath: 'maps/school_hub.json', localPath: '/maps/school_hub.json' },
 
   // Tilesets
   tileset('Grass'),

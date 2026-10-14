@@ -34,6 +34,10 @@ function interactionsFrom(map) {
     height: o.height,
     action: propValue(o, 'action'),
     shopId: propValue(o, 'shopId'),
+    // School Hub actions (ADR 0018): focusSeat -> seatId, board -> boardId, tool -> route
+    seatId: propValue(o, 'seatId'),
+    boardId: propValue(o, 'boardId'),
+    route: propValue(o, 'route'),
   }))
 }
 

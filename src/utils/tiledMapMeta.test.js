@@ -91,9 +91,27 @@ describe('parseMapMeta farm extensions', () => {
     }
     const m = parseMapMeta(map)
     expect(m.interactions).toEqual([
-      { x: 32, y: 48, width: 16, height: 16, action: 'shop', shopId: 'seed_shop' },
-      { x: 80, y: 16, width: 16, height: 16, action: 'chest', shopId: null },
+      { x: 32, y: 48, width: 16, height: 16, action: 'shop', shopId: 'seed_shop', seatId: null, boardId: null, route: null },
+      { x: 80, y: 16, width: 16, height: 16, action: 'chest', shopId: null, seatId: null, boardId: null, route: null },
     ])
+  })
+
+  it('parses the School Hub actions (focusSeat / board / tool)', () => {
+    const map = {
+      width: 2, height: 2, tilesets: [], layers: [
+        {
+          name: 'Interactions', type: 'objectgroup', objects: [
+            { x: 0, y: 0, width: 16, height: 16, properties: [{ name: 'action', value: 'focusSeat' }, { name: 'seatId', value: 'lib-1' }] },
+            { x: 16, y: 0, width: 16, height: 16, properties: [{ name: 'action', value: 'board' }, { name: 'boardId', value: 'news' }] },
+            { x: 32, y: 0, width: 16, height: 16, properties: [{ name: 'action', value: 'tool' }, { name: 'route', value: '/roadmap' }] },
+          ],
+        },
+      ],
+    }
+    const [seat, board, tool] = parseMapMeta(map).interactions
+    expect(seat).toMatchObject({ action: 'focusSeat', seatId: 'lib-1' })
+    expect(board).toMatchObject({ action: 'board', boardId: 'news' })
+    expect(tool).toMatchObject({ action: 'tool', route: '/roadmap' })
   })
 
   it('returns empty interactions when the layer is absent', () => {

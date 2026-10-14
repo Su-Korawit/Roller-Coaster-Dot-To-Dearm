@@ -71,11 +71,15 @@ Files: `functions/index.js`, `src/lib/db.js`, rules, tests.
 
 ### Task 5 — `school_hub` map skeleton  `[claude]`  (art polish: artist/Cursor)
 Files: `scripts/buildSchoolHub.mjs` (new), `public/maps/school_hub.json`, `src/utils/mapConfig.js`, `src/utils/tiledMapMeta.js`(+test).
-- [ ] Script generates Tiled JSON from a layout spec: courtyard, 4 buildings, paths; layers `Ground`, `Objects`, `Collision` + object layers `Spawns`, `Portals`, `Interactions`. Uses existing Sprout Lands tilesets only.
-- [ ] Extend `Interactions` actions: `focusSeat` (props: `seatId`), `board` (`boardId: 'news'|'contest'`), `tool` (`route`). Update `parseMapMeta` + tests; keep `shop`/`chest` working.
-- [ ] Add `DEFAULT_MAP_CONFIGS.school_hub` (tilesets, collision, `multiplayer: true`).
-- [ ] Upload via `scripts/uploadAssets.mjs`; artist then decorates in Tiled and re-uploads through Admin (`rc/`).
-- [ ] Validate with an existing layer-check test pattern (`assetManifest.test.js` style).
+- [x] Script generates Tiled JSON from a layout spec: courtyard, 4 buildings, paths; layers `Ground`, `Objects`, `Collision` + object layers `Spawns`, `Portals`, `Interactions`. Uses existing Sprout Lands tilesets only.
+- [x] Extend `Interactions` actions: `focusSeat` (props: `seatId`), `board` (`boardId: 'news'|'contest'`), `tool` (`route`). Update `parseMapMeta` + tests; keep `shop`/`chest` working.
+- [x] Add `DEFAULT_MAP_CONFIGS.school_hub` (tilesets, collision, `multiplayer: true`).
+- [ ] Upload to Storage (`maps/school_hub.json`) — needs credentials, not done. Until then the game loads `/maps/school_hub.json` from `public/` (local fallback, same as test3). Artist then decorates in Tiled and re-uploads through Admin (`rc/`); re-running the generator overwrites the file, so use it only for layout changes.
+- [x] Validate with an existing layer-check test pattern (`assetManifest.test.js` style).
+- Built: 56x41 map; 5 buildings (library is walkable with 8 Focus seats; canteen/contest/guidance/hall are door buildings), plaza notice board, path network autotiled from rules derived from test3, border trees, flowers on a non-colliding `Decor` layer, Thai labels, exit portal to `test3`.
+- Verified by `scripts/buildSchoolHub.test.js`: every layer is W*H with valid gids, tilesets match `DEFAULT_MAP_CONFIGS`, no unresolved path autotile cells, and BFS from spawn reaches every interaction zone, the portal, and a free tile beside every seat (collision computed exactly as the game configures it). Visual check was a Python render of the JSON (tile layers only); **not yet seen running inside Phaser** (needs a signed-in session).
+- Gameplay events added in `worldScenes.js`: `focusSeatEntered/Exited {seatId}`, `boardEntered/Exited {boardId}`, `toolEntered {route}` — Task 6 consumes them.
+- Deviation: labels use a dark fill (the scene strokes labels white, so white-on-white would be invisible).
 
 ### Task 6 — In-game UI  `[cursor]`
 Files: `src/components/school/` (new `FocusHud`, `LeaderboardPanel`, `BoardPanel`, `AfkToggle`), `GameCanvas.jsx` wiring, `src/index.css` tokens.
