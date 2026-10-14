@@ -27,7 +27,6 @@ const PrivacyPage = lazy(() => import('./pages/legal/PrivacyPage'))
 const TermsPage = lazy(() => import('./pages/legal/TermsPage'))
 // Dev-only style guide; the import is tree-shaken from production builds.
 const DevUiKit = import.meta.env.DEV ? lazy(() => import('./pages/DevUiKit')) : null
-const MiniPlayer = lazy(() => import('./components/music/MiniPlayer'))
 
 // Feature-site pages — separate lazy chunks so hub/roadmap/tcas/news/school
 // never pull the Phaser bundle.
@@ -66,11 +65,6 @@ function MobileLayout() {
       <main className="flex-1 relative overflow-hidden">
         <Outlet />
       </main>
-      {user && (
-        <Suspense fallback={null}>
-          <MiniPlayer />
-        </Suspense>
-      )}
       {user && <OnboardingModal />}
       <FxLayer />
     </div>

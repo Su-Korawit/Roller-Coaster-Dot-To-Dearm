@@ -1,8 +1,7 @@
 import React from 'react'
 import { ItemSprite } from './ItemSprite'
 
-// Stardew-style quick bar: one horizontal wooden strip docked bottom-centre, above the music
-// player and nav. The selected slot gets a bright frame. Gold lives in the top HUD, not here.
+// Stardew-style quick bar: one horizontal wooden strip docked bottom-centre, above the nav. The selected slot gets a bright frame. Gold lives in the top HUD, not here.
 export function Hotbar({ slots = [], selectedIndex = 0, onSelectSlot = () => {} }) {
   return (
     <div
@@ -10,7 +9,7 @@ export function Hotbar({ slots = [], selectedIndex = 0, onSelectSlot = () => {} 
       aria-label="ช่องเก็บของ"
       data-testid="hotbar"
       className="absolute left-1/2 -translate-x-1/2 z-30 pointer-events-none"
-      style={{ bottom: 'calc(env(safe-area-inset-bottom) + 156px)' }}
+      style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}
     >
       <div className="rpg-plank pointer-events-auto flex gap-1 p-1 rounded-md">
         {slots.map((slot, i) => {

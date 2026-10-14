@@ -202,7 +202,7 @@ function HomePage() {
       )}
 
       {/* ── GAME BACKGROUND ── */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0">
         <Suspense
           fallback={
             <div className="w-full h-full px-sky-bg" />

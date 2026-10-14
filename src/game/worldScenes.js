@@ -10,6 +10,7 @@ import { parseMapMeta } from '../utils/tiledMapMeta'
 import { useFarmStore } from '../stores/useFarmStore'
 import { currentStage } from '../systems/farmLogic'
 import { useFarmDataStore } from '../stores/useFarmDataStore'
+import { recolorImageData } from '../utils/recolor'
 
 // 0 = Basic_Charakter (1 ตัว)
 // 1 = MBTI rotation (16 ตัว สลับทุก 1 วิ)
@@ -29,6 +30,28 @@ const PLAYER_KEY = 'Basic_Charakter'
 // ignored by the "non-colliding tile covers a collider" rule (see applyCollision).
 const OVERHEAD_DEPTH = { Canopy: 20, Roof: 21 }
 const ROOF_FADED_ALPHA = 0.12
+
+// Roof colour variants of the Wooden House sheet: tileset "Wooden House Roof <name>" is built at
+// load time by hue-rotating the base texture (no extra image files to host).
+const ROOF_VARIANTS = {
+  blue:   { hue: 185, sat: 0.85, light: 1.05 },
+  red:    { hue: -24, sat: 1.15, light: 0.95 },
+  purple: { hue: 262, sat: 0.8, light: 1.05 },
+  green:  { hue: 95,  sat: 0.9, light: 1.0 },
+}
+function makeRoofVariantTexture(scene, name) {
+  const m = /^Wooden House Roof ([a-z]+)$/.exec(name)
+  const opts = m && ROOF_VARIANTS[m[1]]
+  if (!opts || scene.textures.exists(name) || !scene.textures.exists('Wooden House')) return
+  const src = scene.textures.get('Wooden House').getSourceImage()
+  const tex = scene.textures.createCanvas(name, src.width, src.height)
+  const ctx = tex.getContext()
+  ctx.drawImage(src, 0, 0)
+  const img = ctx.getImageData(0, 0, src.width, src.height)
+  recolorImageData(img.data, opts)
+  ctx.putImageData(img, 0, 0)
+  tex.refresh()
+}
 
 // Ambient wildlife (maps with config.critters): spritesheets from public/assets/sprites/Characters.
 const CRITTER_SHEETS = {
@@ -228,7 +251,10 @@ export class MapScene extends Phaser.Scene {
     this._multiplayer = !!cfg.multiplayer
 
     const tilesets = map.tilesets
-      .map(ts => map.addTilesetImage(ts.name, ts.name))
+      .map((ts) => {
+        makeRoofVariantTexture(this, ts.name)
+        return map.addTilesetImage(ts.name, ts.name)
+      })
       .filter(Boolean)
 
     const layerInfos = map.layers.map((ld, i) => {

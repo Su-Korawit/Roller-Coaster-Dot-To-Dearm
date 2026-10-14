@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { buildSchoolHub, W, H, LAYOUT, LAWNS } from './buildSchoolHub.mjs'
+import { buildSchoolHub, W, H, LAYOUT, LAWNS, ROOF_VARIANTS } from './buildSchoolHub.mjs'
 import { parseMapMeta } from '../src/utils/tiledMapMeta'
 import { DEFAULT_MAP_CONFIGS } from '../src/utils/mapConfig'
 
@@ -61,7 +61,10 @@ describe('school_hub map', () => {
   })
 
   it('declares exactly the tilesets that DEFAULT_MAP_CONFIGS maps to Storage images', () => {
-    expect(meta.tilesetNames.sort()).toEqual(Object.keys(DEFAULT_MAP_CONFIGS.school_hub.tilesets).sort())
+    // roof colour variants are derived from the Wooden House image at load time, not Storage images
+    const stored = meta.tilesetNames.filter((n) => !n.startsWith('Wooden House Roof '))
+    expect(stored.sort()).toEqual(Object.keys(DEFAULT_MAP_CONFIGS.school_hub.tilesets).sort())
+    expect(meta.tilesetNames.filter((n) => n.startsWith('Wooden House Roof ')).length).toBe(Object.keys(ROOF_VARIANTS).length)
   })
 
   it('autotiles every path cell (no 1-wide corridors)', () => {
@@ -158,11 +161,24 @@ describe('school_hub visual layers (production polish)', () => {
     }
   })
 
+  it('roofs come in several colours: at least 4 distinct roof tilesets across the 5 buildings', () => {
+    const colours = new Set(buildings.map((b) => b.roof ?? 'brown'))
+    expect(colours.size).toBeGreaterThanOrEqual(4)
+    const firstgids = new Set(Object.values(ROOF_VARIANTS))
+    for (const b of buildings.filter((x) => x.roof)) {
+      const g = at('Roof', b.x + 1, b.y - 1)
+      const base = ROOF_VARIANTS[b.roof]
+      expect(g, b.roof).toBeGreaterThanOrEqual(base)
+      expect(g, b.roof).toBeLessThan(base + 35)
+      expect(firstgids.has(base)).toBe(true)
+    }
+  })
+
   it('each roof has exactly one ridge band row (the pack draws one; repeating it stripes the roof)', () => {
     for (const b of buildings) {
       const mid = b.x + 1
       const ridges = []
-      for (let y = b.y - 1; y <= b.y + b.h - 1; y++) if (at('Roof', mid, y) === 101) ridges.push(y)
+      for (let y = b.y - 1; y <= b.y + b.h - 1; y++) if (at('Roof', mid, y) === 101 + (b.roof ? ROOF_VARIANTS[b.roof] - 82 : 0)) ridges.push(y)
       expect(ridges, b.name ?? 'building').toHaveLength(1)
     }
   })

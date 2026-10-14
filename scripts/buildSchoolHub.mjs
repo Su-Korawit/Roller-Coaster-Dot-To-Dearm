@@ -78,12 +78,17 @@ const pick = (arr, x, y, salt) => arr[Math.floor(hash(x, y, salt) * arr.length) 
 
 // ── layout (tile coordinates) ───────────────────────────────────────────────
 export const LAYOUT = {
-  library:  { x: 8,  y: 5,  w: 16, h: 7, doorway: [15, 16] },   // open doorway, walkable inside
-  canteen:  { x: 28, y: 5,  w: 11, h: 7, door: 33 },
-  contest:  { x: 43, y: 5,  w: 9,  h: 7, door: 47 },
-  guidance: { x: 8,  y: 21, w: 9,  h: 7, door: 12 },
-  hall:     { x: 39, y: 21, w: 9,  h: 7, door: 43 },
+  library:  { x: 8,  y: 5,  w: 16, h: 7, doorway: [15, 16], roof: 'blue', ridgeShift: 0 },   // open doorway, walkable inside
+  canteen:  { x: 28, y: 5,  w: 11, h: 7, door: 33, roof: 'red', ridgeShift: -1 },
+  contest:  { x: 43, y: 5,  w: 9,  h: 7, door: 47, roof: 'purple', ridgeShift: 1 },
+  guidance: { x: 8,  y: 21, w: 9,  h: 7, door: 12, roof: 'green', ridgeShift: 0 },
+  hall:     { x: 39, y: 21, w: 9,  h: 7, door: 43, ridgeShift: -2 },
 }
+// Roof colour variants: the same Wooden House sheet, hue-rotated at load time (worldScenes
+// ROOF_VARIANTS has the matching hue table). Each is declared as its own 35-tile tileset so a
+// roof tile's gid = base gid - 82 + firstgid. A building without `roof` keeps the original brown.
+export const ROOF_VARIANTS = { blue: 700, red: 740, purple: 780, green: 820 }
+const WOODEN_HOUSE_FIRSTGID = 82
 const SPAWN = { x: 27, y: 34 }
 const SIGN = { x: 27, y: 20 }   // plaza notice board (leaderboard)
 
@@ -129,7 +134,9 @@ function roof(L, b) {
   const { x, y, w, h } = b
   const top = y - 1
   const rows = h + 1                    // y-1 .. y+h-1
-  const ridge = Math.floor((rows - 1) / 2)
+  const shift = b.roof ? ROOF_VARIANTS[b.roof] - WOODEN_HOUSE_FIRSTGID : 0
+  // Each building sits its ridge band a little differently so the roofs do not read as copies.
+  const ridge = Math.min(rows - 3, Math.max(2, Math.floor((rows - 1) / 2) + (b.ridgeShift ?? 0)))
   for (let r = 0; r < rows; r++) {
     let set
     if (r === 0) set = [ROOF.TL, ROOF.T, ROOF.TR]
@@ -141,7 +148,7 @@ function roof(L, b) {
       const cx = x + c
       const front = r === rows - 1
       if (front && ((b.door != null && cx === b.door) || (b.doorway && cx >= b.doorway[0] && cx <= b.doorway[1]))) continue
-      L.roof[idx(cx, top + r)] = c === 0 ? set[0] : c === w - 1 ? set[2] : set[1]
+      L.roof[idx(cx, top + r)] = (c === 0 ? set[0] : c === w - 1 ? set[2] : set[1]) + shift
     }
   }
 }
@@ -369,6 +376,9 @@ export function buildSchoolHub() {
   const tilesets = [
     ...test3.tilesets.filter((t) => KEEP_TILESETS.includes(t.name)),
     { ...indoor.tilesets.find((t) => t.name === 'Basic_Furniture'), firstgid: FURN + 1 },
+    ...Object.entries(ROOF_VARIANTS).map(([name, firstgid]) => ({
+      ...test3.tilesets.find((t) => t.name === 'Wooden House'), name: `Wooden House Roof ${name}`, firstgid,
+    })),
   ]
 
   const map = {
