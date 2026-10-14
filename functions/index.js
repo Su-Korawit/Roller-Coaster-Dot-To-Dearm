@@ -290,3 +290,34 @@ exports.onBagObjectDeleted = onObjectDeleted(async (event) => {
   orphans.docs.forEach((d) => batch.delete(d.ref))
   if (!orphans.empty) await batch.commit()
 })
+
+// ── School membership mirror (ADR 0018) ──────────────────────────────────────
+// Keeps two Functions-owned derived values in step with users/{uid}.schoolId:
+//   Firestore schools/{schoolId}.memberCount — drives the 30-member room threshold
+//   RTDB      userSchool/{uid}               — lets database.rules.json gate school rooms
+// Fires on every users/{uid} write but exits immediately unless schoolId changed.
+// Not idempotent under retries (increment); retries are off by default. A periodic
+// reconcile from a count query is a known follow-up.
+const { onDocumentWritten } = require('firebase-functions/v2/firestore')
+const { schoolMemberDeltas, normalizeSchoolId } = require('./schoolMembers')
+
+exports.syncUserSchool = onDocumentWritten('users/{uid}', async (event) => {
+  const before = event.data?.before?.exists ? event.data.before.data() : undefined
+  const after = event.data?.after?.exists ? event.data.after.data() : undefined
+  const deltas = schoolMemberDeltas(before, after)
+  if (!deltas.length) return
+
+  const uid = event.params.uid
+  const newSchoolId = normalizeSchoolId(after)
+  const rtdbRef = admin.database().ref(`userSchool/${uid}`)
+  if (newSchoolId) await rtdbRef.set(newSchoolId)
+  else await rtdbRef.remove()
+
+  const batch = db.batch()
+  for (const { schoolId, delta } of deltas) {
+    const patch = { memberCount: admin.firestore.FieldValue.increment(delta) }
+    if (delta > 0 && typeof after?.schoolName === 'string') patch.name = after.schoolName
+    batch.set(db.collection('schools').doc(schoolId), patch, { merge: true })
+  }
+  await batch.commit()
+})

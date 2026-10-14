@@ -496,3 +496,22 @@ describe('File Bag rules (ADR-0016)', () => {
     await assertFails(updateDoc(doc(alice, 'users/alice'), { fileBagUsageBytes: 999 }))
   })
 })
+
+describe('schools rules (ADR 0018)', () => {
+  it('lets a signed-in user read a school but not an anonymous one', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'schools/S1'), { name: 'Test School', memberCount: 31 })
+    })
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(getDoc(doc(alice, 'schools/S1')))
+    const anon = testEnv.unauthenticatedContext().firestore()
+    await assertFails(getDoc(doc(anon, 'schools/S1')))
+  })
+
+  it('BLOCKS every client write, including memberCount inflation and the super-admin', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(setDoc(doc(alice, 'schools/S1'), { name: 'x', memberCount: 9999 }))
+    const admin = testEnv.authenticatedContext(SUPER_UID).firestore()
+    await assertFails(setDoc(doc(admin, 'schools/S1'), { name: 'x', memberCount: 9999 }))
+  })
+})

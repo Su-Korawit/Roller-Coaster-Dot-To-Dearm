@@ -22,10 +22,10 @@ Facts verified in code:
 ## Decision
 
 1. **One map, many rooms.** A single authored map `school_hub`. A School Server is a
-   presence room keyed `ownerUid = "school:{schoolId}"`, `mapKey = "school_hub"`. No per-school map authoring.
+   presence room keyed `ownerUid = "school:{schoolId}:{shard}"`, `mapKey = "school_hub"`. No per-school map authoring.
 2. **Rooms open on a threshold.** Until a school has >= `SCHOOL_ROOM_MIN_MEMBERS` (30) registered members,
-   its users share a regional room (`"region:{n}"`). Empty rooms feel dead; density beats breadth.
-   Rooms cap at 50 concurrent players and shard (`#2`, `#3`).
+   its users share the `commons` room (`commons:{shard}`; regional rooms are deferred). Empty rooms feel dead; density beats breadth.
+   Rooms cap at 50 concurrent players and shard (`:2`, `:3`).
 3. **Buildings are doors to existing tools, not new systems.** Library = Focus seats;
    Canteen = news/announcement board (`tcasEvents` + teacher posts); Guidance room = Roadmap portal;
    Contest board = camphub. Exam/sheet sharing (Library shelf) is **deferred** (copyright + moderation).
@@ -52,7 +52,8 @@ Facts verified in code:
 
 ## Consequences
 
-- New RTDB rules for `worlds/school:*` and `worlds/region:*` rooms.
+- New RTDB rules: `worlds/school:{id}:{shard}` rooms are readable/writable only by members (via the Functions-owned `userSchool/{uid}` mirror); `commons:*` is open to signed-in users; presence payloads are shape/size validated. The 50-player cap is soft (client-enforced; rules cannot count children).
+- `syncUserSchool` Function keeps `schools/{id}.memberCount` and `userSchool/{uid}` in step; `scripts/backfillSchools.mjs` seeds existing users once.
 - New Firestore: `focusSessions`, `schoolWeeks`, `users/{uid}.focusXp` (Functions-owned like Coins), rules + indexes.
 - New Functions: `startFocus`, `checkInFocus`, `endFocus`, scheduled `rollupSchoolWeek`, `grantTeacherBadge`.
 - `tiledMapMeta` gains new interaction actions (`focusSeat`, `board`, `tool`).

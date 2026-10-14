@@ -38,11 +38,14 @@ Files: `src/lib/presence.js`, `src/game/worldScenes.js`, `src/components/GameCan
 
 ### Task 2 — Rooms, threshold, sharding  `[claude]`
 Files: `src/lib/presence.js`, new `src/lib/schoolRoom.js`(+test), `database.rules.json`, `test/rules/`.
-- [ ] `resolveRoom({ schoolId, schoolMemberCount, region })` -> `{ ownerUid, mapKey:'school_hub', shard }`; constant `SCHOOL_ROOM_MIN_MEMBERS = 30`, `ROOM_CAP = 50`.
-- [ ] Shard selection by reading player count under the room before joining; join next shard if full.
-- [ ] RTDB rules: authed users write only own `players/{uid}`; validate shape and size; reads limited to authed.
-- [ ] Member count source: Functions-maintained `schools/{schoolId}.memberCount` (via `db.js` refs).
-- [ ] Rules tests for the new paths (`npm run test:rules:emu`).
+- [x] `resolveRoomBase` / `chooseRoom` in `src/lib/schoolRoom.js` -> `{ ownerUid: 'school:{id}:{shard}' | 'commons:{shard}', mapKey:'school_hub' }`; constant `SCHOOL_ROOM_MIN_MEMBERS = 30`, `ROOM_CAP = 50`.
+- [x] Shard selection by reading player count under the room before joining; join next shard if full.
+- [x] RTDB rules: authed users write only own `players/{uid}`; validate shape and size; reads limited to authed.
+- [x] Member count source: Functions-maintained `schools/{schoolId}.memberCount` (via `db.js` refs).
+- [x] Rules tests for the new paths (`npm run test:rules:emu`).
+- [x] `scripts/backfillSchools.mjs` seeds counts + `userSchool` for existing users (run after deploying `syncUserSchool`).
+- [ ] Wire `chooseRoom` into GameCanvas join (blocked on Task 5 `school_hub` map; no school_hub exists yet).
+- Deviation: regional rooms -> single `commons` room; cap is soft. Deploys queued in `.iloveskill/pending-deploys.json`.
 
 ### Task 3 — Focus sessions, server-authoritative  `[claude]`
 Files: `functions/index.js`, `src/lib/db.js`, `firestore.rules`, `firestore.indexes.json`, `src/services/focus.js`(+test).

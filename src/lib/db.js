@@ -20,6 +20,7 @@ export const refs = {
   map:         (uid)            => doc(db, 'maps', uid),
   spotifyAuth: (uid)            => doc(db, 'users', uid, 'private', 'spotify'),
   mapConfig:   (key)            => doc(db, 'mapConfigs', key),
+  school:      (schoolId)       => doc(db, 'schools', schoolId),
   musicConfig: (docId)          => doc(db, 'musicConfig', docId),
   assetFolder: (id)             => doc(db, 'assetFolders', id),
   farmItem:    (id)             => doc(db, 'farmItems', id),

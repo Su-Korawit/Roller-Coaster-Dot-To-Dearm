@@ -1,13 +1,28 @@
 {
   "rules": {
+    "userSchool": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid"
+      }
+    },
     "worlds": {
       "$ownerUid": {
         "maps": {
           "$mapKey": {
             "players": {
-              ".read": "auth != null",
+              ".read": "auth != null && (!$ownerUid.beginsWith('school:') || $ownerUid.beginsWith('school:' + root.child('userSchool').child(auth.uid).val() + ':'))",
               "$uid": {
-                ".write": "auth != null && auth.uid === $uid"
+                ".write": "auth != null && auth.uid === $uid && (!$ownerUid.beginsWith('school:') || $ownerUid.beginsWith('school:' + root.child('userSchool').child(auth.uid).val() + ':'))",
+                ".validate": "newData.hasChildren(['x', 'y'])",
+                "x": { ".validate": "newData.isNumber()" },
+                "y": { ".validate": "newData.isNumber()" },
+                "dir": { ".validate": "newData.isString() && newData.val().length <= 16" },
+                "moving": { ".validate": "newData.isBoolean()" },
+                "mbti": { ".validate": "newData.isString() && newData.val().length <= 8" },
+                "name": { ".validate": "newData.isString() && newData.val().length <= 60" },
+                "photoURL": { ".validate": "newData.isString() && newData.val().length <= 500" },
+                "idle": { ".validate": "newData.isBoolean()" },
+                "$other": { ".validate": false }
               }
             }
           }

@@ -55,3 +55,71 @@ describe('per-map presence rules (/worlds/{owner}/maps/{mapKey}/players/{self})'
     await assertFails(get(ref(anon, `worlds/${OWNER}/maps/${MAP}/players`)))
   })
 })
+
+describe('school-room presence rules (ADR 0018)', () => {
+  const room = (ownerUid, uid = SELF) => `worlds/${ownerUid}/maps/school_hub/players/${uid}`
+  const seedSchool = (uid, schoolId) =>
+    testEnv.withSecurityRulesDisabled((ctx) => set(ref(ctx.database(), `userSchool/${uid}`), schoolId))
+
+  it('lets a member of school A write and read in school A’s room', async () => {
+    await seedSchool(SELF, 'A')
+    const self = testEnv.authenticatedContext(SELF).database()
+    await assertSucceeds(set(ref(self, room('school:A:1')), { x: 1, y: 2 }))
+    await assertSucceeds(get(ref(self, 'worlds/school:A:1/maps/school_hub/players')))
+  })
+
+  it('BLOCKS a member of school A from school B’s room (read and write)', async () => {
+    await seedSchool(SELF, 'A')
+    const self = testEnv.authenticatedContext(SELF).database()
+    await assertFails(set(ref(self, room('school:B:1')), { x: 1, y: 2 }))
+    await assertFails(get(ref(self, 'worlds/school:B:1/maps/school_hub/players')))
+  })
+
+  it('BLOCKS a user with no school from any school room', async () => {
+    const self = testEnv.authenticatedContext('nobody').database()
+    await assertFails(set(ref(self, room('school:A:1', 'nobody')), { x: 1, y: 2 }))
+    await assertFails(get(ref(self, 'worlds/school:A:1/maps/school_hub/players')))
+  })
+
+  it('does not let school "A" match school "AB" (prefix includes the ":" separator)', async () => {
+    await seedSchool(SELF, 'A')
+    const self = testEnv.authenticatedContext(SELF).database()
+    await assertFails(set(ref(self, room('school:AB:1')), { x: 1, y: 2 }))
+  })
+
+  it('keeps the commons room open to any signed-in user', async () => {
+    const self = testEnv.authenticatedContext('nobody').database()
+    await assertSucceeds(set(ref(self, room('commons:1', 'nobody')), { x: 1, y: 2 }))
+  })
+
+  it('BLOCKS clients from writing userSchool (Functions-owned)', async () => {
+    const self = testEnv.authenticatedContext(SELF).database()
+    await assertFails(set(ref(self, `userSchool/${SELF}`), 'A'))
+  })
+
+  it('lets a user read only their own userSchool', async () => {
+    await seedSchool(SELF, 'A')
+    const self = testEnv.authenticatedContext(SELF).database()
+    await assertSucceeds(get(ref(self, `userSchool/${SELF}`)))
+    await assertFails(get(ref(self, 'userSchool/someone-else')))
+  })
+})
+
+describe('presence payload validation', () => {
+  const node = `worlds/${OWNER}/maps/${MAP}/players/${SELF}`
+
+  it('accepts the full shape the client actually sends', async () => {
+    const self = testEnv.authenticatedContext(SELF).database()
+    await assertSucceeds(set(ref(self, node), {
+      x: 1.5, y: 2, dir: 'down', moving: false, mbti: 'INTJ', name: 'Alice', photoURL: null, idle: true,
+    }))
+  })
+
+  it('BLOCKS unknown fields, oversize names and non-numeric positions', async () => {
+    const self = testEnv.authenticatedContext(SELF).database()
+    await assertFails(set(ref(self, node), { x: 1, y: 2, evil: 'payload' }))
+    await assertFails(set(ref(self, node), { x: 1, y: 2, name: 'x'.repeat(61) }))
+    await assertFails(set(ref(self, node), { x: 'a', y: 2 }))
+    await assertFails(set(ref(self, node), { name: 'no position' }))
+  })
+})

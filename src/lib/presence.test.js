@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 const setFn        = vi.fn()
 const removeFn     = vi.fn()
 const onValueFn    = vi.fn()
+const getFn        = vi.fn()
 const onDisconnectObj = { remove: vi.fn(), cancel: vi.fn() }
 const onDisconnectFn  = vi.fn(() => onDisconnectObj)
 
@@ -13,6 +14,7 @@ vi.mock('firebase/database', () => ({
   set:         (...a) => setFn(...a),
   remove:      (...a) => removeFn(...a),
   onValue:     (...a) => onValueFn(...a),
+  get:         (...a) => getFn(...a),
   onDisconnect: (...a) => onDisconnectFn(...a),
 }))
 
@@ -21,7 +23,7 @@ vi.stubGlobal('localStorage', {
   getItem: () => null, setItem: () => {}, removeItem: () => {},
 })
 
-const { joinWorld, leaveWorld, subscribeWorldPlayers, updateSelf, detachWorldPlayers, _resetThrottleForTest, IDLE_AFTER_MS } =
+const { joinWorld, leaveWorld, subscribeWorldPlayers, updateSelf, detachWorldPlayers, _resetThrottleForTest, IDLE_AFTER_MS, countPlayers } =
   await import('./presence')
 
 describe('presence — joinWorld', () => {
@@ -223,5 +225,20 @@ describe('presence — updateSelf (idle / change-only)', () => {
       await vi.advanceTimersByTimeAsync(16)
     }
     expect(setFn.mock.calls.length).toBeLessThanOrEqual(2)
+  })
+})
+
+describe('presence — countPlayers', () => {
+  beforeEach(() => vi.resetAllMocks())
+
+  it('counts children and reports whether self is present', async () => {
+    getFn.mockResolvedValue({ val: () => ({ a: {}, b: {}, me: {} }) })
+    expect(await countPlayers('o', 'm', 'me')).toEqual({ total: 3, hasSelf: true })
+    expect(getFn).toHaveBeenCalledWith({ _path: 'worlds/o/maps/m/players' })
+  })
+
+  it('treats an empty room as zero', async () => {
+    getFn.mockResolvedValue({ val: () => null })
+    expect(await countPlayers('o', 'm', 'me')).toEqual({ total: 0, hasSelf: false })
   })
 })

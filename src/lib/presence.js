@@ -5,7 +5,7 @@
 // Mirrors the detach-before-reattach lifecycle of firestoreListener.js.
 // Uses RTDB (not Firestore) for low-latency throttled writes and onDisconnect.
 // ============================================================================
-import { ref, set, remove, onValue, onDisconnect } from 'firebase/database'
+import { ref, set, remove, get, onValue, onDisconnect } from 'firebase/database'
 import { rtdb } from '../firebase'
 
 const UPDATE_INTERVAL_MS = 120
@@ -24,6 +24,13 @@ function playerRef(ownerUid, mapKey, selfUid) {
 
 function playersRef(ownerUid, mapKey) {
   return ref(rtdb, `worlds/${ownerUid}/maps/${mapKey}/players`)
+}
+
+// One-shot head-count of a room, used to pick a shard before joining.
+export async function countPlayers(ownerUid, mapKey, selfUid) {
+  const snap = await get(playersRef(ownerUid, mapKey))
+  const players = snap.val() ?? {}
+  return { total: Object.keys(players).length, hasSelf: selfUid ? selfUid in players : false }
 }
 
 // Join a map room: write own player node and register onDisconnect cleanup.

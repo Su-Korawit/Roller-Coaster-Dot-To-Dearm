@@ -202,6 +202,13 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isSuperAdmin();
     }
+    // School directory: { name, memberCount } maintained by the syncUserSchool
+    // Cloud Function (ADR 0018). Clients read memberCount to pick a presence room.
+    match /schools/{schoolId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
     match /tcasEvents/{eventId} {
       allow read: if true;
       allow write: if isSuperAdmin();
