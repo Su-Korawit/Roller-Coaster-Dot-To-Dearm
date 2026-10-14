@@ -21,7 +21,7 @@ vi.stubGlobal('localStorage', {
   getItem: () => null, setItem: () => {}, removeItem: () => {},
 })
 
-const { joinWorld, leaveWorld, subscribeWorldPlayers, updateSelf, detachWorldPlayers, _resetThrottleForTest } =
+const { joinWorld, leaveWorld, subscribeWorldPlayers, updateSelf, detachWorldPlayers, _resetThrottleForTest, IDLE_AFTER_MS } =
   await import('./presence')
 
 describe('presence — joinWorld', () => {
@@ -160,5 +160,68 @@ describe('presence — updateSelf (throttle)', () => {
     updateSelf('owner-1', 'test3', 'self-1', { x: 20 })     // same tuple as first — throttled
 
     expect(setFn).toHaveBeenCalledTimes(4)
+  })
+})
+
+describe('presence — updateSelf (idle / change-only)', () => {
+  const still = { x: 10.2, y: 20.4, dir: 'down', moving: false, mbti: 'INTJ', name: 'A' }
+
+  beforeEach(() => {
+    vi.resetAllMocks()
+    vi.useFakeTimers()
+    _resetThrottleForTest()
+    setFn.mockResolvedValue(undefined)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('does not rewrite an unchanged payload (sub-pixel float noise ignored)', async () => {
+    updateSelf('o', 'm', 's', still)
+    await vi.advanceTimersByTimeAsync(500)
+    updateSelf('o', 'm', 's', { ...still, x: 10.3 })
+    await vi.advanceTimersByTimeAsync(500)
+    updateSelf('o', 'm', 's', still)
+
+    expect(setFn).toHaveBeenCalledTimes(1)
+  })
+
+  it('sends one idle:true write after IDLE_AFTER_MS, then stays silent', async () => {
+    updateSelf('o', 'm', 's', still)
+    await vi.advanceTimersByTimeAsync(IDLE_AFTER_MS + 10)
+    updateSelf('o', 'm', 's', still)
+    updateSelf('o', 'm', 's', still)
+
+    expect(setFn).toHaveBeenCalledTimes(2)
+    expect(setFn.mock.calls[1][1]).toEqual({ ...still, idle: true })
+  })
+
+  it('clears idle by writing the new state without the idle flag', async () => {
+    updateSelf('o', 'm', 's', still)
+    await vi.advanceTimersByTimeAsync(IDLE_AFTER_MS + 10)
+    updateSelf('o', 'm', 's', still)                       // idle write
+    await vi.advanceTimersByTimeAsync(150)
+    updateSelf('o', 'm', 's', { ...still, x: 50, moving: true })
+
+    expect(setFn).toHaveBeenCalledTimes(3)
+    expect(setFn.mock.calls[2][1]).not.toHaveProperty('idle')
+  })
+
+  it('a throttled change is retried on a later frame, not dropped', async () => {
+    updateSelf('o', 'm', 's', still)
+    updateSelf('o', 'm', 's', { ...still, x: 99 })        // within 120ms: dropped this frame
+    expect(setFn).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(150)
+    updateSelf('o', 'm', 's', { ...still, x: 99 })        // next frame: goes through
+    expect(setFn).toHaveBeenCalledTimes(2)
+  })
+
+  it('an AFK user costs <= 2 writes over 10 minutes at 60fps (was ~5000)', async () => {
+    for (let ms = 0; ms < 10 * 60_000; ms += 16) {
+      updateSelf('o', 'm', 's', still)
+      await vi.advanceTimersByTimeAsync(16)
+    }
+    expect(setFn.mock.calls.length).toBeLessThanOrEqual(2)
   })
 })

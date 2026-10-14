@@ -30,11 +30,11 @@ Tracked as its own Idea; the MVP must not ship publicly without it.
 
 ### Task 1 — Cost spike: AFK mode  `[claude]`
 Files: `src/lib/presence.js`, `src/game/worldScenes.js`, `src/components/GameCanvas.jsx`, tests.
-- [ ] Add idle state: after 60s no input, presence writes drop from 120ms to a 15s heartbeat; `idle: true` on node.
-- [ ] Phaser: reduce target FPS (e.g. 10) on `visibilitychange` hidden or idle; restore on input.
-- [ ] Remote players with `idle: true` render as static sitting sprite, no tween.
-- [ ] Write `docs/plans/afk-cost-notes.md`: measured RTDB writes/min and download per idle user; extrapolate to 50/room and 1k concurrent. **Stop and re-scope if > budget.**
-- [ ] Tests extend `presence.test.js` (idle throttle).
+- [x] Add idle state: change-only writes + one `idle: true` write after 60s unchanged (no heartbeat needed).
+- [x] Phaser: reduce target FPS (e.g. 10) on `visibilitychange` hidden or idle; restore on input.
+- [x] Remote players with `idle: true` render as static sitting sprite, no tween.
+- [x] Write `docs/plans/afk-cost-notes.md` (write counts measured in test; bandwidth estimated). **Open: real-RTDB measurement before pilot.**
+- [x] Tests extend `presence.test.js` (idle throttle).
 
 ### Task 2 — Rooms, threshold, sharding  `[claude]`
 Files: `src/lib/presence.js`, new `src/lib/schoolRoom.js`(+test), `database.rules.json`, `test/rules/`.

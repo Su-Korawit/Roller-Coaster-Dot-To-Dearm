@@ -9,8 +9,13 @@ import { ref, set, remove, onValue, onDisconnect } from 'firebase/database'
 import { rtdb } from '../firebase'
 
 const UPDATE_INTERVAL_MS = 120
+// After this long with an unchanged payload the avatar is flagged `idle: true`
+// (one write), then nothing more is sent until it changes again. Departure is
+// handled by onDisconnect, so no keep-alive heartbeat is needed.
+export const IDLE_AFTER_MS = 60_000
 
-const _lastUpdateMs = new Map()
+// Per (ownerUid, mapKey, selfUid): { sig, lastWriteMs, changedAtMs, idleSent }
+const _selfState = new Map()
 let _playersUnsub   = null
 
 function playerRef(ownerUid, mapKey, selfUid) {
@@ -58,16 +63,48 @@ export function detachWorldPlayers() {
 }
 
 export function _resetThrottleForTest() {
-  _lastUpdateMs.clear()
+  _selfState.clear()
 }
 
-// Throttled position broadcast. Safe to call from Phaser's update() (60 fps).
-// Throttle is scoped per (ownerUid, mapKey, selfUid) tuple so concurrent rooms
-// / uids never share a clock.
+// Positions arrive as floats every frame; round so a standing avatar is
+// byte-identical frame to frame.
+function signature(p) {
+  return JSON.stringify([
+    Math.round(p.x ?? 0), Math.round(p.y ?? 0), p.dir, !!p.moving, p.mbti, p.name,
+  ])
+}
+
+// Throttled, change-only position broadcast. Safe to call from Phaser's
+// update() (60 fps). Scoped per (ownerUid, mapKey, selfUid) so concurrent
+// rooms / uids never share a clock.
+//   - changed payload  -> write at most every UPDATE_INTERVAL_MS
+//   - unchanged payload -> no write, except one `idle: true` write after
+//     IDLE_AFTER_MS (so AFK users cost ~0 instead of ~8 writes/s)
 export function updateSelf(ownerUid, mapKey, selfUid, partial) {
   const key = `${ownerUid}:${mapKey}:${selfUid}`
   const now = Date.now()
-  if (now - (_lastUpdateMs.get(key) ?? 0) < UPDATE_INTERVAL_MS) return
-  _lastUpdateMs.set(key, now)
-  set(playerRef(ownerUid, mapKey, selfUid), partial).catch(() => {})
+  const sig = signature(partial)
+  const st = _selfState.get(key)
+
+  if (!st) {
+    _selfState.set(key, { sig, lastWriteMs: now, changedAtMs: now, idleSent: false })
+    set(playerRef(ownerUid, mapKey, selfUid), partial).catch(() => {})
+    return
+  }
+
+  if (sig !== st.sig) {
+    if (now - st.lastWriteMs < UPDATE_INTERVAL_MS) return   // retry next frame
+    st.sig = sig
+    st.lastWriteMs = now
+    st.changedAtMs = now
+    st.idleSent = false
+    set(playerRef(ownerUid, mapKey, selfUid), partial).catch(() => {})
+    return
+  }
+
+  if (!st.idleSent && now - st.changedAtMs >= IDLE_AFTER_MS) {
+    st.idleSent = true
+    st.lastWriteMs = now
+    set(playerRef(ownerUid, mapKey, selfUid), { ...partial, idle: true }).catch(() => {})
+  }
 }

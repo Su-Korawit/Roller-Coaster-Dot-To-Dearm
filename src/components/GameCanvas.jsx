@@ -16,6 +16,7 @@ import FarmActionButton from './FarmActionButton'
 import { isEditableTarget } from '../utils/isEditableTarget'
 import { joinWorld, leaveWorld, subscribeWorldPlayers } from '../lib/presence'
 import { MapScene, loadSceneData } from '../game/worldScenes'
+import { createIdleGovernor, setFpsLimit, IDLE_FPS } from '../game/idleGovernor'
 import { listMapConfigs, pickEntryKey } from '../utils/mapConfig'
 import { useFarmDataStore } from '../stores/useFarmDataStore'
 import { tileKey, isReady } from '../systems/farmLogic'
@@ -268,6 +269,24 @@ export default function GameCanvas({ active = true }) {
       clearTimeout(hideTimerRef.current)
       if (game) game.destroy(true)
       gameRef.current = null
+    }
+  }, [])
+
+  // AFK: after 60s without input, cap Phaser at IDLE_FPS (battery/CPU for
+  // all-day tabs). Any input restores full speed. Presence writes are
+  // de-duplicated separately in lib/presence.js.
+  useEffect(() => {
+    const governor = createIdleGovernor({
+      onIdle:   () => setFpsLimit(gameRef.current, IDLE_FPS),
+      onActive: () => setFpsLimit(gameRef.current, 0),
+    })
+    const events = ['pointerdown', 'pointermove', 'keydown', 'touchstart', 'wheel']
+    const touch = () => governor.touch()
+    events.forEach((e) => window.addEventListener(e, touch, { passive: true }))
+    const timer = setInterval(() => governor.tick(), 5000)
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, touch))
+      clearInterval(timer)
     }
   }, [])
 
