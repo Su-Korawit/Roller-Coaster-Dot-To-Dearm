@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Button from '../components/ui/Button'
 import PanelHeader from '../components/ui/PanelHeader'
 import LevelBadge from '../components/hud/LevelBadge'
@@ -8,6 +8,9 @@ import SceneBackdrop from '../components/landing/SceneBackdrop'
 import CharacterSprite from '../components/ui/CharacterSprite'
 import TemperamentCard from '../components/profile/TemperamentCard'
 import LoadingScene from '../components/ui/LoadingScene'
+import ProductCard from '../components/shop/ProductCard'
+import PaymentStatusBadge from '../components/shop/PaymentStatusBadge'
+import QRPaymentCard from '../components/shop/QRPaymentCard'
 import { useSchoolWorldStore } from '../stores/useSchoolWorldStore'
 import { useUserStore } from '../stores/useUserStore'
 
@@ -32,6 +35,7 @@ function Section({ title, children }) {
 }
 
 export default function DevUiKit() {
+  const [qrExpires] = useState(() => Date.now() + 9 * 60000)
   useEffect(() => {
     useUserStore.setState({ focusXp: 400 })
     useSchoolWorldStore.getState().setFocus({
@@ -131,6 +135,37 @@ export default function DevUiKit() {
           </div>
           <div className="flex gap-2 mt-3">
             {['INTJ', 'ENFP', 'ISTP', 'ESFJ'].map((c) => <CharacterSprite key={c} code={c} scale={2} />)}
+          </div>
+        </Section>
+
+        <Section title="SHOP">
+          <div className="grid grid-cols-3 gap-2 max-w-md">
+            <ProductCard product={{ id: 'a', name: 'เหรียญ 100', coins: 100, price: 29 }} onBuy={() => {}} />
+            <ProductCard product={{ id: 'b', name: 'เหรียญ 350', coins: 350, price: 89, image: '💰' }} onBuy={() => {}} />
+            <ProductCard product={{ id: 'c', name: 'เหรียญ 800', coins: 800, price: 179, image: '💎' }} onBuy={() => {}} disabled />
+          </div>
+          <div className="flex gap-2 flex-wrap mt-3">
+            {['WAITING_PAYMENT', 'VERIFYING', 'SUCCESS', 'FAILED', 'EXPIRED'].map((st) => <PaymentStatusBadge key={st} status={st} />)}
+          </div>
+          <div className="neo-card max-w-xs mt-3 overflow-hidden">
+            <div className="rpg-plank px-4 py-3 thai-font text-sm font-semibold">สั่งซื้อ · แพ็คเกจเหรียญ</div>
+            <QRPaymentCard amount={89} expiresAt={qrExpires} />
+          </div>
+        </Section>
+
+        <Section title="CHAT · SOCIAL">
+          <div className="space-y-2 max-w-sm bg-paper p-3 rounded-lg border-2 border-edge">
+            <div className="flex justify-start"><div className="max-w-[76%] rounded-2xl rounded-bl-sm border-2 border-edge/60 shadow-[0_2px_0_0_var(--color-edge)] px-3.5 py-2.5 bg-brand-soft text-ink text-[13px]">ไปอ่านหนังสือที่ห้องสมุดกัน?</div></div>
+            <div className="flex justify-end"><div className="max-w-[76%] rounded-2xl rounded-br-sm border-2 border-edge/60 shadow-[0_2px_0_0_var(--color-edge)] px-3.5 py-2.5 bg-brand text-white text-[13px]">ได้เลย เจอกันโต๊ะ lib-3 😄</div></div>
+            <div className="neo-slab flex items-center gap-3 px-3 py-2.5">
+              <div className="w-10 h-10 rounded-full bg-surface border-2" style={{ borderColor: '#8a4a70' }} />
+              <div className="flex-1 text-sm"><b>เพื่อนร่วมโรงเรียน</b><div className="text-xs text-ink-soft">INFP · วิศวะคอม</div></div>
+              <span className="pixel-font text-[10px]" style={{ color: '#d99b3b' }}>92%</span>
+            </div>
+            <div className="flex items-center gap-2 bg-hud border-t-2 border-edge -mx-3 -mb-3 px-3 py-2.5 rounded-b-md">
+              <input className="neo-input flex-1 px-3 py-2 text-sm" placeholder="พิมพ์ข้อความ..." />
+              <button className="neo-btn rpg-btn-primary w-9 h-9 rounded-xl">➤</button>
+            </div>
           </div>
         </Section>
 

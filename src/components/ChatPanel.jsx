@@ -53,7 +53,7 @@ function GiftModal({ chatId, myUid, onClose }) {
   return (
     <div className="absolute inset-0 flex items-end" style={{ zIndex: Z_SHEET }} onClick={onClose}>
       <div
-        className="w-full bg-white rounded-t-3xl shadow-hard-sm pb-6 md:max-w-lg md:mx-auto"
+        className="w-full neo-sheet pb-6 md:max-w-lg md:mx-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-center pt-3 pb-4">
@@ -76,7 +76,7 @@ function GiftModal({ chatId, myUid, onClose }) {
                 className={`flex flex-col items-center gap-1.5 p-4 rounded-2xl border-2 transition-all active:scale-95 ${
                   canAfford
                     ? 'border-brand/30 bg-brand-soft hover:border-brand'
-                    : 'border-ink/10 bg-paper opacity-40'
+                    : 'border-edge/40 bg-paper opacity-40'
                 }`}
               >
                 {busy === g.name
@@ -150,7 +150,7 @@ function CreditModal({ msg, friendUser, onDone, onClose }) {
   return (
     <div className="absolute inset-0 flex flex-col justify-end" style={{ zIndex: Z_SHEET }} onClick={onClose}>
       <div
-        className="relative bg-white rounded-t-3xl shadow-hard-sm px-5 pb-6 pt-4 md:max-w-lg md:mx-auto md:w-full"
+        className="relative neo-sheet px-5 pb-6 pt-4 md:max-w-lg md:mx-auto md:w-full"
         style={{ transform: visible ? 'translateY(0)' : 'translateY(100%)', transition: 'transform 0.3s ease-out' }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -166,7 +166,7 @@ function CreditModal({ msg, friendUser, onDone, onClose }) {
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="เขียนข้อความขอบคุณ (optional)..."
-          className="w-full rounded-xl border border-ink/10 px-4 py-3 outline-none focus:border-brand resize-none mb-3"
+          className="neo-input w-full px-4 py-3 resize-none mb-3"
           style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 13 }}
           disabled={busy}
         />
@@ -256,7 +256,7 @@ function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* ── Header ── */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-ink/10 bg-white shrink-0">
+      <div className="flex items-center gap-3 px-4 py-3 rpg-plank shrink-0">
         <button onClick={onBack} className="active:scale-90 transition-transform text-ink-soft shrink-0">
           <ArrowLeft size={18} />
         </button>
@@ -264,7 +264,7 @@ function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
         {isAdminChat ? (
           <div
             className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #a78bda, #7c3aed)' }}
+            style={{ background: 'linear-gradient(135deg, #8a4a70, #713970)' }}
           >
             <Wrench size={15} className="text-white" />
           </div>
@@ -307,7 +307,7 @@ function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
         {/* Fire stacks badge — hidden for admin chats */}
         {!isAdminChat && (
           <div
-            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-warn/10 border border-warn/20 shrink-0 ${
+            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-warn/10 border-2 border-warn/50 shrink-0 ${
               stackAnimating ? 'animate-stack-pop' : ''
             }`}
           >
@@ -322,7 +322,7 @@ function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
         {messages.length === 0 && (
           isAdminChat ? (
             <div className="flex-1 flex flex-col items-center justify-center px-6 py-10">
-              <div className="bg-paper border border-ink/10 rounded-2xl p-5 text-center max-w-70">
+              <div className="neo-card p-5 text-center max-w-70">
                 <p className="text-3xl mb-3">👋</p>
                 <p
                   className="text-ink-soft leading-relaxed"
@@ -350,14 +350,14 @@ function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
           return (
             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={`max-w-[76%] rounded-2xl  overflow-hidden ${isCard ? '' : 'px-3.5 py-2.5'} ${
+                className={`max-w-[76%] rounded-2xl border-2 border-edge/60 shadow-[0_2px_0_0_var(--color-edge)] overflow-hidden ${isCard ? '' : 'px-3.5 py-2.5'} ${
                   msg.type === 'shared_task'
                     ? 'bg-ink border border-brand/40'
                     : isMe
                       ? 'bg-brand text-white rounded-br-sm'
                       : 'bg-brand-soft text-ink rounded-bl-sm'
                 }`}
-                style={msg.type === 'shared_task' ? { borderLeft: '3px solid #a78bda' } : {}}
+                style={msg.type === 'shared_task' ? { borderLeft: '3px solid #8a4a70' } : {}}
               >
                 {msg.type === 'gift' ? (
                   <div className="flex flex-col items-center gap-1 py-0.5 px-2">
@@ -384,7 +384,7 @@ function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
                       <button
                         onClick={() => window.open(msg.newsItem?.url, '_blank', 'noopener,noreferrer')}
                         className={`pixel-font text-[6px] px-2 py-1 rounded-lg active:scale-95 transition-transform ${
-                          isMe ? 'bg-white/20 text-white' : 'bg-white text-brand border border-brand/20'
+                          isMe ? 'bg-white/20 text-white' : 'bg-surface text-brand border-2 border-edge/50'
                         }`}
                       >อ่านต่อ →</button>
                     </div>
@@ -418,7 +418,7 @@ function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
                           {isCompleted ? '✅ เสร็จแล้ว' : '⏳ กำลังทำอยู่'}
                         </span>
                         {snap.linkedJourneyKey && (
-                          <span className="pixel-font text-[6px] px-1.5 py-0.5 rounded bg-brand/20 text-[#c4a4f0] self-start">
+                          <span className="pixel-font text-[6px] px-1.5 py-0.5 rounded bg-brand/20 text-brand-soft self-start">
                             {snap.linkedJourneyKey}
                           </span>
                         )}
@@ -455,10 +455,10 @@ function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
       </div>
 
       {/* ── Input bar ── */}
-      <div className="shrink-0 border-t border-ink/10 bg-white px-3 py-2.5 flex items-center gap-2">
+      <div className="shrink-0 bg-hud border-t-2 border-edge px-3 py-2.5 flex items-center gap-2">
         <button
           onClick={() => setShowGift(true)}
-          className="w-9 h-9 rounded-xl bg-warn/10 border border-warn/20 flex items-center justify-center active:scale-90 transition-transform shrink-0"
+          className="w-9 h-9 rounded-xl bg-warn/10 border-2 border-warn/50 flex items-center justify-center active:scale-90 transition-transform shrink-0"
           title="ส่งของขวัญ"
         >
           <Gift size={18} strokeWidth={2.5} className="text-warn" aria-hidden="true" />
@@ -466,7 +466,7 @@ function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
         {!isAdminChat && otherUser?.uid && (
           <button
             onClick={() => onVisitMap?.(otherUser.uid)}
-            className="w-9 h-9 rounded-xl bg-brand-soft border border-brand/20 flex items-center justify-center active:scale-90 transition-transform shrink-0"
+            className="w-9 h-9 rounded-xl bg-brand-soft border-2 border-edge/50 flex items-center justify-center active:scale-90 transition-transform shrink-0"
             title={`เข้าแมพ ${otherUser.displayName || ''}`}
           >
             <Home size={18} strokeWidth={2.5} className="text-brand-strong" aria-hidden="true" />
@@ -474,7 +474,7 @@ function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
         )}
         <button
           onClick={() => alert('นัดหมาย — เร็วๆ นี้!')}
-          className="w-9 h-9 rounded-xl bg-brand-soft border border-brand/20 flex items-center justify-center active:scale-90 transition-transform shrink-0"
+          className="w-9 h-9 rounded-xl bg-brand-soft border-2 border-edge/50 flex items-center justify-center active:scale-90 transition-transform shrink-0"
           title="นัดหมาย"
         >
           <Calendar size={18} strokeWidth={2.5} className="text-brand-strong" aria-hidden="true" />
@@ -486,17 +486,17 @@ function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="พิมพ์ข้อความ..."
-          className="flex-1 bg-paper rounded-xl px-3 py-2 outline-none border border-ink/10 focus:border-brand transition-colors resize-none leading-relaxed"
+          className="neo-input flex-1 px-3 py-2 resize-none leading-relaxed"
           style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 13, maxHeight: 120, overflowY: 'auto' }}
         />
         <button
           onClick={handleSend}
           disabled={!text.trim() || sending}
-          className="w-9 h-9 rounded-xl bg-brand flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50 shrink-0 "
+          className="neo-btn rpg-btn-primary w-9 h-9 rounded-xl flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50 shrink-0"
         >
           {sending
-            ? <Loader2 size={14} className="text-white animate-spin" />
-            : <Send size={14} className="text-white" />}
+            ? <Loader2 size={14} className="text-ink animate-spin" />
+            : <Send size={14} className="text-ink" />}
         </button>
       </div>
 
@@ -534,16 +534,16 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, a
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* ── Header ── */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-ink/10 shrink-0">
+      <div className="flex items-center justify-between px-5 py-4 border-b-2 border-edge/30 shrink-0">
         <h2 className="pixel-font text-[12px] text-ink">Messages</h2>
-        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-warn/10 border border-warn/20">
+        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-warn/10 border-2 border-warn/50">
           <span className="text-sm leading-none">🔥</span>
           <span className="pixel-font text-[9px] text-warn">{totalStacks}</span>
         </div>
       </div>
 
       {/* ── Tabs ── */}
-      <div className="flex border-b border-ink/10 bg-white shrink-0">
+      <div className="flex rpg-plank shrink-0">
         {CHAT_TABS.map(({ id, label }) => (
           <button
             key={id}
@@ -575,7 +575,7 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, a
           >
             <div
               className="w-11 h-11 rounded-full shrink-0 flex items-center justify-center text-2xl"
-              style={{ background: 'linear-gradient(135deg, #fde68a, #f59e0b)' }}
+              style={{ background: 'linear-gradient(135deg, #f3e5c2, #d99b3b)' }}
             >
               🛒
             </div>
@@ -599,7 +599,7 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, a
                 <div
                   key={i}
                   data-testid="chat-list-skeleton"
-                  className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-ink/10 animate-pulse"
+                  className="w-full flex items-center gap-3 px-4 py-3.5 border-b-2 border-edge/30 animate-pulse"
                 >
                   <div className="w-11 h-11 rounded-full bg-brand-soft/60 shrink-0" />
                   <div className="flex-1 min-w-0 space-y-2">
@@ -624,7 +624,7 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, a
               <button
                 key={chat.id}
                 onClick={() => onSelectFriend(otherUid)}
-                className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-ink/10 hover:bg-paper active:bg-brand-soft transition-colors text-left"
+                className="w-full flex items-center gap-3 px-4 py-3.5 border-b-2 border-edge/30 hover:bg-paper active:bg-brand-soft transition-colors text-left"
               >
                 <div
                   className="w-11 h-11 rounded-full overflow-hidden bg-brand-soft shrink-0 border-2 flex items-center justify-center"
@@ -659,7 +659,7 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, a
           >
             <div
               className="w-11 h-11 rounded-full shrink-0 flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #a78bda, #7c3aed)' }}
+              style={{ background: 'linear-gradient(135deg, #8a4a70, #713970)' }}
             >
               <Wrench size={18} className="text-white" />
             </div>
@@ -684,7 +684,7 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, a
                 <div
                   key={i}
                   data-testid="chat-list-skeleton"
-                  className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-ink/10 animate-pulse"
+                  className="w-full flex items-center gap-3 px-4 py-3.5 border-b-2 border-edge/30 animate-pulse"
                 >
                   <div className="w-11 h-11 rounded-full bg-brand-soft/60 shrink-0" />
                   <div className="flex-1 min-w-0 space-y-2">
@@ -713,7 +713,7 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, a
               <button
                 key={uid}
                 onClick={() => onSelectFriend(uid)}
-                className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-ink/10 hover:bg-paper active:bg-brand-soft transition-colors text-left"
+                className="w-full flex items-center gap-3 px-4 py-3.5 border-b-2 border-edge/30 hover:bg-paper active:bg-brand-soft transition-colors text-left"
               >
                 <div
                   className="w-11 h-11 rounded-full overflow-hidden bg-brand-soft shrink-0 border-2 flex items-center justify-center"
@@ -736,7 +736,7 @@ function ChatListView({ user, participants, mutualUids, chats, onSelectFriend, a
                     <span className="pixel-font text-[6px] text-ink-soft">{fmtTime(chat.lastMessageAt)}</span>
                   )}
                   {(chat?.fireStacks ?? 0) > 0 && (
-                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-lg bg-warn/10 border border-warn/20">
+                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-lg bg-warn/10 border-2 border-warn/50">
                       <span className="text-[10px] leading-none">🔥</span>
                       <span className="pixel-font text-[6px] text-warn">{chat.fireStacks}</span>
                     </span>
@@ -836,7 +836,7 @@ export default function ChatPanel({ onClose, initialView = 'list', onAdminContac
 
   return (
     <div
-      className="absolute inset-x-0 z-50 flex flex-col bg-white/96 backdrop-blur-sm rounded-t-4xl overflow-hidden md:max-w-2xl md:mx-auto lg:max-w-3xl"
+      className="absolute inset-x-0 z-50 flex flex-col neo-sheet overflow-hidden md:max-w-2xl md:mx-auto lg:max-w-3xl"
       style={{ top: '10%', bottom: 0 }}
     >
       {/* Drag handle */}
@@ -846,7 +846,7 @@ export default function ChatPanel({ onClose, initialView = 'list', onAdminContac
 
       {/* Inner card */}
       <div className="px-4 pb-4 flex-1 flex flex-col overflow-hidden">
-        <div className="rounded-xl bg-white border border-ink/10  overflow-hidden flex-1 flex flex-col">
+        <div className="neo-card overflow-hidden flex-1 flex flex-col">
           {/* Close button — only shown in list view; window/shop have back arrow */}
           {view === 'list' && (
             <div className="flex justify-end px-4 pt-3 shrink-0">

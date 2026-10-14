@@ -33,7 +33,7 @@ function makeMyIcon(photoURL) {
     : `<span style="font-size:18px;line-height:1">🎮</span>`
   return L.divIcon({
     className: '',
-    html: `<div style="width:44px;height:44px;border-radius:50%;border:4px solid #a78bda;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 0 0 5px rgba(167,139,218,0.2),0 0 18px rgba(167,139,218,0.45);">${inner}</div>`,
+    html: `<div style="width:44px;height:44px;border-radius:50%;border:4px solid #8a4a70;background:#f8efd6;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 0 0 5px rgba(138,74,112,0.2),0 0 18px rgba(138,74,112,0.45);">${inner}</div>`,
     iconSize: [44, 44],
     iconAnchor: [22, 22],
   })
@@ -121,7 +121,7 @@ function SchoolPicker({ uid, onSaved }) {
           type="text"
           placeholder="พิมพ์ชื่อโรงเรียน / มหาวิทยาลัย..."
           disabled={!ready || saving}
-          className="w-full rounded-2xl border border-ink/10 bg-white  px-4 py-3 text-[12px] outline-none focus:border-brand transition-colors disabled:opacity-50"
+          className="neo-input w-full px-4 py-3 text-[12px] disabled:opacity-50"
           style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
         />
         {(!ready || saving) && (
@@ -146,7 +146,7 @@ function MapTab({ myProfile, nearbyUsers, uid, onSchoolSaved, onUserTap }) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* School label bar */}
-      <div className="px-4 py-2 bg-white border-b border-ink/10 flex items-center gap-2 shrink-0">
+      <div className="rpg-plank px-4 py-2 flex items-center gap-2 shrink-0">
         <span className="text-sm">📍</span>
         <span className="pixel-font text-[8px] text-ink-soft truncate flex-1">{myProfile.schoolName}</span>
         <span className="pixel-font text-[7px] text-brand shrink-0">{nearbyUsers.length} คน</span>
@@ -224,14 +224,14 @@ function UserCard({ user, following, sentRequests, onFollow, onTap, score = 0, o
     <div
       className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 border transition-colors cursor-pointer active:brightness-95 ${
         isHighMatch ? 'border-warn/30 bg-warn/10/60'
-        : isMatch   ? 'border-brand/30 bg-brand-soft/60'
-        :             'border-ink/10 bg-paper'
+        : isMatch   ? 'border-edge/60 bg-brand-soft/70'
+        :             'border-edge/40 bg-surface'
       }`}
       onClick={() => onTap?.(user.uid)}
     >
       {/* Avatar with MBTI ring */}
       <div
-        className="w-10 h-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-white border-2"
+        className="w-10 h-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-surface border-2"
         style={{ borderColor: mbtiColor(shapes.readProfile(user).mbti) }}
       >
         {user.photoURL
@@ -325,8 +325,8 @@ function DiscoverTab({ nearbyUsers, following, sentRequests, sendFollowRequest, 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Search bar */}
-      <div className="px-4 py-3 bg-white border-b border-ink/10 shrink-0">
-        <div className="flex items-center gap-2 bg-paper rounded-xl px-3 py-2 border border-ink/10 focus-within:border-brand transition-colors">
+      <div className="rpg-plank px-4 py-3 shrink-0">
+        <div className="neo-input flex items-center gap-2 px-3 py-2 focus-within:border-brand transition-colors">
           <Search size={13} className="text-ink-soft shrink-0" />
           <input
             type="text"
@@ -396,7 +396,7 @@ function RequestCard({ user, onAccept, onDecline }) {
   }
 
   return (
-    <div className="flex items-center gap-3 bg-white rounded-xl px-3 py-2.5 border border-ink/10 ">
+    <div className="neo-slab flex items-center gap-3 px-3 py-2.5">
       <div
         className="w-10 h-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-brand-soft border-2"
         style={{ borderColor: mbtiColor(shapes.readProfile(user).mbti) }}
@@ -491,9 +491,9 @@ function MatchedTab({ onUserTap, onOpenChat, following }) {
   const sevenDaysMs = 7 * 24 * 60 * 60 * 1000
 
   function tierColor(score) {
-    if (score >= 90) return '#EF9F27'
-    if (score >= 71) return '#7F77DD'
-    return '#378ADD'
+    if (score >= 90) return '#d99b3b'
+    if (score >= 71) return '#8a4a70'
+    return '#7ea04a'
   }
 
   return (
@@ -518,7 +518,7 @@ function MatchedTab({ onUserTap, onOpenChat, following }) {
         return (
           <div
             key={m.uid}
-            className="flex items-center gap-3 bg-white rounded-xl px-3 py-2.5 border border-ink/10  cursor-pointer active:brightness-95"
+            className="neo-slab flex items-center gap-3 px-3 py-2.5 cursor-pointer active:brightness-95"
             onClick={() => onUserTap?.(m.uid)}
           >
             <div
@@ -636,7 +636,7 @@ export default function SocialPanel({ onClose, onOpenChat }) {
 
   return (
     <div
-      className="absolute inset-0 z-50 flex flex-col bg-white/96 backdrop-blur-sm rounded-t-4xl overflow-hidden md:max-w-2xl md:mx-auto lg:max-w-3xl"
+      className="absolute inset-0 z-50 flex flex-col neo-sheet overflow-hidden md:max-w-2xl md:mx-auto lg:max-w-3xl"
       style={{ top: '8%' }}
     >
       {/* Drag handle */}
@@ -645,7 +645,7 @@ export default function SocialPanel({ onClose, onOpenChat }) {
       </div>
 
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-ink/10 shrink-0">
+      <div className="flex items-center justify-between px-5 py-3 border-b-2 border-edge/30 shrink-0">
         <div className="flex items-center gap-2">
           <Users size={15} strokeWidth={2} className="text-brand" />
           <h2 className="pixel-font text-[11px] text-ink">Social</h2>
@@ -660,7 +660,7 @@ export default function SocialPanel({ onClose, onOpenChat }) {
       </div>
 
       {/* Tab bar */}
-      <div className="flex border-b border-ink/10 bg-white shrink-0">
+      <div className="rpg-plank flex shrink-0">
         {TABS.map(({ id, label, Icon }) => {
           const isActive = tab === id
           const badge = id === 'requests' ? pendingRequests.length : 0

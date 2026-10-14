@@ -79,12 +79,12 @@ export default function ShopChatView({ onBack }) {
   }
 
   return (
-    <div className="flex h-full flex-col bg-white">
+    <div className="flex h-full flex-col bg-surface">
       {/* Top bar */}
-      <div className="flex items-center gap-3 border-b border-gray-100 bg-white px-4 py-3 shadow-sm">
+      <div className="rpg-plank flex items-center gap-3 px-4 py-3">
         <button
           onClick={onBack}
-          className="rounded-lg p-1 text-ink/60 hover:bg-gray-100 hover:text-ink"
+          className="neo-btn rounded-lg bg-surface px-2 py-0.5 text-ink"
         >
           ←
         </button>
@@ -107,8 +107,8 @@ export default function ShopChatView({ onBack }) {
                   <div
                     className={`max-w-[78%] rounded-2xl px-4 py-2 text-sm ${
                       isUser
-                        ? 'rounded-tr-none bg-brand text-white'
-                        : 'rounded-tl-none bg-gray-100 text-ink'
+                        ? 'rounded-tr-none border-2 border-edge/60 bg-brand text-white'
+                        : 'neo-slab rounded-tl-none text-ink'
                     }`}
                   >
                     <p className="thai-font leading-relaxed">{msg.text}</p>
@@ -132,8 +132,8 @@ export default function ShopChatView({ onBack }) {
                   <span
                     className={`thai-font rounded-full px-3 py-1 text-xs ${
                       isError
-                        ? 'bg-rose-50 text-rose-700'
-                        : 'bg-emerald-50 text-emerald-700'
+                        ? 'border-2 border-danger/40 bg-danger/10 text-danger'
+                        : 'border-2 border-good/60 bg-good/15 text-ink'
                     }`}
                   >
                     {msg.text}
@@ -148,7 +148,7 @@ export default function ShopChatView({ onBack }) {
           {sending && (
             <div className="flex justify-start">
               <span className="mr-2 mt-1 text-lg">🛒</span>
-              <div className="rounded-2xl rounded-tl-none bg-gray-100 px-4 py-2">
+              <div className="neo-slab rounded-tl-none px-4 py-2">
                 <span className="pixel-font text-[9px] text-ink/60 animate-pulse">...</span>
               </div>
             </div>
@@ -160,7 +160,7 @@ export default function ShopChatView({ onBack }) {
 
       {/* Product grid */}
       {products.length > 0 && (
-        <div className="border-t border-gray-100 px-4 py-3">
+        <div className="border-t-2 border-edge/40 bg-paper px-4 py-3">
           <p className="pixel-font mb-2 text-[8px] text-ink/50">COIN PACKAGES</p>
           <div className="grid grid-cols-3 gap-2">
             {products.map((p) => (
@@ -174,7 +174,7 @@ export default function ShopChatView({ onBack }) {
       <UnlockSection />
 
       {/* Chat input */}
-      <div className="border-t border-gray-100 px-4 py-3">
+      <div className="border-t-2 border-edge/40 bg-hud px-4 py-3">
         <div className="flex items-center gap-2">
           <textarea
             ref={textareaRef}
@@ -184,13 +184,13 @@ export default function ShopChatView({ onBack }) {
             onKeyDown={handleKeyDown}
             placeholder="พิมพ์ข้อความ..."
             disabled={sending}
-            className="thai-font flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-ink placeholder-ink/40 focus:border-brand focus:outline-none disabled:opacity-50 resize-none leading-relaxed"
+            className="neo-input thai-font flex-1 px-3 py-2 text-sm text-ink placeholder-ink/40 disabled:opacity-50 resize-none leading-relaxed"
             style={{ maxHeight: 120, overflowY: 'auto' }}
           />
           <button
             onClick={() => handleSend(input)}
             disabled={!input.trim() || sending}
-            className="rounded-xl bg-brand px-4 py-2 text-sm text-white shadow-[2px_2px_0_0_#1a1035] transition-all hover:shadow-[3px_3px_0_0_#1a1035] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none disabled:cursor-not-allowed disabled:opacity-50"
+            className="neo-btn rpg-btn-primary rounded-xl px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
           >
             ส่ง
           </button>

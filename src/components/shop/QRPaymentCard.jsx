@@ -30,7 +30,7 @@ export default function QRPaymentCard({ amount, expiresAt }) {
 
   return (
     <div className="flex flex-col items-center gap-3 py-2">
-      <div className={`relative rounded-xl border-2 border-brand p-2 ${expired ? 'opacity-40 grayscale' : ''}`}>
+      <div className={`relative rounded-xl border-2 border-edge bg-surface p-2 ${expired ? 'opacity-40 grayscale' : ''}`}>
         {qrUrl ? (
           <img src={qrUrl} alt="PromptPay QR" className="h-40 w-40 rounded-lg" />
         ) : (
@@ -39,13 +39,13 @@ export default function QRPaymentCard({ amount, expiresAt }) {
           </div>
         )}
         {expired && (
-          <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/80">
-            <span className="pixel-font text-[10px] text-rose-600">EXPIRED</span>
+          <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-surface/85">
+            <span className="pixel-font text-[10px] text-danger">EXPIRED</span>
           </div>
         )}
       </div>
 
-      <div className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs">
+      <div className="w-full neo-slab px-3 py-2 text-xs">
         <div className="thai-font flex justify-between text-ink/60">
           <span>PromptPay</span>
           <span className="font-semibold text-ink">{shopConfig.promptPayNumber}</span>
@@ -54,13 +54,13 @@ export default function QRPaymentCard({ amount, expiresAt }) {
           <span>Merchant</span>
           <span className="font-semibold text-ink">{shopConfig.merchantName}</span>
         </div>
-        <div className="mt-1 flex justify-between border-t border-gray-200 pt-1">
+        <div className="mt-1 flex justify-between border-t-2 border-edge/30 pt-1">
           <span className="pixel-font text-[8px] text-ink/60">AMOUNT</span>
           <span className="pixel-font text-[12px] text-accent-pink">{amount} ฿</span>
         </div>
       </div>
 
-      <div className={`pixel-font text-[10px] ${expired ? 'text-rose-600' : remaining < 60_000 ? 'text-amber-600' : 'text-brand-strong'}`}>
+      <div className={`pixel-font text-[10px] ${expired ? 'text-danger' : remaining < 60_000 ? 'text-warn' : 'text-brand-strong'}`}>
         {expired ? '⚠ QR EXPIRED' : `⏱ ${formatCountdown(remaining)}`}
       </div>
     </div>

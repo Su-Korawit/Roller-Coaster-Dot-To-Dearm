@@ -34,7 +34,7 @@ export default function UnlockSection() {
   if (!catalogLoading && catalog.length === 0) return null
 
   return (
-    <div className="border-t border-gray-100 px-4 py-3">
+    <div className="border-t-2 border-edge/40 bg-paper px-4 py-3">
       <p className="pixel-font mb-2 text-[8px] text-ink/50">ปลดล็อกฟีเจอร์</p>
       {catalogLoading ? (
         <p className="thai-font text-xs text-ink-soft py-2">กำลังโหลด...</p>
@@ -61,7 +61,7 @@ export default function UnlockSection() {
                     onClick={() => handleBuy(item)}
                     disabled={!affordable}
                     className={`neo-btn rounded-lg px-3 py-1.5 pixel-font text-[9px] flex items-center gap-1.5 shrink-0 ${
-                      affordable ? 'bg-brand-strong text-white' : 'bg-brand-soft text-ink-soft opacity-60'
+                      affordable ? 'rpg-btn-primary' : 'bg-surface text-ink-soft opacity-60'
                     }`}
                   >
                     <CoinIcon size={12} />

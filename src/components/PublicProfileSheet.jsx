@@ -18,16 +18,16 @@ function MatchScoreBar({ score }) {
 
   let barGradient, label
   if (score >= 90) {
-    barGradient = 'linear-gradient(90deg, #f59e0b, #fbbf24)'
+    barGradient = 'linear-gradient(90deg, #d99b3b, #e8b04a)'
     label = '✦ Gold Match'
   } else if (score >= 71) {
-    barGradient = 'linear-gradient(90deg, #8b5cf6, #a78bda)'
+    barGradient = 'linear-gradient(90deg, #713970, #8a4a70)'
     label = '✦ High Match'
   } else if (score >= 41) {
-    barGradient = 'linear-gradient(90deg, #3b82f6, #60a5fa)'
+    barGradient = 'linear-gradient(90deg, #6f8a3a, #9db557)'
     label = 'Match Score'
   } else {
-    barGradient = 'linear-gradient(90deg, #9ca3af, #d1d5db)'
+    barGradient = 'linear-gradient(90deg, #aa7959, #dcb98a)'
     label = 'Match Score'
   }
 
@@ -52,7 +52,7 @@ function PortfolioCirclePublic({ label, emoji, image, canSee }) {
     <div className="flex flex-col items-center gap-1.5">
       <div className="relative">
         <div
-          className={`w-16 h-16 rounded-full overflow-hidden bg-purple-100 flex items-center justify-center border-2 border-purple-200 transition-all ${
+          className={`w-16 h-16 rounded-full overflow-hidden bg-brand-soft flex items-center justify-center border-2 border-edge/50 transition-all ${
             !canSee ? 'blur-sm' : ''
           }`}
         >
@@ -193,7 +193,7 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
 
         {loading && (
           <div className="flex items-center justify-center py-16">
-            <Loader2 size={24} className="text-purple-400 animate-spin" />
+            <Loader2 size={24} className="text-brand animate-spin" />
           </div>
         )}
 
@@ -244,7 +244,7 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
                   disabled={followBusy || isPending}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl pixel-font text-[8px] transition-all active:scale-95 disabled:opacity-60 ${
                     iFollow
-                      ? 'bg-surface border-2 border-ink/10 text-ink-soft'
+                      ? 'bg-surface border-2 border-edge/40 text-ink-soft'
                       : isPending
                         ? 'bg-warn/10 text-warn border border-warn/30'
                         : 'bg-brand text-white shadow-hard-sm'
@@ -277,19 +277,19 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
 
             {/* Unfollow confirmation */}
             {showUnfollowConfirm && (
-              <div className="bg-red-50 rounded-2xl p-4 border border-red-100 space-y-3">
+              <div className="bg-danger/10 rounded-2xl p-4 border border-danger/30 space-y-3">
                 <p className="thai-font text-sm text-ink text-center">ยกเลิกการติดตาม?</p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowUnfollowConfirm(false)}
-                    className="flex-1 py-2 rounded-xl border border-ink/10 text-ink-soft text-sm thai-font"
+                    className="flex-1 py-2 rounded-xl border-2 border-edge/30 text-ink-soft text-sm thai-font"
                   >
                     ยกเลิก
                   </button>
                   <button
                     onClick={handleUnfollow}
                     disabled={followBusy}
-                    className="flex-1 py-2 rounded-xl bg-red-500 text-white text-sm disabled:opacity-60 flex items-center justify-center"
+                    className="flex-1 py-2 rounded-xl bg-danger/100 text-white text-sm disabled:opacity-60 flex items-center justify-center"
                   >
                     {followBusy ? <Loader2 size={14} className="animate-spin" /> : 'Unfollow'}
                   </button>
@@ -299,7 +299,7 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
 
             {/* Match Score — mutual only */}
             {isMutual && !isSelf && (
-              <div className="bg-purple-50 rounded-2xl px-4 py-3 border border-purple-100">
+              <div className="bg-brand-soft rounded-2xl px-4 py-3 border border-edge/30">
                 <MatchScoreBar score={matchScore} />
               </div>
             )}
@@ -330,12 +330,12 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
               <p className="pixel-font text-[10px] text-ink-soft mb-2">Journey of Mastery</p>
 
               {!canSeeItem('journey') ? (
-                <div className="bg-brand-soft rounded-2xl py-6 flex flex-col items-center gap-2 border border-ink/10">
+                <div className="bg-brand-soft rounded-2xl py-6 flex flex-col items-center gap-2 border-2 border-edge/30">
                   <Lock size={20} className="text-ink-soft/50" />
                   <p className="thai-font text-xs text-ink-soft">🔒 Journey เป็น private</p>
                 </div>
               ) : journeys.length === 0 ? (
-                <div className="bg-brand-soft rounded-2xl py-5 flex items-center justify-center border border-ink/10">
+                <div className="bg-brand-soft rounded-2xl py-5 flex items-center justify-center border-2 border-edge/30">
                   <p className="thai-font text-xs text-ink-soft">ยังไม่มีข้อมูล Journey</p>
                 </div>
               ) : (
@@ -345,7 +345,7 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
                     return (
                       <div
                         key={item.id}
-                        className="flex-shrink-0 w-20 h-20 rounded-xl bg-purple-50 border border-purple-100 flex flex-col items-center justify-center p-2 gap-1"
+                        className="flex-shrink-0 w-20 h-20 rounded-xl bg-brand-soft border border-edge/30 flex flex-col items-center justify-center p-2 gap-1"
                       >
                         <span className="thai-font text-xs font-semibold text-ink text-center leading-tight line-clamp-2">
                           {item.title || '—'}
@@ -355,7 +355,7 @@ export default function PublicProfileSheet({ userId, onClose, onOpenChat }) {
                             {credited.slice(0, 3).map((c, i) => (
                               <div
                                 key={i}
-                                className="w-3.5 h-3.5 rounded-full overflow-hidden border border-white bg-purple-200 shrink-0"
+                                className="w-3.5 h-3.5 rounded-full overflow-hidden border border-white bg-wood shrink-0"
                                 style={{ marginLeft: i > 0 ? '-5px' : 0, zIndex: credited.length - i }}
                               >
                                 {c.creditedFriend.photoURL

@@ -36,9 +36,13 @@ leaf-green progress bars, heart-purple accents.
 
 ## Consequences
 
-- Hard-coded colours that predate the theme (`#1a1035` etc.) remain in a few screens
-  (chat, shop, social, roadmap edges, admin). They still work but read as the old palette;
-  sweep them as those screens are touched.
+- Chat, Social, Shop, the match overlay and the public profile sheet were converted in a second pass
+  (parchment rows, wooden headers, warm bubbles, item-slot product cards). Hard-coded colours that
+  predate the theme remain in a few screens (roadmap edges, admin, onboarding, mbtiColors). They
+  still work but read as the old palette; sweep them as those screens are touched.
+- `.neo-btn` keeps its default corner radius in `@layer components` so `rounded-full` /
+  `rounded-lg` utilities on buttons still win; the other `neo-*` classes are unlayered and override
+  radius utilities (as `neo-card` always did).
 - Text colour is now a deep plum-brown rather than near-black; contrast on the parchment
   surfaces is ≥ 7:1, but any component that paired `text-ink` with a *dark* background needs checking.
 - `shadow-hard`/`shadow-hard-sm` now offset straight down (a "ledge") instead of down-right.

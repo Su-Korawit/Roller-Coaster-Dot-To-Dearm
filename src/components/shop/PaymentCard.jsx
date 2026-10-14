@@ -49,9 +49,9 @@ export default function PaymentCard({ purchaseId }) {
   }
 
   return (
-    <div className="w-full max-w-xs rounded-2xl border-2 border-brand bg-white shadow-[4px_4px_0_0_#a78bda]">
+    <div className="neo-card w-full max-w-xs overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between rounded-t-xl bg-brand/10 px-4 py-3">
+      <div className="rpg-plank flex items-center justify-between px-4 py-3">
         <div>
           <p className="pixel-font text-[9px] text-ink/50">สั่งซื้อ</p>
           <p className="thai-font text-sm font-semibold text-ink">
@@ -63,7 +63,7 @@ export default function PaymentCard({ purchaseId }) {
 
       <div className="flex flex-col gap-3 px-4 py-4">
         {/* Coin + price summary */}
-        <div className="flex items-center justify-between rounded-xl border border-ink/10 bg-brand-soft px-3 py-2">
+        <div className="flex items-center justify-between rounded-xl border-2 border-edge/40 bg-brand-soft px-3 py-2">
           <span className="thai-font text-sm text-ink/70">
             🪙 {coins} เหรียญ
           </span>
@@ -93,8 +93,8 @@ export default function PaymentCard({ purchaseId }) {
 
         {/* FAILED reason */}
         {status === 'FAILED' && (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2">
-            <p className="thai-font text-xs text-rose-700">
+          <div className="rounded-xl border-2 border-danger/40 bg-danger/10 px-3 py-2">
+            <p className="thai-font text-xs text-danger">
               ❌ {slipErrorMessage(failReason)}
             </p>
           </div>
@@ -102,8 +102,8 @@ export default function PaymentCard({ purchaseId }) {
 
         {/* SUCCESS */}
         {status === 'SUCCESS' && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2">
-            <p className="thai-font text-xs text-emerald-700">
+          <div className="rounded-xl border-2 border-good/60 bg-good/15 px-3 py-2">
+            <p className="thai-font text-xs text-ink">
               ✅ ชำระเงินสำเร็จ! ได้รับ +{coins} 🪙 เหรียญแล้ว
             </p>
           </div>
@@ -111,15 +111,15 @@ export default function PaymentCard({ purchaseId }) {
 
         {/* EXPIRED */}
         {status === 'EXPIRED' && (
-          <div className="rounded-xl border border-ink/10 bg-brand-soft px-3 py-2">
+          <div className="rounded-xl border-2 border-edge/40 bg-brand-soft px-3 py-2">
             <p className="thai-font text-xs text-ink-soft">⏰ คำสั่งซื้อหมดอายุแล้ว</p>
           </div>
         )}
 
         {/* Local upload error (before server updates status) */}
         {localError && status !== 'FAILED' && (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2">
-            <p className="thai-font text-xs text-rose-700">❌ {localError}</p>
+          <div className="rounded-xl border-2 border-danger/40 bg-danger/10 px-3 py-2">
+            <p className="thai-font text-xs text-danger">❌ {localError}</p>
           </div>
         )}
       </div>

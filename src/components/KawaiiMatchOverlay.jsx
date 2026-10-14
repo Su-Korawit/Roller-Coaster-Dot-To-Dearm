@@ -4,9 +4,9 @@ import { Z_CELEBRATION } from '../constants/zIndex'
 import { shapes } from '../lib/db'
 
 function scoreColor(score) {
-  if (score >= 90) return '#EF9F27'
-  if (score >= 71) return '#7F77DD'
-  return '#378ADD'
+  if (score >= 90) return '#d99b3b'
+  if (score >= 71) return '#8a4a70'
+  return '#7ea04a'
 }
 
 // 20 particles radiating from center — deterministic angles
@@ -17,7 +17,7 @@ const PARTICLES = Array.from({ length: 20 }, (_, i) => ({
   delay: 1.0 + i * 0.04,
   dur: 0.85 + (i % 5) * 0.08,
   size: 14 + (i % 4) * 3,
-  color: ['#fbbf24','#f472b6','#a78bda','#22d3ee','#fde68a','#fda4af','#c4b5fd','#67e8f9'][i % 8],
+  color: ['#e8b04a','#d98ba0','#8a4a70','#9db557','#f3e5c2','#e6a6b4','#d9b3cf','#c0d470'][i % 8],
 }))
 
 // 10 floating hearts at varied x positions
@@ -36,26 +36,26 @@ const HEARTS = [
 
 // 20 twinkling background stars
 const STARS = [
-  {char:'★',top:5, left:10,delay:0,   dur:1.5,size:12,color:'#fbbf24'},
+  {char:'★',top:5, left:10,delay:0,   dur:1.5,size:12,color:'#e8b04a'},
   {char:'✦',top:12,left:85,delay:0.3, dur:2.0,size:8, color:'#fff'   },
-  {char:'✧',top:20,left:30,delay:0.6, dur:1.8,size:10,color:'#f9a8d4'},
-  {char:'★',top:8, left:60,delay:0.9, dur:1.3,size:14,color:'#c4b5fd'},
+  {char:'✧',top:20,left:30,delay:0.6, dur:1.8,size:10,color:'#e6a6b4'},
+  {char:'★',top:8, left:60,delay:0.9, dur:1.3,size:14,color:'#d9b3cf'},
   {char:'✦',top:30,left:5, delay:0.15,dur:2.2,size:8, color:'#fff'   },
-  {char:'✧',top:35,left:92,delay:0.45,dur:1.6,size:12,color:'#fde68a'},
-  {char:'★',top:15,left:45,delay:0.75,dur:1.9,size:10,color:'#fbbf24'},
+  {char:'✧',top:35,left:92,delay:0.45,dur:1.6,size:12,color:'#f3e5c2'},
+  {char:'★',top:15,left:45,delay:0.75,dur:1.9,size:10,color:'#e8b04a'},
   {char:'✦',top:45,left:20,delay:0.05,dur:2.4,size:8, color:'#fff'   },
-  {char:'✧',top:55,left:75,delay:0.35,dur:1.7,size:14,color:'#f9a8d4'},
-  {char:'★',top:25,left:88,delay:0.65,dur:2.1,size:10,color:'#c4b5fd'},
-  {char:'✦',top:65,left:35,delay:0.95,dur:1.4,size:8, color:'#fde68a'},
+  {char:'✧',top:55,left:75,delay:0.35,dur:1.7,size:14,color:'#e6a6b4'},
+  {char:'★',top:25,left:88,delay:0.65,dur:2.1,size:10,color:'#d9b3cf'},
+  {char:'✦',top:65,left:35,delay:0.95,dur:1.4,size:8, color:'#f3e5c2'},
   {char:'✧',top:70,left:55,delay:0.25,dur:2.3,size:12,color:'#fff'   },
-  {char:'★',top:80,left:10,delay:0.55,dur:1.8,size:10,color:'#fbbf24'},
-  {char:'✦',top:75,left:80,delay:0.85,dur:2.0,size:8, color:'#c4b5fd'},
-  {char:'✧',top:40,left:50,delay:0.10,dur:1.6,size:14,color:'#f9a8d4'},
-  {char:'★',top:88,left:40,delay:0.40,dur:2.5,size:10,color:'#fde68a'},
+  {char:'★',top:80,left:10,delay:0.55,dur:1.8,size:10,color:'#e8b04a'},
+  {char:'✦',top:75,left:80,delay:0.85,dur:2.0,size:8, color:'#d9b3cf'},
+  {char:'✧',top:40,left:50,delay:0.10,dur:1.6,size:14,color:'#e6a6b4'},
+  {char:'★',top:88,left:40,delay:0.40,dur:2.5,size:10,color:'#f3e5c2'},
   {char:'✦',top:92,left:65,delay:0.70,dur:1.3,size:8, color:'#fff'   },
-  {char:'✧',top:60,left:15,delay:1.00,dur:2.0,size:12,color:'#fbbf24'},
-  {char:'★',top:50,left:95,delay:0.20,dur:1.7,size:10,color:'#c4b5fd'},
-  {char:'✦',top:18,left:70,delay:0.50,dur:2.2,size:8, color:'#f9a8d4'},
+  {char:'✧',top:60,left:15,delay:1.00,dur:2.0,size:12,color:'#e8b04a'},
+  {char:'★',top:50,left:95,delay:0.20,dur:1.7,size:10,color:'#d9b3cf'},
+  {char:'✦',top:18,left:70,delay:0.50,dur:2.2,size:8, color:'#e6a6b4'},
 ]
 
 // ─── CSS keyframes (injected once) ────────────────────────────────────────────
@@ -168,7 +168,7 @@ function NoMatchToast({ score, onClose }) {
       <style dangerouslySetInnerHTML={{ __html: KEYFRAMES }} />
       <div
         data-rc-anim
-        className="bg-gray-800/90 backdrop-blur-sm rounded-2xl px-5 py-3 flex flex-col items-center gap-1 shadow-xl relative overflow-hidden"
+        className="bg-ink/90 backdrop-blur-sm rounded-2xl px-5 py-3 flex flex-col items-center gap-1 shadow-xl relative overflow-hidden"
         style={{ animation: 'rc-toast-in 2s ease-in-out forwards' }}
       >
         <p className="pixel-font text-[10px] text-white/70">Match Score: {score}%</p>
@@ -297,7 +297,7 @@ function FullMatchOverlay({ score, targetUser, myUser, onClose, onOpenChat, onVi
           <span
             className="pixel-font text-[22px] font-black tracking-widest"
             style={{
-              background: 'linear-gradient(135deg, #fbbf24 0%, #f472b6 40%, #a78bda 80%, #22d3ee 100%)',
+              background: 'linear-gradient(135deg, #e8b04a 0%, #d98ba0 40%, #8a4a70 80%, #9db557 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               filter: 'drop-shadow(0 0 12px rgba(251,191,36,0.6))',
@@ -348,7 +348,7 @@ function FullMatchOverlay({ score, targetUser, myUser, onClose, onOpenChat, onVi
                 style={{
                   width: `${scoreWidth}%`,
                   background: isGold
-                    ? 'linear-gradient(90deg,#EF9F27 0%,#fde68a 50%,#EF9F27 100%)'
+                    ? 'linear-gradient(90deg,#d99b3b 0%,#f3e5c2 50%,#d99b3b 100%)'
                     : barColor,
                   ...(isGold ? {
                     backgroundSize: '300px 100%',
