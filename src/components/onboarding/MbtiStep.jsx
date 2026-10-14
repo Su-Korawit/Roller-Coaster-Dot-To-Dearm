@@ -40,10 +40,13 @@ function MbtiStep({ onNext, onBack }) {
               onClick={() => handleSelect(item.code)}
               aria-pressed={selected}
               aria-label={`${item.code} ${item.name}`}
-              className={`flex flex-col items-center rounded-xl border-2 bg-surface p-3 transition-all active:scale-[0.98] ${
-                selected ? 'border-ink shadow-hard-sm bg-brand-soft' : 'border-ink/25 hover:border-ink/60'
+              className={`neo-card neo-btn relative flex flex-col items-center p-3 transition-all ${
+                selected ? 'ring-4 ring-lime bg-brand-soft' : ''
               }`}
             >
+              {selected && (
+                <span className="rpg-coin pixel-font absolute -top-2 -right-2 text-[10px]" aria-hidden="true">✓</span>
+              )}
               <CharacterSprite code={item.code} />
               <p className="pixel-font mt-2 text-xs font-bold text-ink">{item.code}</p>
               <p className="thai-font text-[10px] text-ink-soft">{item.name}</p>
@@ -53,9 +56,11 @@ function MbtiStep({ onNext, onBack }) {
       </div>
 
       {description && (
-        <p className="thai-font mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-brand-strong">
-          {description}
-        </p>
+        <div className="neo-card mx-auto mt-5 max-w-2xl px-5 py-4">
+          <p className="thai-font text-center text-sm leading-relaxed text-brand-strong">
+            {description}
+          </p>
+        </div>
       )}
 
       <p className="thai-font mx-auto mt-3 max-w-2xl text-center text-xs text-ink-soft">

@@ -8,7 +8,7 @@ export default function AnnotationEdge({ id, sourceX, sourceY, targetX, targetY,
     <BaseEdge
       id={id}
       path={path}
-      style={{ strokeDasharray: '6 4', stroke: 'var(--color-brand-strong, #7c3aed)', strokeWidth: 2 }}
+      style={{ strokeDasharray: '6 4', stroke: 'var(--color-brand-strong, #713970)', strokeWidth: 2 }}
     />
   )
 }

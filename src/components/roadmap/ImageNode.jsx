@@ -102,7 +102,7 @@ export default function ImageNode({ id, data, selected }) {
       <div
         className={`w-full h-full rounded-xl border-2 bg-surface overflow-hidden flex items-center justify-center transition-all ${
           panning ? 'nodrag cursor-grab active:cursor-grabbing' : 'cursor-pointer'
-        } ${selected ? 'border-ink shadow-hard-sm' : 'border-ink/30 shadow-none'}`}
+        } ${selected ? 'border-edge shadow-hard-sm ring-2 ring-lime' : 'border-edge/60 shadow-hard-sm'}`}
         onClick={hasImage ? undefined : () => setPickerOpen(true)}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -133,7 +133,7 @@ export default function ImageNode({ id, data, selected }) {
           onPointerDown={(e) => e.stopPropagation()}
           onClick={() => setPickerOpen(true)}
           aria-label="เพิ่ม/เปลี่ยนรูป"
-          className="nodrag absolute top-1 right-1 w-6 h-6 rounded-lg bg-surface border-2 border-ink flex items-center justify-center text-ink-soft hover:text-brand"
+          className="nodrag absolute top-1 right-1 w-6 h-6 rounded-lg bg-surface border-2 border-edge flex items-center justify-center text-ink-soft hover:text-brand"
         >
           <Pencil size={13} />
         </button>
@@ -145,7 +145,7 @@ export default function ImageNode({ id, data, selected }) {
           onPointerDown={(e) => e.stopPropagation()}
           onClick={removeActive}
           aria-label="ลบรูปนี้"
-          className="nodrag absolute top-1 left-1 w-6 h-6 rounded-lg bg-surface border-2 border-ink flex items-center justify-center text-ink-soft hover:text-danger"
+          className="nodrag absolute top-1 left-1 w-6 h-6 rounded-lg bg-surface border-2 border-edge flex items-center justify-center text-ink-soft hover:text-danger"
         >
           <Trash2 size={13} />
         </button>
@@ -157,7 +157,7 @@ export default function ImageNode({ id, data, selected }) {
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => { e.stopPropagation(); setLightboxOpen(true) }}
           aria-label="ขยายรูป"
-          className="nodrag absolute bottom-1 right-1 w-6 h-6 rounded-lg bg-surface border-2 border-ink flex items-center justify-center text-ink-soft hover:text-brand"
+          className="nodrag absolute bottom-1 right-1 w-6 h-6 rounded-lg bg-surface border-2 border-edge flex items-center justify-center text-ink-soft hover:text-brand"
         >
           <Maximize2 size={13} />
         </button>
@@ -170,7 +170,7 @@ export default function ImageNode({ id, data, selected }) {
             onPointerDown={(e) => e.stopPropagation()}
             onClick={goToIndex(-1)}
             aria-label="รูปก่อนหน้า"
-            className="nodrag absolute left-1 top-1/2 -translate-y-1/2 w-5 h-5 rounded-lg bg-surface border-2 border-ink flex items-center justify-center text-ink-soft hover:text-brand"
+            className="nodrag absolute left-1 top-1/2 -translate-y-1/2 w-5 h-5 rounded-lg bg-surface border-2 border-edge flex items-center justify-center text-ink-soft hover:text-brand"
           >
             <ChevronLeft size={12} />
           </button>
@@ -179,11 +179,11 @@ export default function ImageNode({ id, data, selected }) {
             onPointerDown={(e) => e.stopPropagation()}
             onClick={goToIndex(1)}
             aria-label="รูปถัดไป"
-            className="nodrag absolute right-1 top-1/2 -translate-y-1/2 w-5 h-5 rounded-lg bg-surface border-2 border-ink flex items-center justify-center text-ink-soft hover:text-brand"
+            className="nodrag absolute right-1 top-1/2 -translate-y-1/2 w-5 h-5 rounded-lg bg-surface border-2 border-edge flex items-center justify-center text-ink-soft hover:text-brand"
           >
             <ChevronRight size={12} />
           </button>
-          <span className="nodrag absolute bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full bg-surface border-2 border-ink pixel-font text-[10px] text-ink-soft">
+          <span className="nodrag absolute bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full bg-surface border-2 border-edge pixel-font text-[10px] text-ink-soft">
             {activeIndex + 1}/{images.length}
           </span>
         </>

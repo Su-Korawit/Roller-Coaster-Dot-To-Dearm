@@ -21,7 +21,7 @@ export default function ProcessNode({ id, data, selected }) {
   return (
     <div
       className={`relative w-32 h-32 rounded-xl border-2 bg-surface p-2.5 flex flex-col gap-1 transition-all ${
-        selected ? 'border-ink shadow-hard-sm' : 'border-ink/30 shadow-none'
+        selected ? 'border-edge shadow-hard-sm ring-2 ring-lime' : 'border-edge/60 shadow-hard-sm'
       }`}
     >
       <ConnectionDot type="target" position={Position.Left} />
@@ -45,7 +45,7 @@ export default function ProcessNode({ id, data, selected }) {
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => { e.stopPropagation(); setExpanded(true) }}
         aria-label="ขยายดู/แก้ไข"
-        className="nodrag absolute bottom-1 right-1 w-6 h-6 rounded-lg bg-surface border-2 border-ink flex items-center justify-center text-ink-soft hover:text-brand"
+        className="nodrag absolute bottom-1 right-1 w-6 h-6 rounded-lg bg-surface border-2 border-edge flex items-center justify-center text-ink-soft hover:text-brand"
       >
         <Maximize2 size={13} />
       </button>

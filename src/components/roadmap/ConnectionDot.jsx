@@ -28,15 +28,15 @@ export default function ConnectionDot({ type, position, id }) {
   const tone = connecting
     ? '!bg-brand ring-2 ring-brand/40 shadow-[0_0_8px_2px_rgba(167,139,218,0.6)]'
     : connected
-      ? '!bg-green-400 shadow-[0_0_8px_2px_rgba(74,222,128,0.8)]'
-      : '!bg-gray-300'
+      ? '!bg-lime shadow-[0_0_8px_2px_rgba(192,212,112,0.85)]'
+      : '!bg-wood-dark'
 
   return (
     <Handle
       type={type}
       position={position}
       id={id}
-      className={`!w-3 !h-3 !border-white !border-2 ${tone}`}
+      className={`!w-3 !h-3 !border-surface !border-2 ${tone}`}
     />
   )
 }

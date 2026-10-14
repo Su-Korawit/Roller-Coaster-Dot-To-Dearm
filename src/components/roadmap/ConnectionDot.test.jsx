@@ -48,15 +48,15 @@ describe('ConnectionDot', () => {
     targetConnections = [{ source: 'x', target: 'a', targetHandle: null }]
     render(<ConnectionDot type="target" position="left" />)
     const cls = dotClass('left')
-    expect(cls).toContain('!bg-green-400')
-    expect(cls).toContain('shadow-[0_0_8px_2px_rgba(74,222,128,0.8)]')
+    expect(cls).toContain('!bg-lime')
+    expect(cls).toContain('shadow-[0_0_8px_2px_rgba(192,212,112,0.85)]')
   })
 
   it('stays grey with no glow while free', () => {
     render(<ConnectionDot type="target" position="left" />)
     const cls = dotClass('left')
-    expect(cls).toContain('!bg-gray-300')
-    expect(cls).not.toContain('shadow-[0_0_8px_2px_rgba(74,222,128,0.8)]')
+    expect(cls).toContain('!bg-wood-dark')
+    expect(cls).not.toContain('shadow-[0_0_8px_2px_rgba(192,212,112,0.85)]')
   })
 
   it('does NOT glow an id-less dot when the connection is via a different handle', () => {
@@ -65,10 +65,10 @@ describe('ConnectionDot', () => {
     ]
     render(<ProcessStyleDots />)
 
-    expect(dotClass('right')).toContain('!bg-gray-300')
-    expect(dotClass('right')).not.toContain('!bg-green-400')
-    expect(dotClass('top')).toContain('!bg-green-400')
-    expect(dotClass('bottom')).toContain('!bg-gray-300')
+    expect(dotClass('right')).toContain('!bg-wood-dark')
+    expect(dotClass('right')).not.toContain('!bg-lime')
+    expect(dotClass('top')).toContain('!bg-lime')
+    expect(dotClass('bottom')).toContain('!bg-wood-dark')
   })
 
   it('glows the id-less dot when the connection really uses it', () => {
@@ -77,9 +77,9 @@ describe('ConnectionDot', () => {
     ]
     render(<ProcessStyleDots />)
 
-    expect(dotClass('right')).toContain('!bg-green-400')
-    expect(dotClass('top')).toContain('!bg-gray-300')
-    expect(dotClass('bottom')).toContain('!bg-gray-300')
+    expect(dotClass('right')).toContain('!bg-lime')
+    expect(dotClass('top')).toContain('!bg-wood-dark')
+    expect(dotClass('bottom')).toContain('!bg-wood-dark')
   })
 
   it('focus-highlights only the origin dot during an in-progress connection drag', () => {
@@ -93,6 +93,6 @@ describe('ConnectionDot', () => {
     expect(dotClass('top')).toContain('!bg-brand')
     expect(dotClass('top')).toContain('ring-2')
     expect(dotClass('right')).not.toContain('!bg-brand')
-    expect(dotClass('right')).toContain('!bg-gray-300')
+    expect(dotClass('right')).toContain('!bg-wood-dark')
   })
 })

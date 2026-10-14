@@ -38,8 +38,14 @@ leaf-green progress bars, heart-purple accents.
 
 - Chat, Social, Shop, the match overlay and the public profile sheet were converted in a second pass
   (parchment rows, wooden headers, warm bubbles, item-slot product cards). Hard-coded colours that
-  predate the theme remain in a few screens (roadmap edges, admin, onboarding, mbtiColors). They
+  predate the theme remain in a few screens (admin, landing/news, some one-off modals). They
   still work but read as the old palette; sweep them as those screens are touched.
+- Roadmap (page header, parchment map canvas with dotted grid, quest-card nodes with a lime selection
+  ring, START/SUCCESS/UPDATE nodes, wooden toolbar and pickers, React Flow zoom controls) and
+  onboarding (title-screen intro, character-select MBTI cards, sign-style step titles, green step
+  bar) were converted in a third pass; `mbtiColors` was mapped onto the palette. Roadmap and the
+  Intro were checked in the browser (Roadmap via the guest editor); the later onboarding steps
+  (MBTI grid, university/program lists) were changed by class mapping only and not seen rendered.
 - `.neo-btn` keeps its default corner radius in `@layer components` so `rounded-full` /
   `rounded-lg` utilities on buttons still win; the other `neo-*` classes are unlayered and override
   radius utilities (as `neo-card` always did).

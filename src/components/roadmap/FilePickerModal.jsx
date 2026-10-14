@@ -76,10 +76,10 @@ export default function FilePickerModal({ nodeId, onClose }) {
   return createPortal(
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="w-full max-w-sm aspect-square max-h-[90vh] bg-white rounded-lg shadow-xl flex flex-col overflow-hidden"
+        className="w-full max-w-sm aspect-square max-h-[90vh] neo-card flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-4 py-3 border-b-2 border-ink/10 flex items-center justify-between shrink-0">
+        <div className="rpg-plank px-4 py-3 flex items-center justify-between shrink-0">
           <p className="pixel-font text-[11px] font-bold text-ink">Choose file</p>
           <button
             onClick={onClose}
@@ -127,7 +127,7 @@ function FileRow({ file, onClick }) {
     <button
       onClick={onClick}
       aria-label={`เลือก ${file.name}`}
-      className="flex items-center gap-2 px-3 py-2 rounded-xl border-2 border-ink/10 hover:border-brand active:scale-95 transition-all w-full text-left"
+      className="flex items-center gap-2 px-3 py-2 rounded-xl border-2 border-edge/40 hover:border-brand active:scale-95 transition-all w-full text-left"
     >
       <FileText size={14} className="text-brand shrink-0" />
       <span className="pixel-font text-[10px] text-ink truncate">{file.name}</span>

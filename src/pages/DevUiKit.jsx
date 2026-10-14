@@ -8,6 +8,7 @@ import SceneBackdrop from '../components/landing/SceneBackdrop'
 import CharacterSprite from '../components/ui/CharacterSprite'
 import TemperamentCard from '../components/profile/TemperamentCard'
 import LoadingScene from '../components/ui/LoadingScene'
+import OnboardingIntro from '../components/onboarding/OnboardingIntro'
 import ProductCard from '../components/shop/ProductCard'
 import PaymentStatusBadge from '../components/shop/PaymentStatusBadge'
 import QRPaymentCard from '../components/shop/QRPaymentCard'
@@ -167,6 +168,10 @@ export default function DevUiKit() {
               <button className="neo-btn rpg-btn-primary w-9 h-9 rounded-xl">➤</button>
             </div>
           </div>
+        </Section>
+
+        <Section title="ONBOARDING INTRO">
+          <div className="h-[28rem] overflow-hidden rounded-lg border-2 border-edge"><OnboardingIntro onNext={() => {}} /></div>
         </Section>
 
         <Section title="LOADING SCENE">

@@ -61,8 +61,8 @@ export default function ShareSheetModal({ sheetId, onClose }) {
 
   return createPortal(
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="w-full max-w-sm bg-white rounded-lg shadow-xl flex flex-col overflow-hidden max-h-[80vh]" onClick={(e) => e.stopPropagation()}>
-        <div className="px-4 py-3 border-b-2 border-ink/10 flex items-center justify-between shrink-0">
+      <div className="w-full max-w-sm neo-card flex flex-col overflow-hidden max-h-[80vh]" onClick={(e) => e.stopPropagation()}>
+        <div className="rpg-plank px-4 py-3 flex items-center justify-between shrink-0">
           <p className="pixel-font text-[11px] font-bold text-ink">Share sheet</p>
           <button onClick={onClose} aria-label="Close" className="neo-btn w-9 h-9 rounded-lg flex items-center justify-center text-ink-soft hover:bg-brand-soft">
             <X size={20} strokeWidth={2.5} />
@@ -70,7 +70,7 @@ export default function ShareSheetModal({ sheetId, onClose }) {
         </div>
 
         {/* Public link — no account needed to view */}
-        <div className="px-4 py-3 border-b-2 border-ink/10 flex flex-col gap-2">
+        <div className="rpg-plank px-4 py-3 flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <span className="pixel-font text-[10px] text-ink flex items-center gap-1.5">
               <Globe size={13} className="text-brand" /> Public link
@@ -96,7 +96,7 @@ export default function ShareSheetModal({ sheetId, onClose }) {
                 value={buildPublicShareUrl(publicState.shareId)}
                 aria-label="Public share link"
                 onFocus={(e) => e.target.select()}
-                className="flex-1 min-w-0 text-[10px] px-2 py-1.5 rounded-lg border border-ink/20 bg-brand-soft/30 text-ink-soft truncate"
+                className="flex-1 min-w-0 text-[10px] px-2 py-1.5 rounded-lg border border-edge/50 bg-brand-soft/30 text-ink-soft truncate"
               />
               <button
                 type="button"
@@ -111,7 +111,7 @@ export default function ShareSheetModal({ sheetId, onClose }) {
           <p className="pixel-font text-[8px] text-ink-soft/70">Anyone with the link can view — they cannot edit.</p>
         </div>
 
-        <div className="px-4 py-3 flex items-center gap-2 border-b-2 border-ink/10">
+        <div className="px-4 py-3 flex items-center gap-2 border-b-2 border-edge/30">
           <span className="pixel-font text-[10px] text-ink-soft">Access:</span>
           {['view', 'edit'].map((lv) => (
             <button
@@ -134,7 +134,7 @@ export default function ShareSheetModal({ sheetId, onClose }) {
               key={uid}
               disabled={busy}
               onClick={() => handleShare(uid)}
-              className="flex items-center justify-between px-3 py-2 rounded-xl border border-ink/10 hover:bg-brand/5 active:scale-95 transition-all disabled:opacity-50"
+              className="flex items-center justify-between px-3 py-2 rounded-xl border border-edge/40 hover:bg-brand/5 active:scale-95 transition-all disabled:opacity-50"
             >
               <span className="pixel-font text-[10px] text-ink">{requestUsers[uid]?.displayName ?? uid}</span>
               {sharedWith === uid && <Check size={14} className="text-good" />}

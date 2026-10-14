@@ -32,7 +32,7 @@ export default function IdeaRootNode({ id, data, selected }) {
       />
       <select
         aria-label="Idea status"
-        className="nodrag w-full text-[10px] text-ink bg-surface border border-ink/20 rounded px-1 py-0.5"
+        className="nodrag w-full text-[10px] text-ink bg-surface border border-edge/50 rounded px-1 py-0.5"
         value={data.status ?? 'idea'}
         onChange={onStatus}
       >

@@ -45,7 +45,7 @@ export default function FileViewerModal({ url, name, onClose }) {
       onClick={onClose}
     >
       <div
-        className="shrink-0 flex items-center gap-2 px-4 py-3 bg-surface border-b-2 border-ink/10"
+        className="shrink-0 flex items-center gap-2 px-4 py-3 rpg-plank"
         onClick={(e) => e.stopPropagation()}
       >
         <FileText size={16} className="text-brand shrink-0" />

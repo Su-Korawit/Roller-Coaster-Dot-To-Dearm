@@ -72,7 +72,7 @@ export default function ImagePickerModal({ nodeId, onClose }) {
   return createPortal(
     <Popup variant="center" size="sm" onClose={onClose}>
       <div className="aspect-square max-h-[90vh] flex flex-col overflow-hidden">
-        <div className="px-4 py-3 border-b-2 border-ink/10 flex items-center justify-between shrink-0">
+        <div className="rpg-plank px-4 py-3 flex items-center justify-between shrink-0">
           <div>
             <p className="pixel-font text-[11px] font-bold text-ink">Choose image</p>
             <p className="pixel-font text-[10px] text-ink-soft mt-0.5">Tap to add — close when you're done</p>
@@ -128,7 +128,7 @@ function Thumb({ url, label, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="w-16 h-16 rounded-xl border-2 border-ink/10 overflow-hidden hover:border-brand active:scale-95 transition-all relative"
+      className="w-16 h-16 rounded-xl border-2 border-edge/40 overflow-hidden hover:border-brand active:scale-95 transition-all relative"
     >
       <img src={url} alt={label ?? 'image'} className="w-full h-full object-contain p-1" draggable={false} />
       {label && (

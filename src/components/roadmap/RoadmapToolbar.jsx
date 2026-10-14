@@ -36,7 +36,7 @@ export default function RoadmapToolbar({
       {paletteOpen && paletteItems.length > 0 && (
         <Panel position="top-center">
           <div
-            className="flex items-center gap-2 bg-white rounded-2xl shadow-hard-sm px-3 py-2 border border-ink/10 mt-2 max-w-[calc(100vw-1rem)] overflow-x-auto"
+            className="flex items-center gap-2 neo-slab px-3 py-2 mt-2 max-w-[calc(100vw-1rem)] overflow-x-auto"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
             <span className="pixel-font text-[9px] text-ink-soft mr-1 flex-shrink-0">Add</span>
@@ -89,7 +89,7 @@ export default function RoadmapToolbar({
 
       {wireframe && (
         <Panel position="bottom-center">
-          <div className="flex items-center gap-2 bg-white rounded-2xl shadow-hard-sm px-3 py-2 border border-ink/10 mb-2">
+          <div className="flex items-center gap-2 neo-slab px-3 py-2 mb-2">
             <button
               type="button"
               onClick={wireframe.onText}
@@ -250,7 +250,7 @@ export const IR_PALETTE_ITEMS = [
     type: 'update',
     label: 'Update',
     preview: (
-      <div className="w-8 h-8 rounded-xl bg-amber-100 border-2 border-amber-400/60 flex items-center justify-center">
+      <div className="w-8 h-8 rounded-xl bg-warn/20 border-2 border-warn/60 flex items-center justify-center">
         <span className="text-[12px]">📝</span>
       </div>
     ),

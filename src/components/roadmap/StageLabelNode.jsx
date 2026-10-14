@@ -15,8 +15,8 @@ export default function StageLabelNode({ id, data, selected }) {
     <div
       className={`group min-w-[100px] px-4 py-1.5 rounded-xl border-2 transition-all ${
         selected
-          ? 'border-ink bg-brand-soft shadow-hard-sm'
-          : 'border-ink/30 bg-surface hover:border-ink/60'
+          ? 'border-edge bg-brand-soft shadow-hard-sm ring-2 ring-lime'
+          : 'border-edge/60 bg-surface hover:border-edge'
       }`}
     >
       <input

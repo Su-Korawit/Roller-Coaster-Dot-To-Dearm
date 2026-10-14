@@ -72,7 +72,7 @@ function OnboardingModal() {
             {[1, 2].map((s) => (
               <span
                 key={s}
-                className={`w-6 h-2 border-2 border-ink ${s <= step ? 'bg-brand-strong' : 'bg-surface'}`}
+                className={`w-6 h-2 border-2 border-edge ${s <= step ? 'bg-lime' : 'bg-surface'}`}
               />
             ))}
           </div>

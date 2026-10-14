@@ -23,15 +23,17 @@ export default function StepScreen({
   return (
     <section className="onboarding-bg flex h-full flex-col">
       <div className={`mx-auto w-full ${maxWidth} shrink-0 px-6 pt-6`}>
-        <h1 className="thai-font text-xl font-bold text-ink leading-tight">{title}</h1>
-        {subtitle && <div className="mb-1 mt-2">{subtitle}</div>}
+        <div className="neo-card px-4 py-3">
+          <h1 className="thai-font text-xl font-bold text-ink leading-tight">{title}</h1>
+          {subtitle && <div className="mt-2">{subtitle}</div>}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 pb-2">
         {children}
       </div>
 
-      <div className="sticky bottom-0 bg-paper/95 border-t-2 border-ink">
+      <div className="sticky bottom-0 bg-hud border-t-2 border-edge">
         <div className={`mx-auto w-full ${maxWidth} px-6 py-3 space-y-3`}>
           {!hideSearch && onSearchChange && (
             <SearchBar
@@ -45,7 +47,7 @@ export default function StepScreen({
               <button
                 type="button"
                 onClick={onBack}
-                className="neo-btn flex-1 rounded-xl border-2 border-ink bg-surface py-3 thai-font text-sm text-ink"
+                className="neo-btn flex-1 rounded-xl bg-surface py-3 thai-font text-sm text-ink"
               >
                 ย้อนกลับ
               </button>

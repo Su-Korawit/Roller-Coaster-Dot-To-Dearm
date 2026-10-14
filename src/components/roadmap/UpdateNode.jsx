@@ -13,13 +13,13 @@ export default function UpdateNode({ id, data, selected }) {
 
   return (
     <div
-      className={`relative w-32 h-32 rounded-xl border-2 bg-amber-50 p-2.5 flex flex-col gap-1 ${
-        selected ? 'border-amber-500 shadow-hard-sm' : 'border-amber-300'
+      className={`relative w-32 h-32 rounded-xl border-2 bg-warn/15 p-2.5 flex flex-col gap-1 ${
+        selected ? 'border-warn shadow-hard-sm ring-2 ring-lime' : 'border-warn/60'
       }`}
     >
       <ConnectionDot type="target" position={Position.Left} />
       <ConnectionDot id="top" type="source" position={Position.Top} />
-      <p className="pixel-font text-[8px] text-amber-700">UPDATE</p>
+      <p className="pixel-font text-[8px] text-warn-strong">UPDATE</p>
       <textarea
         className="w-full flex-1 text-[11px] text-ink bg-transparent outline-none resize-none placeholder:text-ink-soft/50 focus:placeholder:text-ink-soft leading-tight"
         placeholder="Summary"

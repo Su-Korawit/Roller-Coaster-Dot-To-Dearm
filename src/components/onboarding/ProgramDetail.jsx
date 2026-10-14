@@ -4,7 +4,7 @@ import { useTcasRounds } from '../../hooks/useMytcas'
 function RoundCard({ round, expanded, onToggle }) {
   const criteria = round.criteria ?? round.weighted_criteria ?? []
   return (
-    <div className="rounded-xl border-2 border-ink/25 bg-surface overflow-hidden">
+    <div className="rounded-xl border-2 border-edge/50 bg-surface overflow-hidden">
       <button
         type="button"
         onClick={onToggle}
@@ -19,7 +19,7 @@ function RoundCard({ round, expanded, onToggle }) {
         <span className="text-ink-soft">{expanded ? '▲' : '▼'}</span>
       </button>
       {expanded && criteria.length > 0 && (
-        <div className="border-t border-ink/10 px-4 py-3 space-y-2">
+        <div className="border-t border-edge/30 px-4 py-3 space-y-2">
           {criteria.map((c, i) => (
             <div key={i}>
               <div className="flex justify-between thai-font text-xs text-ink-soft">
@@ -74,11 +74,11 @@ export default function ProgramDetail({ programId, programName, onBack, onConfir
         )}
       </div>
 
-      <div className="sticky bottom-0 bg-paper/95 border-t-2 border-ink px-6 py-3 flex gap-3">
+      <div className="sticky bottom-0 bg-hud border-t-2 border-edge px-6 py-3 flex gap-3">
         <button
           type="button"
           onClick={onBack}
-          className="neo-btn flex-1 rounded-xl border-2 border-ink bg-surface py-3 thai-font text-sm text-ink"
+          className="neo-btn flex-1 rounded-xl border-2 border-edge bg-surface py-3 thai-font text-sm text-ink"
         >
           ย้อนกลับ
         </button>

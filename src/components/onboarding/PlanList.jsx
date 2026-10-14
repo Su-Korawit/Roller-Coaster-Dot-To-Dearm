@@ -45,7 +45,7 @@ function PlanCard({ plan, selected, onSelect, onDelete, dragHandleProps }) {
         }
       }}
       className={`flex w-full items-start gap-3 rounded-xl border-2 bg-surface p-4 text-left transition-all hover:bg-brand-soft/60 active:scale-[0.98] ${
-        selected ? 'border-ink shadow-hard-sm bg-brand-soft' : 'border-ink/25'
+        selected ? 'border-edge shadow-hard-sm bg-brand-soft ring-2 ring-lime' : 'border-edge/50'
       }`}
       aria-label={`แผน ${plan.id}`}
       {...dragHandleProps}
@@ -123,7 +123,7 @@ export default function PlanList({ onEditPlan, onNext, onBack }) {
       <StepScreen
         title="เลือกสายการเรียน"
         subtitle={
-          <div className="flex items-center justify-between rounded-xl border-2 border-ink bg-brand-soft px-4 py-3">
+          <div className="flex items-center justify-between rounded-xl border-2 border-edge bg-brand-soft px-4 py-3">
             <p className="thai-font text-xs text-ink-soft">
               เพิ่มได้อีก {remaining} โปรแกรม
             </p>

@@ -140,7 +140,7 @@ function UniversityStep({ onNext, onBack }) {
     >
       <div className="mx-auto max-w-5xl neo-card bg-surface p-4 md:p-6">
         {dataSource === 'snapshot' && (
-          <p className="thai-font mb-3 rounded-lg border-2 border-ink/25 bg-brand-soft px-3 py-2 text-center text-xs text-ink-soft">
+          <p className="thai-font mb-3 rounded-lg border-2 border-edge/50 bg-brand-soft px-3 py-2 text-center text-xs text-ink-soft">
             ข้อมูล TCAS กำลังอัปเดตสำหรับรอบใหม่ — แสดงข้อมูลรอบก่อนหน้าไปพลางก่อน
           </p>
         )}
@@ -162,7 +162,7 @@ function UniversityStep({ onNext, onBack }) {
                 aria-pressed={selected === university.university_id}
                 className={`relative rounded-xl bg-surface border-2 p-3 transition-all active:scale-95
                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1
-                  ${selected === university.university_id ? 'border-ink shadow-hard-sm bg-brand-soft' : 'border-ink/25 hover:border-ink/60'}`}
+                  ${selected === university.university_id ? 'border-edge shadow-hard-sm bg-brand-soft ring-2 ring-lime' : 'border-edge/50 hover:border-edge'}`}
               >
                 <UniversityLogo uni={university} />
               </button>

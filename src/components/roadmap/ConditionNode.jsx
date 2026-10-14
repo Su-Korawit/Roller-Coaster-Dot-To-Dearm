@@ -22,7 +22,7 @@ export default function ConditionNode({ id, data, selected }) {
           the full 128x128 (matching ProcessNode) and the dots flush on the edge. */}
       <div
         className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-2 bg-surface transition-all ${
-          selected ? 'border-ink shadow-hard-sm' : 'border-ink/30 shadow-none'
+          selected ? 'border-edge shadow-hard-sm ring-2 ring-lime' : 'border-edge/60 shadow-hard-sm'
         }`}
         style={{ width: '70.71%', height: '70.71%', borderRadius: '8px' }}
       />

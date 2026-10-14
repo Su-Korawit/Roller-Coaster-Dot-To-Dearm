@@ -25,6 +25,8 @@
   --color-wood-dark:    #c49a6c;
   --color-wood-edge:    #aa7959;
   --color-lime:         #c0d470;
+  --color-good-strong:  #5d7a2c;   /* readable green for text on parchment */
+  --color-warn-strong:  #8f5f14;   /* readable amber for text on parchment */
   --shadow-hard:        0 4px 0 0 #90625d;
   --shadow-hard-sm:     0 3px 0 0 #90625d;
 }
@@ -60,7 +62,13 @@
 
 /* ── Unified onboarding page background ────────────────────────────────────── */
 .onboarding-bg {
-  background: linear-gradient(180deg, #fde4f0 0%, #f3edff 50%, #e3f0ff 100%);
+  background-color: #f3e5c2;
+  background-image:
+    linear-gradient(45deg, rgb(144 98 93 / 0.06) 25%, transparent 25%, transparent 75%, rgb(144 98 93 / 0.06) 75%),
+    linear-gradient(45deg, rgb(144 98 93 / 0.06) 25%, transparent 25%, transparent 75%, rgb(144 98 93 / 0.06) 75%),
+    linear-gradient(180deg, #f8efd6 0%, #f3e5c2 60%, #e8cfa6 100%);
+  background-size: 16px 16px, 16px 16px, 100% 100%;
+  background-position: 0 0, 8px 8px, 0 0;
 }
 
 @keyframes marquee {
@@ -329,3 +337,20 @@ html {
 
 /* Sky-to-meadow wash behind loading screens and the game canvas while it boots. */
 .px-sky-bg { background: linear-gradient(180deg, #8ec9d8 0%, #bfe0c8 55%, #c0d470 100%); }
+
+/* React Flow chrome in the parchment theme (zoom controls, attribution). */
+.react-flow__controls {
+  border: 2px solid var(--color-edge);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 3px 0 0 var(--color-edge);
+}
+.react-flow__controls-button {
+  background: var(--color-surface);
+  border-bottom: 2px solid var(--color-wood);
+  color: var(--color-ink);
+  fill: var(--color-ink);
+}
+.react-flow__controls-button:hover { background: var(--color-hud); }
+.react-flow__controls-button:last-child { border-bottom: none; }
+.react-flow__attribution { background: rgb(243 229 194 / 0.8); }

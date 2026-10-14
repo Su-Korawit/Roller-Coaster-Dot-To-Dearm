@@ -273,9 +273,9 @@ export default function RoadmapPage({ onClose, backPath }) {
   }, [importRoadmap])
 
   return (
-    <div className={`h-full w-full flex flex-col ${overlay ? 'bg-transparent' : 'bg-[#F4F7FC]'}`}>
+    <div className={`h-full w-full flex flex-col ${overlay ? 'bg-transparent' : 'bg-mist'}`}>
       {/* Header */}
-      <div className="shrink-0 flex items-center gap-3 px-4 py-3 bg-white  z-10">
+      <div className="rpg-plank shrink-0 flex items-center gap-3 px-4 py-3 z-10">
         <button
           onClick={handleBack}
           aria-label={overlay ? 'ปิด Roadmap' : 'กลับหน้าหลัก'}
@@ -317,7 +317,7 @@ export default function RoadmapPage({ onClose, backPath }) {
           />
         </div>
       </div>
-      <div className="shrink-0 border-t border-ink/10 bg-white">
+      <div className="shrink-0 border-t-2 border-edge bg-hud">
         <SheetSwitcher />
         <StageBands
           stages={timeline?.stages ?? DEFAULT_STAGES}
@@ -358,13 +358,13 @@ export default function RoadmapPage({ onClose, backPath }) {
           connectionMode="loose"
           deleteKeyCode={['Backspace', 'Delete']}
         >
-          <Background gap={20} color="#e2e8f0" />
+          <Background gap={24} size={2} color="#d3b27c" />
           <Controls className="rf-touch-controls" />
 
           {/* Save/saved status indicator */}
           {syncStatus !== 'idle' && (
             <Panel position="top-right">
-              <div className="mt-2 mr-2 px-3 py-1.5 rounded-xl bg-white shadow-hard-sm border border-ink/10">
+              <div className="neo-slab mt-2 mr-2 px-3 py-1.5">
                 {syncStatus === 'saving' && (
                   <span className="pixel-font text-[8px] text-ink-soft">Saving...</span>
                 )}
