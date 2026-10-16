@@ -100,7 +100,7 @@ The hub today is a static prerendered file; articles change at any time, so page
 | Field | Notes |
 |---|---|
 | `title`, `excerpt`, `category`, `tags[]`, `coverUrl`, `coverAlt` | |
-| `body` | TipTap JSON |
+| `body` | TipTap JSON, stored as a JSON **string** (one text field, ≤ 716,800 bytes) |
 | `authorUid`, `authorName`, `draftId` | `draftId` lets republish find the owner and prevents slug hijack |
 | `createdAt`, `updatedAt`, `publishedAt` | server timestamps |
 | `readingMinutes` | computed on publish |
