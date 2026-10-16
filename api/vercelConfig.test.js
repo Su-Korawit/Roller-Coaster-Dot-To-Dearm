@@ -54,6 +54,7 @@ describe('api function import extensions', () => {
       .filter((f) => ['schema.js', 'listing.js', 'renderBody.js', 'htmlPages.js', 'firestoreRest.js'].includes(f))
       .map((f) => `src/content/${f}`),
     'src/constants/sites.js',
+    'src/content/migrate.js',
   ]
 
   it.each(reached)('%s uses explicit .js extensions for relative imports', (file) => {
