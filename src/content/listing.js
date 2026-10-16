@@ -1,6 +1,6 @@
 // List helpers for the content site. Pure: shared by the browser stores, the Vercel
 // function (src/content/htmlPages.js) and tests.
-import { CATEGORY_IDS } from './schema'
+import { CATEGORY_IDS } from './schema.js'
 
 // Accepts ISO strings (REST), Dates, numbers, and Firestore Timestamps.
 export function toMillis(value) {
