@@ -24,6 +24,9 @@ const RoadmapPublicView = lazy(() => import('./pages/RoadmapPublicView'))
 const WelcomePage = lazy(() => import('./pages/WelcomePage'))
 const NewsPostPage = lazy(() => import('./pages/NewsPostPage'))
 const StudioListPage = lazy(() => import('./pages/studio/StudioListPage'))
+// TipTap lives only in the editor chunk.
+const StudioEditorPage = lazy(() => import('./pages/studio/StudioEditorPage'))
+const StudioPreviewPage = lazy(() => import('./pages/studio/StudioPreviewPage'))
 const MusicCallback = lazy(() => import('./pages/MusicCallback'))
 const PrivacyPage = lazy(() => import('./pages/legal/PrivacyPage'))
 const TermsPage = lazy(() => import('./pages/legal/TermsPage'))
@@ -108,6 +111,8 @@ function AppSiteRoutes() {
       {/* Studio — creators write articles for the content site (hub) */}
       <Route element={<RequireCreator />}>
         <Route path="/studio" element={<StudioListPage />} />
+        <Route path="/studio/preview/:draftId" element={<StudioPreviewPage />} />
+        <Route path="/studio/:draftId" element={<StudioEditorPage />} />
       </Route>
 
       {/* Public — landing + auth, outside the mobile frame so the page can scroll */}
