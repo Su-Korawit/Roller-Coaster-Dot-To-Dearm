@@ -9,10 +9,11 @@ import { ADMIN_UID } from '../../constants/admin'
 import Button from '../../components/ui/Button'
 
 // A draft's state, from the server-owned fields: never published, live, or live
-// with edits made since (updatedAt moved past publishedAt).
+// with edits made since the last publish (updatedAt moved past liveUpdatedAt;
+// publishedAt keeps the first publish date, so it cannot be the reference).
 function draftStatus(d) {
   if (!d.isLive) return { id: 'draft', label: 'ฉบับร่าง' }
-  if (toMillis(d.updatedAt) > toMillis(d.publishedAt)) {
+  if (toMillis(d.updatedAt) > toMillis(d.liveUpdatedAt ?? d.publishedAt)) {
     return { id: 'dirty', label: 'เผยแพร่แล้ว มีการแก้ไขที่ยังไม่เผยแพร่' }
   }
   return { id: 'live', label: 'เผยแพร่แล้ว' }

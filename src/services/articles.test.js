@@ -54,7 +54,7 @@ describe('createDraft', () => {
   it('never sends server-owned fields', async () => {
     await svc.createDraft('alice', 'Alice')
     const [, data] = m.setDoc.mock.calls[0]
-    for (const k of ['publishedSlug', 'publishedAt', 'isLive']) expect(data).not.toHaveProperty(k)
+    for (const k of ['publishedSlug', 'publishedAt', 'isLive', 'liveUpdatedAt']) expect(data).not.toHaveProperty(k)
   })
 })
 
@@ -65,7 +65,7 @@ describe('saveDraft', () => {
   })
 
   it('strips owner and server-owned fields so the rules never reject an autosave', async () => {
-    await svc.saveDraft('d1', { title: 'x', authorUid: 'bob', publishedSlug: 's', publishedAt: 1, isLive: true })
+    await svc.saveDraft('d1', { title: 'x', authorUid: 'bob', publishedSlug: 's', publishedAt: 1, isLive: true, liveUpdatedAt: 2 })
     const [, data] = m.updateDoc.mock.calls[0]
     expect(Object.keys(data).sort()).toEqual(['title', 'updatedAt'])
   })

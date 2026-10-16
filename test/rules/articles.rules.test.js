@@ -43,7 +43,7 @@ beforeEach(async () => {
   await testEnv.withSecurityRulesDisabled(async (ctx) => {
     const db = ctx.firestore()
     await setDoc(doc(db, 'articles/live-one'), { title: 'เผยแพร่แล้ว', authorUid: 'alice', draftId: 'd1' })
-    await setDoc(doc(db, 'articleDrafts/d1'), draft({ publishedSlug: 'live-one', isLive: true }))
+    await setDoc(doc(db, 'articleDrafts/d1'), draft({ publishedSlug: 'live-one', isLive: true, liveUpdatedAt: new Date(0) }))
     await setDoc(doc(db, 'articleDrafts/d2'), draft({ authorUid: 'bob', slug: 'bobs' }))
     await setDoc(doc(db, 'siteConfig/hub'), { lineOpenChatUrl: 'https://line.me/ti/g2/abc' })
   })
@@ -82,6 +82,7 @@ describe('articleDrafts', () => {
     await assertFails(setDoc(doc(c, 'articleDrafts/x2'), draft({ authorUid: 'carol', publishedSlug: 'stolen' })))
     await assertFails(setDoc(doc(c, 'articleDrafts/x3'), draft({ authorUid: 'carol', featured: true })))
     await assertFails(setDoc(doc(c, 'articleDrafts/x4'), draft({ authorUid: 'carol', isLive: true })))
+    await assertFails(setDoc(doc(c, 'articleDrafts/x5'), draft({ authorUid: 'carol', liveUpdatedAt: new Date() })))
   })
 
   it('lets the author read and edit their own draft but not change owner or published slug', async () => {
@@ -91,6 +92,7 @@ describe('articleDrafts', () => {
     await assertFails(updateDoc(doc(a, 'articleDrafts/d1'), { authorUid: 'bob' }))
     await assertFails(updateDoc(doc(a, 'articleDrafts/d1'), { publishedSlug: 'other' }))
     await assertFails(updateDoc(doc(a, 'articleDrafts/d1'), { isLive: false }))
+    await assertFails(updateDoc(doc(a, 'articleDrafts/d1'), { liveUpdatedAt: new Date() }))
     await assertFails(updateDoc(doc(a, 'articleDrafts/d1'), { featured: true }))
   })
 

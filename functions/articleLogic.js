@@ -127,7 +127,8 @@ function planPublish({ draft, draftId, uid, isSuperAdmin, existingLive, now }) {
       publishedAt,
       updatedAt: now,
     },
-    draftPatch: { publishedSlug: slug, publishedAt, updatedAt: now, isLive: true },
+    // liveUpdatedAt marks the draft state that is live: edits after it are unpublished.
+    draftPatch: { publishedSlug: slug, publishedAt, updatedAt: now, isLive: true, liveUpdatedAt: now },
   }
 }
 

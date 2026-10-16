@@ -8,7 +8,7 @@ import { EMPTY_DOC } from '../content/renderBody'
 
 // Fields only the server may change. Stripped from every save so an autosave
 // carrying stale state can never be rejected by (or fight with) the rules.
-const SERVER_OWNED = ['authorUid', 'publishedSlug', 'publishedAt', 'isLive', 'createdAt']
+const SERVER_OWNED = ['authorUid', 'publishedSlug', 'publishedAt', 'isLive', 'liveUpdatedAt', 'createdAt']
 
 export class PublishError extends Error {
   constructor(message, errors) {

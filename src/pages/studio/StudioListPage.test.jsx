@@ -67,6 +67,41 @@ describe('StudioListPage', () => {
     expect(screen.getAllByText('เผยแพร่แล้ว มีการแก้ไขที่ยังไม่เผยแพร่')).toHaveLength(1)
   })
 
+  it('does not call a just-published or republished article edited', async () => {
+    // Republishing keeps the first publishedAt; only liveUpdatedAt moves with updatedAt.
+    m.getDocs.mockResolvedValue(
+      snap([
+        draft('again', {
+          isLive: true,
+          publishedSlug: 'again',
+          publishedAt: ts('2026-10-01T00:00:00Z'),
+          liveUpdatedAt: ts('2026-10-12T00:00:00Z'),
+          updatedAt: ts('2026-10-12T00:00:00Z'),
+        }),
+      ]),
+    )
+    renderPage()
+    await screen.findByText('ร่าง again')
+    expect(screen.getByText('เผยแพร่แล้ว')).toBeTruthy()
+    expect(screen.queryByText('เผยแพร่แล้ว มีการแก้ไขที่ยังไม่เผยแพร่')).toBeNull()
+  })
+
+  it('flags edits made after the last publish', async () => {
+    m.getDocs.mockResolvedValue(
+      snap([
+        draft('edited', {
+          isLive: true,
+          publishedSlug: 'edited',
+          publishedAt: ts('2026-10-01T00:00:00Z'),
+          liveUpdatedAt: ts('2026-10-12T00:00:00Z'),
+          updatedAt: ts('2026-10-13T00:00:00Z'),
+        }),
+      ]),
+    )
+    renderPage()
+    expect(await screen.findByText('เผยแพร่แล้ว มีการแก้ไขที่ยังไม่เผยแพร่')).toBeTruthy()
+  })
+
   it('shows an unpublished draft that once went live as a draft', async () => {
     m.getDocs.mockResolvedValue(snap([draft('gone', { isLive: false, publishedSlug: 'gone', publishedAt: ts('2026-10-02T00:00:00Z') })]))
     renderPage()

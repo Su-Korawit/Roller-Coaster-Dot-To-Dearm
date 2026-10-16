@@ -91,6 +91,7 @@ describe('publishArticle', () => {
     const stored = (await db.collection('articleDrafts').doc('d1').get()).data()
     expect(stored.publishedSlug).toBe('medicine-all')
     expect(stored.isLive).toBe(true)
+    expect(stored.liveUpdatedAt.isEqual(stored.updatedAt)).toBe(true)
   })
 
   it('does not let a second creator take an existing slug', async () => {
