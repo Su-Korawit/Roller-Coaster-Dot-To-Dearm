@@ -265,6 +265,53 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── Content site (spec 2026-10-16-content-site-design.md) ────────────────
+    // Creator = custom claim set by grantCreatorRole. Creators write only drafts;
+    // the public `articles` collection is written solely by the publishArticle /
+    // unpublishArticle Cloud Functions (Admin SDK bypasses these rules), so a
+    // half-edited draft can never go live and slugs cannot be hijacked.
+    function isCreator() {
+      return isSignedIn() && request.auth.token.get('creator', false) == true;
+    }
+    function draftFields() {
+      return ['authorUid', 'authorName', 'title', 'slug', 'category', 'excerpt', 'tags',
+              'coverUrl', 'coverAlt', 'body', 'seo', 'publishedSlug', 'publishedAt',
+              'createdAt', 'updatedAt'];
+    }
+
+    match /articles/{slug} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /articleDrafts/{draftId} {
+      allow read: if isSuperAdmin()
+        || (isCreator() && resource.data.authorUid == request.auth.uid);
+      allow create: if isSuperAdmin()
+        || (isCreator()
+            && request.resource.data.authorUid == request.auth.uid
+            && !('publishedSlug' in request.resource.data)
+            && !('publishedAt' in request.resource.data)
+            && request.resource.data.keys().hasOnly(draftFields()));
+      allow update: if isSuperAdmin()
+        || (isCreator()
+            && resource.data.authorUid == request.auth.uid
+            && request.resource.data.authorUid == resource.data.authorUid
+            && request.resource.data.get('publishedSlug', null) == resource.data.get('publishedSlug', null)
+            && request.resource.data.get('publishedAt', null) == resource.data.get('publishedAt', null)
+            && request.resource.data.keys().hasOnly(draftFields()));
+      allow delete: if isSuperAdmin()
+        || (isCreator()
+            && resource.data.authorUid == request.auth.uid
+            && resource.data.get('publishedSlug', '') == '');
+    }
+
+    // Hub settings (LINE OpenChat info, featured article): public read, super-admin write.
+    match /siteConfig/{docId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
     match /tcasEvents/{eventId} {
       allow read: if true;
       allow write: if isSuperAdmin();
