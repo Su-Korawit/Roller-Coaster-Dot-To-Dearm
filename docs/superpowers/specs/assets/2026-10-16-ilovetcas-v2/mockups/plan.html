@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Noto+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--line:#5c4e92;--soft:#6f63a6;--ink:#2B2550;--muted:#6E6890;--mist:#F4F3F9;--leaf:#5FB57A;--med:#E8817B;--med-soft:#FCE5E3;--sci:#5B8DEF;--sci-soft:#E3ECFD}
+*{box-sizing:border-box;margin:0}
+body{font-family:'Noto Sans Thai';color:var(--ink);background:#ECEBF2;padding:26px 30px 50px}
+h1{font:700 22px 'Chakra Petch'}p.s{color:var(--muted);font-size:14px;margin:4px 0 18px;max-width:940px}
+.row{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start}
+.cap{font:600 14px 'Chakra Petch';margin-bottom:8px}.cap span{display:block;font:400 12.5px 'Noto Sans Thai';color:var(--muted);max-width:340px}
+.phone{width:340px;height:700px;border:2px solid var(--line);border-radius:22px;overflow:hidden;position:relative;background:#fff}
+.top{padding:14px 16px 10px;background:var(--mist);border-bottom:2px solid var(--line)}
+.top h2{font:700 19px 'Chakra Petch';display:flex;gap:8px;align-items:center}.top h2 img{width:26px;image-rendering:pixelated}
+.count{display:flex;align-items:baseline;gap:6px;margin-top:6px;font-size:13px;color:var(--muted)}.count b{font:700 26px/1 'Chakra Petch';color:var(--ink)}
+.seg{display:flex;gap:4px;padding:10px 12px 0}
+.seg span{flex:1;text-align:center;font:600 12.5px 'Chakra Petch';padding:5px 0;border:2px solid #D9D5EA;border-radius:9px}
+.seg span.on{border-color:var(--line);background:var(--ink);color:#fff}
+.body{padding:10px 12px;overflow:hidden;height:calc(100% - 160px)}
+.lbl{font:600 12.5px 'Chakra Petch';color:var(--muted);margin:10px 2px 6px}
+.next{border:2px solid var(--line);border-radius:12px;box-shadow:3px 3px 0 var(--line);padding:10px 12px;background:var(--med-soft)}
+.next .d{font:700 13px 'Chakra Petch';color:var(--med)}.next b{display:block;font:600 15px 'Chakra Petch';margin-top:2px}
+.chk{margin-top:6px;font-size:13px;line-height:1.7}.chk i{display:inline-block;width:13px;height:13px;border:2px solid var(--soft);border-radius:4px;vertical-align:-2px;margin-right:6px}.chk i.y{background:#A8E6CF;border-color:var(--leaf)}
+.prog{height:8px;border:2px solid var(--line);border-radius:6px;margin-top:6px;background:linear-gradient(90deg,var(--leaf) 66%,#fff 66%)}
+.rk{display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:center;border:2px solid #D9D5EA;border-radius:11px;padding:8px 9px;margin-bottom:6px}
+.rk .n{font:700 17px 'Chakra Petch';text-align:center}
+.rk b{font:600 14px 'Chakra Petch';display:block;line-height:1.25}.rk small{font-size:12px;color:var(--muted)}
+.chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}.chips em{font:600 10.5px 'Chakra Petch';font-style:normal;padding:1px 6px;border-radius:6px;background:var(--sci-soft);color:#3B63B8}
+.grip{color:#B8B2D4;font-size:15px;letter-spacing:-2px}
+.sub{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;border:2px solid var(--line);border-radius:11px;padding:8px 10px;margin-bottom:6px}
+.sub b{font:600 13.5px 'Chakra Petch'}.sub small{font-size:11.5px;color:var(--muted);grid-column:1}
+.sub .bar{grid-column:1/3;height:7px;border-radius:5px;border:2px solid var(--soft);background:linear-gradient(90deg,var(--sci) var(--w),#fff var(--w))}
+.play{font:600 12px 'Chakra Petch';border:2px solid var(--line);border-radius:9px;padding:3px 8px;background:#fff;box-shadow:2px 2px 0 var(--line);grid-row:1/3;grid-column:2}
+/* popup add flow */
+.pop{position:absolute;inset:0;background:#DCEAB8 url(data:image/png;base64,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) -40px 30px/344px no-repeat;image-rendering:pixelated}
+.pop .sheet{position:absolute;left:0;right:0;bottom:0;height:78%;background:#fff;border-top:2px solid var(--line);border-radius:20px 20px 0 0;padding:12px 14px}
+.prow{display:grid;grid-template-columns:38px 1fr;gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed #CFCCE0}
+.logo{width:38px;height:38px;border:2px solid var(--line);border-radius:9px;display:grid;place-items:center;font:700 12px 'Chakra Petch';background:var(--mist)}
+.add{display:flex;gap:8px;margin-top:10px}
+.btn{flex:1;text-align:center;font:600 14px 'Chakra Petch';padding:9px 0;border-radius:10px;border:2px solid var(--line);box-shadow:2px 2px 0 var(--line)}
+.btn.p{background:var(--ink);color:#fff}
+.picker{margin-top:12px;border:2px solid var(--line);border-radius:12px;padding:10px;background:var(--mist)}
+.picker .q{font:600 13.5px 'Chakra Petch';margin-bottom:8px}
+.opt{display:flex;justify-content:space-between;align-items:center;border:2px solid #D9D5EA;border-radius:9px;background:#fff;padding:7px 10px;margin-bottom:6px;font-size:13px}
+.opt.on{border-color:var(--line);box-shadow:2px 2px 0 var(--line)}.opt b{font-family:'Chakra Petch'}
+.toast{position:absolute;left:14px;right:14px;top:14px;background:var(--ink);color:#fff;border-radius:12px;padding:10px 12px;font-size:13px;display:flex;gap:10px;align-items:center;box-shadow:3px 3px 0 #000}
+.toast img{width:26px;image-rendering:pixelated}.toast u{margin-left:auto;font:600 12.5px 'Chakra Petch';text-decoration:none;color:#FFE08A}
+</style></head><body>
+<h1>สมุดแผน: แผนยื่น TCAS อัตโนมัติ</h1>
+<p class="s">ผู้ใช้ไม่ต้องวาดผังอะไร แค่กด "เพิ่มเข้าแผน" จากตึกคณะ ระบบดึงจาก MyTCAS เองว่าต้องใช้อะไรและต้องทำเมื่อไร แล้ว<b>รวมวิชาที่ต้องสอบจากทุกหลักสูตรในแผน</b>เป็นเป้าชั่วโมงโฟกัส กดแล้วเริ่มอ่านวิชานั้นได้ทันที แผนกับห้องอ่านหนังสือจึงเป็นลูปเดียวกัน (วันที่และคะแนนในภาพเป็นตัวอย่าง)</p>
+<div class="row">
+
+<div><div class="cap">1: เพิ่มจาก popup ตึกคณะ<span>เลือกรอบ ระบบเสนออันดับให้ เพิ่มแล้วมี toast พร้อมลิงก์ไปดูแผน ใช้แบบ guest ได้ (เก็บในเครื่อง และรวมเข้าบัญชีตอนล็อกอิน)</span></div>
+<div class="phone"><div class="pop">
+  <div class="toast"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAACXBIWXMAAAPoAAAD6AG1e1JrAAABSklEQVR4nO2csQ3DIBBFmdAT0HkABkiVCSwxRGpvwBBZIhVl5I7UoYhlfQhgvyddlcZ5uvscLmwMAACchtf9lo5U6+ftDgSKIPDqAu3kU8tC4ITARAcywvXIu2tZ488Kz+2vdTQD8/9TUR0Ci0AHiiBQBIEiCBRBoAgCOxPo5kfRutwe6BAYEUgH+nFG2GUjW5rTZ6BDIAIl6MDOBIbC7wPTO35Vnnn578NnYEBgRCAd6Mcd4drsRcbwGVgbBIogUASBIggUQaAIAkVOJzBUfqV/9KqIwBmBiQ5cGeFmGRga1/AZGBAYEUgHekY4kIEbh8jCIcIpbFhjNvbAwCIdWaS5iVSCq5wIAkUQKIJAEQSKIFAEgSIIFEGgCAJFECiCwIsLtDufllL9ILA2dKAIAitjG38/sHnGqdgOJCFwQmBq3WnDjjAAgBmHD+qwphRjIq/JAAAAAElFTkSuQmCC">เพิ่ม แพทย์ จุฬาฯ เข้ารอบ 3 อันดับ 2 แล้ว<u>ดูแผน</u></div>
+  <div class="sheet">
+    <div class="prow"><div class="logo">CU</div><div><b style="font:600 15px 'Chakra Petch'">จุฬาลงกรณ์มหาวิทยาลัย</b><div style="font-size:12.5px;color:var(--muted)">แพทยศาสตรบัณฑิต, 34,000/ภาค</div></div></div>
+    <div class="add"><span class="btn p">+ เพิ่มเข้าแผน</span><span class="btn">เปิดใน MyTCAS</span></div>
+    <div class="picker"><div class="q">เพิ่มเข้ารอบไหน?</div>
+      <div class="opt"><span><b>รอบ 1</b> Portfolio</span><span style="color:var(--muted)">ปิดรับแล้ว</span></div>
+      <div class="opt"><span><b>รอบ 2</b> Quota</span><span>ไม่มีโควตาพื้นที่คุณ</span></div>
+      <div class="opt on"><span><b>รอบ 3</b> Admission</span><span>อันดับ 2 จาก 10</span></div>
+      <div class="opt"><span><b>รอบ 4</b> Direct</span><span style="color:var(--muted)">ยังไม่ประกาศ</span></div>
+    </div>
+  </div>
+</div></div></div>
+
+<div><div class="cap">2: สมุดแผน หน้ารวม<span>บนสุดคือสิ่งที่ต้องทำเร็วที่สุด ถัดมาเป็นอันดับรอบ 3 (ลากเรียงได้) แต่ละอันบอกคะแนนที่ใช้</span></div>
+<div class="phone">
+  <div class="top"><h2><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAACXBIWXMAAAPoAAAD6AG1e1JrAAABSklEQVR4nO2csQ3DIBBFmdAT0HkABkiVCSwxRGpvwBBZIhVl5I7UoYhlfQhgvyddlcZ5uvscLmwMAACchtf9lo5U6+ftDgSKIPDqAu3kU8tC4ITARAcywvXIu2tZ488Kz+2vdTQD8/9TUR0Ci0AHiiBQBIEiCBRBoAgCOxPo5kfRutwe6BAYEUgH+nFG2GUjW5rTZ6BDIAIl6MDOBIbC7wPTO35Vnnn578NnYEBgRCAd6Mcd4drsRcbwGVgbBIogUASBIggUQaAIAkVOJzBUfqV/9KqIwBmBiQ5cGeFmGRga1/AZGBAYEUgHekY4kIEbh8jCIcIpbFhjNvbAwCIdWaS5iVSCq5wIAkUQKIJAEQSKIFAEgSIIFEGgCAJFECiCwIsLtDufllL9ILA2dKAIAitjG38/sHnGqdgOJCFwQmBq3WnDjjAAgBmHD+qwphRjIq/JAAAAAElFTkSuQmCC">แผน TCAS70 ของฉัน</h2><div class="count"><b>98</b>วัน ถึงสอบ A-Level</div></div>
+  <div class="seg"><span class="on">ทั้งหมด</span><span>รอบ 1</span><span>รอบ 2</span><span>รอบ 3</span><span>รอบ 4</span></div>
+  <div class="body">
+    <div class="lbl">ต้องทำต่อไป</div>
+    <div class="next"><div class="d">15 พ.ย. (อีก 30 วัน)</div><b>ส่ง Portfolio แพทย์ มหิดล</b>
+      <div class="chk"><i class="y"></i>เกรดเฉลี่ย 5 ภาคเรียน<br><i class="y"></i>เกียรติบัตรค่ายวิทย์<br><i></i>เรียงความ 1 หน้า</div><div class="prog"></div></div>
+    <div class="lbl">รอบ 3 Admission (ลากเพื่อเรียง)</div>
+    <div class="rk"><span class="n">1</span><div><b>แพทย์ มหิดล</b><div class="chips"><em>TPAT1 30%</em><em>A-Level 70%</em></div></div><span class="grip">⋮⋮</span></div>
+    <div class="rk"><span class="n">2</span><div><b>แพทย์ จุฬาฯ</b><div class="chips"><em>TPAT1 30%</em><em>A-Level 70%</em></div></div><span class="grip">⋮⋮</span></div>
+    <div class="rk"><span class="n">3</span><div><b>เภสัช เชียงใหม่</b><div class="chips"><em>TGAT 20%</em><em>เคมี 30%</em><em>ชีวะ 20%</em></div></div><span class="grip">⋮⋮</span></div>
+  </div>
+</div></div>
+
+<div><div class="cap">3: วิชาที่ต้องสอบ, เป้าชั่วโมงโฟกัส<span>รวมจากทุกหลักสูตรในแผน เรียงตามจำนวนหลักสูตรที่ใช้ กด "อ่าน" เพื่อเริ่มโฟกัสวิชานั้น ชั่วโมงสะสมแยกตามวิชา</span></div>
+<div class="phone">
+  <div class="top"><h2><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAACXBIWXMAAAPoAAAD6AG1e1JrAAABgElEQVR4nO2bPW4DIRBG94R7grlJqlxhL5TCl0lFidxNeqJ4RT5gMLwnTen1p6dhAP8cBwAA/Imdl7esY7f84QFEwvOHBxAJzx8eQCQ8f/mA5+OrqmwygcPzhwcQCc8fHkAkPH94AJHh+dU3fFYG6l298yPwgUCnA0+WsP93hrRmuxnYGgSKIFAEgSIIFEGgCALfXWDvy/gvcmpbBeEfhiDwQqDRgWmdJayWV8601q9XC4EnAp0OzBst4buZeIt4rlMF3m0yJc2FIbAxdKAIAicX5r1n4OiZiMALgU4HXixhZwayiRibSGIXdo4xSToHfn9+vCzOgRmB3vMmQgdmBA69C3vvWv0u7AhM8ZLowIRAj+40ZmBCoEd3G7twej+Byx1rdvte2BGY4qXRgWljgSWTdVwJAjMCnQ58xe5LePqZOLswBDbG6EAE2kxL2Gr/NyJS+/zuPyJH4GCMDkSgRS7hktlm4HQz7w5DIAJDMTpwLsG22oxTMQQiMBRbrAN/AGnHEVb8g2wxAAAAAElFTkSuQmCC">วิชาที่ต้องสอบ</h2><div class="count"><b>38</b>ชม. อ่านแล้วจากเป้า 210 ชม.</div></div>
+  <div class="body" style="height:calc(100% - 110px)">
+    <div class="lbl">ใช้ในหลายหลักสูตร อ่านก่อน</div>
+    <div class="sub" style="--w:24%"><b>A-Level ชีววิทยา</b><span class="play">อ่าน</span><small>ใช้ใน 4 หลักสูตร, 12 / 50 ชม.</small><div class="bar"></div></div>
+    <div class="sub" style="--w:30%"><b>A-Level เคมี</b><span class="play">อ่าน</span><small>ใช้ใน 4 หลักสูตร, 15 / 50 ชม.</small><div class="bar"></div></div>
+    <div class="sub" style="--w:18%"><b>TPAT1 ความถนัดแพทย์</b><span class="play">อ่าน</span><small>ใช้ใน 2 หลักสูตร, 7 / 40 ชม.</small><div class="bar"></div></div>
+    <div class="sub" style="--w:13%"><b>A-Level ฟิสิกส์</b><span class="play">อ่าน</span><small>ใช้ใน 2 หลักสูตร, 4 / 30 ชม.</small><div class="bar"></div></div>
+    <div class="sub" style="--w:0%"><b>A-Level คณิต 1</b><span class="play">อ่าน</span><small>ใช้ใน 2 หลักสูตร, 0 / 40 ชม.</small><div class="bar"></div></div>
+    <div class="lbl" style="margin-top:12px">เป้าชั่วโมงปรับเองได้ ค่าเริ่มต้นตั้งตามน้ำหนักคะแนน</div>
+  </div>
+</div></div>
+</div>
+</body></html>
