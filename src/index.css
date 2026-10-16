@@ -1,34 +1,70 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+Thai:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Press+Start+2P&family=Noto+Sans+Thai:wght@400;600;700;800&display=swap');
 @import "tailwindcss";
 
-/* ── Design tokens ─────────────────────────────────────────────────────────── */
+/* ── Design tokens — Soft Pixel (ADR-0021) ────────────────────────────────────
+   White, minimal, rounded pixel UI. Outline purple = the MBTI sprites' outline.
+   Legacy names (brand/ink/surface/paper/hud/edge/wood*…) are kept and re-pointed so
+   every existing class re-skins without edits. Tokens marked "background-only" fail
+   AA as text on white: use them for fills/rings, never for copy. */
 @theme {
-  /* Sprout Lands UI palette (Cup Nooble) — warm parchment panels, plum outlines,
-     heart-purple brand, leaf-green progress. Names are kept from the old theme so
-     every existing class re-skins without edits. */
-  --color-brand:        #8a4a70;   /* heart purple */
-  --color-brand-strong: #713970;
-  --color-brand-soft:   #f0dfd8;
-  --color-accent-pink:  #bd757e;
-  --color-ink:          #4b3340;   /* deep plum-brown text */
-  --color-surface:      #f8efd6;   /* light parchment (inputs, cards) */
-  --color-paper:        #f3e5c2;   /* sheets / pages */
-  --color-hud:          #e8cfa6;   /* HUD slabs */
-  --color-ink-soft:     #8c7369;
-  --color-good:         #7ea04a;
-  --color-warn:         #d99b3b;
-  --color-danger:       #b4533f;
-  --color-mist:         #f3e5c2;
-  --color-edge:         #90625d;   /* panel outline */
-  --color-wood-light:   #f3e5c2;
-  --color-wood:         #dcb98a;
-  --color-wood-dark:    #c49a6c;
-  --color-wood-edge:    #aa7959;
-  --color-lime:         #c0d470;
-  --color-good-strong:  #5d7a2c;   /* readable green for text on parchment */
-  --color-warn-strong:  #8f5f14;   /* readable amber for text on parchment */
-  --shadow-hard:        0 4px 0 0 #90625d;
-  --shadow-hard-sm:     0 3px 0 0 #90625d;
+  /* Surfaces */
+  --color-paper:        #FFFFFF;
+  --color-surface:      #FFFFFF;
+  --color-hud:          #FFFFFF;
+  --color-mist:         #F4F3F9;
+  --color-wood-light:   #F4F3F9;
+  --color-wood:         #E9E6F3;
+  --color-wood-dark:    #D9D5EA;
+  --color-hairline:     #D9D5EA;
+  /* Lines */
+  --color-line:         #5c4e92;   /* primary outline = sprite outline */
+  --color-edge:         #5c4e92;
+  --color-line-soft:    #6f63a6;   /* object outlines, secondary borders */
+  --color-wood-edge:    #6f63a6;
+  /* Brand + text */
+  --color-brand:        #5c4e92;
+  --color-brand-strong: #463c74;
+  --color-brand-soft:   #EFEBFA;
+  --color-ink:          #2B2550;
+  --color-ink-soft:     #6E6890;
+  --color-accent-pink:  #B8467F;   /* darker than the art pink: AA as text */
+  /* State */
+  --color-leaf:         #5FB57A;   /* background-only: Leaves currency, fills */
+  --color-good:         #5FB57A;   /* background-only */
+  --color-good-strong:  #2F7A47;   /* readable green for text */
+  --color-lime:         #8FD3A4;   /* background-only: focus ring */
+  --color-warn:         #E8A93B;   /* background-only */
+  --color-warn-strong:  #8A5A00;   /* readable amber for text */
+  --color-danger:       #C2413D;
+  /* Faculty zones: base (fills) / soft (tints) / deep (text on white) */
+  --color-zone-health:      #E8817B;
+  --color-zone-health-soft: #FCECEB;
+  --color-zone-health-deep: #A25A56;
+  --color-zone-sci:         #5B8DEF;
+  --color-zone-sci-soft:    #E6EEFD;
+  --color-zone-sci-deep:    #4063A7;
+  --color-zone-soc:         #9B7BD6;
+  --color-zone-soc-soft:    #F0EBF9;
+  --color-zone-soc-deep:    #6D5696;
+  --color-zone-biz:         #E8A93B;
+  --color-zone-biz-soft:    #FCF2E2;
+  --color-zone-biz-deep:    #8A6420;
+  --color-zone-arts:        #E58BC0;
+  --color-zone-arts-soft:   #FBEEF6;
+  --color-zone-arts-deep:   #A06186;
+  --color-zone-earth:       #5FB57A;
+  --color-zone-earth-soft:  #E7F4EB;
+  --color-zone-earth-deep:  #437F55;
+  /* Shape + shadow (hard, no blur) */
+  --radius-ui:          8px;
+  --radius-slot:        12px;
+  --radius-sheet:       20px;
+  --shadow-px:          3px 3px 0 0 #5c4e92;
+  --shadow-px-sm:       2px 2px 0 0 #5c4e92;
+  --shadow-hard:        3px 3px 0 0 #5c4e92;
+  --shadow-hard-sm:     2px 2px 0 0 #5c4e92;
+  /* Type */
+  --font-display:       'Chakra Petch', 'Noto Sans Thai', sans-serif;
 }
 
 /* ── Public-site checker texture (design.md §15) ──────────────────────────────
