@@ -51,14 +51,14 @@ export default function Popup({
     >
       {backdrop && (
         <div
-          className="absolute inset-0 bg-black/50"
+          className="absolute inset-0 bg-ink/40"
           onClick={onClose}
           aria-hidden="true"
         />
       )}
       <div
         className={`relative flex flex-col overflow-hidden w-full ${maxW} md:mx-auto ${maxHeight} ${
-          isSheet ? 'neo-sheet animate-sheet-up' : 'neo-card'
+          isSheet ? 'px-sheet animate-sheet-up' : 'px-card'
         }`}
         style={clearNav ? { paddingBottom: NAV_SAFE_PB } : undefined}
         onClick={(e) => e.stopPropagation()}

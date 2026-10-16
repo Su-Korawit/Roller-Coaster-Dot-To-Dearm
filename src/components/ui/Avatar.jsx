@@ -9,7 +9,7 @@ export default function Avatar({ photoURL, mbti, size = 'w-10 h-10', className =
 
   return (
     <div
-      className={`${size} rounded-full overflow-hidden flex items-center justify-center bg-purple-100 shrink-0 ${ring} ${className}`}
+      className={`${size} rounded-full overflow-hidden flex items-center justify-center bg-brand-soft shrink-0 ${ring} ${className}`}
       style={ringColor ? { ringColor, boxShadow: `0 0 0 2px ${ringColor}` } : undefined}
     >
       {photoURL
