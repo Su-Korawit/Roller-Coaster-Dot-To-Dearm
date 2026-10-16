@@ -30,6 +30,9 @@ const article = (over = {}) => ({
   ...over,
 })
 
+// What the server does so embedded JSON cannot close its script tag.
+const LT = String.fromCharCode(92) + 'u003c'
+
 beforeEach(() => resetStore())
 
 describe('ArticlePage', () => {
@@ -87,5 +90,28 @@ describe('ArticlePage', () => {
     storeState.loadArticle.mockRejectedValue(new Error('offline'))
     show()
     expect(await screen.findByText(/โหลดบทความไม่สำเร็จ/)).toBeTruthy()
+  })
+
+  it('paints the server-embedded article at once instead of a loading message', () => {
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      `<script id="hub-data" type="application/json">${JSON.stringify({ article: article() }).replace(/</g, LT)}</script>`,
+    )
+    storeState.loadArticle.mockReturnValue(new Promise(() => {}))
+    show()
+    expect(screen.queryByText(/กำลังโหลดบทความ/)).toBeNull()
+    expect(screen.getByRole('heading', { name: 'ทุกโครงการแพทย์' })).toBeTruthy()
+    document.getElementById('hub-data').remove()
+  })
+
+  it('ignores embedded data that belongs to a different article', () => {
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      `<script id="hub-data" type="application/json">${JSON.stringify({ article: article({ slug: "other" }) }).replace(/</g, LT)}</script>`,
+    )
+    storeState.loadArticle.mockReturnValue(new Promise(() => {}))
+    show()
+    expect(screen.getByText(/กำลังโหลดบทความ/)).toBeTruthy()
+    document.getElementById('hub-data').remove()
   })
 })

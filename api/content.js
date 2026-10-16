@@ -122,6 +122,7 @@ export default async function handler(req, res, deps = {}) {
             description: SITES.hub.description,
             canonical: `${SITE_ORIGIN}/`,
             jsonLd: hubJsonLd,
+            data: { summaries: list.map(toSummary), config },
           }),
           body: homeBody({ summaries: list.map(toSummary), config }),
         })
@@ -143,6 +144,7 @@ export default async function handler(req, res, deps = {}) {
             image: article.coverUrl || undefined,
             type: 'article',
             jsonLd: articleJsonLd(full, canonical),
+            data: { article: full, summaries: list.map(toSummary), config },
           }),
           body: articleBody({ article: full, related: relatedTo(list.map(toSummary), full, 3), config }),
         })

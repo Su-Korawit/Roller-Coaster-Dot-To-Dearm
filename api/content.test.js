@@ -104,6 +104,7 @@ describe('api/content', () => {
     expect(res.body).toContain('<title>ทุกโครงการแพทย์ | I LOVE TCAS</title>')
     expect(res.body).toContain('rel="canonical" href="https://ilovetcas.com/blog/medicine-all"')
     expect(res.body).toContain('"@type":"Article"')
+    expect(res.body).toContain('id="hub-data"')
     expect(res.body).toContain('/assets/index-abc.js')
     expect(res.body).not.toContain('เก่า')
   })

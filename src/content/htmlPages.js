@@ -97,8 +97,9 @@ export function notFoundBody() {
   return '<main><h1>ไม่พบบทความนี้</h1><p>บทความอาจถูกย้ายหรือยังไม่เผยแพร่</p><p><a href="/">กลับหน้าแรก</a></p></main>'
 }
 
-export function headFor({ title, description, canonical, image = OG_IMAGE, type = 'website', jsonLd, noindex = false }) {
+export function headFor({ title, description, canonical, image = OG_IMAGE, type = 'website', jsonLd, noindex = false, data }) {
   const ld = jsonLd ? JSON.stringify(jsonLd).replace(/</g, '\\u003c') : ''
+  const embedded = data ? JSON.stringify(data).replace(/</g, '\\u003c') : ''
   return [
     `<title>${esc(title)}</title>`,
     `<meta name="description" content="${esc(description)}" />`,
@@ -116,6 +117,7 @@ export function headFor({ title, description, canonical, image = OG_IMAGE, type 
     `<meta name="twitter:description" content="${esc(description)}" />`,
     `<meta name="twitter:image" content="${esc(image)}" />`,
     ld ? `<script type="application/ld+json">${ld}</script>` : '',
+    embedded ? `<script id="hub-data" type="application/json">${embedded}</script>` : '',
   ]
     .filter(Boolean)
     .join('\n    ')

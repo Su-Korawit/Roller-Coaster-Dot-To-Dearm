@@ -271,7 +271,9 @@ function App() {
   // the static landing HTML, keep the head tags matching the current site.
   useEffect(() => {
     const site = SITES[currentSite]
-    if (!site) return
+    // The hub's head is rendered per page by the server (and pages set their own title);
+    // overwriting the description here would give every article the home description.
+    if (!site || currentSite === 'hub') return
     document.title = site.title
     document.querySelector('meta[name="description"]')?.setAttribute('content', site.description)
   }, [])

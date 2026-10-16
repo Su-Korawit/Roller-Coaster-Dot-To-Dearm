@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useArticlesStore } from '../../stores/useArticlesStore'
 import { categoryLabel } from '../../content/schema'
 import { relatedTo, formatThaiDate } from '../../content/listing'
+import { readSsrData } from '../../content/ssrData'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import HubLayout from '../../components/hub/HubLayout'
 import ArticleBody from '../../components/hub/ArticleBody'
@@ -21,7 +22,14 @@ export default function ArticlePage() {
   const loadHome = useArticlesStore((s) => s.loadHome)
   const summaries = useArticlesStore((s) => s.summaries)
   const config = useArticlesStore((s) => s.config)
-  const [loaded, setLoaded] = useState({ slug: null, status: 'loading', article: null })
+  // On a server-rendered page the article is already embedded: start from it so the
+  // server HTML is not replaced by a loading message while Firestore answers.
+  const [loaded, setLoaded] = useState(() => {
+    const embedded = readSsrData()?.article
+    return embedded?.slug === slug
+      ? { slug, status: 'ready', article: embedded }
+      : { slug: null, status: 'loading', article: null }
+  })
 
   useEffect(() => {
     loadHome()

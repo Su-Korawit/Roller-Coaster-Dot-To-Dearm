@@ -2,6 +2,9 @@ import { create } from 'zustand'
 import { getDoc, getDocs } from 'firebase/firestore'
 import { queries, refs } from '../lib/db'
 import { toSummary } from '../content/listing'
+import { readSsrData } from '../content/ssrData'
+
+const embedded = readSsrData()
 
 // Development only: VITE_CONTENT_SEED=1 swaps Firestore for local sample articles so the
 // hub can be previewed before any content exists (see docs/content-site-ops.md). The
@@ -11,8 +14,8 @@ import { toSummary } from '../content/listing'
 // Public content-site data. One-time reads (no realtime listeners): the hub is
 // public and re-reads on reload; the server-rendered HTML covers first paint.
 export const useArticlesStore = create((set) => ({
-  summaries: [], // newest published articles, without bodies
-  config: null, // siteConfig/hub (OpenChat info, featured slug, …)
+  summaries: embedded?.summaries ?? [], // newest published articles, without bodies
+  config: embedded?.config ?? null, // siteConfig/hub (OpenChat info, featured slug, …)
   loading: false,
   error: null,
 

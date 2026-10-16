@@ -136,6 +136,20 @@ describe('homeBody, categoryBody, searchBody, notFoundBody', () => {
   })
 })
 
+describe('headFor data', () => {
+  it('embeds page data as JSON that cannot close the script tag', () => {
+    const head = headFor({ title: 't', description: 'd', canonical: 'https://x.org/', data: { a: '</script><b>' } })
+    expect(head).toContain('<script id="hub-data" type="application/json">')
+    expect(head).not.toContain('</script><b>')
+    const json = head.match(/id="hub-data" type="application\/json">(.*?)<\/script>/s)[1]
+    expect(JSON.parse(json)).toEqual({ a: '</script><b>' })
+  })
+
+  it('omits the data script when there is none', () => {
+    expect(headFor({ title: 't', description: 'd', canonical: 'https://x.org/' })).not.toContain('hub-data')
+  })
+})
+
 describe('headFor', () => {
   const head = headFor({
     title: 'ทุกโครงการ',
