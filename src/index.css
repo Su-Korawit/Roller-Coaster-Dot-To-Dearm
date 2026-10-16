@@ -68,12 +68,12 @@
 }
 
 /* ── Public-site checker texture (design.md §15) ──────────────────────────────
-   The cartridge-native alternative to atmosphere gradients: an 8px two-tone
-   checkerboard in ink at ~4% opacity. Use on hero strips + screenshot slots. */
+   An 8px two-tone checkerboard in line purple at ~4% opacity. Use on hero strips
+   + screenshot slots. */
 .pixel-checker {
   background-image:
-    linear-gradient(45deg, rgb(26 16 53 / 0.04) 25%, transparent 25%, transparent 75%, rgb(26 16 53 / 0.04) 75%),
-    linear-gradient(45deg, rgb(26 16 53 / 0.04) 25%, transparent 25%, transparent 75%, rgb(26 16 53 / 0.04) 75%);
+    linear-gradient(45deg, rgb(92 78 146 / 0.04) 25%, transparent 25%, transparent 75%, rgb(92 78 146 / 0.04) 75%),
+    linear-gradient(45deg, rgb(92 78 146 / 0.04) 25%, transparent 25%, transparent 75%, rgb(92 78 146 / 0.04) 75%);
   background-size: 16px 16px;
   background-position: 0 0, 8px 8px;
 }
@@ -98,11 +98,11 @@
 
 /* ── Unified onboarding page background ────────────────────────────────────── */
 .onboarding-bg {
-  background-color: #f3e5c2;
+  background-color: var(--color-mist);
   background-image:
-    linear-gradient(45deg, rgb(144 98 93 / 0.06) 25%, transparent 25%, transparent 75%, rgb(144 98 93 / 0.06) 75%),
-    linear-gradient(45deg, rgb(144 98 93 / 0.06) 25%, transparent 25%, transparent 75%, rgb(144 98 93 / 0.06) 75%),
-    linear-gradient(180deg, #f8efd6 0%, #f3e5c2 60%, #e8cfa6 100%);
+    linear-gradient(45deg, rgb(92 78 146 / 0.04) 25%, transparent 25%, transparent 75%, rgb(92 78 146 / 0.04) 75%),
+    linear-gradient(45deg, rgb(92 78 146 / 0.04) 25%, transparent 25%, transparent 75%, rgb(92 78 146 / 0.04) 75%),
+    linear-gradient(180deg, var(--color-paper) 0%, var(--color-mist) 100%);
   background-size: 16px 16px, 16px 16px, 100% 100%;
   background-position: 0 0, 8px 8px, 0 0;
 }
@@ -156,7 +156,7 @@
 body {
   margin: 0;
   font-family: 'Noto Sans Thai', sans-serif;
-  background-color: #d1d5db;
+  background-color: #ECEBF2;
   /* Ensure full-height flex chains work across all pages */
   height: 100%;
 }
@@ -180,98 +180,82 @@ html {
   font-family: 'Noto Sans Thai', sans-serif;
 }
 
-/* ── Surface language: Sprout Lands "wooden parchment" panels ───────────────
-   Class names (neo-*) are historical; they now draw chamfer-ish parchment panels:
-   plum outline, light inner ring, darker bottom ledge, hard drop ledge. Metrics
-   (2px border) are unchanged from the old look, so no layout shifts. */
-.neo-card {
-  border: 2px solid var(--color-edge);
-  border-radius: 8px;
-  background: var(--color-surface);
-  box-shadow:
-    inset 0 0 0 2px var(--color-wood-light),
-    inset 0 -4px 0 0 #e8cfa6,
-    0 4px 0 0 var(--color-edge);
+/* ── Surface language: Soft Pixel panels ─────────────────────────────────────
+   White panels, 2px line-purple outline, soft radius, hard offset shadow (no blur).
+   `.px-*` are canonical; `.neo-*` are historical aliases kept so ~100 usages restyle
+   with zero JSX edits (they migrate to `.px-*` in the Part B screen groups). */
+.px-card, .neo-card {
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-ui);
+  background: var(--color-paper);
+  box-shadow: var(--shadow-px);
 }
-/* Default corner radius lives in the components layer so `rounded-full` / `rounded-lg` utilities
-   on a button still win (unlayered CSS would beat every utility). */
-@layer components { .neo-btn { border-radius: 6px; } }
-.neo-btn {
-  border: 2px solid var(--color-edge);
-  box-shadow:
-    inset 0 2px 0 0 rgb(255 255 255 / 0.35),
-    inset 0 -3px 0 0 rgb(75 51 64 / 0.18),
-    0 4px 0 0 var(--color-edge);
+/* Default corner radius lives in the components layer so `rounded-full` / `rounded-lg`
+   utilities on a button still win (unlayered CSS would beat every utility). */
+@layer components { .px-btn, .neo-btn { border-radius: var(--radius-ui); } }
+.px-btn, .neo-btn {
+  border: 2px solid var(--color-line);
+  box-shadow: var(--shadow-px-sm);
   transition: transform 120ms steps(2), box-shadow 120ms steps(2);
 }
-.neo-btn:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    inset 0 2px 0 0 rgb(255 255 255 / 0.35),
-    inset 0 -3px 0 0 rgb(75 51 64 / 0.18),
-    0 6px 0 0 var(--color-edge);
+.px-btn:hover, .neo-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-px);
 }
-.neo-btn:active {
-  transform: translateY(4px);
-  box-shadow:
-    inset 0 2px 0 0 rgb(75 51 64 / 0.2),
-    0 0 0 0 var(--color-edge);
+.px-btn:active, .neo-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
 }
 @media (prefers-reduced-motion: reduce) {
-  .neo-btn { transition: none; }
-  .neo-btn:hover, .neo-btn:active { transform: none; }
+  .px-btn, .neo-btn { transition: none; }
+  .px-btn:hover, .px-btn:active, .neo-btn:hover, .neo-btn:active { transform: none; }
 }
 
 /* ── HUD surface system (see design.md §4) ─────────────────────────────────── */
-.neo-slab {
-  border: 2px solid var(--color-edge);
-  border-radius: 8px;
-  background: var(--color-hud);
-  box-shadow:
-    inset 0 2px 0 0 var(--color-wood-light),
-    inset 0 -3px 0 0 var(--color-wood-dark),
-    0 3px 0 0 var(--color-edge);
-}
-.neo-sheet {
-  border: 2px solid var(--color-edge);
-  border-bottom: none;
-  border-radius: 12px 12px 0 0;
+.px-slab, .neo-slab {
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-ui);
   background: var(--color-paper);
-  box-shadow: inset 0 2px 0 0 #fbf3dd, 0 -3px 0 0 rgb(75 51 64 / 0.25);
+  box-shadow: var(--shadow-px-sm);
 }
-.neo-pressed {
-  transform: translateY(2px);
-  box-shadow: inset 0 2px 0 0 rgb(75 51 64 / 0.2);
+.px-sheet, .neo-sheet {
+  border: 2px solid var(--color-line);
+  border-bottom: none;
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  background: var(--color-paper);
+  box-shadow: 0 -3px 0 0 rgb(92 78 146 / 0.18);
+}
+.px-pressed, .neo-pressed {
+  transform: translate(2px, 2px);
+  box-shadow: none;
   background: var(--color-brand-soft);
 }
-.neo-input {
-  border: 2px solid var(--color-edge);
-  border-radius: 6px;
-  background: #fbf3dd;
-  box-shadow: inset 0 2px 0 0 rgb(107 75 91 / 0.18);
+.px-input, .neo-input {
+  border: 2px solid var(--color-hairline);
+  border-radius: var(--radius-slot);
+  background: var(--color-paper);
 }
-.neo-input:focus {
+.px-input:focus, .neo-input:focus {
   outline: none;
-  box-shadow: inset 0 2px 0 0 rgb(107 75 91 / 0.18), 0 0 0 3px var(--color-lime);
+  border-color: var(--color-line);
+  box-shadow: 0 0 0 3px var(--color-lime);
 }
 
-/* ── RPG chrome (cozy pixel RPG) ─────────────────────────────────────────────── */
-/* Wooden title plank: header strip of every panel. */
+/* ── RPG chrome ──────────────────────────────────────────────────────────────── */
+/* Title strip of every panel. */
 .rpg-plank {
-  background: var(--color-wood);
-  border-bottom: 2px solid var(--color-edge);
-  box-shadow: inset 0 2px 0 0 var(--color-wood-light), inset 0 -3px 0 0 var(--color-wood-dark);
+  background: var(--color-paper);
+  border-bottom: 2px solid var(--color-hairline);
 }
-/* XP / HP style bar: --pct is 0-100. Dark plum trough, lime (or plum) fill. */
+/* XP / HP style bar: --pct is 0-100. Mist trough, flat leaf (or health) fill. */
 .rpg-bar {
   position: relative;
   flex-shrink: 0;
   height: 14px;
   padding: 1px;
-  border: 2px solid var(--color-edge);
-  border-radius: 5px;
-  background: #6b4b5b;
-  box-shadow: inset 0 2px 0 0 rgb(0 0 0 / 0.28);
+  border: 2px solid var(--color-line-soft);
+  border-radius: 6px;
+  background: var(--color-mist);
 }
 .rpg-bar > i {
   display: block;
@@ -279,26 +263,25 @@ html {
   width: calc(var(--pct, 0) * 1%);
   min-width: 0;
   border-radius: 3px;
-  background: linear-gradient(#dbe99b, #c0d470 45%, #9db557);
-  box-shadow: inset 0 2px 0 0 rgb(255 255 255 / 0.5);
+  background: var(--color-leaf);
   transition: width 240ms steps(6);
 }
-.rpg-bar--heart > i { background: linear-gradient(#c9889a, #a35b70 45%, #8a4a70); }
+.rpg-bar--heart > i { background: var(--color-zone-health); }
 @media (prefers-reduced-motion: reduce) { .rpg-bar > i { transition: none; } }
-/* Primary action: leaf-green button. */
+/* Primary action: ink button. */
 .rpg-btn-primary {
-  background: linear-gradient(#cfe08a, #b6cb68);
-  color: var(--color-ink);
-  border-color: #6f8a3a;
+  background: var(--color-ink);
+  color: #FFFFFF;
+  border-color: var(--color-ink);
 }
-.rpg-btn-danger { background: linear-gradient(#d98a78, #b4533f); color: #fff8ee; border-color: #7a3326; }
-/* Level badge: round wooden coin. */
+.rpg-btn-danger { background: var(--color-danger); color: #FFFFFF; border-color: var(--color-danger); }
+/* Level badge: round white coin. */
 .rpg-coin {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 2rem; height: 2rem; padding: 0 0.4rem;
-  border: 2px solid var(--color-edge); border-radius: 999px;
-  background: radial-gradient(circle at 35% 30%, #f3e5c2, #dcb98a 70%);
-  box-shadow: inset 0 -3px 0 0 var(--color-wood-dark), 0 3px 0 0 var(--color-edge);
+  border: 2px solid var(--color-line); border-radius: 999px;
+  background: var(--color-paper);
+  box-shadow: var(--shadow-px-sm);
 }
 /* Pop-in for panels/toasts: stepped scale, no blur. */
 @keyframes pxPop { 0% { transform: scale(0.9); opacity: 0; } 60% { transform: scale(1.03); opacity: 1; } 100% { transform: scale(1); } }
@@ -310,8 +293,8 @@ html {
 @media (prefers-reduced-motion: reduce) { .px-cloud { animation: none; left: 12%; } }
 
 /* ── Headline treatment — replaces gradient-clipped text (design.md §5) ────── */
-.pixel-title      { color: var(--color-ink); text-shadow: 2px 2px 0 var(--color-wood); }
-.pixel-title-dark { color: #fff8ee;          text-shadow: 3px 3px 0 #6b4b5b; }
+.pixel-title      { color: var(--color-ink); text-shadow: 2px 2px 0 var(--color-brand-soft); }
+.pixel-title-dark { color: #FFFFFF;          text-shadow: 3px 3px 0 var(--color-brand-strong); }
 
 /* ── Stepped motion (design.md §7) ─────────────────────────────────────────── */
 @keyframes sheetUp {
@@ -365,31 +348,31 @@ html {
   .rain-layer { animation: none; }
 }
 
-/* Cozy scrollbars: thin wooden thumb on a parchment track (Firefox + Chromium). */
-* { scrollbar-width: thin; scrollbar-color: #aa7959 #ecd9b3; }
+/* Thin purple scrollbars on a mist track (Firefox + Chromium). */
+* { scrollbar-width: thin; scrollbar-color: var(--color-line-soft) var(--color-mist); }
 *::-webkit-scrollbar { width: 10px; height: 10px; }
-*::-webkit-scrollbar-track { background: #ecd9b3; }
-*::-webkit-scrollbar-thumb { background: #aa7959; border: 2px solid #ecd9b3; border-radius: 6px; }
+*::-webkit-scrollbar-track { background: var(--color-mist); }
+*::-webkit-scrollbar-thumb { background: var(--color-line-soft); border: 2px solid var(--color-mist); border-radius: 6px; }
 
-/* Sky-to-meadow wash behind loading screens and the game canvas while it boots. */
-.px-sky-bg { background: linear-gradient(180deg, #8ec9d8 0%, #bfe0c8 55%, #c0d470 100%); }
+/* Soft sky wash behind loading screens and the game canvas while it boots. */
+.px-sky-bg { background: linear-gradient(180deg, #E1F3FB 0%, var(--color-mist) 70%, var(--color-paper) 100%); }
 
-/* React Flow chrome in the parchment theme (zoom controls, attribution). */
+/* React Flow chrome in the Soft Pixel theme (zoom controls, attribution). */
 .react-flow__controls {
-  border: 2px solid var(--color-edge);
-  border-radius: 8px;
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-ui);
   overflow: hidden;
-  box-shadow: 0 3px 0 0 var(--color-edge);
+  box-shadow: var(--shadow-px-sm);
 }
 .react-flow__controls-button {
-  background: var(--color-surface);
-  border-bottom: 2px solid var(--color-wood);
+  background: var(--color-paper);
+  border-bottom: 2px solid var(--color-hairline);
   color: var(--color-ink);
   fill: var(--color-ink);
 }
-.react-flow__controls-button:hover { background: var(--color-hud); }
+.react-flow__controls-button:hover { background: var(--color-mist); }
 .react-flow__controls-button:last-child { border-bottom: none; }
-.react-flow__attribution { background: rgb(243 229 194 / 0.8); }
+.react-flow__attribution { background: rgb(244 243 249 / 0.8); }
 
 /* Toast pop + drift for FxLayer: stepped, then gone. Static under reduced motion. */
 @keyframes fxRise {
