@@ -5,7 +5,7 @@ import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing'
 import { doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, collection, query, where } from 'firebase/firestore'
-import { ref, uploadBytes, getBytes } from 'firebase/storage'
+import { ref, uploadBytes, getBytes, deleteObject } from 'firebase/storage'
 
 const SUPER_UID = 'IaltEhO0mPVfK3ng8npr4CdqnEE3'
 let testEnv
@@ -146,6 +146,21 @@ describe('storage articles/**', () => {
     await assertFails(uploadBytes(ref(c, 'articles/d1/big.png'), big, { contentType: 'image/png' }))
     await assertFails(uploadBytes(ref(store('carol'), 'articles/d1/a.png'), PNG, { contentType: 'image/png' }))
     await assertFails(uploadBytes(ref(testEnv.unauthenticatedContext().storage(), 'articles/d1/a.png'), PNG, { contentType: 'image/png' }))
+  })
+
+  it("keeps one creator's images away from another creator, even for a published article", async () => {
+    const alice = store('alice', { creator: true })
+    const bob = store('bob', { creator: true })
+    await assertSucceeds(uploadBytes(ref(alice, 'articles/d1/cover.png'), PNG, { contentType: 'image/png' }))
+    // bob owns d2, not d1: he cannot overwrite or delete alice's cover
+    await assertFails(uploadBytes(ref(bob, 'articles/d1/cover.png'), PNG, { contentType: 'image/png' }))
+    await assertFails(deleteObject(ref(bob, 'articles/d1/cover.png')))
+    await assertSucceeds(uploadBytes(ref(bob, 'articles/d2/mine.png'), PNG, { contentType: 'image/png' }))
+    await assertSucceeds(deleteObject(ref(alice, 'articles/d1/cover.png')))
+  })
+
+  it('refuses uploads under a draft that does not exist', async () => {
+    await assertFails(uploadBytes(ref(store('alice', { creator: true }), 'articles/nope/a.png'), PNG, { contentType: 'image/png' }))
   })
 
   it('lets the super-admin upload and everyone read', async () => {

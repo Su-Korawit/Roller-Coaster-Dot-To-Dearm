@@ -9,6 +9,10 @@ firebase deploy --only firestore:rules,storage
 firebase deploy --only functions:grantCreatorRole,functions:publishArticle,functions:unpublishArticle
 ```
 
+The Storage rules read Firestore (`firestore.get`) to check who owns a draft's images. On
+the first deploy the Firebase CLI asks to let the Storage service read Firestore (the
+"Firebase Rules Firestore Service Agent" role): answer yes, or uploads will be refused.
+
 Then merge to `main` (Vercel builds and deploys the hosting). In the Vercel project set:
 
 | Variable | Needed | Value |
