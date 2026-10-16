@@ -1,5 +1,9 @@
 # design.md — I LOVE TCAS · Design Constitution
 
+> **Soft Pixel (ADR-0021, 2026-10-16):** §3 colour tokens, §4 surface language and §5 typography below are
+> **rewritten for Soft Pixel** (white, minimal, rounded pixel). Older parchment / "Sprout Lands" wording elsewhere in
+> this file is historical until each screen group is migrated; where it conflicts with §3–§5, §3–§5 win.
+
 > **TL;DR (ไทย):** UI ของแอปต้องเป็น "HUD ของเกม" ไม่ใช่แอป iOS ลอยทับเกม
 > ทุกชิ้นส่วน chrome (ปุ่ม, แผง, nav) ต้องดูเหมือนมาจากตลับเกมเดียวกับโลก Sprout Lands ข้างหลัง:
 > ขอบหมึกหนา 2px · เงาแข็งแบบ offset (ไม่มีเงาฟุ้ง) · ฟอนต์พิกเซลใช้เป็น display เท่านั้น (≥10px, ห้ามใช้กับภาษาไทย) ·
@@ -73,79 +77,49 @@ on a Game Boy. Already implemented as `.neo-btn` on the Welcome page; it becomes
 All colors come from `@theme` in `src/index.css`. **No raw hex in JSX. No Tailwind default
 palette classes (`gray-*`, `blue-*`, `red-*`, `amber-*`…) in app chrome.**
 
-```css
-@theme {
-  /* existing */
-  --color-brand:        #a78bda;  /* soft purple — accents, icons */
-  --color-brand-strong: #7c3aed;  /* primary action fill */
-  --color-brand-soft:   #f0eeff;  /* selected/pressed fills */
-  --color-accent-pink:  #d93d8c;  /* highlights, title shadow */
-  --color-ink:          #1a1035;  /* ALL borders, hard shadows, primary text */
-  --color-surface:      #ffffff;  /* card/sheet body */
-
-  /* new */
-  --color-paper:        #fdf6ec;  /* parchment — panel & dialog backgrounds (game dialog box) */
-  --color-hud:          #fffdf8;  /* HUD slab fill (slightly warm white) */
-  --color-ink-soft:     #6b6284;  /* secondary text (replaces gray-400/500) */
-  --color-good:         #3f9e58;  /* success, crops, "ready" */
-  --color-warn:         #e0a53c;  /* gold, streak, caution */
-  --color-danger:       #d9534f;  /* destructive, errors, badges */
-
-  /* hard shadows as first-class tokens → shadow-hard / shadow-hard-sm classes */
-  --shadow-hard:    4px 4px 0 0 #1a1035;
-  --shadow-hard-sm: 3px 3px 0 0 #1a1035;
-}
-```
+| Group | Tokens (value) |
+|---|---|
+| Surfaces | `paper`/`surface`/`hud` `#FFFFFF` · `mist` `#F4F3F9` · `hairline` `#D9D5EA` |
+| Lines | `line`/`edge`/`brand` `#5c4e92` (sprite outline) · `line-soft` `#6f63a6` |
+| Brand + text | `brand-strong` `#463c74` · `brand-soft` `#EFEBFA` · `ink` `#2B2550` · `ink-soft` `#6E6890` · `accent-pink` `#B8467F` |
+| State | `leaf`/`good` `#5FB57A` (bg only) · `good-strong` `#2F7A47` · `warn` `#E8A93B` (bg only) · `warn-strong` `#8A5A00` · `danger` `#C2413D` · `lime` `#8FD3A4` (focus ring) |
+| Faculty zones | `zone-{health,sci,soc,biz,arts,earth}` with `-soft` (tint) and `-deep` (text) |
+| Shape | `rounded-ui` 8px · `rounded-slot` 12px · `rounded-sheet` 20px · `shadow-px` `3px 3px 0 #5c4e92` · `shadow-px-sm` `2px 2px 0` |
 
 Usage rules:
-- Text: `text-ink` primary, `text-ink-soft` secondary. Never `text-gray-*`.
-- Panels/sheets: `bg-paper` body, `bg-surface` for cards *inside* a paper panel.
-- Exactly **one** brand-strong action per view. Everything else is surface/ink.
+- Text: `text-ink` primary, `text-ink-soft` secondary — all text tokens meet AA (≥4.5:1) on white.
+  `warn`, `good`, `leaf`, `lime` are **background-only**; use `*-strong` / `-deep` for copy.
+- Panels/sheets: `bg-paper`; secondary areas `bg-mist`.
+- Exactly **one** filled ink action per view. Everything else is paper/outline.
 - Semantic colors (`good`/`warn`/`danger`) only for their meanings, never decoration.
-- Gradients: allowed **only** as full-screen scene backdrops (loading screen, auth sky).
-  Never on buttons, text, cards, or icons.
+- No pure black anywhere (UI or art). Gradients only as full-screen scene backdrops.
 
-## 4. Surface language — the `neo-*` system
+## 4. Surface language — the `px-*` system (`neo-*` are aliases)
 
-Defined once in `src/index.css`, used everywhere. (`neo-card` / `neo-btn` already exist.)
+Defined once in `src/index.css`. `.neo-*` classes remain as aliases until usages migrate.
 
 | Class | Recipe | Use for |
 |---|---|---|
-| `neo-card` | 2px ink border · `rounded-2xl` (1rem) · surface bg · `shadow-hard` | Standalone cards, modals |
-| `neo-btn` | 2px ink border · `shadow-hard` · hover lifts `(-2px,-2px)` · active presses `(4px,4px)` + shadow→0 · `steps(2)` | Every button and tappable tile |
-| `neo-slab` | 2px ink border · `rounded-xl` (0.75rem) · `bg-hud` · `shadow-hard-sm` | HUD bars: stats, music pill, MiniPlayer, nav dock |
-| `neo-sheet` | 2px ink border (no bottom) · `rounded-t-2xl` · `bg-paper` | All bottom sheets (Popup `variant="sheet"`) |
-| `neo-pressed` | translate `(2px,2px)` · shadow none · `bg-brand-soft` | Active/selected state (nav tab, segmented tab, toggle-on) |
+| `px-card` | 2px line border · 8px radius · paper · `shadow-px` | Cards, modals |
+| `px-btn` | 2px line border · `shadow-px-sm` · hover lifts (-1,-1) · active presses (2,2) with no shadow · `steps(2)` | Every button and tappable tile |
+| `px-slab` | like card with `shadow-px-sm` | HUD bars, MiniPlayer, hotbar dock |
+| `px-sheet` | 2px line border (no bottom) · 20px top radius · paper | Bottom sheets (Popup `variant="sheet"`) |
+| `px-pressed` | translate (2,2) · no shadow · `bg-brand-soft` | Active / selected state |
+| `px-input` | 2px hairline border · 12px radius · focus: line border + lime ring | Inputs |
 
-Radius scale — only three values: `rounded-lg` (buttons/tiles inside slabs), `rounded-xl`
-(slabs), `rounded-2xl` (cards/sheets). `rounded-full` is reserved for avatars and
-notification-count badges. Nothing else.
-
-Shadows — only `shadow-hard` / `shadow-hard-sm` / none. Delete every `shadow-sm/md/lg/xl`
-in chrome.
+Radius scale: 8 (buttons/cards), 12 (slots/inputs), 20 (sheets). `rounded-full` for avatars,
+badges and toggles only. Shadows: `shadow-px` / `shadow-px-sm` / none — no blurred shadows in chrome.
 
 ## 5. Typography
 
-Two families, strict roles:
+| Role | Font | Rules |
+|---|---|---|
+| **Game UI** | Chakra Petch 500/600/700 (`.pixel-font`, `font-display`) | Headings, numbers, short labels; supports Thai. Sentence case, no all-caps. |
+| **Body / ไทย** | Noto Sans Thai (`.thai-font`, body default) | All sentences, inputs, long Thai text. |
+| **Wordmark** | Press Start 2P (`.wordmark-font`) | Latin only: `I LOVE TCAS`, `site.pixelName`. Never Thai, never below 10px. |
 
-| Role | Font | Sizes | Rules |
-|---|---|---|---|
-| **Display / HUD** | Press Start 2P (`.pixel-font`) | 10px labels · 12px buttons/HUD numbers · 16px panel titles · 24px+ hero | Latin + digits ONLY. Never Thai (no Thai glyphs → fallback soup). **Never below 10px.** Uppercase. |
-| **Body / ไทย** | Noto Sans Thai (`.thai-font`, body default) | 12px caption · 14px body · 16px section heading | Weights 400/600/700. All Thai text, all sentences, all form inputs. |
-
-Hard bans:
-- `pixel-font text-[7px]` / `text-[8px]` / `text-[9px]` — dead. Minimum is `text-[10px]`.
-- Pixel font on any string containing Thai characters.
-- Inline `style={{ fontFamily: ... }}` — use `.thai-font` / `.pixel-font` classes.
-- Gradient-clipped text (`title-gradient`, `title-soft-gradient`).
-
-Headline treatment (`pixel-title`): solid color + hard offset text-shadow — the type
-version of the hard box shadow:
-
-```css
-.pixel-title       { color: var(--color-ink);  text-shadow: 3px 3px 0 var(--color-accent-pink); }
-.pixel-title-dark  { color: #ffffff;           text-shadow: 3px 3px 0 var(--color-brand-strong); }
-```
+Hard bans: Press Start 2P on any string with Thai; inline `style={{ fontFamily }}` (use the
+classes); gradient-clipped text. Headline treatment `pixel-title`: solid ink + `2px 2px 0 brand-soft`.
 
 ## 6. Iconography
 

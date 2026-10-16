@@ -150,16 +150,17 @@ dual-track roadmap generator, extracted out of ProfilePanel) uses
 
 ```css
 @theme {
-  --color-brand:        #a78bda;   /* primary purple */
-  --color-brand-strong: #7c3aed;
-  --color-brand-soft:   #f0eeff;
-  --color-accent-pink:  #d93d8c;
-  --color-ink:          #1a1035;
-  --color-surface:      #ffffff;
+  --color-brand:        #5c4e92;   /* sprite-outline purple */
+  --color-brand-strong: #463c74;
+  --color-brand-soft:   #EFEBFA;
+  --color-ink:          #2B2550;
+  --color-paper:        #FFFFFF;
+  --color-leaf:         #5FB57A;   /* background-only: Leaves, fills */
+  /* … faculty zone-* tokens, radii, shadow-px — full list in design.md §3 (Soft Pixel, ADR-0021) */
 }
 ```
 
-Use token names as Tailwind classes: `text-brand`, `border-accent-pink`, `bg-surface`.
+Use token names as Tailwind classes: `text-brand`, `bg-paper`, `border-line`, `shadow-px`.
 
 **Inline `style`** only for dynamic values or gradients:
 ```js
@@ -171,7 +172,7 @@ style={{ background: 'linear-gradient(135deg, #a78bda, #7c3aed)' }}
 className="!w-3 !h-3 !bg-green-400 !border-white !border-2"
 ```
 
-**Fonts:** `.pixel-font` = Press Start 2P (retro); `.thai-font` / body = Noto Sans Thai.
+**Fonts (Soft Pixel):** `.pixel-font` / `font-display` = Chakra Petch (game UI labels + numbers, Thai-capable); `.thai-font` / body = Noto Sans Thai; `.wordmark-font` = Press Start 2P for Latin wordmarks only. Surfaces: `.px-card/-btn/-slab/-sheet/-pressed/-input` (`.neo-*` are aliases). Generated art: `npm run art:build` (ADR-0021).
 
 ---
 

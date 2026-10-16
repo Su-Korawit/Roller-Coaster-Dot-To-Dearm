@@ -1,3 +1,4 @@
+/* global process */
 import { describe, it, expect } from 'vitest'
 import { phaseAt, PHASE_TINT } from './timeOfDay'
 

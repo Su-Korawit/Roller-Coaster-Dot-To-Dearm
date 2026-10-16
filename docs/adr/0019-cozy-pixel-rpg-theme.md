@@ -1,6 +1,6 @@
 # 0019 — Cozy pixel RPG theme (Sprout Lands UI)
 
-**Status:** accepted
+**Status:** accepted — superseded in part by [0021](0021-soft-pixel-visual-system.md) (palette, surfaces, type)
 **Date:** 2026-10-14
 
 ## Context
