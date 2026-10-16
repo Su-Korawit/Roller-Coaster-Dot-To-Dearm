@@ -61,3 +61,52 @@ describe('useAuthStore onAuthStateChanged', () => {
     expect(useAuthStore.getState().user).toBeNull()
   })
 })
+
+describe('useAuthStore creator claims', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    m.bootstrapSession.mockResolvedValue(undefined)
+    useAuthStore.setState({ user: null, claims: null, loading: true })
+  })
+
+  const fbUser = (claims, extra = {}) => ({
+    uid: 'u1',
+    getIdToken: vi.fn().mockResolvedValue('tok'),
+    getIdTokenResult: vi.fn().mockResolvedValue({ claims }),
+    ...extra,
+  })
+
+  it('reads custom claims after sign-in', async () => {
+    await m.authStateCallback(fbUser({ creator: true }))
+    expect(useAuthStore.getState().claims).toEqual({ creator: true })
+  })
+
+  it('keeps claims null for a signed-out user', async () => {
+    await m.authStateCallback(null)
+    expect(useAuthStore.getState().claims).toBeNull()
+  })
+
+  it('does not break sign-in when the token result cannot be read', async () => {
+    const user = fbUser({}, { getIdTokenResult: vi.fn().mockRejectedValue(new Error('offline')) })
+    await m.authStateCallback(user)
+    expect(useAuthStore.getState().loading).toBe(false)
+    expect(useAuthStore.getState().claims).toBeNull()
+  })
+
+  it('refreshClaims forces a new token and picks up a freshly granted role', async () => {
+    const user = fbUser({})
+    await m.authStateCallback(user)
+    expect(useAuthStore.getState().claims).toEqual({})
+
+    user.getIdTokenResult.mockResolvedValue({ claims: { creator: true } })
+    await useAuthStore.getState().refreshClaims()
+
+    expect(user.getIdToken).toHaveBeenCalledWith(true)
+    expect(useAuthStore.getState().claims).toEqual({ creator: true })
+  })
+
+  it('refreshClaims is a no-op when signed out', async () => {
+    await expect(useAuthStore.getState().refreshClaims()).resolves.toBeUndefined()
+  })
+})

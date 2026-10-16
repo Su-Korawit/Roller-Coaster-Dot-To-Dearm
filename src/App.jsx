@@ -6,6 +6,7 @@ import { getAdminSections } from './constants/admin'
 import OnboardingModal from './components/onboarding/OnboardingModal'
 import ConsentGate from './components/ConsentGate'
 import LoadingScene from './components/ui/LoadingScene'
+import RequireCreator from './components/studio/RequireCreator'
 import FxLayer from './components/hud/FxLayer'
 import { installUiSounds } from './lib/sfx'
 import { useConsentStore } from './stores/useConsentStore'
@@ -22,6 +23,7 @@ const RoadmapPage = lazy(() => import('./pages/RoadmapPage'))
 const RoadmapPublicView = lazy(() => import('./pages/RoadmapPublicView'))
 const WelcomePage = lazy(() => import('./pages/WelcomePage'))
 const NewsPostPage = lazy(() => import('./pages/NewsPostPage'))
+const StudioListPage = lazy(() => import('./pages/studio/StudioListPage'))
 const MusicCallback = lazy(() => import('./pages/MusicCallback'))
 const PrivacyPage = lazy(() => import('./pages/legal/PrivacyPage'))
 const TermsPage = lazy(() => import('./pages/legal/TermsPage'))
@@ -101,6 +103,11 @@ function AppSiteRoutes() {
       {/* Admin — full-width desktop, outside mobile frame */}
       <Route element={<RequireAdmin />}>
         <Route path="/admin" element={<AdminPage />} />
+      </Route>
+
+      {/* Studio — creators write articles for the content site (hub) */}
+      <Route element={<RequireCreator />}>
+        <Route path="/studio" element={<StudioListPage />} />
       </Route>
 
       {/* Public — landing + auth, outside the mobile frame so the page can scroll */}
