@@ -73,6 +73,32 @@ describe('createAutosaver', () => {
     expect(saver.status).toBe('saved')
   })
 
+  it('retries a failed save by itself, waiting longer each time', async () => {
+    const save = vi.fn().mockRejectedValueOnce(new Error('x')).mockRejectedValueOnce(new Error('x')).mockResolvedValue(undefined)
+    const { saver } = make(save)
+    saver.push({ title: 'a' })
+    await vi.advanceTimersByTimeAsync(2000) // first attempt fails
+    expect(save).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(4000) // retry after 2x the delay, fails again
+    expect(save).toHaveBeenCalledTimes(2)
+    await vi.advanceTimersByTimeAsync(7000)
+    expect(save).toHaveBeenCalledTimes(2) // next wait is 4x: not yet
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(save).toHaveBeenCalledTimes(3)
+    expect(save).toHaveBeenLastCalledWith({ title: 'a' })
+    expect(saver.status).toBe('saved')
+  })
+
+  it('cancel also stops a scheduled retry', async () => {
+    const save = vi.fn().mockRejectedValue(new Error('x'))
+    const { saver } = make(save)
+    saver.push({ title: 'a' })
+    await vi.advanceTimersByTimeAsync(2000)
+    saver.cancel()
+    await vi.advanceTimersByTimeAsync(60000)
+    expect(save).toHaveBeenCalledTimes(1)
+  })
+
   it('retries the kept patch on flush', async () => {
     const save = vi.fn().mockRejectedValueOnce(new Error('offline')).mockResolvedValue(undefined)
     const { saver } = make(save)

@@ -111,6 +111,32 @@ describe('StudioEditorPage', () => {
     expect(await screen.findByText('บันทึกไม่สำเร็จ ลองใหม่')).toBeTruthy()
   })
 
+  it('offers a retry button next to the failure and saves again when pressed', async () => {
+    m.getDoc.mockResolvedValue(loaded(full()))
+    m.saveDraft.mockRejectedValueOnce(new Error('offline')).mockResolvedValue(undefined)
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    renderPage()
+    fireEvent.change(await screen.findByLabelText('ชื่อบทความ'), { target: { value: 'ใหม่' } })
+    await act(() => vi.advanceTimersByTimeAsync(2100))
+    fireEvent.click(await screen.findByRole('button', { name: 'ลองบันทึกอีกครั้ง' }))
+    await waitFor(() => expect(m.saveDraft).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(screen.queryByText('บันทึกไม่สำเร็จ ลองใหม่')).toBeNull())
+  })
+
+  it('asks before leaving through the back link while the last save has failed', async () => {
+    m.getDoc.mockResolvedValue(loaded(full()))
+    m.saveDraft.mockRejectedValue(new Error('offline'))
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    renderPage()
+    fireEvent.change(await screen.findByLabelText('ชื่อบทความ'), { target: { value: 'ใหม่' } })
+    await act(() => vi.advanceTimersByTimeAsync(2100))
+    await screen.findByText('บันทึกไม่สำเร็จ ลองใหม่')
+    fireEvent.click(screen.getByRole('link', { name: /บทความทั้งหมด/ }))
+    expect(confirm).toHaveBeenCalled()
+    expect(screen.getByLabelText('ชื่อบทความ').value).toBe('ใหม่')
+  })
+
   it('suggests a slug from the title until the article has been published', async () => {
     m.getDoc.mockResolvedValue(loaded(full({ title: '', slug: '' })))
     renderPage()

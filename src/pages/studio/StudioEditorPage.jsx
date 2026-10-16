@@ -43,7 +43,7 @@ function EditorForm({ draftId, initial }) {
   useEffect(() => () => { saver.flush() }, [saver])
   useEffect(() => {
     const warn = (e) => {
-      if (saver.status === 'pending' || saver.status === 'error') e.preventDefault()
+      if (saver.status !== 'idle' && saver.status !== 'saved') e.preventDefault()
     }
     window.addEventListener('beforeunload', warn)
     return () => window.removeEventListener('beforeunload', warn)
@@ -105,9 +105,20 @@ function EditorForm({ draftId, initial }) {
     <div className="min-h-dvh bg-mist">
       <div className="max-w-3xl mx-auto px-4 py-6 flex flex-col gap-4">
         <header className="flex flex-wrap items-center justify-between gap-3">
-          <Link to="/studio" className="text-sm text-ink-soft underline">← บทความทั้งหมด</Link>
+          <Link
+            to="/studio"
+            onClick={(e) => {
+              // Leaving unmounts the editor; edits that could not be saved would be lost.
+              if (saver.status === 'error' && !window.confirm('ยังบันทึกการแก้ไขล่าสุดไม่สำเร็จ ถ้าออกตอนนี้การแก้ไขจะหายไป ออกจากหน้านี้ใช่ไหม')) {
+                e.preventDefault()
+              }
+            }}
+            className="text-sm text-ink-soft underline"
+          >
+            ← บทความทั้งหมด
+          </Link>
           <div className="flex items-center gap-3">
-            <SaveStatus status={saveStatus} />
+            <SaveStatus status={saveStatus} onRetry={() => saver.flush()} />
             <span className="rounded-slot px-2 py-0.5 text-xs font-bold bg-white text-ink">
               {meta.isLive ? 'เผยแพร่แล้ว' : 'ฉบับร่าง'}
             </span>
