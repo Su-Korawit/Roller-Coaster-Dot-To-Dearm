@@ -1,0 +1,419 @@
+[
+  {
+    "name": "valid draft",
+    "draft": {
+      "title": "ทุกโครงการแพทย์ ม.ตัวอย่าง เทียบให้ครบ",
+      "slug": "medicine-all-projects",
+      "category": "compare",
+      "excerpt": "สรุปทุกโครงการพร้อมเงื่อนไขที่ซ้ำกัน",
+      "coverUrl": "https://firebasestorage.googleapis.com/v0/b/x/o/cover.png",
+      "coverAlt": "ภาพปก",
+      "tags": [
+        "แพทย์"
+      ],
+      "body": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"เนื้อหาบทความ\"}]}]}"
+    },
+    "expectedErrors": []
+  },
+  {
+    "name": "Thai title with valid slug",
+    "draft": {
+      "title": "คณะแพทย์",
+      "slug": "a-12345678",
+      "category": "compare",
+      "excerpt": "สรุปทุกโครงการพร้อมเงื่อนไขที่ซ้ำกัน",
+      "coverUrl": "https://firebasestorage.googleapis.com/v0/b/x/o/cover.png",
+      "coverAlt": "ภาพปก",
+      "tags": [
+        "แพทย์"
+      ],
+      "body": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"เนื้อหาบทความ\"}]}]}"
+    },
+    "expectedErrors": []
+  },
+  {
+    "name": "empty title",
+    "draft": {
+      "title": "  ",
+      "slug": "medicine-all-projects",
+      "category": "compare",
+      "excerpt": "สรุปทุกโครงการพร้อมเงื่อนไขที่ซ้ำกัน",
+      "coverUrl": "https://firebasestorage.googleapis.com/v0/b/x/o/cover.png",
+      "coverAlt": "ภาพปก",
+      "tags": [
+        "แพทย์"
+      ],
+      "body": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"เนื้อหาบทความ\"}]}]}"
+    },
+    "expectedErrors": [
+      {
+        "field": "title",
+        "code": "required"
+      }
+    ]
+  },
+  {
+    "name": "title too long",
+    "draft": {
+      "title": "กกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกก",
+      "slug": "medicine-all-projects",
+      "category": "compare",
+      "excerpt": "สรุปทุกโครงการพร้อมเงื่อนไขที่ซ้ำกัน",
+      "coverUrl": "https://firebasestorage.googleapis.com/v0/b/x/o/cover.png",
+      "coverAlt": "ภาพปก",
+      "tags": [
+        "แพทย์"
+      ],
+      "body": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"เนื้อหาบทความ\"}]}]}"
+    },
+    "expectedErrors": [
+      {
+        "field": "title",
+        "code": "too_long"
+      }
+    ]
+  },
+  {
+    "name": "slug too short",
+    "draft": {
+      "title": "ทุกโครงการแพทย์ ม.ตัวอย่าง เทียบให้ครบ",
+      "slug": "ab",
+      "category": "compare",
+      "excerpt": "สรุปทุกโครงการพร้อมเงื่อนไขที่ซ้ำกัน",
+      "coverUrl": "https://firebasestorage.googleapis.com/v0/b/x/o/cover.png",
+      "coverAlt": "ภาพปก",
+      "tags": [
+        "แพทย์"
+      ],
+      "body": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"เนื้อหาบทความ\"}]}]}"
+    },
+    "expectedErrors": [
+      {
+        "field": "slug",
+        "code": "invalid_slug"
+      }
+    ]
+  },
+  {
+    "name": "empty slug",
+    "draft": {
+      "title": "ทุกโครงการแพทย์ ม.ตัวอย่าง เทียบให้ครบ",
+      "slug": "",
+      "category": "compare",
+      "excerpt": "สรุปทุกโครงการพร้อมเงื่อนไขที่ซ้ำกัน",
+      "coverUrl": "https://firebasestorage.googleapis.com/v0/b/x/o/cover.png",
+      "coverAlt": "ภาพปก",
+      "tags": [
+        "แพทย์"
+      ],
+      "body": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"เนื้อหาบทความ\"}]}]}"
+    },
+    "expectedErrors": [
+      {
+        "field": "slug",
+        "code": "invalid_slug"
+      }
+    ]
+  },
+  {
+    "name": "unknown category",
+    "draft": {
+      "title": "ทุกโครงการแพทย์ ม.ตัวอย่าง เทียบให้ครบ",
+      "slug": "medicine-all-projects",
+      "category": "sports",
+      "excerpt": "สรุปทุกโครงการพร้อมเงื่อนไขที่ซ้ำกัน",
+      "coverUrl": "https://firebasestorage.googleapis.com/v0/b/x/o/cover.png",
+      "coverAlt": "ภาพปก",
+      "tags": [
+        "แพทย์"
+      ],
+      "body": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"เนื้อหาบทความ\"}]}]}"
+    },
+    "expectedErrors": [
+      {
+        "field": "category",
+        "code": "invalid_category"
+      }
+    ]
+  },
+  {
+    "name": "missing excerpt",
+    "draft": {
+      "title": "ทุกโครงการแพทย์ ม.ตัวอย่าง เทียบให้ครบ",
+      "slug": "medicine-all-projects",
+      "category": "compare",
+      "excerpt": "",
+      "coverUrl": "https://firebasestorage.googleapis.com/v0/b/x/o/cover.png",
+      "coverAlt": "ภาพปก",
+      "tags": [
+        "แพทย์"
+      ],
+      "body": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"เนื้อหาบทความ\"}]}]}"
+    },
+    "expectedErrors": [
+      {
+        "field": "excerpt",
+        "code": "required"
+      }
+    ]
+  },
+  {
+    "name": "excerpt too long",
+    "draft": {
+      "title": "ทุกโครงการแพทย์ ม.ตัวอย่าง เทียบให้ครบ",
+      "slug": "medicine-all-projects",
+      "category": "compare",
+      "excerpt": "กกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกกก",
+      "coverUrl": "https://firebasestorage.googleapis.com/v0/b/x/o/cover.png",
+      "coverAlt": "ภาพปก",
+      "tags": [
+        "แพทย์"
+      ],
+      "body": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"เนื้อหาบทความ\"}]}]}"
+    },
+    "expectedErrors": [
+      {
+        "field": "excerpt",
+        "code": "too_long"
+      }
+    ]
+  },
+  {
+    "name": "missing cover",
+    "draft": {
+      "title": "ทุกโครงการแพทย์ ม.ตัวอย่าง เทียบให้ครบ",
+      "slug": "medicine-all-projects",
+      "category": "compare",
+      "excerpt": "สรุปทุกโครงการพร้อมเงื่อนไขที่ซ้ำกัน",
+      "coverUrl": "",
+      "coverAlt": "ภาพปก",
+      "tags": [
+        "แพทย์"
+      ],
+      "body": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"เนื้อหาบทความ\"}]}]}"
+    },
+    "expectedErrors": [
+      {
+        "field": "coverUrl",
+        "code": "required"
+      }
+    ]
+  },
+  {
+    "name": "http cover",
+    "draft": {
+      "title": "ทุกโครงการแพทย์ ม.ตัวอย่าง เทียบให้ครบ",
+      "slug": "medicine-all-projects",
+      "category": "compare",
+      "excerpt": "สรุปทุกโครงการพร้อมเงื่อนไขที่ซ้ำกัน",
+      "coverUrl": "http://x.org/a.png",
+      "coverAlt": "ภาพปก",
+      "tags": [
+        "แพทย์"
+      ],
+      "body": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"เนื้อหาบทความ\"}]}]}"
+    },
+    "expectedErrors": [
+      {
+        "field": "coverUrl",
+        "code": "invalid_url"
+      }
+    ]
+  },
+  {
+    "name": "missing cover alt",
+    "draft": {
+      "title": "ทุกโครงการแพทย์ ม.ตัวอย่าง เทียบให้ครบ",
+      "slug": "medicine-all-projects",
+      "category": "compare",
+      "excerpt": "สรุปทุกโครงการพร้อมเงื่อนไขที่ซ้ำกัน",
+      "coverUrl": "https://firebasestorage.googleapis.com/v0/b/x/o/cover.png",
+      "coverAlt": "",
+      "tags": [
+        "แพทย์"
+      ],
+      "body": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"เนื้อหาบทความ\"}]}]}"
+    },
+    "expectedErrors": [
+      {
+        "field": "coverAlt",
+        "code": "required"
+      }
+    ]
+  },
+  {
+    "name": "empty document body",
+    "draft": {
+      "title": "ทุกโครงการแพทย์ ม.ตัวอย่าง เทียบให้ครบ",
+      "slug": "medicine-all-projects",
+      "category": "compare",
+      "excerpt": "สรุปทุกโครงการพร้อมเงื่อนไขที่ซ้ำกัน",
+      "coverUrl": "https://firebasestorage.googleapis.com/v0/b/x/o/cover.png",
+      "coverAlt": "ภาพปก",
+      "tags": [
+        "แพทย์"
+      ],
+      "body": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\"}]}"
+    },
+    "expectedErrors": [
+      {
+        "field": "body",
+        "code": "empty_body"
+      }
+    ]
+  },
+  {
+    "name": "body is not JSON",
+    "draft": {
+      "title": "ทุกโครงการแพทย์ ม.ตัวอย่าง เทียบให้ครบ",
+      "slug": "medicine-all-projects",
+      "category": "compare",
+      "excerpt": "สรุปทุกโครงการพร้อมเงื่อนไขที่ซ้ำกัน",
+      "coverUrl": "https://firebasestorage.googleapis.com/v0/b/x/o/cover.png",
+      "coverAlt": "ภาพปก",
+      "tags": [
+        "แพทย์"
+      ],
+      "body": "not json"
+    },
+    "expectedErrors": [
+      {
+        "field": "body",
+        "code": "empty_body"
+      }
+    ]
+  },
+  {
+    "name": "image without alt",
+    "draft": {
+      "title": "ทุกโครงการแพทย์ ม.ตัวอย่าง เทียบให้ครบ",
+      "slug": "medicine-all-projects",
+      "category": "compare",
+      "excerpt": "สรุปทุกโครงการพร้อมเงื่อนไขที่ซ้ำกัน",
+      "coverUrl": "https://firebasestorage.googleapis.com/v0/b/x/o/cover.png",
+      "coverAlt": "ภาพปก",
+      "tags": [
+        "แพทย์"
+      ],
+      "body": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"text\"}]},{\"type\":\"image\",\"attrs\":{\"src\":\"https://x.org/a.png\"}}]}"
+    },
+    "expectedErrors": [
+      {
+        "field": "body",
+        "code": "image_alt_missing"
+      }
+    ]
+  },
+  {
+    "name": "image with blank alt",
+    "draft": {
+      "title": "ทุกโครงการแพทย์ ม.ตัวอย่าง เทียบให้ครบ",
+      "slug": "medicine-all-projects",
+      "category": "compare",
+      "excerpt": "สรุปทุกโครงการพร้อมเงื่อนไขที่ซ้ำกัน",
+      "coverUrl": "https://firebasestorage.googleapis.com/v0/b/x/o/cover.png",
+      "coverAlt": "ภาพปก",
+      "tags": [
+        "แพทย์"
+      ],
+      "body": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"text\"}]},{\"type\":\"image\",\"attrs\":{\"src\":\"https://x.org/a.png\",\"alt\":\"  \"}}]}"
+    },
+    "expectedErrors": [
+      {
+        "field": "body",
+        "code": "image_alt_missing"
+      }
+    ]
+  },
+  {
+    "name": "image with alt",
+    "draft": {
+      "title": "ทุกโครงการแพทย์ ม.ตัวอย่าง เทียบให้ครบ",
+      "slug": "medicine-all-projects",
+      "category": "compare",
+      "excerpt": "สรุปทุกโครงการพร้อมเงื่อนไขที่ซ้ำกัน",
+      "coverUrl": "https://firebasestorage.googleapis.com/v0/b/x/o/cover.png",
+      "coverAlt": "ภาพปก",
+      "tags": [
+        "แพทย์"
+      ],
+      "body": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"text\"}]},{\"type\":\"image\",\"attrs\":{\"src\":\"https://x.org/a.png\",\"alt\":\"คำอธิบายภาพ\"}}]}"
+    },
+    "expectedErrors": []
+  },
+  {
+    "name": "nine tags",
+    "draft": {
+      "title": "ทุกโครงการแพทย์ ม.ตัวอย่าง เทียบให้ครบ",
+      "slug": "medicine-all-projects",
+      "category": "compare",
+      "excerpt": "สรุปทุกโครงการพร้อมเงื่อนไขที่ซ้ำกัน",
+      "coverUrl": "https://firebasestorage.googleapis.com/v0/b/x/o/cover.png",
+      "coverAlt": "ภาพปก",
+      "tags": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i"
+      ],
+      "body": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"เนื้อหาบทความ\"}]}]}"
+    },
+    "expectedErrors": [
+      {
+        "field": "tags",
+        "code": "too_many"
+      }
+    ]
+  },
+  {
+    "name": "oversize body",
+    "draft": {
+      "title": "ทุกโครงการแพทย์ ม.ตัวอย่าง เทียบให้ครบ",
+      "slug": "medicine-all-projects",
+      "category": "compare",
+      "excerpt": "สรุปทุกโครงการพร้อมเงื่อนไขที่ซ้ำกัน",
+      "coverUrl": "https://firebasestorage.googleapis.com/v0/b/x/o/cover.png",
+      "coverAlt": "ภาพปก",
+      "tags": [
+        "แพทย์"
+      ],
+      "body": "__LARGE__"
+    },
+    "expectedErrors": [
+      {
+        "field": "body",
+        "code": "body_too_large"
+      }
+    ]
+  },
+  {
+    "name": "several problems at once",
+    "draft": {
+      "title": "",
+      "slug": "medicine-all-projects",
+      "category": "x",
+      "excerpt": "สรุปทุกโครงการพร้อมเงื่อนไขที่ซ้ำกัน",
+      "coverUrl": "https://firebasestorage.googleapis.com/v0/b/x/o/cover.png",
+      "coverAlt": "ภาพปก",
+      "tags": [
+        "แพทย์"
+      ],
+      "body": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"เนื้อหาบทความ\"}]}]}"
+    },
+    "expectedErrors": [
+      {
+        "field": "title",
+        "code": "required"
+      },
+      {
+        "field": "category",
+        "code": "invalid_category"
+      }
+    ]
+  }
+]
