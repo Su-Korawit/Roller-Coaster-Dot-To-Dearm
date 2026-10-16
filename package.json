@@ -13,6 +13,7 @@
     "test:rules": "vitest run --config vitest.rules.config.js",
     "test:rules:emu": "firebase emulators:exec --only auth,firestore,database,storage --project demo-rcdtd \"npm run test:rules\"",
     "upload-assets": "node scripts/uploadAssets.mjs",
+    "art:build": "node scripts/art/build.mjs",
     "reset-farm-data": "node scripts/resetFarmData.mjs",
     "ir-report": "node scripts/irReport.mjs",
     "refresh-tcas-snapshot": "node scripts/refreshTcasSnapshot.mjs"
