@@ -276,7 +276,7 @@ service cloud.firestore {
     function draftFields() {
       return ['authorUid', 'authorName', 'title', 'slug', 'category', 'excerpt', 'tags',
               'coverUrl', 'coverAlt', 'body', 'seo', 'publishedSlug', 'publishedAt',
-              'createdAt', 'updatedAt'];
+              'isLive', 'createdAt', 'updatedAt'];
     }
 
     match /articles/{slug} {
@@ -292,6 +292,7 @@ service cloud.firestore {
             && request.resource.data.authorUid == request.auth.uid
             && !('publishedSlug' in request.resource.data)
             && !('publishedAt' in request.resource.data)
+            && !('isLive' in request.resource.data)
             && request.resource.data.keys().hasOnly(draftFields()));
       allow update: if isSuperAdmin()
         || (isCreator()
@@ -299,6 +300,7 @@ service cloud.firestore {
             && request.resource.data.authorUid == resource.data.authorUid
             && request.resource.data.get('publishedSlug', null) == resource.data.get('publishedSlug', null)
             && request.resource.data.get('publishedAt', null) == resource.data.get('publishedAt', null)
+            && request.resource.data.get('isLive', null) == resource.data.get('isLive', null)
             && request.resource.data.keys().hasOnly(draftFields()));
       allow delete: if isSuperAdmin()
         || (isCreator()

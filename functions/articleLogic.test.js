@@ -41,7 +41,7 @@ describe('planPublish', () => {
       updatedAt: NOW,
     })
     expect(plan.liveDoc.readingMinutes).toBeGreaterThanOrEqual(1)
-    expect(plan.draftPatch).toEqual({ publishedSlug: 'medicine-all-projects', publishedAt: NOW, updatedAt: NOW })
+    expect(plan.draftPatch).toEqual({ publishedSlug: 'medicine-all-projects', publishedAt: NOW, updatedAt: NOW, isLive: true })
   })
 
   it('lets only the author or the super-admin publish', () => {

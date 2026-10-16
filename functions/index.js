@@ -625,8 +625,12 @@ exports.unpublishArticle = onCall(async (req) => {
     await db.runTransaction(async (tx) => {
       const ref = db.collection('articles').doc(slug)
       const snap = await tx.get(ref)
-      articleLogic.planUnpublish({ live: snap.exists ? snap.data() : null, uid, isSuperAdmin })
+      const live = snap.exists ? snap.data() : null
+      articleLogic.planUnpublish({ live, uid, isSuperAdmin })
+      const draftRef = live.draftId ? db.collection('articleDrafts').doc(live.draftId) : null
+      const draftSnap = draftRef ? await tx.get(draftRef) : null
       tx.delete(ref)
+      if (draftSnap?.exists) tx.update(draftRef, { isLive: false })
     })
   } catch (err) {
     throw toHttpsError(err)

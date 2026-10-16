@@ -40,7 +40,7 @@ export function welcomeNewsToArticle(oldDoc, id, { authorUid, authorName, now = 
     publishedAt,
     updatedAt: publishedAt,
   }
-  const draft = { ...shared, slug: id, publishedSlug: id, publishedAt, createdAt: publishedAt, updatedAt: publishedAt }
+  const draft = { ...shared, slug: id, publishedSlug: id, isLive: true, publishedAt, createdAt: publishedAt, updatedAt: publishedAt }
   return { article, draft }
 }
 

@@ -88,7 +88,9 @@ describe('publishArticle', () => {
     const res = await run('publishArticle', creator('alice'), { draftId: 'd1' })
     expect(res).toEqual({ ok: true, slug: 'medicine-all' })
     expect(await live('medicine-all')).toMatchObject({ title: 'ทุกโครงการแพทย์', draftId: 'd1', authorUid: 'alice' })
-    expect((await db.collection('articleDrafts').doc('d1').get()).data().publishedSlug).toBe('medicine-all')
+    const stored = (await db.collection('articleDrafts').doc('d1').get()).data()
+    expect(stored.publishedSlug).toBe('medicine-all')
+    expect(stored.isLive).toBe(true)
   })
 
   it('does not let a second creator take an existing slug', async () => {
@@ -156,13 +158,16 @@ describe('unpublishArticle', () => {
   it('removes the live article for its author but keeps the draft and its slug', async () => {
     expect(await run('unpublishArticle', creator('alice'), { slug: 'medicine-all' })).toEqual({ ok: true })
     expect(await live('medicine-all')).toBeUndefined()
-    expect((await db.collection('articleDrafts').doc('d1').get()).data().publishedSlug).toBe('medicine-all')
+    const stored = (await db.collection('articleDrafts').doc('d1').get()).data()
+    expect(stored.publishedSlug).toBe('medicine-all')
+    expect(stored.isLive).toBe(false)
   })
 
   it('lets the author republish after an unpublish', async () => {
     await run('unpublishArticle', creator('alice'), { slug: 'medicine-all' })
     expect((await run('publishArticle', creator('alice'), { draftId: 'd1' })).slug).toBe('medicine-all')
     expect(await live('medicine-all')).toBeDefined()
+    expect((await db.collection('articleDrafts').doc('d1').get()).data().isLive).toBe(true)
   })
 
   it('lets the super-admin unpublish, and reports a missing article', async () => {

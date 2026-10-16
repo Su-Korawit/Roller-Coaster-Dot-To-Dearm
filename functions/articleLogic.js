@@ -127,7 +127,7 @@ function planPublish({ draft, draftId, uid, isSuperAdmin, existingLive, now }) {
       publishedAt,
       updatedAt: now,
     },
-    draftPatch: { publishedSlug: slug, publishedAt, updatedAt: now },
+    draftPatch: { publishedSlug: slug, publishedAt, updatedAt: now, isLive: true },
   }
 }
 

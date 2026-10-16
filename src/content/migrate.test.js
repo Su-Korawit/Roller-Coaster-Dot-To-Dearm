@@ -49,8 +49,12 @@ describe('welcomeNewsToArticle', () => {
       expect(draft[k]).toEqual(article[k])
     }
     expect(Object.keys(draft).sort()).toEqual(
-      ['authorName', 'authorUid', 'body', 'category', 'coverAlt', 'coverUrl', 'createdAt', 'excerpt', 'publishedAt', 'publishedSlug', 'seo', 'slug', 'tags', 'title', 'updatedAt'],
+      ['authorName', 'authorUid', 'body', 'category', 'coverAlt', 'coverUrl', 'createdAt', 'excerpt', 'isLive', 'publishedAt', 'publishedSlug', 'seo', 'slug', 'tags', 'title', 'updatedAt'],
     )
+  })
+
+  it('marks the draft as live because its article is published', () => {
+    expect(draft.isLive).toBe(true)
   })
 
   it('passes the publish checks when the old post had a cover', () => {
