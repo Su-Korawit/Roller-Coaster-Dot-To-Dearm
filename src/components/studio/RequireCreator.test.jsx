@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom'
 
 const auth = vi.hoisted(() => ({ state: {} }))
 vi.mock('../../stores/useAuthStore', () => ({
@@ -37,6 +37,23 @@ describe('RequireCreator', () => {
   it('sends signed-out visitors to the sign-in page', () => {
     renderGuard()
     expect(screen.getByText('หน้าเข้าสู่ระบบ')).toBeTruthy()
+  })
+
+  it('remembers where to come back to when it sends a visitor to sign in', () => {
+    function AuthProbe() {
+      return <p>{`from:${useLocation().state?.from}`}</p>
+    }
+    render(
+      <MemoryRouter initialEntries={['/studio']}>
+        <Routes>
+          <Route path="/auth" element={<AuthProbe />} />
+          <Route element={<RequireCreator />}>
+            <Route path="/studio" element={<p>สตูดิโอ</p>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+    expect(screen.getByText('from:/studio')).toBeTruthy()
   })
 
   it('lets a user with the creator claim in', () => {

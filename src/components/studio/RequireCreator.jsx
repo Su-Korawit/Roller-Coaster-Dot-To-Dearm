@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, Navigate, Outlet } from 'react-router-dom'
+import { Link, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { ADMIN_UID } from '../../constants/admin'
 import Button from '../ui/Button'
@@ -12,15 +12,18 @@ export default function RequireCreator() {
   const loading = useAuthStore((s) => s.loading)
   const refreshClaims = useAuthStore((s) => s.refreshClaims)
   const [refreshing, setRefreshing] = useState(false)
+  const location = useLocation()
 
   if (loading) return null
-  if (!user) return <Navigate to="/auth" replace />
+  if (!user) return <Navigate to="/auth" replace state={{ from: location.pathname }} />
   if (claims?.creator === true || user.uid === ADMIN_UID) return <Outlet />
 
   const refresh = async () => {
     setRefreshing(true)
     try {
       await refreshClaims()
+    } catch (e) {
+      console.error('[RequireCreator] refreshing role failed:', e)
     } finally {
       setRefreshing(false)
     }

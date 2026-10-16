@@ -13,12 +13,13 @@ vi.mock('../services/consent', () => consent)
 
 const { default: AuthPage } = await import('./AuthPage')
 
-function renderAt(url) {
+function renderAt(url, state) {
   return render(
-    <MemoryRouter initialEntries={[url]}>
+    <MemoryRouter initialEntries={[{ pathname: url.split('?')[0], search: url.includes('?') ? `?${url.split('?')[1]}` : '', state }]}>
       <Routes>
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/home" element={<div>HOME</div>} />
+        <Route path="/studio" element={<div>STUDIO</div>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -51,6 +52,22 @@ describe('AuthPage', () => {
   it('redirects to /home when already authenticated', () => {
     authState = { user: { uid: 'u1' }, signIn: vi.fn(), loading: false }
     renderAt('/auth')
+    expect(screen.getByText('HOME')).toBeTruthy()
+  })
+})
+
+describe('AuthPage return path', () => {
+  beforeEach(() => {
+    authState = { user: { uid: 'u1' }, signIn: vi.fn(), loading: false }
+  })
+
+  it('returns to the page that sent the visitor to sign in', () => {
+    renderAt('/auth', { from: '/studio' })
+    expect(screen.getByText('STUDIO')).toBeTruthy()
+  })
+
+  it('never follows an off-site or protocol-relative return path', () => {
+    renderAt('/auth', { from: '//evil.test/x' })
     expect(screen.getByText('HOME')).toBeTruthy()
   })
 })
