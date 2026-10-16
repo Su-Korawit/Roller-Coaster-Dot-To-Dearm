@@ -533,6 +533,107 @@ exports.grantTeacherBadge = onCall(async (req) => {
   return { ok: true, teacherSchoolId: revoke ? null : claims.teacherSchoolId }
 })
 
+// ── Content site: creator role + article publishing ──────────────────────────
+// Spec: docs/superpowers/specs/2026-10-16-content-site-design.md. Creators write
+// only `articleDrafts`; `articles` (public) is written exclusively here, so a
+// half-edited draft can never go live and slugs are claimed atomically.
+const { nextCreatorClaims } = require('./creatorClaims')
+const articleLogic = require('./articleLogic')
+
+const PLAIN_SLUG = /^[A-Za-z0-9_-]+$/
+const PLAN_ERROR_CODES = new Set(['permission-denied', 'failed-precondition', 'already-exists', 'invalid-argument'])
+
+function requireCreator(req) {
+  const uid = requireUid(req)
+  const isSuperAdmin = uid === SUPER_ADMIN_UID
+  if (!isSuperAdmin && req.auth?.token?.creator !== true) {
+    throw new HttpsError('permission-denied', 'Creator access is required.')
+  }
+  return { uid, isSuperAdmin }
+}
+
+// planPublish/planUnpublish throw plain Errors tagged with a code; surface them as HttpsErrors.
+function toHttpsError(err) {
+  if (err instanceof HttpsError) return err
+  if (PLAN_ERROR_CODES.has(err?.code)) {
+    return new HttpsError(err.code, err.message, err.errors ? { errors: err.errors } : undefined)
+  }
+  return err
+}
+
+exports.grantCreatorRole = onCall(async (req) => {
+  if (req.auth?.uid !== SUPER_ADMIN_UID) {
+    throw new HttpsError('permission-denied', 'Only the super-admin can manage creators.')
+  }
+  const { uid, email } = req.data ?? {}
+  const hasUid = typeof uid === 'string' && uid !== ''
+  const hasEmail = typeof email === 'string' && email.trim() !== ''
+  if (!hasUid && !hasEmail) throw new HttpsError('invalid-argument', 'uid or email is required.')
+
+  let user
+  try {
+    user = hasUid ? await admin.auth().getUser(uid) : await admin.auth().getUserByEmail(email.trim().toLowerCase())
+  } catch {
+    throw new HttpsError('not-found', 'User not found.')
+  }
+
+  const revoke = req.data?.revoke === true
+  await admin.auth().setCustomUserClaims(user.uid, nextCreatorClaims(user.customClaims, { revoke }))
+  return { ok: true, uid: user.uid, creator: !revoke }
+})
+
+exports.publishArticle = onCall(async (req) => {
+  const { uid, isSuperAdmin } = requireCreator(req)
+  const draftId = req.data?.draftId
+  if (typeof draftId !== 'string' || draftId === '' || draftId.includes('/')) {
+    throw new HttpsError('invalid-argument', 'draftId is required.')
+  }
+
+  try {
+    return await db.runTransaction(async (tx) => {
+      const draftRef = db.collection('articleDrafts').doc(draftId)
+      const draftSnap = await tx.get(draftRef)
+      const draft = draftSnap.exists ? draftSnap.data() : null
+
+      // Reads first: the live doc for the slug this draft would publish to.
+      const slug = articleLogic.resolveSlug(draft)
+      const liveSnap = PLAIN_SLUG.test(slug) ? await tx.get(db.collection('articles').doc(slug)) : null
+
+      const plan = articleLogic.planPublish({
+        draft,
+        draftId,
+        uid,
+        isSuperAdmin,
+        existingLive: liveSnap?.exists ? liveSnap.data() : null,
+        now: admin.firestore.Timestamp.now(),
+      })
+      tx.set(db.collection('articles').doc(plan.slug), plan.liveDoc)
+      tx.update(draftRef, plan.draftPatch)
+      return { ok: true, slug: plan.slug }
+    })
+  } catch (err) {
+    throw toHttpsError(err)
+  }
+})
+
+exports.unpublishArticle = onCall(async (req) => {
+  const { uid, isSuperAdmin } = requireCreator(req)
+  const slug = req.data?.slug
+  if (typeof slug !== 'string' || !PLAIN_SLUG.test(slug)) throw new HttpsError('invalid-argument', 'slug is required.')
+
+  try {
+    await db.runTransaction(async (tx) => {
+      const ref = db.collection('articles').doc(slug)
+      const snap = await tx.get(ref)
+      articleLogic.planUnpublish({ live: snap.exists ? snap.data() : null, uid, isSuperAdmin })
+      tx.delete(ref)
+    })
+  } catch (err) {
+    throw toHttpsError(err)
+  }
+  return { ok: true }
+})
+
 // ── Account erasure (PDPA) ───────────────────────────────────────────────────
 // The signed-in user deletes their OWN account and data. Guards: must have
 // signed in within the last 5 minutes (the client re-authenticates first), must
