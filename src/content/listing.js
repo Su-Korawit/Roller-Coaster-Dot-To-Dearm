@@ -12,6 +12,12 @@ export function toMillis(value) {
   return Number.isFinite(t) ? t : 0
 }
 
+export function formatThaiDate(value) {
+  const ms = toMillis(value)
+  if (!ms) return ''
+  return new Date(ms).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
 export function toSummary(article) {
   return {
     slug: article.slug ?? article.id,

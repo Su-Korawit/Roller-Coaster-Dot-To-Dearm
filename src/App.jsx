@@ -30,7 +30,10 @@ const DevUiKit = import.meta.env.DEV ? lazy(() => import('./pages/DevUiKit')) : 
 
 // Feature-site pages — separate lazy chunks so hub/roadmap/tcas/news/school
 // never pull the Phaser bundle.
-const HubPage = lazy(() => import('./pages/HubPage'))
+const HubHome = lazy(() => import('./pages/hub/HubHome'))
+const ArticlePage = lazy(() => import('./pages/hub/ArticlePage'))
+const CategoryPage = lazy(() => import('./pages/hub/CategoryPage'))
+const SearchPage = lazy(() => import('./pages/hub/SearchPage'))
 const RoadmapLanding = lazy(() => import('./pages/landing/RoadmapLanding'))
 const SchoolLanding = lazy(() => import('./pages/landing/SchoolLanding'))
 const NewsHomePage = lazy(() => import('./pages/landing/NewsHomePage'))
@@ -86,9 +89,10 @@ function ExternalRedirect({ to }) {
   return null
 }
 
+// Legacy hub news URLs now live under /blog (the migration keeps each old id as the slug).
 function HubNewsRedirect() {
   const { id } = useParams()
-  return <ExternalRedirect to={`https://news.ilovetcas.com/${id}`} />
+  return <Navigate to={`/blog/${id}`} replace />
 }
 
 function AppSiteRoutes() {
@@ -122,7 +126,10 @@ function AppSiteRoutes() {
 function HubSiteRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<HubPage />} />
+      <Route path="/" element={<HubHome />} />
+      <Route path="/blog/:slug" element={<ArticlePage />} />
+      <Route path="/category/:cat" element={<CategoryPage />} />
+      <Route path="/search" element={<SearchPage />} />
       <Route path="/home" element={<ExternalRedirect to="https://app.ilovetcas.com/home" />} />
       <Route path="/roadmap" element={<ExternalRedirect to="https://app.ilovetcas.com/roadmap" />} />
       <Route path="/auth" element={<ExternalRedirect to="https://app.ilovetcas.com/auth" />} />
