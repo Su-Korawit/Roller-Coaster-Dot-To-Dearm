@@ -42,6 +42,9 @@ export const refs = {
   fileBagItem:   (id)  => doc(db, 'fileBagItems', id),
   fileBagFolder: (id)  => doc(db, 'fileBagFolders', id),
   bagSettings:    (uid) => doc(db, 'bagSettings', uid),
+  article:        (slug) => doc(db, 'articles', slug),
+  articleDraft:   (id)   => doc(db, 'articleDrafts', id),
+  siteConfigHub:  ()     => doc(db, 'siteConfig', 'hub'),
 }
 
 // ── Collection refs ───────────────────────────────────────────────────────────
@@ -65,6 +68,8 @@ export const cols = {
   fileBagItems:   collection(db, 'fileBagItems'),
   fileBagFolders: collection(db, 'fileBagFolders'),
   bagSettings:     collection(db, 'bagSettings'),
+  articles:        collection(db, 'articles'),
+  articleDrafts:   collection(db, 'articleDrafts'),
   chatMessages: (chatId) => collection(db, 'chats', chatId, 'messages'),
   userMatches:  (uid)    => collection(db, 'users', uid, 'matches'),
   userCredits:  (uid)    => collection(db, 'users', uid, 'receivedCredits'),
@@ -129,6 +134,11 @@ export const queries = {
     where('folderId', '==', folderId),
   ),
   fileBagFoldersByOwner: (uid) => query(cols.fileBagFolders, where('ownerUid', '==', uid)),
+  // Content site: newest published first; a creator's drafts are filtered by author only
+  // (sorted client-side) to avoid a composite index; the super-admin lists all by updatedAt.
+  publishedArticles: (n = 60) => query(cols.articles, orderBy('publishedAt', 'desc'), limit(n)),
+  draftsByAuthor:    (uid)    => query(cols.articleDrafts, where('authorUid', '==', uid)),
+  allDrafts:         ()       => query(cols.articleDrafts, orderBy('updatedAt', 'desc')),
 }
 
 // ── Document shapes ───────────────────────────────────────────────────────────
