@@ -25,7 +25,7 @@ export default function SiteFooter() {
               height={32}
               className="h-8 w-8 rounded border-2 border-ink"
             />
-            <p className="pixel-font pixel-title text-[10px]">I LOVE TCAS</p>
+            <p className="wordmark-font pixel-title text-[10px]">I LOVE TCAS</p>
           </div>
           <p className="thai-font text-sm leading-relaxed text-ink-soft">
             เครื่องมือวางแผนสอบติดมหาลัยสำหรับนักเรียนไทย

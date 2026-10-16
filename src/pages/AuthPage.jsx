@@ -99,7 +99,7 @@ export default function AuthPage() {
 
       <div className="relative z-10 flex flex-col items-center mb-5">
         <div className="neo-card px-7 pt-4 pb-5 text-center animate-pop">
-          <h1 className="pixel-font pixel-title text-xl leading-relaxed tracking-wide">I LOVE TCAS</h1>
+          <h1 className="wordmark-font pixel-title text-xl leading-relaxed tracking-wide">I LOVE TCAS</h1>
           <p className="thai-font mt-1 text-sm md:text-base text-ink-soft">เส้นทางสู่ความสำเร็จของคุณ</p>
         </div>
         <div className="-mt-1" aria-hidden="true">

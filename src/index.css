@@ -170,7 +170,14 @@ html {
   height: 100%;
 }
 
+/* Game UI labels and numbers: Chakra Petch (has Thai glyphs). */
 .pixel-font {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+/* Latin wordmarks only (I LOVE TCAS, site.pixelName): Press Start 2P has no Thai glyphs. */
+.wordmark-font {
   font-family: 'Press Start 2P', system-ui;
 }
 

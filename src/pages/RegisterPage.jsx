@@ -62,7 +62,7 @@ function RegisterPage() {
       <TopBar icon="♫" />
 
       <div className="mx-auto max-w-2xl mt-4 px-6 text-center">
-        <h1 className="pixel-font pixel-title text-2xl md:text-3xl leading-snug">I LOVE TCAS</h1>
+        <h1 className="wordmark-font pixel-title text-2xl md:text-3xl leading-snug">I LOVE TCAS</h1>
         <p className="pixel-font pixel-title mt-2 text-xs md:text-sm leading-tight">The best solution</p>
         <p className="pixel-font pixel-title text-xs md:text-sm leading-tight">For self-discovery.</p>
       </div>

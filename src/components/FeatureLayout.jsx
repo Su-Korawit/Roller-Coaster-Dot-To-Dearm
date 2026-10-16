@@ -44,7 +44,7 @@ export default function FeatureLayout({ children }) {
   return (
     <div className="h-dvh w-full flex flex-col bg-[#F4F7FC] overflow-hidden">
       <header className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 border-b-2 border-ink bg-surface z-20">
-        <h1 className="pixel-font text-[10px] uppercase text-ink truncate min-w-0">
+        <h1 className="wordmark-font text-[10px] uppercase text-ink truncate min-w-0">
           {site.pixelName}
         </h1>
 
