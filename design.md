@@ -81,14 +81,14 @@ palette classes (`gray-*`, `blue-*`, `red-*`, `amber-*`…) in app chrome.**
 |---|---|
 | Surfaces | `paper`/`surface`/`hud` `#FFFFFF` · `mist` `#F4F3F9` · `hairline` `#D9D5EA` |
 | Lines | `line`/`edge`/`brand` `#5c4e92` (sprite outline) · `line-soft` `#6f63a6` |
-| Brand + text | `brand-strong` `#463c74` · `brand-soft` `#EFEBFA` · `ink` `#2B2550` · `ink-soft` `#6E6890` · `accent-pink` `#B8467F` |
+| Brand + text | `brand-strong` `#463c74` · `brand-soft` `#EFEBFA` · `ink` `#2B2550` · `ink-soft` `#686288` · `accent-pink` `#B8467F` |
 | State | `leaf`/`good` `#5FB57A` (bg only) · `good-strong` `#2F7A47` · `warn` `#E8A93B` (bg only) · `warn-strong` `#8A5A00` · `danger` `#C2413D` · `lime` `#8FD3A4` (focus ring) |
 | Faculty zones | `zone-{health,sci,soc,biz,arts,earth}` with `-soft` (tint) and `-deep` (text) |
 | Shape | `rounded-ui` 8px · `rounded-slot` 12px · `rounded-sheet` 20px · `shadow-px` `3px 3px 0 #5c4e92` · `shadow-px-sm` `2px 2px 0` |
 
 Usage rules:
-- Text: `text-ink` primary, `text-ink-soft` secondary — all text tokens meet AA (≥4.5:1) on white.
-  `warn`, `good`, `leaf`, `lime` are **background-only**; use `*-strong` / `-deep` for copy.
+- Text: `text-ink` primary, `text-ink-soft` secondary — all text tokens meet AA (≥4.5:1) on white; `ink-soft` and each `zone-*-deep` also meet it on mist, brand-soft and the zone tints.
+  `warn`, `good`, `leaf`, `lime` are **background-only**; use `*-strong` / `-deep` for copy, and never put `text-white` on them (use `text-ink`, or the `-strong` fill with white text).
 - Panels/sheets: `bg-paper`; secondary areas `bg-mist`.
 - Exactly **one** filled ink action per view. Everything else is paper/outline.
 - Semantic colors (`good`/`warn`/`danger`) only for their meanings, never decoration.

@@ -182,7 +182,7 @@ function CreditModal({ msg, friendUser, onDone, onClose }) {
           <button
             onClick={handleConfirm}
             disabled={busy}
-            className="flex-1 py-3 rounded-2xl bg-warn text-white pixel-font text-[8px] active:scale-95 transition-transform disabled:opacity-60 flex items-center justify-center gap-1"
+            className="flex-1 py-3 rounded-2xl bg-warn text-ink pixel-font text-[8px] active:scale-95 transition-transform disabled:opacity-60 flex items-center justify-center gap-1"
           >
             {busy ? <Loader2 size={12} className="animate-spin" /> : '🏅 ยืนยัน'}
           </button>
@@ -425,7 +425,7 @@ function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
                         {showCredit && (
                           <button
                             onClick={() => setCreditTarget(msg)}
-                            className="mt-0.5 w-full pixel-font text-[7px] py-1.5 rounded-lg bg-warn text-white active:scale-95 transition-transform"
+                            className="mt-0.5 w-full pixel-font text-[7px] py-1.5 rounded-lg bg-warn text-ink active:scale-95 transition-transform"
                           >
                             🏅 ให้ Credit เพื่อน
                           </button>

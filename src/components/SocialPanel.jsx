@@ -269,7 +269,7 @@ function UserCard({ user, following, sentRequests, onFollow, onTap, score = 0, o
         onClick={handleMatch}
         disabled={isChecking || isMatched || (isNoMatch && !canRetry)}
         className={`shrink-0 px-2 py-1.5 rounded-xl pixel-font text-[7px] transition-all active:scale-95 disabled:cursor-not-allowed ${
-          isMatched           ? 'bg-warn text-white '
+          isMatched           ? 'bg-warn text-ink '
           : isChecking        ? 'bg-brand-soft text-brand-strong'
           : (isNoMatch && !canRetry) ? 'bg-brand-soft text-ink-soft'
           : 'border border-brand text-brand'

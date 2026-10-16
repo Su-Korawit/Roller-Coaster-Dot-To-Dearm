@@ -55,6 +55,28 @@ describe('typography', () => {
     }
   })
 
+  it('renders every Latin wordmark in src with the wordmark font, not only the listed files', () => {
+    const offenders = []
+    for (const file of sourceFiles.filter((p) => p.endsWith('.jsx'))) {
+      const lines = readFileSync(file, 'utf8').split('\n')
+      lines.forEach((line, i) => {
+        const isWordmark =
+          />I LOVE TCAS</.test(line) || /^\s*I LOVE TCAS\s*$/.test(line) || /\.pixelName\}/.test(line)
+        if (!isWordmark) return
+        const chunk = lines.slice(Math.max(0, i - 2), i + 1).join(' ')
+        if (!chunk.includes('wordmark-font') || /\bpixel-font\b/.test(chunk)) {
+          offenders.push(`${relative(SRC, file)}:${i + 1}`)
+        }
+      })
+    }
+    expect(offenders).toEqual([])
+  })
+
+  it('keeps font utilities working on game labels (rule lives in the components layer)', () => {
+    expect(css).toMatch(/@layer components\s*{[^@]*\.pixel-font\s*{/)
+    expect(css).toMatch(/@layer components\s*{[^@]*\.wordmark-font\s*{/)
+  })
+
   it('uses Press Start 2P only through .wordmark-font', () => {
     const offenders = sourceFiles.filter((p) =>
       /font-?family\s*[=:]\s*[^\n]*Press Start 2P/i.test(readFileSync(p, 'utf8')),

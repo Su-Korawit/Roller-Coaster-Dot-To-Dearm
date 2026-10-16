@@ -26,6 +26,12 @@ describe('Soft Pixel surfaces', () => {
     for (const hex of banned) expect(lower, hex).not.toContain(hex)
   })
 
+  it('draws input borders at a visible (>=3:1) line colour', () => {
+    expect(css).toMatch(
+      /\.px-input,\s*\.neo-input\s*{[^}]*border:\s*2px solid var\(--color-line-soft\)/,
+    )
+  })
+
   it('uses no pure black', () => {
     expect(css).not.toMatch(/#000(000)?\b/)
     expect(css).not.toMatch(/rgb\(\s*0\s+0\s+0/)

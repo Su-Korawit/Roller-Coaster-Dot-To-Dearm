@@ -24,7 +24,7 @@ function SkillsPage() {
 
       <button
         onClick={() => equipSkill('spark')}
-        className="neo-btn rounded-lg bg-good px-4 py-2 text-sm font-semibold text-white"
+        className="neo-btn rounded-lg bg-good px-4 py-2 text-sm font-semibold text-ink"
       >
         Equip Spark
       </button>

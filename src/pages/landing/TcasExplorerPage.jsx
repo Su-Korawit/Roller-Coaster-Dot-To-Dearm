@@ -59,7 +59,7 @@ export default function TcasExplorerPage() {
 
       <header className="pixel-checker border-b-2 border-ink bg-surface px-6 py-12 md:py-16">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="pixel-font mb-4 text-[10px] uppercase text-brand-strong md:text-xs">
+          <p className="wordmark-font mb-4 text-[10px] uppercase text-brand-strong md:text-xs">
             {SITES.tcas.pixelName}
           </p>
           <h1 className="thai-font text-3xl font-extrabold leading-tight text-ink md:text-4xl">

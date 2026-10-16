@@ -22,7 +22,7 @@ Adopt **Soft Pixel** (spec: `docs/superpowers/specs/2026-10-16-soft-pixel-redesi
   colours each with `-soft`/`-deep`; radii 8/12/20; hard blur-free shadow
   `3px 3px 0 #5c4e92`. Legacy token names are re-pointed (not renamed) so ~1,900 utility
   usages restyle with no JSX edits; they are renamed per screen group later.
-- **Three values deviate from the spec's first draft to meet WCAG AA text contrast on white:**
+- **Values deviate from the spec's first draft to meet WCAG AA text contrast** (on white, and on mist / brand-soft / the zone tints after final review): `ink-soft` `#686288`, `zone-health-deep` `#9D5753`, `zone-arts-deep` `#955A7D`, `zone-earth-deep` `#3F7750`, plus three below:
   `danger` `#C2413D` (spec `#D9534F`, 3.96:1), `accent-pink` `#B8467F` (art pink fails as
   text), and the business-zone deep tone `#8A6420`. `warn`, `good`, `leaf`, `lime` are
   documented as background-only.
@@ -47,6 +47,8 @@ Adopt **Soft Pixel** (spec: `docs/superpowers/specs/2026-10-16-soft-pixel-redesi
 
 ## Consequences
 
+- `.px-*` class names read like Tailwind's `px-<n>` padding (e.g. `px-card px-8`). Nothing collides today (no `--spacing-card` token, no tailwind-merge); do not add either without renaming.
+- Small `.pixel-font` labels (201 usages at 5–9px) now render in Chakra Petch, whose caps are about 30% smaller than Press Start 2P. They violate design.md's 10px floor and are swept to ≥10px in the Part B screen groups.
 - ADR-0019's palette, wood slabs, plum shadows and "pixel font is Latin-only display"
   rules are superseded; its game-feel principles (stepped motion, hard shadows) stand.
 - Screens keep working unchanged; some now show leftovers (hard-coded hex, `text-black`,

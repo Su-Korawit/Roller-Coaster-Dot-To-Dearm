@@ -22,7 +22,7 @@ const EXPECTED = {
   'color-brand-strong': '#463c74',
   'color-brand-soft': '#EFEBFA',
   'color-ink': '#2B2550',
-  'color-ink-soft': '#6E6890',
+  'color-ink-soft': '#686288',
   'color-accent-pink': '#B8467F',
   'color-leaf': '#5FB57A',
   'color-good': '#5FB57A',
@@ -33,7 +33,7 @@ const EXPECTED = {
   'color-danger': '#C2413D',
   'color-zone-health': '#E8817B',
   'color-zone-health-soft': '#FCECEB',
-  'color-zone-health-deep': '#A25A56',
+  'color-zone-health-deep': '#9D5753',
   'color-zone-sci': '#5B8DEF',
   'color-zone-sci-soft': '#E6EEFD',
   'color-zone-sci-deep': '#4063A7',
@@ -45,10 +45,10 @@ const EXPECTED = {
   'color-zone-biz-deep': '#8A6420',
   'color-zone-arts': '#E58BC0',
   'color-zone-arts-soft': '#FBEEF6',
-  'color-zone-arts-deep': '#A06186',
+  'color-zone-arts-deep': '#955A7D',
   'color-zone-earth': '#5FB57A',
   'color-zone-earth-soft': '#E7F4EB',
-  'color-zone-earth-deep': '#437F55',
+  'color-zone-earth-deep': '#3F7750',
   'radius-ui': '8px',
   'radius-slot': '12px',
   'radius-sheet': '20px',
@@ -72,6 +72,22 @@ describe('Soft Pixel tokens', () => {
     ]
     for (const k of textKeys) {
       expect(contrastRatio(tokens[`color-${k}`], '#FFFFFF'), k).toBeGreaterThanOrEqual(4.5)
+    }
+  })
+
+  it('zone deep text meets AA on its own tint, paper and mist', () => {
+    for (const z of ['health', 'sci', 'soc', 'biz', 'arts', 'earth']) {
+      const deep = tokens['color-zone-' + z + '-deep']
+      for (const bg of [tokens['color-zone-' + z + '-soft'], tokens['color-paper'], tokens['color-mist']]) {
+        expect(contrastRatio(deep, bg), z + ' on ' + bg).toBeGreaterThanOrEqual(4.5)
+      }
+    }
+  })
+
+  it('ink-soft meets AA on every light fill it is used on', () => {
+    const fills = ['paper', 'mist', 'brand-soft', 'wood', ...['health', 'sci', 'soc', 'biz', 'arts', 'earth'].map((z) => 'zone-' + z + '-soft')]
+    for (const f of fills) {
+      expect(contrastRatio(tokens['color-ink-soft'], tokens['color-' + f]), f).toBeGreaterThanOrEqual(4.5)
     }
   })
 

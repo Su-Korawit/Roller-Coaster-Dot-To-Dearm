@@ -26,7 +26,7 @@
   --color-brand-strong: #463c74;
   --color-brand-soft:   #EFEBFA;
   --color-ink:          #2B2550;
-  --color-ink-soft:     #6E6890;
+  --color-ink-soft:     #686288;
   --color-accent-pink:  #B8467F;   /* darker than the art pink: AA as text */
   /* State */
   --color-leaf:         #5FB57A;   /* background-only: Leaves currency, fills */
@@ -39,7 +39,7 @@
   /* Faculty zones: base (fills) / soft (tints) / deep (text on white) */
   --color-zone-health:      #E8817B;
   --color-zone-health-soft: #FCECEB;
-  --color-zone-health-deep: #A25A56;
+  --color-zone-health-deep: #9D5753;
   --color-zone-sci:         #5B8DEF;
   --color-zone-sci-soft:    #E6EEFD;
   --color-zone-sci-deep:    #4063A7;
@@ -51,10 +51,10 @@
   --color-zone-biz-deep:    #8A6420;
   --color-zone-arts:        #E58BC0;
   --color-zone-arts-soft:   #FBEEF6;
-  --color-zone-arts-deep:   #A06186;
+  --color-zone-arts-deep:   #955A7D;
   --color-zone-earth:       #5FB57A;
   --color-zone-earth-soft:  #E7F4EB;
-  --color-zone-earth-deep:  #437F55;
+  --color-zone-earth-deep:  #3F7750;
   /* Shape + shadow (hard, no blur) */
   --radius-ui:          8px;
   --radius-slot:        12px;
@@ -170,15 +170,18 @@ html {
   height: 100%;
 }
 
-/* Game UI labels and numbers: Chakra Petch (has Thai glyphs). */
-.pixel-font {
-  font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: 0;
-}
-/* Latin wordmarks only (I LOVE TCAS, site.pixelName): Press Start 2P has no Thai glyphs. */
-.wordmark-font {
-  font-family: 'Press Start 2P', system-ui;
+/* In the components layer so font-* / tracking-* utilities on the same element still win. */
+@layer components {
+  /* Game UI labels and numbers: Chakra Petch (has Thai glyphs). */
+  .pixel-font {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+  /* Latin wordmarks only (I LOVE TCAS, site.pixelName): Press Start 2P has no Thai glyphs. */
+  .wordmark-font {
+    font-family: 'Press Start 2P', system-ui;
+  }
 }
 
 /* Body/Thai text — pairs with .pixel-font (chrome only). Replaces the
@@ -238,7 +241,7 @@ html {
   background: var(--color-brand-soft);
 }
 .px-input, .neo-input {
-  border: 2px solid var(--color-hairline);
+  border: 2px solid var(--color-line-soft);
   border-radius: var(--radius-slot);
   background: var(--color-paper);
 }

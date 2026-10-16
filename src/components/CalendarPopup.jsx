@@ -223,7 +223,7 @@ export default function CalendarPopup({ onClose }) {
                     onClick={() => toggleTask(task.id)}
                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors active:scale-90
                       ${task.completed
-                        ? 'border-good bg-good text-white'
+                        ? 'border-good bg-good text-ink'
                         : 'border-ink/30 hover:border-brand'}`}
                   >
                     {task.completed && <Check size={12} />}

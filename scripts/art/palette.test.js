@@ -26,6 +26,26 @@ describe('lintPalette', () => {
     expect(strict.offenders[0].count).toBe(1)
   })
 
+  it('rejects translucent pixels whose colour is not an approved shadow or light tint', () => {
+    const black = new Canvas(1, 1)
+    black.px(0, 0, [0, 0, 0, 80])
+    const res = lintPalette(black)
+    expect(res.ok).toBe(false)
+    expect(res.offenders[0].hex).toBe('#000000')
+    const odd = new Canvas(1, 1)
+    odd.px(0, 0, [200, 10, 10, 90])
+    expect(lintPalette(odd).ok).toBe(false)
+  })
+
+  it('accepts the approved translucent shadow and light tints', () => {
+    const c = new Canvas(4, 1)
+    c.px(0, 0, [70, 60, 116, 46])
+    c.px(1, 0, [92, 78, 146, 128])
+    c.px(2, 0, [255, 255, 255, 120])
+    c.px(3, 0, [255, 214, 140, 30])
+    expect(lintPalette(c).ok).toBe(true)
+  })
+
   it('matches hex case-insensitively', () => {
     const c = new Canvas(1, 1)
     c.px(0, 0, '#5C4E92')

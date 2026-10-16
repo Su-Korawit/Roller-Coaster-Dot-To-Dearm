@@ -3,14 +3,14 @@
 
 const TOKENS = [
   '#FFFFFF', '#F4F3F9', '#E9E6F3', '#D9D5EA', '#5C4E92', '#6F63A6', '#463C74', '#EFEBFA',
-  '#2B2550', '#6E6890', '#B8467F', '#5FB57A', '#2F7A47', '#8FD3A4', '#E8A93B', '#8A5A00', '#C2413D',
+  '#2B2550', '#686288', '#B8467F', '#5FB57A', '#2F7A47', '#8FD3A4', '#E8A93B', '#8A5A00', '#C2413D',
   // zones: base / soft / deep
-  '#E8817B', '#FCECEB', '#A25A56',
+  '#E8817B', '#FCECEB', '#9D5753',
   '#5B8DEF', '#E6EEFD', '#4063A7',
   '#9B7BD6', '#F0EBF9', '#6D5696',
   '#FCF2E2', '#8A6420',
-  '#E58BC0', '#FBEEF6', '#A06186',
-  '#E7F4EB', '#437F55',
+  '#E58BC0', '#FBEEF6', '#955A7D',
+  '#E7F4EB', '#3F7750',
 ]
 
 const ART = [
@@ -35,17 +35,31 @@ export const SOFT_PIXEL_PALETTE = [...new Set([...TOKENS, ...ART].map((h) => h.t
 const toHex = (r, g, b) =>
   '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('').toUpperCase()
 
-// Opaque pixels must be in the palette. Translucent pixels (0 < a < 255) are
-// allowed unless `allowTranslucent` is false. Fully transparent pixels are ignored.
-export function lintPalette(canvas, palette = SOFT_PIXEL_PALETTE, { allowTranslucent = true } = {}) {
+// Translucent pixels are limited to purple shadows, white highlights and a few warm
+// light tints (spec art rules 3-4). Anything else (e.g. a black shadow) is an offender.
+export const SOFT_PIXEL_TRANSLUCENT = [
+  '#463C74', '#5C4E92', // shadows
+  '#FFFFFF', // highlights
+  '#FFD68C', '#FFECC4', '#FFE6A0', '#FFFAE6', // warm lamp / sun light, dust
+]
+
+// Opaque pixels must be in `palette`. Translucent pixels (0 < a < 255) must use a colour
+// from `translucentPalette`, or are all rejected when `allowTranslucent` is false.
+// Fully transparent pixels are ignored.
+export function lintPalette(
+  canvas,
+  palette = SOFT_PIXEL_PALETTE,
+  { allowTranslucent = true, translucentPalette = SOFT_PIXEL_TRANSLUCENT } = {},
+) {
   const allowed = new Set(palette.map((h) => h.toUpperCase()))
+  const allowedTranslucent = new Set(translucentPalette.map((h) => h.toUpperCase()))
   const counts = new Map()
   for (let i = 0; i < canvas.d.length; i += 4) {
     const a = canvas.d[i + 3]
     if (a === 0) continue
     const hex = toHex(canvas.d[i], canvas.d[i + 1], canvas.d[i + 2])
     const translucent = a < 255
-    const bad = translucent ? !allowTranslucent : !allowed.has(hex)
+    const bad = translucent ? !allowTranslucent || !allowedTranslucent.has(hex) : !allowed.has(hex)
     if (bad) counts.set(hex, (counts.get(hex) ?? 0) + 1)
   }
   const offenders = [...counts].map(([hex, count]) => ({ hex, count }))

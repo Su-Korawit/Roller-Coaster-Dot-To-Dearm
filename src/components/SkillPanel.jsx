@@ -320,7 +320,7 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                                   <button
                                     onClick={() => setActiveSkillTask(task)}
                                     className={`pixel-font text-[8px] text-white rounded-xl px-3 py-1.5 active:scale-95 transition-transform shrink-0 shadow ${
-                                      task.assignedSkill === 'ignite' ? 'bg-warn' : 'bg-brand'
+                                      task.assignedSkill === 'ignite' ? 'bg-warn-strong' : 'bg-brand'
                                     }`}
                                   >
                                     {task.assignedSkill === 'ignite' ? '🚀 Go' : '⏳ View'}
