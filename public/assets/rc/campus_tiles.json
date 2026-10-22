@@ -1,0 +1,253 @@
+{
+  "name": "campus_tiles",
+  "frameW": 16,
+  "frameH": 16,
+  "columns": 16,
+  "sprites": {
+    "grass": {
+      "col": 0,
+      "row": 0,
+      "frames": 1
+    },
+    "grass_tuft1": {
+      "col": 1,
+      "row": 0,
+      "frames": 1
+    },
+    "grass_tuft2": {
+      "col": 2,
+      "row": 0,
+      "frames": 1
+    },
+    "grass_tuft3": {
+      "col": 3,
+      "row": 0,
+      "frames": 1
+    },
+    "grass_flower1": {
+      "col": 4,
+      "row": 0,
+      "frames": 1
+    },
+    "grass_flower2": {
+      "col": 5,
+      "row": 0,
+      "frames": 1
+    },
+    "lawn": {
+      "col": 6,
+      "row": 0,
+      "frames": 1
+    },
+    "lawn_tuft": {
+      "col": 7,
+      "row": 0,
+      "frames": 1
+    },
+    "plaza": {
+      "col": 8,
+      "row": 0,
+      "frames": 1
+    },
+    "plaza_dark": {
+      "col": 9,
+      "row": 0,
+      "frames": 1
+    },
+    "path": {
+      "col": 10,
+      "row": 0,
+      "frames": 1
+    },
+    "path_n": {
+      "col": 11,
+      "row": 0,
+      "frames": 1
+    },
+    "path_s": {
+      "col": 12,
+      "row": 0,
+      "frames": 1
+    },
+    "path_w": {
+      "col": 13,
+      "row": 0,
+      "frames": 1
+    },
+    "path_e": {
+      "col": 14,
+      "row": 0,
+      "frames": 1
+    },
+    "water": {
+      "col": 15,
+      "row": 0,
+      "frames": 1
+    },
+    "water2": {
+      "col": 0,
+      "row": 1,
+      "frames": 1
+    },
+    "lily": {
+      "col": 1,
+      "row": 1,
+      "frames": 1
+    },
+    "shore_n": {
+      "col": 2,
+      "row": 1,
+      "frames": 1
+    },
+    "bridge_v": {
+      "col": 3,
+      "row": 1,
+      "frames": 1
+    },
+    "tree_tl": {
+      "col": 4,
+      "row": 1,
+      "frames": 1
+    },
+    "tree_tr": {
+      "col": 5,
+      "row": 1,
+      "frames": 1
+    },
+    "tree_bl": {
+      "col": 6,
+      "row": 1,
+      "frames": 1
+    },
+    "tree_br": {
+      "col": 7,
+      "row": 1,
+      "frames": 1
+    },
+    "bush": {
+      "col": 8,
+      "row": 1,
+      "frames": 1
+    },
+    "flowerbed1": {
+      "col": 9,
+      "row": 1,
+      "frames": 1
+    },
+    "flowerbed2": {
+      "col": 10,
+      "row": 1,
+      "frames": 1
+    },
+    "lamp_top": {
+      "col": 11,
+      "row": 1,
+      "frames": 1
+    },
+    "lamp_base": {
+      "col": 12,
+      "row": 1,
+      "frames": 1
+    },
+    "bench": {
+      "col": 13,
+      "row": 1,
+      "frames": 1
+    },
+    "fountain_nw": {
+      "col": 14,
+      "row": 1,
+      "frames": 1
+    },
+    "fountain_n": {
+      "col": 15,
+      "row": 1,
+      "frames": 1
+    },
+    "fountain_ne": {
+      "col": 0,
+      "row": 2,
+      "frames": 1
+    },
+    "fountain_w": {
+      "col": 1,
+      "row": 2,
+      "frames": 1
+    },
+    "fountain_c": {
+      "col": 2,
+      "row": 2,
+      "frames": 1
+    },
+    "fountain_e": {
+      "col": 3,
+      "row": 2,
+      "frames": 1
+    },
+    "fountain_sw": {
+      "col": 4,
+      "row": 2,
+      "frames": 1
+    },
+    "fountain_s": {
+      "col": 5,
+      "row": 2,
+      "frames": 1
+    },
+    "fountain_se": {
+      "col": 6,
+      "row": 2,
+      "frames": 1
+    },
+    "stage_back_l": {
+      "col": 7,
+      "row": 2,
+      "frames": 1
+    },
+    "stage_back_m": {
+      "col": 8,
+      "row": 2,
+      "frames": 1
+    },
+    "stage_back_r": {
+      "col": 9,
+      "row": 2,
+      "frames": 1
+    },
+    "stage_front_l": {
+      "col": 10,
+      "row": 2,
+      "frames": 1
+    },
+    "stage_front_m": {
+      "col": 11,
+      "row": 2,
+      "frames": 1
+    },
+    "stage_front_r": {
+      "col": 12,
+      "row": 2,
+      "frames": 1
+    },
+    "signpost": {
+      "col": 13,
+      "row": 2,
+      "frames": 1
+    },
+    "board": {
+      "col": 14,
+      "row": 2,
+      "frames": 1
+    },
+    "rice": {
+      "col": 15,
+      "row": 2,
+      "frames": 1
+    },
+    "rice_water": {
+      "col": 0,
+      "row": 3,
+      "frames": 1
+    }
+  }
+}

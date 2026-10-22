@@ -1,0 +1,87 @@
+{
+  "name": "campus_buildings",
+  "frameW": 96,
+  "frameH": 80,
+  "sprites": {
+    "med": {
+      "row": 0,
+      "frames": 1
+    },
+    "dent": {
+      "row": 1,
+      "frames": 1
+    },
+    "pharm": {
+      "row": 2,
+      "frames": 1
+    },
+    "vet": {
+      "row": 3,
+      "frames": 1
+    },
+    "allied": {
+      "row": 4,
+      "frames": 1
+    },
+    "sci": {
+      "row": 5,
+      "frames": 1
+    },
+    "it": {
+      "row": 6,
+      "frames": 1
+    },
+    "eng": {
+      "row": 7,
+      "frames": 1
+    },
+    "arch": {
+      "row": 8,
+      "frames": 1
+    },
+    "law": {
+      "row": 9,
+      "frames": 1
+    },
+    "comm": {
+      "row": 10,
+      "frames": 1
+    },
+    "pol": {
+      "row": 11,
+      "frames": 1
+    },
+    "hum": {
+      "row": 12,
+      "frames": 1
+    },
+    "biz": {
+      "row": 13,
+      "frames": 1
+    },
+    "tour": {
+      "row": 14,
+      "frames": 1
+    },
+    "fine": {
+      "row": 15,
+      "frames": 1
+    },
+    "edu": {
+      "row": 16,
+      "frames": 1
+    },
+    "agri": {
+      "row": 17,
+      "frames": 1
+    },
+    "hall": {
+      "row": 18,
+      "frames": 1
+    },
+    "gate": {
+      "row": 19,
+      "frames": 1
+    }
+  }
+}
