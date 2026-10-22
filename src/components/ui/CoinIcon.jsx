@@ -1,7 +1,7 @@
 export function CoinIcon({ size = 16 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <circle cx="8" cy="8" r="6.5" fill="#a78bda" stroke="#7c3aed" strokeWidth="1.5"/>
+      <circle cx="8" cy="8" r="6.5" fill="var(--color-zone-soc)" stroke="var(--color-line)" strokeWidth="1.5"/>
       <text
         x="8"
         y="11.5"

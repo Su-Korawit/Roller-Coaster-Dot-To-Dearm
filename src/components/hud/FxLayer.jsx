@@ -23,8 +23,8 @@ export default function FxLayer() {
         <div
           key={t.id}
           data-testid={`fx-${t.kind}`}
-          className={`neo-card animate-fx-rise pixel-font whitespace-nowrap px-4 py-2 ${
-            t.kind === 'levelup' ? 'text-sm' : 'text-[11px]'
+          className={`px-card animate-fx-rise pixel-font whitespace-nowrap px-4 py-2 ${
+            t.kind === 'levelup' ? 'text-sm' : 'text-xs'
           } ${STYLE[t.kind] ?? STYLE.info}`}
         >
           {t.kind === 'levelup' && <span aria-hidden="true">✨ </span>}

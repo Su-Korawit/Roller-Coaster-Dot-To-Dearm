@@ -5,7 +5,7 @@ export default function MBTIBadge({ mbti }) {
   if (!mbti) return null
   return (
     <span
-      className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold text-white pixel-font leading-none"
+      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold text-white pixel-font leading-none"
       style={{ backgroundColor: mbtiColor(mbti) }}
     >
       {mbti}

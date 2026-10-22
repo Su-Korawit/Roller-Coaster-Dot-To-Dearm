@@ -24,7 +24,7 @@ export default function ItemSlot({
         ${selected ? '-translate-y-1 shadow-px border-line bg-paper' : 'border-hairline bg-mist'} ${className}`}
     >
       {hotkey != null && (
-        <span className="absolute left-1 top-0.5 font-display text-[9px] font-bold text-ink-soft" aria-hidden="true">
+        <span className="absolute left-1 top-0.5 font-display text-xs font-bold text-ink-soft" aria-hidden="true">
           {hotkey}
         </span>
       )}

@@ -21,7 +21,7 @@ export default function SegmentedTabs({ tabs, activeId, onChange }) {
             {tab.icon && <span aria-hidden="true">{tab.icon}</span>}
             <span className="thai-font">{tab.label}</span>
             {tab.badge != null && tab.badge > 0 && (
-              <span className="ml-0.5 min-w-[16px] h-4 px-1 rounded-full bg-danger text-white text-[10px] flex items-center justify-center leading-none">
+              <span className="ml-0.5 min-w-[16px] h-4 px-1 rounded-full bg-danger text-white text-xs flex items-center justify-center leading-none">
                 {tab.badge > 99 ? '99+' : tab.badge}
               </span>
             )}

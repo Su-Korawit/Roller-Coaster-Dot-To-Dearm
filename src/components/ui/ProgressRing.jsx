@@ -20,7 +20,7 @@ export default function ProgressRing({ value, total, size = 56, stroke = 6, labe
           strokeDashoffset={c * (1 - pct)}
         />
       </svg>
-      <span className="absolute text-[10px] font-semibold text-brand-strong">{text}</span>
+      <span className="absolute text-xs font-semibold text-brand-strong">{text}</span>
     </div>
   )
 }

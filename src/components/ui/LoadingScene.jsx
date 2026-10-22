@@ -9,7 +9,7 @@ export default function LoadingScene({ label = 'Loading...', character = 'INFP',
       {compact ? null : (
         <div className="px-card px-8 py-6 flex flex-col items-center gap-3 animate-pop">
           <div aria-hidden="true"><CharacterSprite code={character} scale={3} /></div>
-          <span className="pixel-font text-[10px] text-ink">{label}</span>
+          <span className="pixel-font text-xs text-ink">{label}</span>
           <div className="flex gap-1" role="progressbar" aria-label="กำลังโหลด" aria-busy="true">
             {[0, 1, 2, 3, 4].map((i) => (
               <span
