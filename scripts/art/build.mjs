@@ -13,6 +13,22 @@ const ROOT = resolve(HERE, '../..')
 
 export function buildFamily(family) {
   const keys = Object.keys(family.sprites)
+  // Default: one sprite per row, frames side by side. With `columns`, single-frame sprites
+  // (tiles) are packed in a grid instead; atlas entries then carry `col` as well as `row`.
+  if (family.columns) {
+    const rows = Math.ceil(keys.length / family.columns)
+    const sheet = new Canvas(family.frameW * family.columns, family.frameH * rows)
+    const atlas = { name: family.name, frameW: family.frameW, frameH: family.frameH, columns: family.columns, sprites: {} }
+    keys.forEach((key, i) => {
+      const col = i % family.columns
+      const row = Math.floor(i / family.columns)
+      const c = new Canvas(family.frameW, family.frameH)
+      family.sprites[key].draw(c, 0)
+      sheet.blit(c, col * family.frameW, row * family.frameH)
+      atlas.sprites[key] = { col, row, frames: 1 }
+    })
+    return { sheet, atlas }
+  }
   const maxFrames = Math.max(...keys.map((k) => family.sprites[k].frames))
   const sheet = new Canvas(family.frameW * maxFrames, family.frameH * keys.length)
   const atlas = { name: family.name, frameW: family.frameW, frameH: family.frameH, sprites: {} }
