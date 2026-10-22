@@ -28,6 +28,8 @@ export const refs = {
   focusDaily:  (uid, day)       => doc(db, 'focusDaily', `${uid}_${day}`),
   musicConfig: (docId)          => doc(db, 'musicConfig', docId),
   assetFolder: (id)             => doc(db, 'assetFolders', id),
+  roomCatalog: (id)             => doc(db, 'roomCatalog', id),
+  room:        (uid)            => doc(db, 'rooms', uid),
   farmItem:    (id)             => doc(db, 'farmItems', id),
   farmPlant:   (id)             => doc(db, 'farmPlants', id),
   farmShop:    (id)             => doc(db, 'farmShops', id),
@@ -55,6 +57,7 @@ export const cols = {
   shopProducts: collection(db, 'shopProducts'),
   purchases:    collection(db, 'purchases'),
   maps:         collection(db, 'maps'),
+  roomCatalog:  collection(db, 'roomCatalog'),
   farmPlants:   collection(db, 'farmPlants'),
   farmItems:    collection(db, 'farmItems'),
   farmShops:    collection(db, 'farmShops'),
@@ -146,6 +149,17 @@ export const queries = {
 // under `profile.*` — this module is the single seam for its shape. `schoolId`
 // and friends stay top-level because Firestore queries filter on them.
 export const shapes = {
+  // Study Room layout as saved by the saveRoomLayout function (rooms/{uid}); a missing doc
+  // is the starter room. Malformed placements are dropped, never thrown on.
+  roomLayout: (d) => ({
+    tier: Number.isInteger(d?.tier) ? d.tier : 0,
+    theme: typeof d?.theme === 'string' ? d.theme : 'minimal',
+    placed: (Array.isArray(d?.placed) ? d.placed : []).filter(
+      (p) => p && typeof p.itemId === 'string' && Number.isFinite(p.x) && Number.isFinite(p.y),
+    ),
+    petId: typeof d?.petId === 'string' ? d.petId : null,
+  }),
+
   // Canonical write shape: maps select-store fields onto profile.*, keeping only
   // non-empty values and renaming mastery → masteryTrack.
   profileFields: ({ mbti, career, mastery, university, program, plans, activePlanId } = {}) => {

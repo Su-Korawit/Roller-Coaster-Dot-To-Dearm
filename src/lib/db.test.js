@@ -324,3 +324,21 @@ describe('content site refs, cols and queries', () => {
     expect(orderBy).toHaveBeenCalledWith('updatedAt', 'desc')
   })
 })
+
+describe('study room refs/cols/shapes', () => {
+  it('points at roomCatalog and rooms documents', () => {
+    expect(refs.roomCatalog('lamp_desk')).toEqual({ _path: 'roomCatalog/lamp_desk' })
+    expect(refs.room('u1')).toEqual({ _path: 'rooms/u1' })
+    expect(cols.roomCatalog).toEqual({ _col: 'roomCatalog' })
+  })
+
+  it('reads a missing room as the starter defaults', () => {
+    expect(shapes.roomLayout(undefined)).toEqual({ tier: 0, theme: 'minimal', placed: [], petId: null })
+    expect(shapes.roomLayout({})).toEqual({ tier: 0, theme: 'minimal', placed: [], petId: null })
+  })
+
+  it('keeps stored layout fields and drops malformed placements', () => {
+    const doc = { tier: 1, theme: 'cafe', petId: 'cat', placed: [{ itemId: 'desk_basic', x: 8, y: 16 }, { nope: true }, null] }
+    expect(shapes.roomLayout(doc)).toEqual({ tier: 1, theme: 'cafe', petId: 'cat', placed: [{ itemId: 'desk_basic', x: 8, y: 16 }] })
+  })
+})

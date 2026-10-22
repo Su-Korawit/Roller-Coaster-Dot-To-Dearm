@@ -568,3 +568,29 @@ describe('consent record and erasure log (PDPA)', () => {
     await assertFails(getDoc(doc(admin, 'accountDeletions/a1')))
   })
 })
+
+describe('study room: roomCatalog + rooms', () => {
+  it('lets any signed-in user read the catalog and rooms, and nobody write rooms', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore()
+      await setDoc(doc(db, 'roomCatalog/lamp_desk'), { name: 'lamp', price: 90 })
+      await setDoc(doc(db, 'rooms/alice'), { tier: 0 })
+    })
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(getDoc(doc(alice, 'roomCatalog/lamp_desk')))
+    await assertSucceeds(getDoc(doc(alice, 'rooms/alice')))
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    await assertSucceeds(getDoc(doc(bob, 'rooms/alice')))
+    await assertFails(setDoc(doc(alice, 'rooms/alice'), { tier: 3, placed: [] }))
+    await assertFails(updateDoc(doc(alice, 'rooms/alice'), { tier: 3 }))
+    const anon = testEnv.unauthenticatedContext().firestore()
+    await assertFails(getDoc(doc(anon, 'roomCatalog/lamp_desk')))
+  })
+
+  it('lets only the super-admin write catalog rows', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(setDoc(doc(alice, 'roomCatalog/lamp_desk'), { price: 1 }))
+    const root = testEnv.authenticatedContext('IaltEhO0mPVfK3ng8npr4CdqnEE3').firestore()
+    await assertSucceeds(setDoc(doc(root, 'roomCatalog/lamp_desk'), { name: 'lamp', price: 120 }))
+  })
+})

@@ -211,6 +211,18 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Study Room. The catalog is public to signed-in users and admin-edited; a room layout is
+    // written ONLY by the saveRoomLayout function (rules cannot count copies per item, so the
+    // function validates the layout against the owner's inventory).
+    match /roomCatalog/{itemId} {
+      allow read: if isSignedIn();
+      allow write: if isSuperAdmin();
+    }
+    match /rooms/{uid} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
     // Focus sessions (ADR 0018): written only by the startFocus/checkInFocus/
     // endFocus Cloud Functions. Owners may read their own records.
     match /focusActive/{uid} {
