@@ -11,18 +11,18 @@ export default function TemperamentCard({ mbti, focusXp = 0 }) {
   const p = levelProgress(xp)
 
   return (
-    <section aria-label="เลเวลและความสามารถ" className="neo-slab p-3 flex flex-col gap-2" data-testid="temperament-card">
+    <section aria-label="เลเวลและความสามารถ" className="px-slab p-3 flex flex-col gap-2" data-testid="temperament-card">
       {xp > 0 && (
         <div>
           <div className="flex items-baseline justify-between">
-            <span className="pixel-font text-[11px] text-ink">เลเวล {p.level}</span>
-            <span className="thai-font text-[10px] text-ink/60">
+            <span className="pixel-font text-xs text-ink">เลเวล {p.level}</span>
+            <span className="thai-font text-xs text-ink/60">
               {p.next ? `${Math.floor(p.xp)} / ${p.next} XP` : 'เลเวลสูงสุด'}
             </span>
           </div>
           <div
             role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(p.ratio * 100)}
-            className="mt-1 h-2.5 border-2 border-ink bg-surface rounded-full overflow-hidden"
+            className="mt-1 h-2.5 border-2 border-ink bg-paper rounded-full overflow-hidden"
           >
             <div className="h-full bg-brand" style={{ width: `${Math.round(p.ratio * 100)}%` }} />
           </div>

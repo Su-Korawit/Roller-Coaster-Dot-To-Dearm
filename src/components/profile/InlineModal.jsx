@@ -6,7 +6,7 @@ export default function InlineModal({ title, children, onClose }) {
   return (
     <Popup variant="center" size="sm" maxHeight="max-h-[80vh]" onClose={onClose}>
       <div className="p-5 flex flex-col">
-        <p className="pixel-font text-[10px] text-ink mb-3 shrink-0">{title}</p>
+        <p className="pixel-font text-xs text-ink mb-3 shrink-0">{title}</p>
         <div className="overflow-y-auto flex-1 space-y-3 pr-1 pb-1">
           {children}
         </div>

@@ -174,11 +174,11 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 pb-3 shrink-0">
-          <p className="pixel-font text-[11px] text-ink">Settings</p>
+          <p className="pixel-font text-xs text-ink">Settings</p>
           <button
             onClick={onClose}
             aria-label="ปิด"
-            className="neo-btn w-9 h-9 flex items-center justify-center rounded-lg bg-surface text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            className="px-btn w-9 h-9 flex items-center justify-center rounded-lg bg-paper text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             <X size={16} strokeWidth={2.5} aria-hidden="true" />
           </button>
@@ -190,7 +190,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
 
           {activeTab === 'profile' && (
           <section className="space-y-3">
-            <p className="pixel-font text-[9px] text-brand-strong uppercase tracking-wide">Edit Profile</p>
+            <p className="pixel-font text-xs text-brand-strong uppercase tracking-wide">Edit Profile</p>
 
             {/* Avatar picker */}
             <div className="flex items-center gap-4">
@@ -247,7 +247,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
 
             {/* Bio */}
             <div>
-              <label className="pixel-font text-[8px] text-ink-soft block mb-1">
+              <label className="pixel-font text-xs text-ink-soft block mb-1">
                 Bio <span className="text-ink-soft/50">({bio.length}/100)</span>
               </label>
               <textarea
@@ -301,10 +301,10 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
 
           {activeTab === 'general' && (
           <section className="space-y-3">
-            <p className="pixel-font text-[9px] text-brand-strong uppercase tracking-wide">General</p>
+            <p className="pixel-font text-xs text-brand-strong uppercase tracking-wide">General</p>
 
             <div>
-              <p className="pixel-font text-[8px] text-ink-soft mb-1.5">AI Output Language</p>
+              <p className="pixel-font text-xs text-ink-soft mb-1.5">AI Output Language</p>
               <div className="flex gap-2">
                 {['Thai', 'English'].map((lang) => (
                   <button
@@ -323,7 +323,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
             </div>
 
             <div>
-              <p className="pixel-font text-[8px] text-ink-soft mb-1.5">Movement Control</p>
+              <p className="pixel-font text-xs text-ink-soft mb-1.5">Movement Control</p>
               <div className="flex gap-2">
                 {[
                   { value: 'joystick',    label: 'Joystick' },
@@ -346,7 +346,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <p className="pixel-font text-[8px] text-ink-soft">Sound Effects</p>
+                <p className="pixel-font text-xs text-ink-soft">Sound Effects</p>
                 <Toggle checked={sfxEnabled !== false} onChange={setSfxEnabled} label="เสียงเอฟเฟกต์" />
               </div>
               {sfxEnabled !== false && (
@@ -379,7 +379,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
             </button>
 
             <div className="pt-3 mt-1 border-t border-ink/10 space-y-2">
-              <p className="pixel-font text-[8px] text-ink-soft">ความเป็นส่วนตัว</p>
+              <p className="pixel-font text-xs text-ink-soft">ความเป็นส่วนตัว</p>
               <div className="flex gap-3 text-xs">
                 <a href={LEGAL_PATHS.privacy} target="_blank" rel="noopener noreferrer" className="underline text-brand-strong">นโยบายความเป็นส่วนตัว</a>
                 <a href={LEGAL_PATHS.terms} target="_blank" rel="noopener noreferrer" className="underline text-brand-strong">ข้อกำหนดการใช้งาน</a>
@@ -396,7 +396,7 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
 
           {activeTab === 'interface' && (
           <section className="space-y-4">
-            <p className="pixel-font text-[9px] text-brand-strong uppercase tracking-wide">Interface</p>
+            <p className="pixel-font text-xs text-brand-strong uppercase tracking-wide">Interface</p>
 
             {UI_VISIBILITY_ITEMS.map(({ key, label }) => (
               <div key={key} className="flex items-center justify-between">

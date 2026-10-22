@@ -41,12 +41,12 @@ export default function PortfolioCircle({ label, image, progress, isActive, onPr
             className="absolute -inset-1 rounded-full animate-spin"
             style={{
               background:
-                'conic-gradient(#ec4899 0%, #fce7f3 25%, #ec4899 50%, #fce7f3 75%, #ec4899 100%)',
+                'conic-gradient(var(--color-accent-pink) 0%, var(--color-zone-arts-soft) 25%, var(--color-accent-pink) 50%, var(--color-zone-arts-soft) 75%, var(--color-accent-pink) 100%)',
             }}
           />
         )}
         <div
-          className={`relative z-10 w-16 h-16 rounded-full bg-brand-soft flex items-center justify-center overflow-hidden border-2 ${isActive ? 'border-surface' : 'border-ink/10'}`}
+          className={`relative z-10 w-16 h-16 rounded-full bg-brand-soft flex items-center justify-center overflow-hidden border-2 ${isActive ? 'border-paper' : 'border-ink/10'}`}
         >
           {image ? (
             <img src={image} alt={label} className="w-full h-full object-cover" />
@@ -56,12 +56,12 @@ export default function PortfolioCircle({ label, image, progress, isActive, onPr
         </div>
         {/* Progress badge for mastery */}
         {progress !== undefined && progress > 0 && (
-          <div className="absolute -bottom-1 -right-1 bg-purple-500 text-white text-[8px] rounded-full w-5 h-5 flex items-center justify-center font-bold z-20">
+          <div className="absolute -bottom-1 -right-1 bg-purple-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold z-20">
             {progress}%
           </div>
         )}
       </div>
-      <span className="pixel-font text-[10px] text-ink-soft">{label}</span>
+      <span className="pixel-font text-xs text-ink-soft">{label}</span>
     </button>
   )
 }

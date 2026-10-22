@@ -66,7 +66,7 @@ export default function DeleteAccountSheet({ onClose, onDone }) {
             onChange={(e) => setPhrase(e.target.value)}
             autoComplete="off"
             aria-label="พิมพ์คำยืนยัน"
-            className="border-2 border-ink rounded-lg px-3 py-2 bg-surface"
+            className="border-2 border-ink rounded-lg px-3 py-2 bg-paper"
           />
         </label>
 
@@ -79,7 +79,7 @@ export default function DeleteAccountSheet({ onClose, onDone }) {
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
               aria-label="รหัสผ่าน"
-              className="border-2 border-ink rounded-lg px-3 py-2 bg-surface"
+              className="border-2 border-ink rounded-lg px-3 py-2 bg-paper"
             />
           </label>
         ) : (
@@ -91,7 +91,7 @@ export default function DeleteAccountSheet({ onClose, onDone }) {
         <button
           type="submit"
           disabled={!ready}
-          className="neo-btn bg-danger text-white py-3 rounded-xl font-semibold disabled:opacity-40"
+          className="px-btn bg-danger text-white py-3 rounded-xl font-semibold disabled:opacity-40"
         >
           {busy ? 'กำลังลบข้อมูล…' : 'ลบบัญชีและข้อมูลของฉันถาวร'}
         </button>
