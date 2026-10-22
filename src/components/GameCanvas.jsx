@@ -23,6 +23,9 @@ import LoadingScene from './ui/LoadingScene'
 import { MapScene, loadSceneData } from '../game/worldScenes'
 import { createIdleGovernor, setFpsLimit, IDLE_FPS } from '../game/idleGovernor'
 import { listMapConfigs, resolveEntryKey } from '../utils/mapConfig'
+import { useRoomStore } from '../stores/useRoomStore'
+import { useFocusStore } from '../stores/useFocusStore'
+import { useRoomUiStore } from '../stores/useRoomUiStore'
 import { useFarmDataStore } from '../stores/useFarmDataStore'
 import { tileKey, isReady } from '../systems/farmLogic'
 import { countInSlots } from '../systems/inventoryLogic'
@@ -159,6 +162,7 @@ export default function GameCanvas({ active = true, onOpenView }) {
   useEffect(() => {
     let game = null
     let cancelled = false
+    const unsubs = []
 
     function bootGame(width, height) {
       if (game || !assetUrlsRef.current) return
@@ -251,6 +255,21 @@ export default function GameCanvas({ active = true, onOpenView }) {
         boardId === 'leaderboard' ? { type: 'leaderboard' } : { type: 'board', id: boardId },
       ))
       game.events.on('toolEntered', ({ route }) => useSchoolWorldStore.getState().requestTool(route))
+      // Study room (ADR-0023): the desk seat opens the focus setup; taps edit the room while decorating.
+      game.events.on('roomSeatEntered', () => {
+        if (useAuthStore.getState().user && useFocusStore.getState().status === 'idle') useRoomUiStore.getState().open('focus')
+      })
+      game.events.on('roomTap', ({ x, y }) => {
+        if (useRoomStore.getState().tapRoom(x, y)) game.events.emit('roomChanged')
+      })
+      game.registry.set('roomDecorating', useRoomStore.getState().decorating)
+      unsubs.push(useRoomStore.subscribe((s, prev) => {
+        if (s.decorating !== prev.decorating) game.registry.set('roomDecorating', s.decorating)
+        if (s.layout !== prev.layout || s.catalog !== prev.catalog) game.events.emit('roomChanged')
+      }))
+      unsubs.push(useFocusStore.subscribe((s, prev) => {
+        if (s.status !== prev.status) game.events.emit('roomChanged')
+      }))
     }
 
     // Resolve entry map configs + cloud URLs first, then let the ResizeObserver boot.
@@ -287,6 +306,7 @@ export default function GameCanvas({ active = true, onOpenView }) {
 
     return () => {
       cancelled = true
+      unsubs.forEach((off) => off())
       ro.disconnect()
       clearTimeout(hideTimerRef.current)
       if (game) game.destroy(true)

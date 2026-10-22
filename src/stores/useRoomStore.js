@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { getDoc, getDocs } from 'firebase/firestore'
 import { refs, cols, shapes } from '../lib/db'
-import { canPlace } from '../room/placement'
+import { canPlace, validateLayout } from '../room/placement'
+import { resolveTap } from '../room/tapPlacement'
 import { saveRoomLayout } from '../services/roomApi'
 import { createRoomSync } from '../lib/roomSync'
 import { useLeavesStore } from './useLeavesStore'
@@ -16,6 +17,8 @@ export const useRoomStore = create((set, get) => ({
   layout: STARTER_LAYOUT,
   catalog: ROOM_CATALOG,
   decorating: false,
+  selected: null, // item id armed for placing while decorating
+  lastError: null, // why the last placement was refused (placement.js error code)
 
   hydrate: async (uid) => {
     const [catalogSnap, roomSnap] = await Promise.all([getDocs(cols.roomCatalog), getDoc(refs.room(uid))])
@@ -26,16 +29,37 @@ export const useRoomStore = create((set, get) => ({
   },
 
   setLayout: (layout) => set({ layout }),
-  setDecorating: (decorating) => set({ decorating }),
+  setDecorating: (decorating) => set({ decorating, ...(decorating ? {} : { selected: null, lastError: null }) }),
+  selectItem: (selected) => set({ selected, lastError: null }),
 
   // `slot` is only for desk items (left | centre | right | back); their x/y are the desk's.
   place: (itemId, x, y, slot) => {
     const { layout, catalog } = get()
     const inventory = useLeavesStore.getState().inventory
-    if (!canPlace({ layout, catalog, inventory, itemId, x, y, slot })) return false
-    set({ layout: { ...layout, placed: [...layout.placed, { itemId, x, y, ...(slot !== undefined ? { slot } : {}) }] } })
+    const candidate = { itemId, x, y, ...(slot !== undefined ? { slot } : {}) }
+    if (!canPlace({ layout, catalog, inventory, itemId, x, y, slot })) {
+      const { errors } = validateLayout({ layout: { ...layout, placed: [...layout.placed, candidate] }, catalog, inventory })
+      // the candidate is the last placement: prefer the error that points at it
+      const own = errors.find((e) => e.index === layout.placed.length) ?? errors[errors.length - 1]
+      set({ lastError: own?.code ?? 'invalid' })
+      return false
+    }
+    set({ layout: { ...layout, placed: [...layout.placed, candidate] }, lastError: null })
     roomSync.schedule()
     return true
+  },
+
+  // A tap on the room while decorating: place the armed item there, or pick up what is under it.
+  tapRoom: (x, y) => {
+    const { layout, catalog, selected } = get()
+    const action = resolveTap({ layout, catalog, selected, x, y })
+    if (action.kind === 'place') return get().place(action.itemId, action.x, action.y, action.slot)
+    if (action.kind === 'pickup') {
+      get().pickUp(action.index)
+      return true
+    }
+    if (action.reason) set({ lastError: action.reason })
+    return false
   },
 
   pickUp: (index) => {

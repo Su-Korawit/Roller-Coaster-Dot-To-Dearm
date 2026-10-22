@@ -51,13 +51,13 @@ export function furnitureSprites({ layout, catalog, lit = false }) {
       const off = SLOT_OFFSETS[p.slot]
       const desk = placed.find((d) => catalog[d.itemId]?.kind === 'desk' && d.x === p.x && d.y === p.y)
       if (!off || !desk) return
-      out.push({ itemId: p.itemId, key: 'room_items', frame, x: p.x + off.x, y: p.y + off.y, depth: deskDepth(desk) + 0.0005 + index / 1e7, slot: p.slot })
+      out.push({ index, itemId: p.itemId, key: 'room_items', frame, x: p.x + off.x, y: p.y + off.y, depth: deskDepth(desk) + 0.0005 + index / 1e7, slot: p.slot })
     } else if (item.kind === 'wall') {
-      out.push({ itemId: p.itemId, key: 'room_items', frame, x: p.x, y: bottom, depth: WALL_DEPTH + index / 1e6, slot: null })
+      out.push({ index, itemId: p.itemId, key: 'room_items', frame, x: p.x, y: bottom, depth: WALL_DEPTH + index / 1e6, slot: null })
     } else if (item.kind === 'decor') {
-      out.push({ itemId: p.itemId, key: 'room_items', frame, x: p.x, y: bottom, depth: RUG_DEPTH + bottom / 1000, slot: null })
+      out.push({ index, itemId: p.itemId, key: 'room_items', frame, x: p.x, y: bottom, depth: RUG_DEPTH + bottom / 1000, slot: null })
     } else {
-      out.push({ itemId: p.itemId, key: 'room_items', frame, x: p.x, y: bottom, depth: FLOOR_DEPTH + bottom / 1000, slot: null })
+      out.push({ index, itemId: p.itemId, key: 'room_items', frame, x: p.x, y: bottom, depth: FLOOR_DEPTH + bottom / 1000, slot: null })
     }
   })
   return out.sort((a, b) => a.depth - b.depth)

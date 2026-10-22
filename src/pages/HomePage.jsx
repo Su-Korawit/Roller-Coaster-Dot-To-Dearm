@@ -22,6 +22,7 @@ import { useChatStore } from '../stores/useChatStore'
 import { buildChatId, refs } from '../lib/db'
 import { ADMIN_UID, ADMIN_DISPLAY_NAME } from '../constants/admin'
 import LeavesCounter from '../components/room/LeavesCounter'
+import RoomLayer from '../components/room/RoomLayer'
 import { CoinIcon } from '../components/ui/CoinIcon'
 import { useCloudAsset } from '../hooks/useCloudAsset'
 import { getMusicConfig, DEFAULT_TRACKS } from '../utils/musicConfig'
@@ -209,6 +210,9 @@ function HomePage() {
           <GameCanvas active={activeTab === APP_VIEWS.HOME && activePopup !== 'calendar'} onOpenView={handleTabChange} />
         </Suspense>
       </div>
+
+      {/* Study room: focus / shop entry, HUD, decorate bar, completion screen */}
+      <RoomLayer />
 
       {/* Gradient scrim — top: keeps header pills readable over pixel art */}
       <div className="absolute top-0 inset-x-0 h-24 bg-linear-to-b from-black/30 to-transparent z-10 pointer-events-none" />

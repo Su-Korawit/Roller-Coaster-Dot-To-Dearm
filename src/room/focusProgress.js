@@ -4,3 +4,8 @@ export function focusProgress({ startedAt, plannedMin, now = Date.now() }) {
   const p = (now - startedAt) / (plannedMin * 60000)
   return Math.min(1, Math.max(0, p))
 }
+
+// Growth frame 0..3 for a tree or the desk pot (same thresholds as the pot in roomRender).
+export function growthStage(progress) {
+  return progress >= 1 ? 3 : progress >= 0.67 ? 2 : progress >= 0.34 ? 1 : 0
+}

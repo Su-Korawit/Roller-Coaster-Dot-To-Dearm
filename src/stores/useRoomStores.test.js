@@ -175,6 +175,7 @@ describe('useFocusStore', () => {
   it('a lapsed check-in in a strict session turns the store withered', async () => {
     useFocusStore.setState({ status: 'running', mode: 'strict', plannedMin: 25, startedAt: 0 })
     m.checkInFocus.mockResolvedValue({ ok: true, lastCheckInAt: 5, verifiedMs: 0, withered: true })
+    m.abandonFocus.mockResolvedValue({ ok: true, leaves: 0, tree: 'withered', withered: true })
     await useFocusStore.getState().checkIn()
     expect(useFocusStore.getState().status).toBe('withered')
   })
@@ -194,5 +195,47 @@ describe('focusProgress', () => {
     expect(focusProgress({ startedAt: 0, plannedMin: 10, now: 9e9 })).toBe(1)
     expect(focusProgress({ startedAt: 1000, plannedMin: 10, now: 0 })).toBe(0)
     expect(focusProgress({ startedAt: null, plannedMin: 10, now: 5 })).toBe(0)
+  })
+})
+
+describe('useRoomStore decorating by tapping', () => {
+  beforeEach(() => {
+    useRoomStore.setState({ decorating: true, selected: null, lastError: null })
+  })
+
+  it('remembers why a placement was refused and clears it on success', () => {
+    useRoomStore.getState().place('chair_basic', 32, 32)
+    expect(useRoomStore.getState().place('chair_basic', 32, 32)).toBe(false)
+    expect(useRoomStore.getState().lastError).toBe('overlap')
+    expect(useRoomStore.getState().place('chair_basic', 64, 64)).toBe(true)
+    expect(useRoomStore.getState().lastError).toBeNull()
+  })
+
+  it('reports not_owned when the player has no copy left', () => {
+    useLeavesStore.setState({ inventory: { theme_minimal: 1 } })
+    useRoomStore.getState().place('chair_basic', 32, 32)
+    expect(useRoomStore.getState().lastError).toBe('not_owned')
+  })
+
+  it('places the selected item where the room is tapped', () => {
+    useRoomStore.getState().selectItem('chair_basic')
+    expect(useRoomStore.getState().tapRoom(60, 70)).toBe(true)
+    expect(useRoomStore.getState().layout.placed).toEqual([{ itemId: 'chair_basic', x: 56, y: 64 }])
+  })
+
+  it('picks up the item under the tap when nothing is selected', () => {
+    useRoomStore.getState().place('chair_basic', 32, 32)
+    expect(useRoomStore.getState().tapRoom(40, 40)).toBe(true)
+    expect(useRoomStore.getState().layout.placed).toEqual([])
+  })
+
+  it('does nothing on an empty tap with nothing selected', () => {
+    expect(useRoomStore.getState().tapRoom(40, 40)).toBe(false)
+  })
+
+  it('leaving decorate mode drops the selection and the error', () => {
+    useRoomStore.setState({ selected: 'chair_basic', lastError: 'overlap' })
+    useRoomStore.getState().setDecorating(false)
+    expect(useRoomStore.getState()).toMatchObject({ decorating: false, selected: null, lastError: null })
   })
 })

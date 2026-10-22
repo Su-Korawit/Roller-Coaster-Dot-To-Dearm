@@ -527,6 +527,11 @@ export class MapScene extends Phaser.Scene {
     this.joystickPointerId = -1
 
     this.input.on('pointerdown', (pointer) => {
+      // Study room: while decorating, a tap edits the room instead of moving the avatar.
+      if (cfg.room && this.registry.get('roomDecorating')) {
+        this.game.events.emit('roomTap', { x: pointer.worldX / mapScale, y: pointer.worldY / mapScale })
+        return
+      }
       // Decoration placement only on editable maps while edit mode is on.
       if (cfg.editable && this.registry.get('editMode')) {
         const selectedKey = this.registry.get('selectedItemKey')
