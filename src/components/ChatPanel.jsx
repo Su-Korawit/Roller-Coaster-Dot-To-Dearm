@@ -350,7 +350,7 @@ function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
           return (
             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={`max-w-[76%] rounded-2xl border-2 border-line/60 shadow-[0_2px_0_0_var(--color-edge)] overflow-hidden ${isCard ? '' : 'px-3.5 py-2.5'} ${
+                className={`max-w-[76%] rounded-2xl border-2 border-line/60 shadow-[0_2px_0_0_var(--color-line)] overflow-hidden ${isCard ? '' : 'px-3.5 py-2.5'} ${
                   msg.type === 'shared_task'
                     ? 'bg-ink border border-brand/40'
                     : isMe

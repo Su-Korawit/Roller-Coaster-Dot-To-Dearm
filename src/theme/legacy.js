@@ -55,6 +55,7 @@ export const THIRD_PARTY_HEX = [
 const PREFIXES = 'bg|text|border|border-[tblrxy]|ring|from|to|via|shadow|fill|stroke|outline|divide|decoration'
 const LEGACY_TOKENS = Object.keys(TOKEN_MAP).sort((a, b) => b.length - a.length).join('|')
 
+const VAR_RE = new RegExp(`var\\(--color-(${LEGACY_TOKENS})\\)`, 'g')
 const NEO_RE = /(?<![\w-])neo-(?:btn|card|slab|input|sheet|pressed)(?![\w-])/g
 const UTILITY_RE = new RegExp(`(?<![\\w-])(${PREFIXES})-(${LEGACY_TOKENS})(?=(?:\\/\\d+)?(?![\\w-]))`, 'g')
 const ARBITRARY_HEX_RE = new RegExp(`(?<![\\w-])(${PREFIXES})-\\[(#[0-9a-fA-F]{6})\\]`, 'g')
@@ -68,10 +69,16 @@ function rewrite(text, line, changes) {
   const util = note('token')
   const hex = note('hex-class')
   const tiny = note('tiny-text')
+  const cssVar = note('css-var')
   return text
     .replace(NEO_RE, (m) => {
       neo(m, NEO_MAP[m])
       return NEO_MAP[m]
+    })
+    .replace(VAR_RE, (m, token) => {
+      const to = `var(--color-${TOKEN_MAP[token]})`
+      cssVar(m, to)
+      return to
     })
     .replace(UTILITY_RE, (m, prefix, token) => {
       const to = `${prefix}-${TOKEN_MAP[token]}`
@@ -113,9 +120,9 @@ export function migrateSource(source) {
     }
     if (/^\s*\/\//.test(rawLine)) return rawLine
     // Split out inline block comments so only code/strings are rewritten.
-    const parts = rawLine.split(/(\/\*.*?\*\/)/)
+    const parts = rawLine.split(/((?<![\w"'/])\/\*.*?\*\/)/)
     const last = parts[parts.length - 1]
-    if (last.includes('/*') && !last.includes('*/')) inBlock = true
+    if (/(?<![\w"'/])\/\*/.test(last) && !last.includes('*/')) inBlock = true
     const next = parts.map((part, idx) => (idx % 2 === 1 ? part : rewrite(part, line, changes))).join('')
     for (const m of next.matchAll(HEX_RE)) {
       if (!THIRD_PARTY_HEX.includes(m[0].toUpperCase())) flagged.push({ line, kind: 'hex', text: m[0] })

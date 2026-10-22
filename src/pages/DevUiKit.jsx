@@ -159,8 +159,8 @@ export default function DevUiKit() {
 
         <Section title="CHAT · SOCIAL">
           <div className="space-y-2 max-w-sm bg-paper p-3 rounded-lg border-2 border-line">
-            <div className="flex justify-start"><div className="max-w-[76%] rounded-2xl rounded-bl-sm border-2 border-line/60 shadow-[0_2px_0_0_var(--color-edge)] px-3.5 py-2.5 bg-brand-soft text-ink text-[13px]">ไปอ่านหนังสือที่ห้องสมุดกัน?</div></div>
-            <div className="flex justify-end"><div className="max-w-[76%] rounded-2xl rounded-br-sm border-2 border-line/60 shadow-[0_2px_0_0_var(--color-edge)] px-3.5 py-2.5 bg-brand text-white text-[13px]">ได้เลย เจอกันโต๊ะ lib-3 😄</div></div>
+            <div className="flex justify-start"><div className="max-w-[76%] rounded-2xl rounded-bl-sm border-2 border-line/60 shadow-[0_2px_0_0_var(--color-line)] px-3.5 py-2.5 bg-brand-soft text-ink text-[13px]">ไปอ่านหนังสือที่ห้องสมุดกัน?</div></div>
+            <div className="flex justify-end"><div className="max-w-[76%] rounded-2xl rounded-br-sm border-2 border-line/60 shadow-[0_2px_0_0_var(--color-line)] px-3.5 py-2.5 bg-brand text-white text-[13px]">ได้เลย เจอกันโต๊ะ lib-3 😄</div></div>
             <div className="px-slab flex items-center gap-3 px-3 py-2.5">
               <div className="w-10 h-10 rounded-full bg-paper border-2" style={{ borderColor: 'var(--color-brand)' }} />
               <div className="flex-1 text-sm"><b>เพื่อนร่วมโรงเรียน</b><div className="text-xs text-ink-soft">INFP · วิศวะคอม</div></div>

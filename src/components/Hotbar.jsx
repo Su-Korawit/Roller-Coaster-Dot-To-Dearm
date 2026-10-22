@@ -31,7 +31,7 @@ export function Hotbar({ slots = [], selectedIndex = 0, onSelectSlot = () => {} 
                 <>
                   <ItemSprite itemId={slot.itemId} size={28} />
                   {slot.count > 1 && (
-                    <span className="absolute bottom-0 right-0.5 pixel-font text-xs leading-none text-ink [text-shadow:1px_1px_0_var(--color-wood-light)]">
+                    <span className="absolute bottom-0 right-0.5 pixel-font text-xs leading-none text-ink [text-shadow:1px_1px_0_var(--color-mist)]">
                       {slot.count}
                     </span>
                   )}

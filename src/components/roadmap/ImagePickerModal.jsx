@@ -118,7 +118,7 @@ export default function ImagePickerModal({ nodeId, onClose }) {
 function Section({ title, children }) {
   return (
     <div className="flex flex-col gap-2">
-      <p className="pixel-font text-[10px] text-ink-soft">{title}</p>
+      <p className="pixel-font text-xs text-ink-soft">{title}</p>
       <div className="flex flex-wrap gap-2">{children}</div>
     </div>
   )
@@ -128,16 +128,16 @@ function Thumb({ url, label, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="w-16 h-16 rounded-xl border-2 border-edge/40 overflow-hidden hover:border-brand active:scale-95 transition-all relative"
+      className="w-16 h-16 rounded-xl border-2 border-line/40 overflow-hidden hover:border-brand active:scale-95 transition-all relative"
     >
       <img src={url} alt={label ?? 'image'} className="w-full h-full object-contain p-1" draggable={false} />
       {label && (
-        <span className="absolute bottom-0 inset-x-0 bg-surface/80 pixel-font text-[10px] text-ink-soft text-center">{label}</span>
+        <span className="absolute bottom-0 inset-x-0 bg-paper/80 pixel-font text-xs text-ink-soft text-center">{label}</span>
       )}
     </button>
   )
 }
 
 function Empty({ children }) {
-  return <span className="pixel-font text-[10px] text-ink-soft/50">{children}</span>
+  return <span className="pixel-font text-xs text-ink-soft/50">{children}</span>
 }

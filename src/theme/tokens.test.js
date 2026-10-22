@@ -5,20 +5,15 @@ import { contrastRatio } from '../utils/contrast'
 const css = readIndexCss()
 const tokens = readThemeTokens(css)
 
+const RETIRED = ['surface', 'hud', 'edge', 'wood', 'wood-light', 'wood-dark', 'wood-edge']
+
 const EXPECTED = {
   'color-paper': '#FFFFFF',
-  'color-surface': '#FFFFFF',
-  'color-hud': '#FFFFFF',
   'color-mist': '#F4F3F9',
-  'color-wood-light': '#F4F3F9',
-  'color-wood': '#E9E6F3',
-  'color-wood-dark': '#D9D5EA',
   'color-hairline': '#D9D5EA',
   'color-line': '#5c4e92',
-  'color-edge': '#5c4e92',
   'color-brand': '#5c4e92',
   'color-line-soft': '#6f63a6',
-  'color-wood-edge': '#6f63a6',
   'color-brand-strong': '#463c74',
   'color-brand-soft': '#EFEBFA',
   'color-ink': '#2B2550',
@@ -59,6 +54,12 @@ const EXPECTED = {
   'font-display': "'Chakra Petch', 'Noto Sans Thai', sans-serif",
 }
 
+describe('retired tokens', () => {
+  it('no longer defines the legacy colour aliases (Part B moved every screen to the canonical names)', () => {
+    for (const name of RETIRED) expect(tokens[`color-${name}`], name).toBeUndefined()
+  })
+})
+
 describe('Soft Pixel tokens', () => {
   it.each(Object.entries(EXPECTED))('defines %s with the exact value', (key, value) => {
     expect(tokens[key]?.toLowerCase()).toBe(value.toLowerCase())
@@ -85,7 +86,7 @@ describe('Soft Pixel tokens', () => {
   })
 
   it('ink-soft meets AA on every light fill it is used on', () => {
-    const fills = ['paper', 'mist', 'brand-soft', 'wood', ...['health', 'sci', 'soc', 'biz', 'arts', 'earth'].map((z) => 'zone-' + z + '-soft')]
+    const fills = ['paper', 'mist', 'brand-soft', ...['health', 'sci', 'soc', 'biz', 'arts', 'earth'].map((z) => 'zone-' + z + '-soft')]
     for (const f of fills) {
       expect(contrastRatio(tokens['color-ink-soft'], tokens['color-' + f]), f).toBeGreaterThanOrEqual(4.5)
     }

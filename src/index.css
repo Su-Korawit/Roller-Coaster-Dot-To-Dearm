@@ -3,24 +3,17 @@
 
 /* ── Design tokens — Soft Pixel (ADR-0021) ────────────────────────────────────
    White, minimal, rounded pixel UI. Outline purple = the MBTI sprites' outline.
-   Legacy names (brand/ink/surface/paper/hud/edge/wood*…) are kept and re-pointed so
-   every existing class re-skins without edits. Tokens marked "background-only" fail
+   Canonical names only (the legacy surface/hud/edge/wood* aliases were retired in Part B).
+   Tokens marked "background-only" fail
    AA as text on white: use them for fills/rings, never for copy. */
 @theme {
   /* Surfaces */
   --color-paper:        #FFFFFF;
-  --color-surface:      #FFFFFF;
-  --color-hud:          #FFFFFF;
   --color-mist:         #F4F3F9;
-  --color-wood-light:   #F4F3F9;
-  --color-wood:         #E9E6F3;
-  --color-wood-dark:    #D9D5EA;
   --color-hairline:     #D9D5EA;
   /* Lines */
   --color-line:         #5c4e92;   /* primary outline = sprite outline */
-  --color-edge:         #5c4e92;
   --color-line-soft:    #6f63a6;   /* object outlines, secondary borders */
-  --color-wood-edge:    #6f63a6;
   /* Brand + text */
   --color-brand:        #5c4e92;
   --color-brand-strong: #463c74;
@@ -192,9 +185,8 @@ html {
 
 /* ── Surface language: Soft Pixel panels ─────────────────────────────────────
    White panels, 2px line-purple outline, soft radius, hard offset shadow (no blur).
-   `.px-*` are canonical; `.neo-*` are historical aliases kept so ~100 usages restyle
-   with zero JSX edits (they migrate to `.px-*` in the Part B screen groups). */
-.px-card, .neo-card {
+   `.px-*` are the only surface classes. */
+.px-card {
   border: 2px solid var(--color-line);
   border-radius: var(--radius-ui);
   background: var(--color-paper);
@@ -202,50 +194,50 @@ html {
 }
 /* Default corner radius lives in the components layer so `rounded-full` / `rounded-lg`
    utilities on a button still win (unlayered CSS would beat every utility). */
-@layer components { .px-btn, .neo-btn { border-radius: var(--radius-ui); } }
-.px-btn, .neo-btn {
+@layer components { .px-btn { border-radius: var(--radius-ui); } }
+.px-btn {
   border: 2px solid var(--color-line);
   box-shadow: var(--shadow-px-sm);
   transition: transform 120ms steps(2), box-shadow 120ms steps(2);
 }
-.px-btn:hover, .neo-btn:hover {
+.px-btn:hover {
   transform: translate(-1px, -1px);
   box-shadow: var(--shadow-px);
 }
-.px-btn:active, .neo-btn:active {
+.px-btn:active {
   transform: translate(2px, 2px);
   box-shadow: none;
 }
 @media (prefers-reduced-motion: reduce) {
-  .px-btn, .neo-btn { transition: none; }
-  .px-btn:hover, .px-btn:active, .neo-btn:hover, .neo-btn:active { transform: none; }
+  .px-btn { transition: none; }
+  .px-btn:hover, .px-btn:active { transform: none; }
 }
 
 /* ── HUD surface system (see design.md §4) ─────────────────────────────────── */
-.px-slab, .neo-slab {
+.px-slab {
   border: 2px solid var(--color-line);
   border-radius: var(--radius-ui);
   background: var(--color-paper);
   box-shadow: var(--shadow-px-sm);
 }
-.px-sheet, .neo-sheet {
+.px-sheet {
   border: 2px solid var(--color-line);
   border-bottom: none;
   border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
   background: var(--color-paper);
   box-shadow: 0 -3px 0 0 rgb(92 78 146 / 0.18);
 }
-.px-pressed, .neo-pressed {
+.px-pressed {
   transform: translate(2px, 2px);
   box-shadow: none;
   background: var(--color-brand-soft);
 }
-.px-input, .neo-input {
+.px-input {
   border: 2px solid var(--color-line-soft);
   border-radius: var(--radius-slot);
   background: var(--color-paper);
 }
-.px-input:focus, .neo-input:focus {
+.px-input:focus {
   outline: none;
   border-color: var(--color-line);
   box-shadow: 0 0 0 3px var(--color-lime);

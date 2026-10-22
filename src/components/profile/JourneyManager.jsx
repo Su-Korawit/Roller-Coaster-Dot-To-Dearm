@@ -302,7 +302,7 @@ export default function JourneyManager() {
             onChange={(e) => setPortfolioEdit({ ...portfolioEdit, description: e.target.value })}
             placeholder="Description"
             rows={3}
-            className="neo-input thai-font px-3 py-2 text-sm w-full resize-none"
+            className="px-input thai-font px-3 py-2 text-sm w-full resize-none"
           />
           <button
             onClick={handleSavePortfolio}

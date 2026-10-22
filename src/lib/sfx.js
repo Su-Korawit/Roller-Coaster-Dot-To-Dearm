@@ -142,7 +142,7 @@ export function stopRain() {
 }
 
 // ── Global UI click sound ───────────────────────────────────────────────────
-const CLICKABLE = 'button, [role="button"], [role="tab"], [role="switch"], a[href], .neo-btn'
+const CLICKABLE = 'button, [role="button"], [role="tab"], [role="switch"], a[href], .px-btn'
 
 export function shouldClick(target) {
   const el = target?.closest?.(CLICKABLE)

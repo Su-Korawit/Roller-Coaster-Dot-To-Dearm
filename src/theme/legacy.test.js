@@ -34,6 +34,17 @@ describe('migrateSource', () => {
     expect(run(src).code).toBe(src)
   })
 
+  it('does not mistake a glob like accept="image/*" for a comment opening', () => {
+    const lines = ['<input accept="image/*" />', '<div className="neo-card">']
+    expect(run(lines.join(String.fromCharCode(10))).code).toBe(['<input accept="image/*" />', '<div className="px-card">'].join(String.fromCharCode(10)))
+  })
+
+  it('rewrites retired colour variables, in values and in arbitrary classes', () => {
+    expect(run("shadow-[0_2px_0_0_var(--color-edge)]").code).toBe("shadow-[0_2px_0_0_var(--color-line)]")
+    expect(run("[text-shadow:1px_1px_0_var(--color-wood-light)]").code).toBe("[text-shadow:1px_1px_0_var(--color-mist)]")
+    expect(run("'var(--color-surface)'").code).toBe("'var(--color-paper)'")
+  })
+
   it('rewrites class names inside template literals', () => {
     expect(run('`${a} bg-hud`').code).toBe('`${a} bg-paper`')
   })
