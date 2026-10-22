@@ -16,7 +16,8 @@
     "art:build": "node scripts/art/build.mjs",
     "reset-farm-data": "node scripts/resetFarmData.mjs",
     "ir-report": "node scripts/irReport.mjs",
-    "refresh-tcas-snapshot": "node scripts/refreshTcasSnapshot.mjs"
+    "refresh-tcas-snapshot": "node scripts/refreshTcasSnapshot.mjs",
+    "refresh-openhouse-index": "node scripts/refreshOpenHouseIndex.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

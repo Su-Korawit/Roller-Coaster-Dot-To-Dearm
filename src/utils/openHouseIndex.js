@@ -1,6 +1,6 @@
 // Pure Open House index logic, shared by scripts/refreshOpenHouseIndex.mjs and the popup.
 // No I/O, never throws on malformed rows.
-import { BUILDINGS } from '../constants/openHouseBuildings'
+import { BUILDINGS } from '../constants/openHouseBuildings.js'
 
 const ROUNDS = [1, 2, 3, 4]
 
