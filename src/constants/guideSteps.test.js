@@ -3,7 +3,7 @@ import { GUIDE_STEPS, nextAvailable } from './guideSteps'
 
 const ctx = (over = {}) => ({
   signedIn: true, practiceDone: false, hasPurchased: false, canAffordSomething: true,
-  hasUnplacedItem: true, hasCustomRoom: false, places: 2, ...over,
+  hasUnplacedItem: true, hasCustomRoom: false, places: 2, hasCampus: true, ...over,
 })
 
 describe('GUIDE_STEPS', () => {
@@ -24,8 +24,11 @@ describe('GUIDE_STEPS', () => {
     expect(practice.textTh).not.toContain('แตะนาฬิกา')
   })
 
-  it('plan is never available until its sub-project ships', () => {
-    expect(GUIDE_STEPS.find((s) => s.id === 'plan').available(ctx())).toBe(false)
+  it('plan is available exactly where the campus exists (guest or signed in)', () => {
+    const plan = GUIDE_STEPS.find((s) => s.id === 'plan')
+    expect(plan.available(ctx())).toBe(true)
+    expect(plan.available(ctx({ signedIn: false }))).toBe(true)
+    expect(plan.available(ctx({ hasCampus: false }))).toBe(false)
   })
 })
 
@@ -47,13 +50,15 @@ describe('nextAvailable', () => {
     expect(nextAvailable(2, ctx({ hasCustomRoom: true }))).toBe(3)
   })
 
-  it('a guest only ever reaches the warp step, and not even that with one place', () => {
+  it('a guest only reaches the warp step (with somewhere to go) and the plan step (where the campus exists)', () => {
     expect(nextAvailable(0, ctx({ signedIn: false }))).toBe(3)
-    expect(nextAvailable(0, ctx({ signedIn: false, places: 1 }))).toBe(GUIDE_STEPS.length)
+    expect(nextAvailable(0, ctx({ signedIn: false, places: 1 }))).toBe(4)
+    expect(nextAvailable(0, ctx({ signedIn: false, places: 1, hasCampus: false }))).toBe(GUIDE_STEPS.length)
   })
 
   it('returns the end when nothing is left', () => {
-    expect(nextAvailable(4, ctx())).toBe(GUIDE_STEPS.length)
+    expect(nextAvailable(4, ctx({ hasCampus: false }))).toBe(GUIDE_STEPS.length)
+    expect(nextAvailable(5, ctx())).toBe(GUIDE_STEPS.length)
     expect(nextAvailable(99, ctx())).toBe(GUIDE_STEPS.length)
   })
 })

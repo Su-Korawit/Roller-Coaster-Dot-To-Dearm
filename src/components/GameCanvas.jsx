@@ -22,9 +22,14 @@ import { loadBootTarget } from '../lib/bootTarget'
 import { useRoomStore } from '../stores/useRoomStore'
 import { useFocusStore } from '../stores/useFocusStore'
 import { useRoomUiStore } from '../stores/useRoomUiStore'
+import { useOpenHouseUiStore } from '../stores/useOpenHouseUiStore'
 
-export default function GameCanvas({ active = true, onOpenView }) {
+// `entryMapKey` pins the first map (the guest-usable /openhouse page boots straight into the campus,
+// ignoring the registry and the resume point); `entrySpawnAt` ({ x, y } in map px) stands the avatar
+// somewhere specific there, e.g. in front of a deep-linked building.
+export default function GameCanvas({ active = true, onOpenView, entryMapKey = null, entrySpawnAt = null }) {
   const containerRef = useRef(null)
+  const entryRef = useRef({ mapKey: entryMapKey, spawnAt: entrySpawnAt })
   const [zoom, setZoom] = useState(null)
   const [showZoom, setShowZoom] = useState(false)
   const gameRef = useRef(null)
@@ -199,6 +204,13 @@ export default function GameCanvas({ active = true, onOpenView }) {
       game.events.on('roomTap', ({ x, y }) => {
         if (useRoomStore.getState().tapRoom(x, y)) game.events.emit('roomChanged')
       })
+      // Open House campus: door zones and the directory board feed the faculty UI; the UI walks the avatar.
+      const campusUi = useOpenHouseUiStore.getState()
+      game.events.on('buildingDoorEntered', ({ buildingId }) => campusUi.setDoor(buildingId))
+      game.events.on('buildingDoorExited', ({ buildingId }) => campusUi.clearDoor(buildingId))
+      game.events.on('directoryEntered', () => campusUi.setNearDirectory(true))
+      game.events.on('directoryExited', () => campusUi.setNearDirectory(false))
+      campusUi.setWalker((tx, ty) => game.events.emit('campusWalkTo', { tx, ty }))
       game.registry.set('roomDecorating', useRoomStore.getState().decorating)
       unsubs.push(useRoomStore.subscribe((s, prev) => {
         if (s.decorating !== prev.decorating) game.registry.set('roomDecorating', s.decorating)
@@ -211,6 +223,20 @@ export default function GameCanvas({ active = true, onOpenView }) {
 
     // Resolve entry map configs + cloud URLs first, then let the ResizeObserver boot.
     ;(async () => {
+      const pinned = entryRef.current.mapKey
+      if (pinned) {
+        // A page that pins its map needs no registry read (guests cannot list it) and no resume.
+        const data = await loadSceneData(pinned)
+        if (cancelled) return
+        assetUrlsRef.current = { ...data, mapKey: pinned, spawnAt: entryRef.current.spawnAt }
+        useSchoolWorldStore.getState().setEntryMapKey(pinned)
+        useWorldStore.getState().setCurrentMapKey(pinned)
+        if (containerRef.current) {
+          const { width, height } = containerRef.current.getBoundingClientRect()
+          if (width > 0 && height > 0) bootGame(width, height)
+        }
+        return
+      }
       const maps = await listMapConfigs()
       // Boot where the player left off when that spot is usable, else the normal entry map.
       const normalEntry = resolveEntryKey(maps)
@@ -252,6 +278,8 @@ export default function GameCanvas({ active = true, onOpenView }) {
 
     return () => {
       cancelled = true
+      useOpenHouseUiStore.getState().setWalker(null)
+      useOpenHouseUiStore.getState().reset()
       unsubs.forEach((off) => off())
       ro.disconnect()
       clearTimeout(hideTimerRef.current)

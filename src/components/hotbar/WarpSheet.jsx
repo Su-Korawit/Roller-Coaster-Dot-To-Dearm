@@ -8,6 +8,9 @@ import { useAuthStore } from '../../stores/useAuthStore'
 import { useWorldStore } from '../../stores/useWorldStore'
 import { useResumeStore } from '../../stores/useResumeStore'
 import { useSchoolWorldStore } from '../../stores/useSchoolWorldStore'
+import { useOpenHouseUiStore } from '../../stores/useOpenHouseUiStore'
+import { BUILDINGS } from '../../constants/openHouseBuildings'
+import { placementOf, doorTile } from '../../game/campusLayout'
 
 const hasMap = (key) => key in DEFAULT_MAP_CONFIGS
 
@@ -76,6 +79,28 @@ export default function WarpSheet({ onClose }) {
             )
           })}
         </ul>
+        {!inHub && currentMapKey === 'campus' && (
+          <section aria-label="ตึกคณะ" className="flex flex-col gap-2">
+            <h3 className="thai-font text-sm font-bold text-ink">ตึกคณะ</h3>
+            <ul className="grid grid-cols-2 gap-2">
+              {BUILDINGS.map((b) => (
+                <li key={b.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const d = doorTile(placementOf(b.id))
+                      useOpenHouseUiStore.getState().walkTo(d.x, d.y)
+                      onClose()
+                    }}
+                    className="px-btn w-full min-h-11 px-3 py-1 text-left text-sm font-bold bg-paper text-ink"
+                  >
+                    {b.nameTh}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </div>
     </Popup>
   )

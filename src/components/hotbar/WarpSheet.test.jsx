@@ -65,6 +65,28 @@ describe('WarpSheet', () => {
     expect(onClose).not.toHaveBeenCalled()
   })
 
+  it('on the campus it also lists the faculty buildings and walks to the door of the one tapped', async () => {
+    const { useOpenHouseUiStore } = await import('../../stores/useOpenHouseUiStore')
+    const { placementOf, doorTile } = await import('../../game/campusLayout')
+    const walker = vi.fn()
+    useOpenHouseUiStore.getState().setWalker(walker)
+    useWorldStore.setState({ currentMapKey: 'campus' })
+    const onClose = vi.fn()
+    render(<WarpSheet onClose={onClose} />)
+    const list = screen.getByRole('region', { name: 'ตึกคณะ' })
+    expect(within(list).getAllByRole('button')).toHaveLength(18)
+    fireEvent.click(within(list).getByRole('button', { name: 'วิศวกรรมศาสตร์' }))
+    const d = doorTile(placementOf('eng'))
+    expect(walker).toHaveBeenCalledWith(d.x, d.y)
+    expect(onClose).toHaveBeenCalled()
+    useOpenHouseUiStore.getState().setWalker(null)
+  })
+
+  it('elsewhere there is no building list', () => {
+    render(<WarpSheet onClose={() => {}} />)
+    expect(screen.queryByRole('region', { name: 'ตึกคณะ' })).toBeNull()
+  })
+
   it('a guest only sees the room', () => {
     m.auth.user = null
     render(<WarpSheet onClose={() => {}} />)

@@ -45,6 +45,7 @@ const NewsHomePage = lazy(() => import('./pages/landing/NewsHomePage'))
 const TcasExplorerPage = lazy(() => import('./pages/landing/TcasExplorerPage'))
 const SchoolAppPage = lazy(() => import('./pages/SchoolAppPage'))
 const BagPage = lazy(() => import('./pages/BagPage'))
+const OpenHousePage = lazy(() => import('./pages/OpenHousePage'))
 const FeatureLayout = lazy(() => import('./components/FeatureLayout'))
 
 function LoadingScreen() {
@@ -119,6 +120,15 @@ function AppSiteRoutes() {
       <Route path="/" element={<WelcomePage />} />
       <Route path="/news/:id" element={<NewsPostPage />} />
       <Route path="/auth" element={<AuthPage />} />
+      {/* Open House campus: guest-usable, deliberately outside RequireAuth (ADR-0026). */}
+      <Route
+        path="/openhouse"
+        element={(
+          <FeatureLayout>
+            <OpenHousePage />
+          </FeatureLayout>
+        )}
+      />
       {DevUiKit && <Route path="/dev/ui" element={<DevUiKit />} />}
 
       <Route element={<MobileLayout />}>
@@ -142,6 +152,15 @@ function HubSiteRoutes() {
       <Route path="/blog/:slug" element={<ArticlePage />} />
       <Route path="/category/:cat" element={<CategoryPage />} />
       <Route path="/search" element={<SearchPage />} />
+      {/* Open House campus: guest-usable, deliberately outside RequireAuth (ADR-0026). */}
+      <Route
+        path="/openhouse"
+        element={(
+          <FeatureLayout>
+            <OpenHousePage />
+          </FeatureLayout>
+        )}
+      />
       <Route path="/home" element={<ExternalRedirect to="https://app.ilovetcas.com/home" />} />
       <Route path="/roadmap" element={<ExternalRedirect to="https://app.ilovetcas.com/roadmap" />} />
       <Route path="/auth" element={<ExternalRedirect to="https://app.ilovetcas.com/auth" />} />

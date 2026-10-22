@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   MAP, SPRITE, PLACEMENTS, HALL, GATE, SPAWN, BRIDGE, LAKE_TOP, PROMENADE_ROWS,
-  footprint, doorZone, footprints, doorTile, blockedByFootprints, placementOf, minimapRects,
+  doorZone, footprints, doorTile, blockedByFootprints, placementOf, minimapRects,
 } from './campusLayout'
 import { BUILDING_IDS } from '../constants/openHouseBuildings'
 

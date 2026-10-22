@@ -19,7 +19,7 @@ describe('buildGuideContext', () => {
   it('a fresh student with the welcome pack: can afford something, owns an unplaced starter plant, no custom room', () => {
     expect(buildGuideContext()).toMatchObject({
       signedIn: true, practiceDone: false, hasPurchased: false, canAffordSomething: true,
-      hasUnplacedItem: true, hasCustomRoom: false, places: 2,
+      hasUnplacedItem: true, hasCustomRoom: false, places: 3, hasCampus: true,
     })
   })
 
@@ -43,9 +43,9 @@ describe('buildGuideContext', () => {
     expect(buildGuideContext().canAffordSomething).toBe(false)
   })
 
-  it('a guest has one place and cannot do the account steps', () => {
+  it('a guest has the room and the campus (no school) and cannot do the account steps', () => {
     auth.user = null
-    expect(buildGuideContext()).toMatchObject({ signedIn: false, places: 1 })
+    expect(buildGuideContext()).toMatchObject({ signedIn: false, places: 2, hasCampus: true })
   })
 
   it('knows the practice gift was taken', () => {
