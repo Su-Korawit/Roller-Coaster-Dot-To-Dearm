@@ -47,13 +47,15 @@ service cloud.firestore {
       allow get, list: if isSignedIn();
       allow create: if isSignedIn() && (request.auth.uid == uid || isSuperAdmin());
       // Owners may update their own doc freely EXCEPT the `coins`,
-      // `entitlements`, `fileBagUsageBytes`, `focusXp` and `teacherSchoolId` fields — those are
+      // `entitlements`, `fileBagUsageBytes`, `focusXp`, `teacherSchoolId`, `leaves`,
+      // `roomInventory` and `welcomePack` fields — those are
       // written only by Cloud Functions (Admin SDK bypasses rules). Cross-user
       // updates are restricted to ONLY the four social array fields.
       allow update: if isSignedIn() && (
         (request.auth.uid == uid &&
           !request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['coins', 'entitlements', 'fileBagUsageBytes', 'focusXp', 'teacherSchoolId'])) ||
+            .hasAny(['coins', 'entitlements', 'fileBagUsageBytes', 'focusXp', 'teacherSchoolId',
+                      'leaves', 'roomInventory', 'welcomePack'])) ||
         request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['followRequests', 'followers', 'following', 'sentRequests'])
       );

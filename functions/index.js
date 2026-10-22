@@ -330,11 +330,13 @@ exports.syncUserSchool = onDocumentWritten('users/{uid}', async (event) => {
 //   focusDaily/{uid}_{day}     verified ms per Bangkok day (leaderboard source, Task 4)
 //   focusSessions/{autoId}     finished-session history
 //   users/{uid}.focusXp        running XP total
+//   users/{uid}.leaves         Study Room currency, credited once at session end
 const {
   CHECKIN_WINDOW_MS, DAILY_CAP_MS, bangkokDay, settleSegment, xpDelta,
 } = require('./focusMath')
 const { normalizeSchoolId: normalizeFocusSchoolId } = require('./schoolMembers')
 const { temperamentOf, xpMultiplier, YESTERDAY_MIN_MS } = require('./temperaments')
+const { validateFocusParams, treeFor, leavesFor } = require('./leavesMath')
 
 function requireUid(req) {
   const uid = req.auth?.uid
@@ -343,7 +345,7 @@ function requireUid(req) {
 }
 
 // Shared body of checkIn/end. Reads first, writes last (Firestore transaction rule).
-async function settleActive(uid, { end }) {
+async function settleActive(uid, { end, forceWither = false }) {
   const nowMs = Date.now()
   const activeRef = db.collection('focusActive').doc(uid)
   const userRef = db.collection('users').doc(uid)
@@ -351,12 +353,18 @@ async function settleActive(uid, { end }) {
   const dailyRef = db.collection('focusDaily').doc(`${uid}_${day}`)
 
   return db.runTransaction(async (tx) => {
+    let endExtras = {}
     const [activeSnap, dailySnap] = await Promise.all([tx.get(activeRef), tx.get(dailyRef)])
     if (!activeSnap.exists) throw new HttpsError('failed-precondition', 'NO_ACTIVE_SESSION')
     const active = activeSnap.data()
     const dailyUsed = Number(dailySnap.data()?.verifiedMs ?? 0)
 
     const seg = settleSegment({ lastCheckInAt: active.lastCheckInAt, nowMs, dailyUsedMs: dailyUsed })
+    // Study Room: a Strict session whose check-in lapsed has withered (server-decided);
+    // sessions started before modes existed behave as Flexible 25 min.
+    const mode = active.mode ?? 'flexible'
+    const plannedMin = active.plannedMin ?? 25
+    const withered = active.withered === true || forceWither || (mode === 'strict' && seg.lapsed)
     const before = Number(active.verifiedMs ?? 0)
     const after = before + seg.creditedMs
     // Temperament perk (ADR 0018) scales XP only, never the verified time behind the
@@ -384,14 +392,24 @@ async function settleActive(uid, { end }) {
     }
 
     if (end) {
+      const leaves = leavesFor({ mode, verifiedMs: after, plannedMin, withered })
+      const tree = treeFor({ plannedMin, withered })
+      if (leaves > 0) {
+        tx.set(userRef, { leaves: admin.firestore.FieldValue.increment(leaves) }, { merge: true })
+      }
       tx.delete(activeRef)
       tx.set(db.collection('focusSessions').doc(), {
         uid, schoolId: active.schoolId ?? null,
         startedAt: active.startedAt, endedAt: nowMs, verifiedMs: after,
-        day, reason: 'ended',
+        day, reason: forceWither ? 'abandoned' : 'ended',
+        mode, plannedMin, subjectKey: null, tree, leaves, withered,
       })
+      endExtras = { leaves, tree, mode, plannedMin, withered }
     } else if (!seg.tooSoon) {
-      tx.update(activeRef, { lastCheckInAt: nowMs, verifiedMs: after, weightedMs: weightedAfter })
+      tx.update(activeRef, {
+        lastCheckInAt: nowMs, verifiedMs: after, weightedMs: weightedAfter,
+        ...(withered ? { withered: true } : {}),
+      })
     }
 
     return {
@@ -406,12 +424,16 @@ async function settleActive(uid, { end }) {
       tooSoon: seg.tooSoon,
       dailyMs: dailyUsed + seg.creditedMs,
       dailyCapMs: DAILY_CAP_MS,
+      withered,
+      ...endExtras,
     }
   })
 }
 
 exports.startFocus = onCall(async (req) => {
   const uid = requireUid(req)
+  const params = validateFocusParams({ mode: req.data?.mode, plannedMin: req.data?.plannedMin })
+  if (!params.ok) throw new HttpsError('invalid-argument', 'Invalid focus parameters.', { code: params.code })
   const nowMs = Date.now()
   const activeRef = db.collection('focusActive').doc(uid)
   const userRef = db.collection('users').doc(uid)
@@ -425,7 +447,7 @@ exports.startFocus = onCall(async (req) => {
       const a = activeSnap.data()
       if (nowMs - a.lastCheckInAt <= CHECKIN_WINDOW_MS) {
         // Idempotent: a second tab / a reload resumes the running session.
-        return { ok: true, resumed: true, startedAt: a.startedAt, lastCheckInAt: a.lastCheckInAt, verifiedMs: a.verifiedMs ?? 0, temperament: a.temperament ?? null }
+        return { ok: true, resumed: true, startedAt: a.startedAt, lastCheckInAt: a.lastCheckInAt, verifiedMs: a.verifiedMs ?? 0, temperament: a.temperament ?? null, mode: a.mode ?? 'flexible', plannedMin: a.plannedMin ?? 25 }
       }
       // Stale: close it with nothing extra credited, then start fresh.
       tx.set(db.collection('focusSessions').doc(), {
@@ -441,13 +463,17 @@ exports.startFocus = onCall(async (req) => {
     tx.set(activeRef, {
       uid, schoolId, startedAt: nowMs, lastCheckInAt: nowMs, verifiedMs: 0,
       weightedMs: 0, temperament, studiedYesterday,
+      mode: params.mode, plannedMin: params.plannedMin, withered: false,
     })
-    return { ok: true, resumed: false, startedAt: nowMs, lastCheckInAt: nowMs, verifiedMs: 0, temperament }
+    return { ok: true, resumed: false, startedAt: nowMs, lastCheckInAt: nowMs, verifiedMs: 0, temperament, mode: params.mode, plannedMin: params.plannedMin }
   })
 })
 
 exports.checkInFocus = onCall(async (req) => settleActive(requireUid(req), { end: false }))
 exports.endFocus = onCall(async (req) => settleActive(requireUid(req), { end: true }))
+// Strict: client reports it left the page (>10 s) — the tree withers and earns nothing.
+// Flexible: client reports it was away > 2 min — verified minutes still count, no bonus.
+exports.abandonFocus = onCall(async (req) => settleActive(requireUid(req), { end: true, forceWither: true }))
 
 // ── Weekly school leaderboard (ADR 0018) ─────────────────────────────────────
 // Recomputes the current ISO week (Asia/Bangkok) from focusDaily and writes
