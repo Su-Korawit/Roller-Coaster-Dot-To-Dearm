@@ -475,6 +475,92 @@ exports.endFocus = onCall(async (req) => settleActive(requireUid(req), { end: tr
 // Flexible: client reports it was away > 2 min — verified minutes still count, no bonus.
 exports.abandonFocus = onCall(async (req) => settleActive(requireUid(req), { end: true, forceWither: true }))
 
+// ── Study Room economy ───────────────────────────────────────────────────────
+// Leaves, room inventory and the welcome pack are Functions-owned (rules deny client
+// writes). Every callable reads first and writes last inside one transaction, so parallel
+// calls cannot double-spend or double-grant.
+const roomLogic = require('./roomLogic')
+
+function toRoomError(err) {
+  if (err instanceof HttpsError) return err
+  if (err && err.code && err.extra !== undefined) return new HttpsError(err.code, err.message, err.extra)
+  if (err && err.code) return new HttpsError(err.code, err.message)
+  console.error('[room] unexpected error:', err)
+  return new HttpsError('internal', 'Something went wrong.')
+}
+
+exports.buyRoomItem = onCall(async (req) => {
+  const uid = requireUid(req)
+  const itemId = req.data?.itemId
+  if (typeof itemId !== 'string' || !itemId) throw new HttpsError('invalid-argument', 'itemId is required.')
+  const userRef = db.collection('users').doc(uid)
+  const itemRef = db.collection('roomCatalog').doc(itemId)
+  const roomRef = db.collection('rooms').doc(uid)
+  try {
+    return await db.runTransaction(async (tx) => {
+      const [userSnap, itemSnap, roomSnap] = await Promise.all([tx.get(userRef), tx.get(itemRef), tx.get(roomRef)])
+      if (!userSnap.exists) throw new HttpsError('not-found', 'User not found.')
+      const u = userSnap.data()
+      const inventory = u.roomInventory ?? {}
+      const plan = roomLogic.planPurchase({
+        item: itemSnap.exists ? itemSnap.data() : null,
+        itemId,
+        leaves: u.leaves ?? 0,
+        inventory,
+        currentTier: roomSnap.exists ? roomSnap.data().tier ?? 0 : 0,
+      })
+      const leaves = Number(u.leaves ?? 0) - plan.price
+      const owned = Number(inventory[itemId] ?? 0) + 1
+      tx.set(userRef, { leaves, roomInventory: { [itemId]: owned } }, { merge: true })
+      return { ok: true, leaves, owned }
+    })
+  } catch (err) {
+    throw toRoomError(err)
+  }
+})
+
+exports.claimWelcomePack = onCall(async (req) => {
+  const uid = requireUid(req)
+  const userRef = db.collection('users').doc(uid)
+  const roomRef = db.collection('rooms').doc(uid)
+  const starterIds = Object.keys(roomLogic.STARTER_ITEMS)
+  try {
+    return await db.runTransaction(async (tx) => {
+      const [userSnap, roomSnap, ...itemSnaps] = await Promise.all([
+        tx.get(userRef),
+        tx.get(roomRef),
+        ...starterIds.map((id) => tx.get(db.collection('roomCatalog').doc(id))),
+      ])
+      if (!userSnap.exists) throw new HttpsError('not-found', 'User not found.')
+      const u = userSnap.data()
+      if (!roomLogic.planWelcomePack({ welcomePack: u.welcomePack }).grant) return { ok: true, already: true }
+
+      const granted = {}
+      starterIds.forEach((id, i) => {
+        if (itemSnaps[i].exists) granted[id] = roomLogic.STARTER_ITEMS[id]
+      })
+      const inventory = { ...(u.roomInventory ?? {}) }
+      for (const [id, n] of Object.entries(granted)) inventory[id] = Number(inventory[id] ?? 0) + n
+      tx.set(userRef, {
+        leaves: Number(u.leaves ?? 0) + roomLogic.WELCOME_LEAVES,
+        roomInventory: inventory,
+        welcomePack: 'v2',
+      }, { merge: true })
+      if (!roomSnap.exists) {
+        const layout = roomLogic.STARTER_LAYOUT
+        tx.set(roomRef, {
+          tier: layout.tier, theme: layout.theme, petId: layout.petId,
+          placed: layout.placed.filter((p) => granted[p.itemId] > 0),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        })
+      }
+      return { ok: true, already: false }
+    })
+  } catch (err) {
+    throw toRoomError(err)
+  }
+})
+
 // ── Weekly school leaderboard (ADR 0018) ─────────────────────────────────────
 // Recomputes the current ISO week (Asia/Bangkok) from focusDaily and writes
 //   schoolWeeks/{schoolId}_{week}   per-school totals + `ranked` flag
