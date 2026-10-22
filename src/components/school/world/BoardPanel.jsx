@@ -15,7 +15,7 @@ function Row({ title, sub, link }) {
       {sub && <div className="thai-font text-xs text-ink/60 line-clamp-2">{sub}</div>}
     </>
   )
-  const cls = 'neo-slab block px-3 py-2'
+  const cls = 'px-slab block px-3 py-2'
   return link
     ? <a href={link} target="_blank" rel="noopener noreferrer" className={cls}>{body}</a>
     : <div className={cls}>{body}</div>
@@ -30,7 +30,7 @@ function Countdown({ event, days }) {
         {days > 0 && <div className="thai-font text-xs text-ink/70 mt-1">วัน</div>}
       </div>
       <div className="min-w-0">
-        <div className="pixel-font text-[9px] text-ink/60">เหตุการณ์ TCAS ถัดไป</div>
+        <div className="pixel-font text-xs text-ink/60">เหตุการณ์ TCAS ถัดไป</div>
         <div className="thai-font text-sm text-ink font-bold">{event.title}</div>
         <div className="thai-font text-xs text-ink/70 line-clamp-2">{event.description}</div>
       </div>
@@ -49,7 +49,7 @@ function NewsBoard({ extra }) {
     <>
       {extra}
       {next && <Countdown event={next.event} days={next.days} />}
-      <h3 className="pixel-font text-[10px] text-ink/60">ปฏิทิน TCAS ที่กำลังจะถึง</h3>
+      <h3 className="pixel-font text-xs text-ink/60">ปฏิทิน TCAS ที่กำลังจะถึง</h3>
       {!next && <p className="thai-font text-sm text-ink/60">ยังไม่มีกำหนดการที่กำลังจะถึง</p>}
       {upcoming.map((e) => (
         <Row key={e.id} title={`${e.date} · ${e.title}`} sub={e.description} link={e.link} />

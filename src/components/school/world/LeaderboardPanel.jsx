@@ -38,7 +38,7 @@ export default function LeaderboardPanel({ mySchoolId, onClose }) {
             </p>
 
             {data.mine && (
-              <div className="neo-slab p-3 thai-font text-sm text-ink" data-testid="my-school">
+              <div className="px-slab p-3 thai-font text-sm text-ink" data-testid="my-school">
                 <div className="font-bold">{data.mine.schoolName ?? 'โรงเรียนของคุณ'}</div>
                 {data.mine.rank
                   ? <div>อันดับที่ {data.mine.rank} · เฉลี่ย {data.mine.avgHoursPerMember} ชม./คน</div>
@@ -54,11 +54,11 @@ export default function LeaderboardPanel({ mySchoolId, onClose }) {
               {data.schools.map((s) => (
                 <li
                   key={s.schoolId}
-                  className={`neo-slab flex items-center gap-3 px-3 py-2 ${s.schoolId === mySchoolId ? 'ring-2 ring-lime' : ''}`}
+                  className={`px-slab flex items-center gap-3 px-3 py-2 ${s.schoolId === mySchoolId ? 'ring-2 ring-lime' : ''}`}
                 >
-                  <span className="rpg-coin pixel-font text-[11px]">{MEDALS[s.rank - 1] ?? s.rank}</span>
+                  <span className="rpg-coin pixel-font text-xs">{MEDALS[s.rank - 1] ?? s.rank}</span>
                   <span className="thai-font text-sm text-ink flex-1 truncate">{s.schoolName ?? 'โรงเรียน'}</span>
-                  <span className="pixel-font text-[10px] text-brand-strong">{s.avgHoursPerMember} ชม.</span>
+                  <span className="pixel-font text-xs text-brand-strong">{s.avgHoursPerMember} ชม.</span>
                 </li>
               ))}
             </ol>

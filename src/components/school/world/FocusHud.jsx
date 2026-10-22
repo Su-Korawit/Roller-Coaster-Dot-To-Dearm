@@ -40,7 +40,7 @@ export default function FocusHud() {
         onClick={due ? confirmFocus : undefined}
         disabled={focus.busy}
         aria-label={due ? 'ยืนยันว่ายังอยู่' : 'กำลังนับเวลาอ่านหนังสือ'}
-        className={`neo-slab flex items-center gap-2 px-3 py-1.5 pixel-font text-[10px] ${due ? 'animate-pulse text-accent-pink' : 'text-ink'}`}
+        className={`px-slab flex items-center gap-2 px-3 py-1.5 pixel-font text-xs ${due ? 'animate-pulse text-accent-pink' : 'text-ink'}`}
       >
         <span aria-hidden="true">📚</span>
         {due ? 'ยังอยู่ไหม? แตะเพื่อยืนยัน' : `ยืนยันใน ${formatDuration(left)}`}
