@@ -21,6 +21,8 @@ import { useUserStore } from '../stores/useUserStore'
 import { useWorldStore } from '../stores/useWorldStore'
 import { useSchoolStore } from '../stores/useSchoolStore'
 import { useHotbarStore } from '../stores/useHotbarStore'
+import { useResumeStore } from '../stores/useResumeStore'
+import { mergeResume } from './resumeRules'
 
 /**
  * Build a debounced Firestore sync for a single Zustand store.
@@ -34,10 +36,11 @@ import { useHotbarStore } from '../stores/useHotbarStore'
  * @param {(data) => boolean} opts.needsSeed  whether to push local up on first migration
  * @param {(uid) => DocumentRef} [opts.ref]   doc ref factory — defaults to refs.user
  * @param {(state, uid) => boolean} [opts.guard]  extra condition checked before debouncing
+ * @param {number}   [opts.delayMs]  debounce window in ms (default 1000)
  * @param {(status: 'saving'|'saved'|'error') => void} [opts.onStatus]  save-status callback, defaults to a no-op — only the roadmap instance passes one today
  * @returns {{ push(uid): Promise<void>, hydrate(uid): Promise<void>, setSyncUser(uid): void }}
  */
-export function createFirestoreSync({ store, logName, toDoc, fromDoc, changed, needsSeed, ref, guard, onStatus }) {
+export function createFirestoreSync({ store, logName, toDoc, fromDoc, changed, needsSeed, ref, guard, onStatus, delayMs = 1000 }) {
   const getRef = ref ?? refs.user
   const emitStatus = onStatus ?? (() => {})
 
@@ -119,7 +122,7 @@ export function createFirestoreSync({ store, logName, toDoc, fromDoc, changed, n
         const target = pendingTarget
         pendingTarget = null
         void push(target)
-      }, 1000)
+      }, delayMs)
     })
   }
 
@@ -132,7 +135,7 @@ export function createFirestoreSync({ store, logName, toDoc, fromDoc, changed, n
     return timer != null
   }
 
-  return { push, hydrate, setSyncUser, isPending }
+  return { push, hydrate, setSyncUser, isPending, flush: flushPending }
 }
 
 // ── Tasks ────────────────────────────────────────────────────────────────────
@@ -267,6 +270,25 @@ const hotbarSync = createFirestoreSync({
 
 export const hydrateHotbarFromFirestore = hotbarSync.hydrate
 export const setHotbarSyncUser = hotbarSync.setSyncUser
+
+// ── Resume points → users/{uid}.resume (debounced 10 s; flushed when the page is hidden) ──
+const resumeSync = createFirestoreSync({
+  store: useResumeStore,
+  logName: 'syncResume',
+  delayMs: 10000,
+  toDoc: ({ last, points }) => ({ resume: { last, points } }),
+  fromDoc: (data) => {
+    if (!data.resume) return {}
+    const s = useResumeStore.getState()
+    return mergeResume({ last: s.last, points: s.points }, data.resume)
+  },
+  changed: (s, p) => s.points !== p.points || s.last !== p.last,
+  needsSeed: (data) => !data.resume && useResumeStore.getState().last != null,
+})
+
+export const hydrateResumeFromFirestore = resumeSync.hydrate
+export const setResumeSyncUser = resumeSync.setSyncUser
+export const flushResumeSync = resumeSync.flush
 
 // Back to the signed-in user's own world. `mapKey` (optional) switches the map key in the same
 // state update, so presence never briefly joins the user's own world under the previous map's key.

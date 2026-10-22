@@ -9,13 +9,14 @@ import { NotificationContainer } from './NotificationContainer'
 import { isEditableTarget } from '../utils/isEditableTarget'
 import { joinWorld, leaveWorld, subscribeWorldPlayers } from '../lib/presence'
 import { isRoomOwnerUid, SCHOOL_HUB_MAP_KEY } from '../lib/schoolRoom'
-import { returnHome } from '../lib/syncManager'
+import { returnHome, flushResumeSync } from '../lib/syncManager'
+import { useResumeStore } from '../stores/useResumeStore'
 import { useSchoolWorldStore } from '../stores/useSchoolWorldStore'
 import SchoolWorldLayer from './school/world/SchoolWorldLayer'
 import LoadingScene from './ui/LoadingScene'
 import { MapScene, loadSceneData } from '../game/worldScenes'
 import { createIdleGovernor, setFpsLimit, IDLE_FPS } from '../game/idleGovernor'
-import { listMapConfigs, resolveEntryKey } from '../utils/mapConfig'
+import { listMapConfigs, resolveBootTarget } from '../utils/mapConfig'
 import { useRoomStore } from '../stores/useRoomStore'
 import { useFocusStore } from '../stores/useFocusStore'
 import { useRoomUiStore } from '../stores/useRoomUiStore'
@@ -124,7 +125,7 @@ export default function GameCanvas({ active = true, onOpenView }) {
       game.registry.set('mapConfig', assetUrlsRef.current.mapConfig)
       game.registry.set('tilesetUrls', assetUrlsRef.current.tilesetUrls)
       game.registry.set('controlMode', useUserStore.getState().controlMode)
-      game.scene.start('MapScene', { mapKey: assetUrlsRef.current.mapKey, spawn: null })
+      game.scene.start('MapScene', { mapKey: assetUrlsRef.current.mapKey, spawn: null, spawnAt: assetUrlsRef.current.spawnAt ?? null })
       gameRef.current = game
       // Dev-only QA handle (e.g. teleport the player from the console); stripped from production builds.
       if (import.meta.env.DEV) window.__rcGame = game
@@ -147,7 +148,7 @@ export default function GameCanvas({ active = true, onOpenView }) {
       // Handle portal-driven map switches: reload target map's config/tilesets into
       // the registry before restarting the scene so preload can access fresh URLs.
       let switching = false
-      game.events.on('mapChangeRequested', async ({ mapKey, spawn }) => {
+      game.events.on('mapChangeRequested', async ({ mapKey, spawn, spawnAt }) => {
         if (switching) return
         switching = true
         setIsSwitchingMap(true)
@@ -171,7 +172,7 @@ export default function GameCanvas({ active = true, onOpenView }) {
           } else {
             useWorldStore.getState().setCurrentMapKey(mapKey)
           }
-          game.scene.start('MapScene', { mapKey, spawn })
+          game.scene.start('MapScene', { mapKey, spawn, spawnAt: spawnAt ?? null })
         } catch (e) {
           console.error('[GameCanvas] map switch failed:', e)
           setIsSwitchingMap(false)
@@ -179,6 +180,8 @@ export default function GameCanvas({ active = true, onOpenView }) {
           switching = false
         }
       })
+      // Where the player stands, every 2 s while moving: remembered so the app resumes there.
+      game.events.on('playerSampled', ({ mapKey, x, y, facing, label }) => useResumeStore.getState().record(mapKey, { x, y, facing, label }))
       // School Hub zones (ADR 0018) -> UI state; panels render in SchoolWorldLayer.
       game.events.on('focusSeatEntered', ({ seatId }) => useSchoolWorldStore.getState().openPanel({ type: 'focus', seatId }))
       game.events.on('boardEntered', ({ boardId }) => useSchoolWorldStore.getState().openPanel(
@@ -205,10 +208,11 @@ export default function GameCanvas({ active = true, onOpenView }) {
     // Resolve entry map configs + cloud URLs first, then let the ResizeObserver boot.
     ;(async () => {
       const maps = await listMapConfigs()
-      const entryKey = resolveEntryKey(maps)
+      // Boot where the player left off when that spot is usable, else the normal entry map.
+      const { mapKey: entryKey, point } = resolveBootTarget(maps, useResumeStore.getState())
       const data = await loadSceneData(entryKey)
       if (cancelled) return
-      assetUrlsRef.current = { ...data, mapKey: entryKey }
+      assetUrlsRef.current = { ...data, mapKey: entryKey, spawnAt: point ? { x: point.x, y: point.y } : null }
       useSchoolWorldStore.getState().setEntryMapKey(entryKey)
       useWorldStore.getState().setCurrentMapKey(entryKey)
       if (containerRef.current) {
@@ -263,6 +267,19 @@ export default function GameCanvas({ active = true, onOpenView }) {
     s.setLeft()
     const uid = useAuthStore.getState().user?.uid
     if (uid) returnHome(uid)
+  }, [])
+
+  // Leaving or hiding the page: send the pending resume point now instead of waiting 10 s.
+  useEffect(() => {
+    const flush = () => {
+      if (document.visibilityState === 'hidden') flushResumeSync()
+    }
+    document.addEventListener('visibilitychange', flush)
+    window.addEventListener('pagehide', flushResumeSync)
+    return () => {
+      document.removeEventListener('visibilitychange', flush)
+      window.removeEventListener('pagehide', flushResumeSync)
+    }
   }, [])
 
   // AFK: after 60s without input, cap Phaser at IDLE_FPS (battery/CPU for

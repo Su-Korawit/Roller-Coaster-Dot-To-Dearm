@@ -39,7 +39,10 @@ const {
   disarmRoadmapSheetSync,
   hydrateHotbarFromFirestore,
   setHotbarSyncUser,
+  setResumeSyncUser,
+  flushResumeSync,
 } = await import('./syncManager')
+const { useResumeStore } = await import('../stores/useResumeStore')
 const { useHotbarStore } = await import('../stores/useHotbarStore')
 
 describe('SyncManager (roadmap sheet instance)', () => {
@@ -302,6 +305,39 @@ describe('hotbar sync', () => {
     await vi.advanceTimersByTimeAsync(1200)
     expect(setDoc).toHaveBeenCalledTimes(1)
     setHotbarSyncUser(null)
+    vi.useRealTimers()
+  })
+})
+
+describe('resume sync', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    setDoc.mockReset(); getDoc.mockReset()
+    setDoc.mockResolvedValue(undefined)
+    useResumeStore.getState().reset()
+  })
+
+  it('writes at most once per 10 s window for many position records', async () => {
+    getDoc.mockResolvedValue({ exists: () => true, data: () => ({ resume: { last: null, points: {} } }) })
+    setResumeSyncUser('u1')
+    for (let i = 0; i < 4; i++) {
+      useResumeStore.getState().record('room', { x: i, y: 1, facing: 'down', label: 'l' })
+      await vi.advanceTimersByTimeAsync(2000)
+    }
+    expect(setDoc).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(10500)
+    expect(setDoc).toHaveBeenCalledTimes(1)
+    expect(setDoc.mock.calls[0][1].resume.points.room.x).toBe(3)
+    setResumeSyncUser(null)
+  })
+
+  it('flush sends a pending point right away (page hidden)', async () => {
+    setResumeSyncUser('u1')
+    useResumeStore.getState().record('room', { x: 7, y: 1, facing: 'down', label: 'l' })
+    flushResumeSync()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(setDoc).toHaveBeenCalledTimes(1)
+    setResumeSyncUser(null)
     vi.useRealTimers()
   })
 })

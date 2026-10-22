@@ -1,5 +1,6 @@
 import { getDoc, setDoc, getDocs, serverTimestamp } from 'firebase/firestore'
 import { refs, cols } from '../lib/db'
+import { pickBootTarget } from '../lib/resumeRules'
 
 // Per-map runtime config the game needs but the Tiled JSON can't carry reliably:
 //   tilesets  — Tiled tileset name → Storage path of its image (the JSON's own
@@ -121,6 +122,20 @@ export function resolveEntryKey(maps) {
     .filter((key) => !RETIRED_MAP_KEYS.includes(key) && !stored.some((m) => m.key === key))
     .map((key) => ({ key, ...withRegistryDefaults(key, {}) }))
   return pickEntryKey([...stored, ...builtIns]) ?? 'room'
+}
+
+// Pure: may the app boot straight into this map? It must exist (stored or built in), must not
+// be retired, and must not be the School Hub (that needs its async room choice: enterSchoolHub).
+export function isResumableMapKey(key, maps) {
+  if (typeof key !== 'string' || RETIRED_MAP_KEYS.includes(key) || key === 'school_hub') return false
+  return (maps ?? []).some((m) => m.key === key) || key in DEFAULT_MAP_CONFIGS
+}
+
+// Pure: where to boot given the stored resume points. Falls back to the normal entry map at
+// its default spawn whenever the remembered map or point cannot be used.
+export function resolveBootTarget(maps, resume) {
+  const fallbackKey = resolveEntryKey(maps)
+  return pickBootTarget({ resume, isAllowed: (k) => isResumableMapKey(k, maps), fallbackKey })
 }
 
 // Pure: choose which map loads on boot.

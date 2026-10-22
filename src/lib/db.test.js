@@ -347,3 +347,13 @@ describe('shapes.hotbar', () => {
     }
   })
 })
+
+describe('shapes.resume', () => {
+  it('returns the empty resume for a missing or malformed field and keeps good points', () => {
+    expect(shapes.resume(undefined)).toEqual({ last: null, points: {} })
+    expect(shapes.resume({ resume: 'x' })).toEqual({ last: null, points: {} })
+    const out = shapes.resume({ resume: { last: 'room', points: { room: { x: 1, y: 2, facing: 'up', label: 'a', at: 5 }, bad: { x: 'q' } } } })
+    expect(Object.keys(out.points)).toEqual(['room'])
+    expect(out.last).toBe('room')
+  })
+})

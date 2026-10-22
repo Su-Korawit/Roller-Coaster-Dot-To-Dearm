@@ -9,6 +9,8 @@ import { useRoomStore } from '../stores/useRoomStore'
 import { useFocusStore } from '../stores/useFocusStore'
 import { focusProgress } from '../room/focusProgress'
 import { renderRoom } from './roomRender'
+import { isWalkableAt } from './walkable'
+import { nearestLabel } from '../lib/resumeRules'
 
 // 0 = Basic_Charakter (1 ตัว)
 // 1 = MBTI rotation (16 ตัว สลับทุก 1 วิ)
@@ -154,6 +156,7 @@ export class MapScene extends Phaser.Scene {
   init(data) {
     this.mapKey = data?.mapKey ?? 'room'
     this.spawnName = data?.spawn ?? null   // null → use map's default spawn
+    this.spawnAt = data?.spawnAt ?? null   // { x, y } in map px (resume point); used only if walkable
     this.preview = !!data?.preview
     // Always initialise before create() or update() runs — preview mode returns
     // early from create() before the normal _remoteAvatars = new Map() line,
@@ -383,6 +386,17 @@ export class MapScene extends Phaser.Scene {
     this.player.play(`${this.currentMbti}-idle`)
 
     applyCollision(this, map, layerInfos, cfg, this.player)
+    this._map = map
+    this._collisionLayers = layerInfos.filter(({ name, layer }) => layer && cfg.collision?.[name]).map(({ layer }) => layer)
+    // Resume point: stand where the player last was, but only if that spot is still walkable.
+    if (this.spawnAt && isWalkableAt(map, this._collisionLayers, this.spawnAt.x, this.spawnAt.y)) {
+      this.player.setPosition(this.spawnAt.x * mapScale, this.spawnAt.y * mapScale)
+    }
+    this._resumeZones = [
+      ...(meta.labels ?? []).map((l) => ({ x: l.x, y: l.y, label: l.text })),
+      ...(meta.interactions ?? []).filter((i) => i.name).map((i) => ({ x: i.x, y: i.y, label: i.name })),
+    ]
+    this._resumeFallback = cfg.room ? 'ที่ห้องของฉัน' : 'ในแผนที่'
     this._initRoofs(layerInfos, map)
     this._spawnCritters(meta.critters ?? [], mapScale)
 
@@ -573,9 +587,10 @@ export class MapScene extends Phaser.Scene {
     this.game.events.emit('mapSceneReady')
   }
 
-  update(_time, delta) {
+  update(time, delta) {
     if (this.preview) return
     this._tickPresence()
+    this._tickResume(time)
     this._tickRoofs()
     this._tickCritters(delta ?? 16)
 
@@ -931,6 +946,25 @@ export class MapScene extends Phaser.Scene {
     }
     this._selfBubble.x = this.player.x
     this._selfBubble.y = this.player.y - 26 * this._mapScale
+  }
+
+  // While the player moves, tell React where they are every 2 s (map px) so the app can
+  // remember the spot. The School Hub is skipped: it is re-entered through enterSchoolHub.
+  _tickResume(time) {
+    if (this.mapKey === 'school_hub' || !this.player) return
+    const moving = this.isMoving || this.usingWasd || this.joystickActive
+    if (!moving || time - (this._lastResumeAt ?? 0) < 2000) return
+    this._lastResumeAt = time
+    const s = this._mapScale || 1
+    const x = this.player.x / s
+    const y = this.player.y / s
+    this.game.events.emit('playerSampled', {
+      mapKey: this.mapKey,
+      x,
+      y,
+      facing: this._currentDir ?? 'down',
+      label: nearestLabel(this._resumeZones, x, y, this._resumeFallback),
+    })
   }
 
   // Runs at the top of update() every frame: lerps remote avatars and (only on

@@ -13,7 +13,7 @@ vi.mock('firebase/firestore', () => ({
 }))
 vi.mock('../firebase', () => ({ db: {} }))
 
-import { saveMapConfig, listMapConfigs, getMapConfig, resolveEntryKey } from './mapConfig'
+import { saveMapConfig, listMapConfigs, getMapConfig, resolveEntryKey, resolveBootTarget, isResumableMapKey } from './mapConfig'
 
 describe('pickEntryKey', () => {
   it('returns the map flagged isEntry', () => {
@@ -120,5 +120,28 @@ describe('entry map', () => {
     expect(resolveEntryKey([{ key: 'room', isEntry: true }, { key: 'school_hub' }])).toBe('room')
     expect(resolveEntryKey([])).toBe('room')
     expect(resolveEntryKey(null)).toBe('room')
+  })
+})
+
+describe('resume boot target', () => {
+  const maps = [{ key: 'room' }, { key: 'campus' }, { key: 'school_hub' }, { key: 'test3' }]
+  const point = { x: 5, y: 6, facing: 'down', label: 'l', at: 1 }
+
+  it('boots the remembered map at its point', () => {
+    const resume = { last: 'campus', points: { campus: point } }
+    expect(resolveBootTarget(maps, resume)).toEqual({ mapKey: 'campus', point })
+  })
+
+  it.each(['test3', 'school_hub', 'nowhere'])('never boots %s from a resume', (last) => {
+    expect(resolveBootTarget(maps, { last, points: { [last]: point } })).toEqual({ mapKey: 'room', point: null })
+  })
+
+  it('treats a built-in map as resumable even without a stored document', () => {
+    expect(isResumableMapKey('room', [])).toBe(true)
+    expect(isResumableMapKey('campus', [])).toBe(false)
+  })
+
+  it('falls back to the entry map with no resume at all', () => {
+    expect(resolveBootTarget(maps, null)).toEqual({ mapKey: 'room', point: null })
   })
 })

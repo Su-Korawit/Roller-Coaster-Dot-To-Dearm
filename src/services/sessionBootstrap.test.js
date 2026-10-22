@@ -11,6 +11,9 @@ const m = vi.hoisted(() => ({
   setSchoolSyncUser: vi.fn(),
   disarmSchoolSync: vi.fn(),
   hydrateHotbar: vi.fn(),
+  hydrateResume: vi.fn(),
+  setResumeSyncUser: vi.fn(),
+  resetResume: vi.fn(),
   setHotbarSyncUser: vi.fn(),
   resetHotbar: vi.fn(),
   hydrateEntitlements: vi.fn(),
@@ -95,7 +98,10 @@ vi.mock('../lib/syncManager', () => ({
   disarmSchoolSync: (...a) => m.disarmSchoolSync(...a),
   hydrateHotbarFromFirestore: (...a) => m.hydrateHotbar(...a),
   setHotbarSyncUser: (...a) => m.setHotbarSyncUser(...a),
+  hydrateResumeFromFirestore: (...a) => m.hydrateResume(...a),
+  setResumeSyncUser: (...a) => m.setResumeSyncUser(...a),
 }))
+vi.mock('../stores/useResumeStore', () => ({ useResumeStore: { getState: () => ({ reset: m.resetResume }) } }))
 vi.mock('../stores/useHotbarStore', () => ({ useHotbarStore: { getState: () => ({ reset: m.resetHotbar }) } }))
 
 const { bootstrapSession, teardownSession } = await import('./sessionBootstrap')
@@ -168,6 +174,12 @@ describe('bootstrapSession', () => {
     await bootstrapSession({ uid: 'u1' })
     expect(m.hydrateHotbar).toHaveBeenCalledWith('u1')
     expect(m.setHotbarSyncUser).toHaveBeenCalledWith('u1')
+  })
+
+  it('hydrates resume points and arms their sync writer on login', async () => {
+    await bootstrapSession({ uid: 'u1' })
+    expect(m.hydrateResume).toHaveBeenCalledWith('u1')
+    expect(m.setResumeSyncUser).toHaveBeenCalledWith('u1')
   })
 
   it('sets the current map owner to the signed-in user', async () => {
@@ -318,6 +330,12 @@ describe('teardownSession', () => {
     expect(m.resetFocus).toHaveBeenCalled()
     expect(m.resetRoom).toHaveBeenCalled()
     expect(m.cancelRoomSync).toHaveBeenCalled() // a pending save must not outlive the account
+  })
+
+  it('disarms the resume sync and forgets the points on logout', () => {
+    teardownSession()
+    expect(m.setResumeSyncUser).toHaveBeenCalledWith(null)
+    expect(m.resetResume).toHaveBeenCalled()
   })
 
   it('disarms the hotbar sync and resets the bar on logout', () => {

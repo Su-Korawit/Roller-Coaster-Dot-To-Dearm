@@ -9,6 +9,7 @@
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { normalizeHotbar } from './hotbarRules'
+import { sanitizeResume } from './resumeRules'
 
 // ── Document refs ─────────────────────────────────────────────────────────────
 export const refs = {
@@ -146,6 +147,9 @@ export const queries = {
 export const shapes = {
   // users/{uid}.hotbar: always 7 unique, ready item ids including warp (repaired, never thrown on).
   hotbar: (d) => normalizeHotbar(d?.hotbar),
+
+  // users/{uid}.resume = { last, points }: malformed parts are dropped, never thrown on.
+  resume: (d) => sanitizeResume(d?.resume),
 
   // Study Room layout as saved by the saveRoomLayout function (rooms/{uid}); a missing doc
   // is the starter room. Malformed placements are dropped, never thrown on.
