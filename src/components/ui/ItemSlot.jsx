@@ -36,8 +36,8 @@ export default function ItemSlot({
       )}
       {iconName ? (
         <>
-          <AtlasIcon name={iconName} scale={2} className="hidden min-[430px]:inline-block" />
-          <AtlasIcon name={iconName} scale={1} className="min-[430px]:hidden" />
+          <span className="hidden min-[430px]:block"><AtlasIcon name={iconName} scale={2} className="block" /></span>
+          <span className="min-[430px]:hidden"><AtlasIcon name={iconName} scale={1} className="block" /></span>
         </>
       ) : (
         <PxIcon src={icon} />

@@ -49,9 +49,9 @@ function useTargetRect(selectors, active) {
 
 // The hands-on guide: a bubble with the current step and, when its target is on screen and
 // uncovered, a spotlight around it. It never blocks input (dimming and spotlight ignore
-// pointer events). While a sheet, a popup, decorate mode or the result screen is up the bubble
-// moves to the top and the dimming stops, so it can never cover what the step sends the student
-// to; behind a full-screen panel it is hidden altogether (`suspended`).
+// pointer events). While a sheet or popup is up (or behind a full-screen panel, `suspended`) it
+// is hidden; during decorate mode or the result screen the bubble moves to the top and the
+// dimming stops, so it can never cover what the step sends the student to.
 export default function GuideOverlay({ suspended = false }) {
   const started = useGuideStore((s) => s.started)
   const done = useGuideStore((s) => s.done)
@@ -90,7 +90,9 @@ export default function GuideOverlay({ suspended = false }) {
   const selectors = current ? [current.target, current.fallbackTarget].filter(Boolean) : []
   const rect = useTargetRect(selectors, !!current && !suspended && !crowded)
 
-  if (!current || suspended) return null
+  // A sheet or popup is up: the bubble would cover its header, and the student is already where
+  // the step sent them. It returns when the sheet closes.
+  if (!current || suspended || roomSheet || popup) return null
 
   const startPractice = async () => {
     setError('')
@@ -130,7 +132,7 @@ export default function GuideOverlay({ suspended = false }) {
           }}
         />
       )}
-      <SpeechBubble className="fixed left-1/2 -translate-x-1/2" style={{ ...place, zIndex: Z_TOAST }}>
+      <SpeechBubble className="fixed left-1/2 -translate-x-1/2 w-[min(20rem,92vw)]" style={{ ...place, zIndex: Z_TOAST }}>
         <p className="thai-font text-sm">{current.textTh}</p>
         {error && <p role="alert" className="text-sm text-danger">{error}</p>}
         <div className="flex flex-wrap gap-2">

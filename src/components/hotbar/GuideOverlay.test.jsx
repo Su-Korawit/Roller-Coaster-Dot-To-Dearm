@@ -162,7 +162,7 @@ describe('GuideOverlay stays out of the way (review fixes)', () => {
     expect(container.firstChild).toBeNull()
   })
 
-  it('moves to the top and stops dimming while a sheet is open, so it never covers the sheet', async () => {
+  it('hides while a sheet is open, so it never covers the sheet, and returns when it closes', async () => {
     const { useRoomUiStore } = await import('../../stores/useRoomUiStore')
     addTarget('slot-shop')
     startGuide()
@@ -170,12 +170,13 @@ describe('GuideOverlay stays out of the way (review fixes)', () => {
     render(<GuideOverlay />)
     await tick()
     expect(document.querySelector('[data-guide-spotlight]')).toBeNull()
-    expect(screen.getByRole('status').style.top).not.toBe('')
-    expect(screen.getByRole('status').style.bottom).toBe('')
-    useRoomUiStore.setState({ sheet: null })
+    expect(screen.queryByRole('status')).toBeNull()
+    act(() => { useRoomUiStore.setState({ sheet: null }) })
+    await tick()
+    expect(screen.getByRole('status')).toBeTruthy()
   })
 
-  it('moves to the top and stops dimming while a popup is open or decorating', async () => {
+  it('hides while a popup is open; during decorating it moves to the top without dimming', async () => {
     const { usePopupStore } = await import('../../stores/usePopupStore')
     const { useRoomStore } = await import('../../stores/useRoomStore')
     addTarget('slot-shop')
@@ -184,6 +185,7 @@ describe('GuideOverlay stays out of the way (review fixes)', () => {
     const { unmount } = render(<GuideOverlay />)
     await tick()
     expect(document.querySelector('[data-guide-spotlight]')).toBeNull()
+    expect(screen.queryByRole('status')).toBeNull()
     unmount()
     usePopupStore.setState({ activePopup: null })
     useRoomStore.setState({ decorating: true })
