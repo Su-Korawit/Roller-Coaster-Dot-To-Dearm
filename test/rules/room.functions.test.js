@@ -26,7 +26,7 @@ beforeEach(async () => {
     await Promise.all(snap.docs.map((d) => d.ref.delete()))
   }
   await db.doc(`users/${UID}`).set({ uid: UID, leaves: 200 })
-  await db.doc('roomCatalog/lamp_desk').set(cat('lamp', 'decor', 90))
+  await db.doc('roomCatalog/lamp_desk').set({ ...cat('lamp', 'decor', 90), deskSlot: true })
   await db.doc('roomCatalog/theme_cafe').set(cat('cafe', 'theme', 150))
   await db.doc('roomCatalog/desk_basic').set(cat('desk', 'desk', 150, [2, 1]))
   await db.doc('roomCatalog/chair_basic').set(cat('chair', 'furniture', 90))
@@ -126,5 +126,57 @@ describe('claimWelcomePack', () => {
 
   it('requires sign-in', async () => {
     await expect(run(fns.claimWelcomePack, {}, null)).rejects.toMatchObject({ code: 'unauthenticated' })
+  })
+})
+
+describe('saveRoomLayout', () => {
+  const layout = (placed, extra = {}) => ({ tier: 0, theme: 'minimal', petId: null, placed, ...extra })
+  const inventory = { desk_basic: 1, chair_basic: 1, lamp_desk: 1, theme_minimal: 1 }
+  const roomDoc = async (uid = UID) => (await db.doc(`rooms/${uid}`).get()).data()
+
+  beforeEach(async () => {
+    await db.doc(`users/${UID}`).set({ uid: UID, leaves: 0, roomInventory: inventory })
+  })
+
+  it('saves a valid layout for the caller', async () => {
+    const placed = [
+      { itemId: 'desk_basic', x: 96, y: 32 },
+      { itemId: 'chair_basic', x: 104, y: 48 },
+      { itemId: 'lamp_desk', x: 96, y: 32, slot: 'left' },
+    ]
+    expect(await run(fns.saveRoomLayout, { layout: layout(placed) })).toEqual({ ok: true })
+    expect(await roomDoc()).toMatchObject({ tier: 0, theme: 'minimal', petId: null, placed })
+  })
+
+  it('rejects more copies than owned and leaves the saved room unchanged', async () => {
+    await db.doc(`rooms/${UID}`).set({ tier: 0, theme: 'minimal', petId: null, placed: [] })
+    const bad = layout([{ itemId: 'chair_basic', x: 16, y: 16 }, { itemId: 'chair_basic', x: 48, y: 16 }])
+    const err = await run(fns.saveRoomLayout, { layout: bad }).catch((e) => e)
+    expect(err.code).toBe('invalid-argument')
+    expect(err.details.errors).toEqual([{ code: 'not_owned', itemId: 'chair_basic' }])
+    expect((await roomDoc()).placed).toEqual([])
+  })
+
+  it('rejects unknown items, overlaps and an unowned theme', async () => {
+    const err = await run(fns.saveRoomLayout, { layout: layout([{ itemId: 'ghost', x: 8, y: 8 }], { theme: 'cafe' }) }).catch((e) => e)
+    expect(err.details.errors.map((e) => e.code).sort()).toEqual(['bad_theme', 'unknown_item'])
+  })
+
+  it('requires sign-in and a layout object', async () => {
+    await expect(run(fns.saveRoomLayout, { layout: layout([]) }, null)).rejects.toMatchObject({ code: 'unauthenticated' })
+    await expect(run(fns.saveRoomLayout, {})).rejects.toMatchObject({ code: 'invalid-argument' })
+  })
+
+  it('only ever writes the own room of the caller', async () => {
+    await db.doc('users/other').set({ uid: 'other', roomInventory: inventory })
+    await run(fns.saveRoomLayout, { layout: layout([]) })
+    expect((await db.doc('rooms/other').get()).exists).toBe(false)
+  })
+
+  it('stores only the known layout fields', async () => {
+    await run(fns.saveRoomLayout, { layout: { ...layout([]), isAdmin: true, leaves: 9999 } })
+    const doc = await roomDoc()
+    expect(doc.isAdmin).toBeUndefined()
+    expect(doc.leaves).toBeUndefined()
   })
 })

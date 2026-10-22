@@ -1,0 +1,1052 @@
+{
+ "catalog": {
+  "desk_basic": {
+   "kind": "desk",
+   "footprint": [
+    2,
+    1
+   ]
+  },
+  "chair_basic": {
+   "kind": "furniture",
+   "footprint": [
+    1,
+    1
+   ]
+  },
+  "bed_basic": {
+   "kind": "furniture",
+   "footprint": [
+    2,
+    1
+   ]
+  },
+  "bookshelf_basic": {
+   "kind": "furniture",
+   "footprint": [
+    1,
+    1
+   ]
+  },
+  "rug_round": {
+   "kind": "decor",
+   "footprint": [
+    2,
+    2
+   ]
+  },
+  "poster_pastel": {
+   "kind": "wall",
+   "footprint": [
+    1,
+    1
+   ]
+  },
+  "lamp_desk": {
+   "kind": "decor",
+   "footprint": [
+    1,
+    1
+   ],
+   "deskSlot": true
+  },
+  "mug": {
+   "kind": "decor",
+   "footprint": [
+    1,
+    1
+   ],
+   "deskSlot": true
+  },
+  "theme_minimal": {
+   "kind": "theme",
+   "footprint": [
+    1,
+    1
+   ]
+  },
+  "theme_cafe": {
+   "kind": "theme",
+   "footprint": [
+    1,
+    1
+   ]
+  }
+ },
+ "cases": [
+  {
+   "name": "valid starter-like layout",
+   "layout": {
+    "tier": 0,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "bed_basic",
+      "x": 16,
+      "y": 16
+     },
+     {
+      "itemId": "desk_basic",
+      "x": 96,
+      "y": 32
+     },
+     {
+      "itemId": "chair_basic",
+      "x": 104,
+      "y": 48
+     },
+     {
+      "itemId": "lamp_desk",
+      "x": 96,
+      "y": 32,
+      "slot": "left"
+     },
+     {
+      "itemId": "rug_round",
+      "x": 64,
+      "y": 80
+     }
+    ]
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1
+   },
+   "codes": []
+  },
+  {
+   "name": "empty layout is valid",
+   "layout": {
+    "tier": 0,
+    "theme": "minimal",
+    "petId": null,
+    "placed": []
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1
+   },
+   "codes": []
+  },
+  {
+   "name": "more copies than owned",
+   "layout": {
+    "tier": 0,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "lamp_desk",
+      "x": 96,
+      "y": 32,
+      "slot": "left"
+     },
+     {
+      "itemId": "lamp_desk",
+      "x": 96,
+      "y": 32,
+      "slot": "right"
+     },
+     {
+      "itemId": "desk_basic",
+      "x": 96,
+      "y": 32
+     }
+    ]
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1
+   },
+   "codes": [
+    "not_owned"
+   ]
+  },
+  {
+   "name": "unknown item id",
+   "layout": {
+    "tier": 0,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "ghost",
+      "x": 8,
+      "y": 8
+     }
+    ]
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1
+   },
+   "codes": [
+    "unknown_item"
+   ]
+  },
+  {
+   "name": "x off the 8px grid",
+   "layout": {
+    "tier": 0,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "chair_basic",
+      "x": 4,
+      "y": 16
+     }
+    ]
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1
+   },
+   "codes": [
+    "off_grid"
+   ]
+  },
+  {
+   "name": "y off the 8px grid",
+   "layout": {
+    "tier": 0,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "chair_basic",
+      "x": 16,
+      "y": 12
+     }
+    ]
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1
+   },
+   "codes": [
+    "off_grid"
+   ]
+  },
+  {
+   "name": "desk past the right edge",
+   "layout": {
+    "tier": 0,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "desk_basic",
+      "x": 160,
+      "y": 32
+     }
+    ]
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1
+   },
+   "codes": [
+    "out_of_bounds"
+   ]
+  },
+  {
+   "name": "item with negative x",
+   "layout": {
+    "tier": 0,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "chair_basic",
+      "x": -8,
+      "y": 16
+     }
+    ]
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1
+   },
+   "codes": [
+    "out_of_bounds"
+   ]
+  },
+  {
+   "name": "two chairs on one tile",
+   "layout": {
+    "tier": 0,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "chair_basic",
+      "x": 32,
+      "y": 32
+     },
+     {
+      "itemId": "chair_basic",
+      "x": 32,
+      "y": 32
+     }
+    ]
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1
+   },
+   "codes": [
+    "overlap"
+   ]
+  },
+  {
+   "name": "chair partly on the bed",
+   "layout": {
+    "tier": 0,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "bed_basic",
+      "x": 16,
+      "y": 16
+     },
+     {
+      "itemId": "chair_basic",
+      "x": 40,
+      "y": 16
+     }
+    ]
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1
+   },
+   "codes": [
+    "overlap"
+   ]
+  },
+  {
+   "name": "rug under a chair is fine",
+   "layout": {
+    "tier": 0,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "rug_round",
+      "x": 32,
+      "y": 32
+     },
+     {
+      "itemId": "chair_basic",
+      "x": 40,
+      "y": 40
+     }
+    ]
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1
+   },
+   "codes": []
+  },
+  {
+   "name": "wall poster over furniture is fine",
+   "layout": {
+    "tier": 0,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "bookshelf_basic",
+      "x": 32,
+      "y": 16
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 32,
+      "y": 16
+     }
+    ]
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1
+   },
+   "codes": []
+  },
+  {
+   "name": "desk item on the floor without a slot",
+   "layout": {
+    "tier": 0,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "lamp_desk",
+      "x": 32,
+      "y": 32
+     }
+    ]
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1
+   },
+   "codes": [
+    "bad_slot"
+   ]
+  },
+  {
+   "name": "two lamps in one slot",
+   "layout": {
+    "tier": 0,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "desk_basic",
+      "x": 96,
+      "y": 32
+     },
+     {
+      "itemId": "lamp_desk",
+      "x": 96,
+      "y": 32,
+      "slot": "left"
+     },
+     {
+      "itemId": "mug",
+      "x": 96,
+      "y": 32,
+      "slot": "left"
+     }
+    ]
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1
+   },
+   "codes": [
+    "bad_slot"
+   ]
+  },
+  {
+   "name": "slotted item with no desk under it",
+   "layout": {
+    "tier": 0,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "lamp_desk",
+      "x": 96,
+      "y": 32,
+      "slot": "left"
+     }
+    ]
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1
+   },
+   "codes": [
+    "bad_slot"
+   ]
+  },
+  {
+   "name": "slot name that does not exist",
+   "layout": {
+    "tier": 0,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "desk_basic",
+      "x": 96,
+      "y": 32
+     },
+     {
+      "itemId": "lamp_desk",
+      "x": 96,
+      "y": 32,
+      "slot": "middle"
+     }
+    ]
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1
+   },
+   "codes": [
+    "bad_slot"
+   ]
+  },
+  {
+   "name": "floor item carrying a slot",
+   "layout": {
+    "tier": 0,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "chair_basic",
+      "x": 32,
+      "y": 32,
+      "slot": "left"
+     }
+    ]
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1
+   },
+   "codes": [
+    "bad_slot"
+   ]
+  },
+  {
+   "name": "theme not owned",
+   "layout": {
+    "tier": 0,
+    "theme": "cafe",
+    "petId": null,
+    "placed": []
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1
+   },
+   "codes": [
+    "bad_theme"
+   ]
+  },
+  {
+   "name": "tier not owned",
+   "layout": {
+    "tier": 1,
+    "theme": "minimal",
+    "petId": null,
+    "placed": []
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1
+   },
+   "codes": [
+    "bad_tier"
+   ]
+  },
+  {
+   "name": "unknown tier",
+   "layout": {
+    "tier": 9,
+    "theme": "minimal",
+    "petId": null,
+    "placed": []
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1,
+    "tier_9": 1
+   },
+   "codes": [
+    "bad_tier"
+   ]
+  },
+  {
+   "name": "pet not owned",
+   "layout": {
+    "tier": 0,
+    "theme": "minimal",
+    "petId": "cat_orange",
+    "placed": []
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 1,
+    "theme_minimal": 1
+   },
+   "codes": [
+    "bad_pet"
+   ]
+  },
+  {
+   "name": "61 placed items",
+   "layout": {
+    "tier": 0,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     },
+     {
+      "itemId": "poster_pastel",
+      "x": 0,
+      "y": 0
+     }
+    ]
+   },
+   "inventory": {
+    "desk_basic": 1,
+    "chair_basic": 2,
+    "bed_basic": 1,
+    "bookshelf_basic": 1,
+    "rug_round": 1,
+    "lamp_desk": 1,
+    "mug": 1,
+    "poster_pastel": 100,
+    "theme_minimal": 1
+   },
+   "codes": [
+    "too_many"
+   ]
+  }
+ ]
+}

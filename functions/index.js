@@ -561,6 +561,41 @@ exports.claimWelcomePack = onCall(async (req) => {
   }
 })
 
+// Saves the caller's room layout. Firestore rules cannot count copies per item, so the
+// layout is validated here against the caller's inventory and the catalog (placement.js,
+// shared with the editor), and rooms/{uid} is client-read-only.
+const placement = require('./placement')
+
+exports.saveRoomLayout = onCall(async (req) => {
+  const uid = requireUid(req)
+  const input = req.data?.layout
+  if (!input || typeof input !== 'object' || !Array.isArray(input.placed)) {
+    throw new HttpsError('invalid-argument', 'layout is required.')
+  }
+  const layout = {
+    tier: input.tier,
+    theme: input.theme,
+    petId: input.petId ?? null,
+    placed: input.placed.map((p) => (p && typeof p === 'object'
+      ? { itemId: p.itemId, x: p.x, y: p.y, ...(p.slot !== undefined ? { slot: p.slot } : {}) }
+      : p)),
+  }
+  const userRef = db.collection('users').doc(uid)
+  try {
+    return await db.runTransaction(async (tx) => {
+      const [userSnap, catalogSnap] = await Promise.all([tx.get(userRef), tx.get(db.collection('roomCatalog'))])
+      if (!userSnap.exists) throw new HttpsError('not-found', 'User not found.')
+      const catalog = Object.fromEntries(catalogSnap.docs.map((d) => [d.id, d.data()]))
+      const result = placement.validateLayout({ layout, catalog, inventory: userSnap.data().roomInventory ?? {} })
+      if (!result.ok) throw new HttpsError('invalid-argument', 'Invalid layout.', { errors: result.errors })
+      tx.set(db.collection('rooms').doc(uid), { ...layout, updatedAt: admin.firestore.FieldValue.serverTimestamp() })
+      return { ok: true }
+    })
+  } catch (err) {
+    throw toRoomError(err)
+  }
+})
+
 // ── Weekly school leaderboard (ADR 0018) ─────────────────────────────────────
 // Recomputes the current ISO week (Asia/Bangkok) from focusDaily and writes
 //   schoolWeeks/{schoolId}_{week}   per-school totals + `ranked` flag
