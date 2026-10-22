@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { BUILDING_BY_ID } from '../../constants/openHouseBuildings'
 import { useOpenHouseUiStore } from '../../stores/useOpenHouseUiStore'
 import { Z_HUD } from '../../constants/zIndex'
-import { HOTBAR_CLEARANCE } from '../../constants/hotbarLayout'
+import { HOTBAR_DOCK } from '../../constants/hotbarLayout'
 
 const typing = (el) => !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable)
 
@@ -28,7 +28,7 @@ export default function EnterBuildingButton() {
 
   if (!target) return null
   return (
-    <div className="absolute inset-x-0 flex justify-center pointer-events-none" style={{ bottom: HOTBAR_CLEARANCE, zIndex: Z_HUD }}>
+    <div className="absolute inset-x-0 flex justify-center pointer-events-none" style={{ bottom: HOTBAR_DOCK, zIndex: Z_HUD }}>
       <button type="button" onClick={target.go} className="px-btn pointer-events-auto h-12 px-6 text-sm font-bold bg-leaf text-ink">
         {target.label}
         <span className="ml-2 text-xs text-ink-soft hidden md:inline" aria-hidden="true">E</span>

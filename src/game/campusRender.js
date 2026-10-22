@@ -53,7 +53,8 @@ export function renderCampus(scene, mapScale = 1) {
   }
 
   const signs = campusSigns().map((sg) => {
-    const text = scene.add.text(sg.cx * tile, (sg.cy - 0.1) * tile, sg.text, {
+    // Floats on the façade above the door strip, so it never covers the avatar standing in the door.
+    const text = scene.add.text(sg.cx * tile, (sg.cy - 1.6) * tile, sg.text, {
       fontSize: `${8 * s}px`,
       color: '#3b2f2f',
       backgroundColor: 'rgba(243, 229, 194, 0.94)',

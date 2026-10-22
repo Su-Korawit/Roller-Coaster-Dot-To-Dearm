@@ -521,7 +521,7 @@ export class MapScene extends Phaser.Scene {
     this.joystickPointerId = -1
 
     this.input.on('pointerdown', (pointer) => {
-      this._walker?.cancel()
+      this._cancelWalk()
       // Study room: while decorating, a tap edits the room instead of moving the avatar.
       if (cfg.room && this.registry.get('roomDecorating')) {
         this.game.events.emit('roomTap', { x: pointer.worldX / mapScale, y: pointer.worldY / mapScale })
@@ -619,6 +619,12 @@ export class MapScene extends Phaser.Scene {
         for (const def of this._zoneDefs) {
           const overlapping = this.physics.world.overlap(this.player, def.zone)
           const was = this._activeZones.has(def.zone)
+          // Door zones forgive a flicker: pressing against the building can nudge the avatar out of the
+          // strip for a frame, and that must not close the faculty popup. Out for 3 checks = left.
+          if (def.action === 'building' || def.action === 'directory') {
+            def.outTicks = overlapping ? 0 : (def.outTicks ?? 0) + 1
+            if (was && !overlapping && def.outTicks < 3) continue
+          }
           if (overlapping && !was) {
             this._activeZones.add(def.zone)
             if (def.action === 'focusSeat') this.game.events.emit('focusSeatEntered', { seatId: def.seatId })
@@ -665,7 +671,7 @@ export class MapScene extends Phaser.Scene {
 
     if (wasdActive) {
       this.usingWasd = true
-      this._walker?.cancel()
+      this._cancelWalk()
       this.isMoving = false
       this.marker.setVisible(false)
 
@@ -699,8 +705,10 @@ export class MapScene extends Phaser.Scene {
     }
 
     const controlMode = this.registry.get('controlMode') ?? DEFAULT_CONTROL_MODE
-    if (controlMode === 'joystick') {
-      if (this.joystickActive) this._walker?.cancel()
+    // An auto-walk in progress keeps running in joystick mode (the default) until the player touches
+    // the joystick; only then does the joystick take over.
+    if (controlMode === 'joystick' && (this.joystickActive || !this.isMoving)) {
+      if (this.joystickActive) this._cancelWalk()
       // Find the specific pointer that started the joystick
       const allPointers = [this.input.pointer1, this.input.pointer2]
       const ptr = allPointers.find(p => p.id === this.joystickPointerId) ?? this.input.activePointer
@@ -749,9 +757,19 @@ export class MapScene extends Phaser.Scene {
     const dy       = this.targetY - this.player.y
     const distance = Math.sqrt(dx * dx + dy * dy)
 
-    if (distance < ARRIVE_THRESHOLD) {
+    // An auto-walk can aim at a tile the 20 px body cannot fully enter (a door strip under a wall).
+    // Pressed against it without moving for ~0.2 s counts as arrived.
+    const moved = Math.hypot(this.player.x - (this._lastX ?? 0), this.player.y - (this._lastY ?? 0))
+    this._lastX = this.player.x
+    this._lastY = this.player.y
+    this._stuckFrames = this._autoWalk && moved < 0.2 ? (this._stuckFrames ?? 0) + 1 : 0
+    const stuck = this._autoWalk && this._stuckFrames > 12 && distance < 16
+
+    if (distance < ARRIVE_THRESHOLD || stuck) {
+      this._stuckFrames = 0
       // Auto-walk: slide straight on to the next waypoint instead of idling at the corner.
       if (this._feedWalker()) return
+      this._autoWalk = false
       this.player.setVelocity(0, 0)
       this.player.play(`${this.currentMbti}-idle`)
       this.isMoving = false
@@ -872,8 +890,19 @@ export class MapScene extends Phaser.Scene {
     const path = here && goal ? findPath(blocked, w, h, here, goal) : null
     if (!path) return false
     this._walker = createWalker(simplifyPath(path))
+    this._autoWalk = true
     this._feedWalker()
     return true
+  }
+
+  // Any player input ends an auto-walk: the avatar stops where it is.
+  _cancelWalk() {
+    if (!this._autoWalk) { this._walker?.cancel(); return }
+    this._autoWalk = false
+    this._walker.cancel()
+    this.isMoving = false
+    this.player?.setVelocity(0, 0)
+    this.marker?.setVisible(false)
   }
 
   // Hand the next waypoint to the click-to-move machinery. True while there is one.

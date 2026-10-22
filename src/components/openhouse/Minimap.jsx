@@ -3,7 +3,8 @@ import { MAP, HALL, SPAWN, minimapRects, placementOf, doorTile } from '../../gam
 import { useOpenHouseUiStore } from '../../stores/useOpenHouseUiStore'
 import { Z_HUD } from '../../constants/zIndex'
 
-const SCALE = 2 // px per tile
+// Width follows the screen (a phone must not lose a third of the map to it); the aspect is the map's.
+const WIDTH = 'clamp(110px, 24vw, 190px)'
 const pct = (v, total) => `${(v / total) * 100}%`
 
 // Top-right minimap drawn from the layout table. Every faculty is a real button: tapping it walks
@@ -20,13 +21,13 @@ export default function Minimap() {
   return (
     <nav aria-label="แผนที่มหาวิทยาลัย" className="absolute top-3 right-3 px-slab p-1.5" style={{ zIndex: Z_HUD }}>
       <div
-        className="relative bg-[#DCEAB8] border-2 border-line rounded-ui overflow-hidden cursor-pointer"
-        style={{ width: MAP.w * SCALE, height: MAP.h * SCALE }}
+        className="relative bg-zone-earth-soft border-2 border-line rounded-ui overflow-hidden cursor-pointer"
+        style={{ width: WIDTH, aspectRatio: `${MAP.w} / ${MAP.h}` }}
         onClick={onBackdrop}
       >
         {/* lake and avenue, for orientation */}
-        <i className="absolute inset-x-0 bottom-0 bg-[#9BD3E8] pointer-events-none" style={{ height: pct(MAP.h - 69, MAP.h) }} />
-        <i className="absolute bg-[#F3E5C2] pointer-events-none" style={{ left: pct(44, MAP.w), width: pct(13, MAP.w), top: pct(20, MAP.h), height: pct(49, MAP.h) }} />
+        <i className="absolute inset-x-0 bottom-0 bg-zone-sci-soft pointer-events-none" style={{ height: pct(MAP.h - 69, MAP.h) }} />
+        <i className="absolute bg-hairline pointer-events-none" style={{ left: pct(44, MAP.w), width: pct(13, MAP.w), top: pct(20, MAP.h), height: pct(49, MAP.h) }} />
         {minimapRects().map((r) => (
           <button
             key={r.id}

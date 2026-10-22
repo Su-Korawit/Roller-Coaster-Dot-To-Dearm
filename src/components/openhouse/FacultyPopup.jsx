@@ -5,7 +5,6 @@ import { filterUniversities, summariseBuilding, summariseRounds, universityTypes
 import { useOpenHouseStore } from '../../stores/useOpenHouseStore'
 import { usePlanUiStore } from '../../stores/usePlanUiStore'
 import { Z_PANEL } from '../../constants/zIndex'
-import { HOTBAR_CLEARANCE } from '../../constants/hotbarLayout'
 import { ROUNDS } from '../../constants/tcasRounds'
 import RoundTabs from './RoundTabs'
 import FilterBar from './FilterBar'
@@ -130,15 +129,14 @@ export default function FacultyPopup({ buildingId, onClose }) {
         role="dialog"
         aria-label={building.nameTh}
         className="relative flex flex-col overflow-hidden w-full h-[84%] md:h-auto md:w-[420px] md:m-4 bg-paper border-2 border-line rounded-t-sheet md:rounded-slot"
-        style={{ paddingBottom: HOTBAR_CLEARANCE }}
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <header className="flex items-start gap-3 px-4 pt-4 pb-3 border-b-2 border-line shrink-0" style={{ background: zone.soft }}>
+        <header className="flex items-start gap-3 px-4 pt-3 pb-2.5 border-b-2 border-line shrink-0" style={{ background: zone.soft }}>
           <div className="min-w-0 flex-1">
-            <h2 className="pixel-font text-xl leading-tight text-ink">{building.nameTh}</h2>
-            <p className="thai-font text-xs text-ink-soft mt-1">{`ทุกมหาลัยที่เปิดสอน · โซน${ZONES[building.zone].nameTh}`}</p>
-            {entry?.status === 'ready' && (
-              <p className="thai-font text-xs font-bold text-ink mt-2">{`${totals.universities} มหาลัย · ${totals.programs} หลักสูตร`}</p>
-            )}
+            <h2 className="pixel-font text-lg leading-tight text-ink">{building.nameTh}</h2>
+            <p className="thai-font text-xs text-ink-soft mt-0.5">
+              {entry?.status === 'ready' ? `${totals.universities} มหาลัย · ${totals.programs} หลักสูตร · ` : ''}{`โซน${ZONES[building.zone].nameTh}`}
+            </p>
           </div>
           <button type="button" onClick={onClose} aria-label="ปิด" className="px-btn w-9 h-9 grid place-items-center bg-paper text-ink shrink-0">
             <X size={16} strokeWidth={3} aria-hidden="true" />

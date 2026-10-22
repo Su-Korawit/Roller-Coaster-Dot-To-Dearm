@@ -39,7 +39,7 @@ describe('FacultyPopup', () => {
     ready()
     open()
     expect(screen.getByRole('dialog', { name: 'แพทยศาสตร์' })).toBeTruthy()
-    expect(screen.getByText('3 มหาลัย · 4 หลักสูตร')).toBeTruthy()
+    expect(screen.getByText('3 มหาลัย · 4 หลักสูตร · โซนสุขภาพ')).toBeTruthy()
     expect(screen.getByRole('tab', { name: /Portfolio/ }).getAttribute('aria-selected')).toBe('true')
     expect(screen.getAllByRole('tab')).toHaveLength(4)
     // rounds 3 and 4 are greyed but selectable
