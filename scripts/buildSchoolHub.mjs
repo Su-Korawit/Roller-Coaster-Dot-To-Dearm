@@ -6,9 +6,8 @@
 //
 // Usage:  node scripts/buildSchoolHub.mjs
 //
-// Tile ids are Sprout Lands gids taken from public/maps/test3.json (same
-// tileset firstgids, so they stay valid). Path autotiling rules were derived
-// from test3's Path layer (Tilled_Dirt_Wide, gids 407-431 + 434/435/423/424).
+// Tiles come from the generated Soft Pixel tileset (node scripts/art/build.mjs schoolhub);
+// the map declares that single tileset.
 //
 // Layer stack (bottom to top):
 //   Grass   base meadow with texture variants
@@ -19,9 +18,10 @@
 //   Canopy  tree tops, drawn ABOVE the player so avatars walk behind trees
 //   Roof    building roofs, ABOVE the player; fades while the player is inside
 
-import { readFileSync, writeFileSync } from 'node:fs'
+import { writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
+import { TILE_NAMES, FIRSTGID } from './art/families/schoolhub.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = join(here, '..')
@@ -30,33 +30,33 @@ export const W = 56
 export const H = 41
 const T = 16
 
-// ── gids ────────────────────────────────────────────────────────────────────
-const GRASS = 13
-const FLOOR = 97
-const WALL = { TL: 89, T: 90, TR: 91, L: 96, R: 98, BL: 103, B: 104, BR: 105, WINDOW: 83, DOOR: 92 }
-const PATH = { TL: 407, T: 408, TR: 409, L: 418, C: 419, R: 420, BL: 429, B: 430, BR: 431, C2: 463, NW: 435, NE: 434, SW: 424, SE: 423 }
-const TREES = [[577, 578, 586, 587], [579, 580, 588, 589]]   // [TL, TR, BL, BR]
-const GRASS_TUFTS = [56, 57, 58]
-const GRASS_PATCHES = [59, 60, 70, 71]
-const GRASS_FLOWERS = [61, 72]
-const LAWN = { TL: 1, T: 2, TR: 3, L: 12, C: 13, R: 14, BL: 23, B: 24, BR: 25 }
-const HEDGE_H = { L: 34, M: 35, R: 36 }
-const FLOWERS = [600, 601, 608, 609, 610]
-const MUSHROOMS = [581, 582, 583, 584]
-const BUSHES = [603, 604]
-const ROCKS = [592, 593, 617, 618]
-const STUMPS = [597, 598]
-const LOG = 599
-const SUNFLOWER = { top: 602, stem: 611 }
-const ROOF = {
-  TL: 86, T: 87, TR: 88, TL2: 93, T2: 94, TR2: 95, ML: 100, M: 101, MR: 102,
-  BL2: 107, B2: 108, BR2: 109, BL: 114, B: 115, BR: 116,
-}
-const F = { BOOKSHELF: 22, CHAIR_FRONT: 25, CHAIR_BACK: 26, TABLE: 31, PLANT: 5 }   // Basic_Furniture (firstgid 637 -> +636)
-const FURN = 636
-
-// Tileset firstgids are copied from test3 so gids stay valid; Basic_Furniture is appended.
-const KEEP_TILESETS = ['Grass', 'Wooden House', 'Tilled_Dirt_Wide', 'Basic Grass Biom things 1', 'Fences']
+// ── gids ─────────────────────────────────────────────────────────────────
+// Every tile comes from the generated Soft Pixel tileset (scripts/art/families/schoolhub.mjs);
+// a gid is FIRSTGID + the tile's index in TILE_NAMES.
+const G = Object.fromEntries(TILE_NAMES.map((name, i) => [name, FIRSTGID + i]))
+const names = (prefix, n) => Array.from({ length: n }, (_, i) => G[`${prefix}${i + 1}`])
+const GRASS = G.grass
+const FLOOR = G.floor
+const WALL = { TL: G.wall_tl, T: G.wall_t, TR: G.wall_tr, L: G.wall_l, R: G.wall_r, BL: G.wall_bl, B: G.wall_b, BR: G.wall_br, WINDOW: G.wall_window, DOOR: G.wall_door }
+const PATH = { TL: G.path_tl, T: G.path_t, TR: G.path_tr, L: G.path_l, C: G.path_c, R: G.path_r, BL: G.path_bl, B: G.path_b, BR: G.path_br, C2: G.path_c2, NW: G.path_nw, NE: G.path_ne, SW: G.path_sw, SE: G.path_se }
+const TREES = [1, 2].map((t) => ['tl', 'tr', 'bl', 'br'].map((p) => G[`tree${t}_${p}`]))   // [TL, TR, BL, BR]
+const GRASS_TUFTS = names('grass_tuft', 3)
+const GRASS_PATCHES = names('grass_patch', 4)
+const GRASS_FLOWERS = names('grass_flower', 2)
+const LAWN = { TL: G.lawn_tl, T: G.lawn_t, TR: G.lawn_tr, L: G.lawn_l, C: G.lawn_c, R: G.lawn_r, BL: G.lawn_bl, B: G.lawn_b, BR: G.lawn_br }
+const HEDGE_H = { L: G.hedge_l, M: G.hedge_m, R: G.hedge_r }
+const FLOWERS = names('flower', 5)
+const MUSHROOMS = names('mushroom', 4)
+const BUSHES = names('bush', 2)
+const ROCKS = names('rock', 4)
+const STUMPS = names('stump', 2)
+const LOG = G.log
+const SUNFLOWER = { top: G.sunflower_top, stem: G.sunflower_stem }
+const roofSet = (colour) => Object.fromEntries(
+  ['TL', 'T', 'TR', 'TL2', 'T2', 'TR2', 'ML', 'M', 'MR', 'BL2', 'B2', 'BR2', 'BL', 'B', 'BR'].map((p) => [p, G[`roof_${colour}_${p.toLowerCase()}`]]),
+)
+const F = { BOOKSHELF: G.bookshelf, CHAIR_FRONT: G.chair_front, CHAIR_BACK: G.chair_back, TABLE: G.table, PLANT: G.plant }
+const FURN = 0   // furniture gids are already absolute in the Soft Pixel tileset
 
 // ── grid helpers ────────────────────────────────────────────────────────────
 const idx = (x, y) => y * W + x
@@ -84,11 +84,8 @@ export const LAYOUT = {
   guidance: { x: 8,  y: 21, w: 9,  h: 7, door: 12, roof: 'green', ridgeShift: 0 },
   hall:     { x: 39, y: 21, w: 9,  h: 7, door: 43, ridgeShift: -2 },
 }
-// Roof colour variants: the same Wooden House sheet, hue-rotated at load time (worldScenes
-// ROOF_VARIANTS has the matching hue table). Each is declared as its own 35-tile tileset so a
-// roof tile's gid = base gid - 82 + firstgid. A building without `roof` keeps the original brown.
-export const ROOF_VARIANTS = { blue: 700, red: 740, purple: 780, green: 820 }
-const WOODEN_HOUSE_FIRSTGID = 82
+// Roof colours (each is a full 15-piece set in the tileset). A building without `roof` uses 'sky'.
+export const ROOF_COLOURS = ['sky', 'blue', 'red', 'purple', 'green']
 const SPAWN = { x: 27, y: 34 }
 const SIGN = { x: 27, y: 20 }   // plaza notice board (leaderboard)
 
@@ -134,21 +131,21 @@ function roof(L, b) {
   const { x, y, w, h } = b
   const top = y - 1
   const rows = h + 1                    // y-1 .. y+h-1
-  const shift = b.roof ? ROOF_VARIANTS[b.roof] - WOODEN_HOUSE_FIRSTGID : 0
+  const R = roofSet(b.roof ?? 'sky')
   // Each building sits its ridge band a little differently so the roofs do not read as copies.
   const ridge = Math.min(rows - 3, Math.max(2, Math.floor((rows - 1) / 2) + (b.ridgeShift ?? 0)))
   for (let r = 0; r < rows; r++) {
     let set
-    if (r === 0) set = [ROOF.TL, ROOF.T, ROOF.TR]
-    else if (r === rows - 1) set = [ROOF.BL, ROOF.B, ROOF.BR]
-    else if (r === ridge) set = [ROOF.ML, ROOF.M, ROOF.MR]
-    else if (r < ridge) set = [ROOF.TL2, ROOF.T2, ROOF.TR2]
-    else set = [ROOF.BL2, ROOF.B2, ROOF.BR2]
+    if (r === 0) set = [R.TL, R.T, R.TR]
+    else if (r === rows - 1) set = [R.BL, R.B, R.BR]
+    else if (r === ridge) set = [R.ML, R.M, R.MR]
+    else if (r < ridge) set = [R.TL2, R.T2, R.TR2]
+    else set = [R.BL2, R.B2, R.BR2]
     for (let c = 0; c < w; c++) {
       const cx = x + c
       const front = r === rows - 1
       if (front && ((b.door != null && cx === b.door) || (b.doorway && cx >= b.doorway[0] && cx <= b.doorway[1]))) continue
-      L.roof[idx(cx, top + r)] = (c === 0 ? set[0] : c === w - 1 ? set[2] : set[1]) + shift
+      L.roof[idx(cx, top + r)] = c === 0 ? set[0] : c === w - 1 ? set[2] : set[1]
     }
   }
 }
@@ -195,9 +192,6 @@ function autotilePaths(mask) {
 }
 
 export function buildSchoolHub() {
-  const test3 = JSON.parse(readFileSync(join(root, 'public/maps/test3.json'), 'utf8'))
-  const indoor = JSON.parse(readFileSync(join(root, 'public/maps/indoor.json'), 'utf8'))
-
   const L = {
     grass: layer(), lawn: layer(), path: layer(), decor: layer(),
     wall: layer(), object: layer(), canopy: layer(), roof: layer(),
@@ -373,13 +367,10 @@ export function buildSchoolHub() {
   const tileLayer = (id, name, data, visible = true) => ({ data, height: H, id, name, opacity: 1, type: 'tilelayer', visible, width: W, x: 0, y: 0 })
   const objLayer = (id, name, objects) => ({ draworder: 'topdown', id, name, objects, opacity: 1, type: 'objectgroup', visible: true, x: 0, y: 0 })
 
-  const tilesets = [
-    ...test3.tilesets.filter((t) => KEEP_TILESETS.includes(t.name)),
-    { ...indoor.tilesets.find((t) => t.name === 'Basic_Furniture'), firstgid: FURN + 1 },
-    ...Object.entries(ROOF_VARIANTS).map(([name, firstgid]) => ({
-      ...test3.tilesets.find((t) => t.name === 'Wooden House'), name: `Wooden House Roof ${name}`, firstgid,
-    })),
-  ]
+  const tilesets = [{
+    columns: 16, firstgid: FIRSTGID, image: 'school_hub_tiles.png', imageheight: Math.ceil(TILE_NAMES.length / 16) * T,
+    imagewidth: 16 * T, margin: 0, name: 'School Hub Tiles', spacing: 0, tilecount: TILE_NAMES.length, tileheight: T, tilewidth: T,
+  }]
 
   const map = {
     compressionlevel: -1, height: H, infinite: false,

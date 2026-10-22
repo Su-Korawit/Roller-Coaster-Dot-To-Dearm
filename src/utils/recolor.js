@@ -1,5 +1,5 @@
 // Palette swaps for pixel art: rotate hue (degrees), scale saturation / lightness.
-// Used to give the one Sprout Lands roof sheet several colours (see worldScenes ROOF_VARIANTS).
+// Used for character outfit recolouring.
 
 export function recolorPixel(r, g, b, { hue = 0, sat = 1, light = 1 } = {}) {
   const rn = r / 255, gn = g / 255, bn = b / 255

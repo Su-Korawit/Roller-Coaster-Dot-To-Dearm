@@ -47,6 +47,13 @@ export const GAME_ASSETS = [
   tileset('Tilled_Dirt_Wide'),
   tileset('Tilled_Dirt_Wide_v2'),
   tileset('Fences'),
+  // School Hub: generated Soft Pixel tileset (scripts/art/families/schoolhub.mjs)
+  {
+    key: 'School Hub Tiles',
+    type: 'image',
+    storagePath: 'rc/tilesets/school_hub_tiles.png',
+    localPath: '/assets/rc/school_hub_tiles.png',
+  },
 
   // Objects
   object('Wood_Bridge', 'Wood_Bridge'),
