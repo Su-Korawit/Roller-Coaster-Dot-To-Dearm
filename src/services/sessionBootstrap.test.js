@@ -26,6 +26,7 @@ const m = vi.hoisted(() => ({
   bootstrapStudyRoom: vi.fn(),
   resetLeaves: vi.fn(),
   resetFocus: vi.fn(),
+  cancelRoomSync: vi.fn(),
   resetRoom: vi.fn(),
 }))
 
@@ -51,7 +52,7 @@ vi.mock('../lib/db', () => ({
 }))
 vi.mock('../stores/useLeavesStore', () => ({ useLeavesStore: { getState: () => ({ reset: m.resetLeaves }) } }))
 vi.mock('../stores/useFocusStore', () => ({ useFocusStore: { getState: () => ({ reset: m.resetFocus }) } }))
-vi.mock('../stores/useRoomStore', () => ({ useRoomStore: { getState: () => ({ reset: m.resetRoom }) } }))
+vi.mock('../stores/useRoomStore', () => ({ useRoomStore: { getState: () => ({ reset: m.resetRoom }) }, roomSync: { cancel: () => m.cancelRoomSync() } }))
 vi.mock('./studyRoomBootstrap', () => ({
   bootstrapStudyRoom: (...a) => m.bootstrapStudyRoom(...a),
 }))
@@ -304,6 +305,7 @@ describe('teardownSession', () => {
     expect(m.resetLeaves).toHaveBeenCalled()
     expect(m.resetFocus).toHaveBeenCalled()
     expect(m.resetRoom).toHaveBeenCalled()
+    expect(m.cancelRoomSync).toHaveBeenCalled() // a pending save must not outlive the account
   })
 
   it('clears persisted plans on logout', () => {

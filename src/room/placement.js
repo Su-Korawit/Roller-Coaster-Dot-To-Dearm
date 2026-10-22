@@ -20,9 +20,9 @@ export function validateLayout({ layout, catalog, inventory }) {
   if (placed.length > MAX_PLACED) errors.push({ code: 'too_many' })
 
   const size = TIER_SIZES[layout?.tier]
-  if (!size || (layout.tier > 0 && owned(`tier_${layout.tier}`) < 1)) errors.push({ code: 'bad_tier' })
+  if (!Number.isInteger(layout?.tier) || !size || (layout.tier > 0 && owned(`tier_${layout.tier}`) < 1)) errors.push({ code: 'bad_tier' })
   if (owned(`theme_${layout?.theme}`) < 1) errors.push({ code: 'bad_theme' })
-  if (layout?.petId != null && owned(layout.petId) < 1) errors.push({ code: 'bad_pet' })
+  if (layout?.petId != null && (owned(layout.petId) < 1 || catalog?.[layout.petId]?.kind !== 'pet')) errors.push({ code: 'bad_pet' })
 
   const known = (p) => (p && typeof p.itemId === 'string' && Number.isFinite(p.x) && Number.isFinite(p.y) ? catalog?.[p.itemId] : undefined)
   const desks = placed.filter((p) => known(p)?.kind === 'desk')

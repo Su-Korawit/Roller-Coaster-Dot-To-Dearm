@@ -45,6 +45,12 @@ describe('buyRoomItem', () => {
     expect(await user()).toMatchObject({ leaves: 110, roomInventory: { lamp_desk: 1 } })
   })
 
+  it('refuses a hidden item and an id with a slash', async () => {
+    await db.doc('roomCatalog/lamp_desk').set({ hidden: true }, { merge: true })
+    await expect(run(fns.buyRoomItem, { itemId: 'lamp_desk' })).rejects.toMatchObject({ code: 'failed-precondition' })
+    await expect(run(fns.buyRoomItem, { itemId: 'a/b' })).rejects.toMatchObject({ code: 'invalid-argument' })
+  })
+
   it('writes nothing when the Leaves do not cover it, and reports the shortfall', async () => {
     await db.doc(`users/${UID}`).set({ leaves: 50 }, { merge: true })
     const err = await run(fns.buyRoomItem, { itemId: 'lamp_desk' }).catch((e) => e)
@@ -136,6 +142,11 @@ describe('saveRoomLayout', () => {
 
   beforeEach(async () => {
     await db.doc(`users/${UID}`).set({ uid: UID, leaves: 0, roomInventory: inventory })
+  })
+
+  it('rejects an oversized layout before looking at it', async () => {
+    const placed = Array.from({ length: 61 }, () => ({ itemId: 'chair_basic', x: 8, y: 8 }))
+    await expect(run(fns.saveRoomLayout, { layout: layout(placed) })).rejects.toMatchObject({ code: 'invalid-argument' })
   })
 
   it('saves a valid layout for the caller', async () => {

@@ -64,3 +64,17 @@ describe('canPlace', () => {
     expect(TIER_SIZES[0]).toEqual({ w: 11, h: 9 })
   })
 })
+
+describe('layout header checks (review minors)', () => {
+  const base = { tier: 0, theme: 'minimal', petId: null, placed: [] }
+  const inv = { theme_minimal: 1, desk_basic: 1 }
+  const cat = { theme_minimal: { kind: 'theme', footprint: [1, 1] }, desk_basic: { kind: 'desk', footprint: [4, 2] } }
+
+  it('rejects a non-integer tier', () => {
+    expect(validateLayout({ layout: { ...base, tier: '0' }, catalog: cat, inventory: inv }).errors.map((e) => e.code)).toContain('bad_tier')
+  })
+
+  it('rejects a pet id that is not a pet', () => {
+    expect(validateLayout({ layout: { ...base, petId: 'desk_basic' }, catalog: cat, inventory: inv }).errors.map((e) => e.code)).toContain('bad_pet')
+  })
+})

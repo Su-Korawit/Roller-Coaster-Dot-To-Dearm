@@ -1,3 +1,6 @@
+import { useEffect } from 'react'
+import { roomSync } from '../../stores/useRoomStore'
+import { flushOnLeave } from '../../lib/roomSync'
 import FocusSetupSheet from './FocusSetupSheet'
 import ShopSheet from './ShopSheet'
 import FocusHud from './FocusHud'
@@ -16,6 +19,9 @@ export default function RoomLayer() {
   const sheet = useRoomUiStore((s) => s.sheet)
   const open = useRoomUiStore((s) => s.open)
   const close = useRoomUiStore((s) => s.close)
+
+  // The last decorate edit must not be lost when the tab is hidden or closed.
+  useEffect(() => flushOnLeave(roomSync), [])
 
   return (
     <>

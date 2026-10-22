@@ -29,7 +29,7 @@ import { hydrateSpotify } from './spotifyConnect'
 import { bootstrapStudyRoom } from './studyRoomBootstrap'
 import { useLeavesStore } from '../stores/useLeavesStore'
 import { useFocusStore } from '../stores/useFocusStore'
-import { useRoomStore } from '../stores/useRoomStore'
+import { useRoomStore, roomSync } from '../stores/useRoomStore'
 import { resolveConsent } from './consent'
 import { useConsentStore } from '../stores/useConsentStore'
 import { migrateLegacyRoadmap } from '../utils/migrateLegacyRoadmap'
@@ -220,5 +220,6 @@ export function teardownSession() {
   // Study room: nothing of the previous account may show for the next one.
   useLeavesStore.getState().reset()
   useFocusStore.getState().reset()
+  roomSync.cancel() // a pending save must not run for the next account
   useRoomStore.getState().reset()
 }

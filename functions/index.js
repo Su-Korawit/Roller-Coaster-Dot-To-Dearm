@@ -495,7 +495,7 @@ function toRoomError(err) {
 exports.buyRoomItem = onCall(async (req) => {
   const uid = requireUid(req)
   const itemId = req.data?.itemId
-  if (typeof itemId !== 'string' || !itemId) throw new HttpsError('invalid-argument', 'itemId is required.')
+  if (typeof itemId !== 'string' || !itemId || itemId.length > 64 || itemId.includes('/')) throw new HttpsError('invalid-argument', 'itemId is required.')
   const userRef = db.collection('users').doc(uid)
   const itemRef = db.collection('roomCatalog').doc(itemId)
   const roomRef = db.collection('rooms').doc(uid)
@@ -503,6 +503,7 @@ exports.buyRoomItem = onCall(async (req) => {
     return await db.runTransaction(async (tx) => {
       const [userSnap, itemSnap, roomSnap] = await Promise.all([tx.get(userRef), tx.get(itemRef), tx.get(roomRef)])
       if (!userSnap.exists) throw new HttpsError('not-found', 'User not found.')
+      if (itemSnap.exists && itemSnap.data().hidden === true) throw new HttpsError('failed-precondition', 'ITEM_HIDDEN')
       const u = userSnap.data()
       const inventory = u.roomInventory ?? {}
       const plan = roomLogic.planPurchase({
@@ -575,6 +576,7 @@ exports.saveRoomLayout = onCall(async (req) => {
   if (!input || typeof input !== 'object' || !Array.isArray(input.placed)) {
     throw new HttpsError('invalid-argument', 'layout is required.')
   }
+  if (input.placed.length > 60) throw new HttpsError('invalid-argument', 'Too many items.')
   const layout = {
     tier: input.tier,
     theme: input.theme,
