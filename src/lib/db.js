@@ -8,6 +8,7 @@
   where,
 } from 'firebase/firestore'
 import { db } from '../firebase'
+import { normalizeHotbar } from './hotbarRules'
 
 // ── Document refs ─────────────────────────────────────────────────────────────
 export const refs = {
@@ -143,6 +144,9 @@ export const queries = {
 // under `profile.*` — this module is the single seam for its shape. `schoolId`
 // and friends stay top-level because Firestore queries filter on them.
 export const shapes = {
+  // users/{uid}.hotbar: always 7 unique, ready item ids including warp (repaired, never thrown on).
+  hotbar: (d) => normalizeHotbar(d?.hotbar),
+
   // Study Room layout as saved by the saveRoomLayout function (rooms/{uid}); a missing doc
   // is the starter room. Malformed placements are dropped, never thrown on.
   roomLayout: (d) => ({

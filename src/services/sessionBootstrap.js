@@ -31,6 +31,7 @@ import { useLeavesStore } from '../stores/useLeavesStore'
 import { useFocusStore } from '../stores/useFocusStore'
 import { useRoomStore, roomSync } from '../stores/useRoomStore'
 import { resolveConsent } from './consent'
+import { useHotbarStore } from '../stores/useHotbarStore'
 import { useConsentStore } from '../stores/useConsentStore'
 import { migrateLegacyRoadmap } from '../utils/migrateLegacyRoadmap'
 import {
@@ -50,6 +51,8 @@ import {
   hydrateSchoolFromFirestore,
   setSchoolSyncUser,
   disarmSchoolSync,
+  hydrateHotbarFromFirestore,
+  setHotbarSyncUser,
 } from '../lib/syncManager'
 
 function readSelectStore() {
@@ -189,6 +192,10 @@ export async function bootstrapSession(firebaseUser) {
       await hydrateSchoolFromFirestore(uid)
       setSchoolSyncUser(uid)
     }),
+    step('hydrate/arm hotbar', async () => {
+      await hydrateHotbarFromFirestore(uid)
+      setHotbarSyncUser(uid)
+    }),
     step('hydrate spotify', () => hydrateSpotify(uid)),
     step('study room', () => bootstrapStudyRoom(uid)),
   ])
@@ -215,6 +222,8 @@ export function teardownSession() {
   setTaskSyncUser(null)
   disarmRoadmapSheetSync()
   disarmSchoolSync()
+  setHotbarSyncUser(null)
+  useHotbarStore.getState().reset()
   useWorldStore.getState().setMapOwner(null)
   usePlansStore.getState().resetPlans()
   // Study room: nothing of the previous account may show for the next one.

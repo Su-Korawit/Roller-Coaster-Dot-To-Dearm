@@ -10,6 +10,9 @@ const m = vi.hoisted(() => ({
   hydrateSchool: vi.fn(),
   setSchoolSyncUser: vi.fn(),
   disarmSchoolSync: vi.fn(),
+  hydrateHotbar: vi.fn(),
+  setHotbarSyncUser: vi.fn(),
+  resetHotbar: vi.fn(),
   hydrateEntitlements: vi.fn(),
   setCoins: vi.fn(),
   setFileBagUsageBytes: vi.fn(),
@@ -90,7 +93,10 @@ vi.mock('../lib/syncManager', () => ({
   hydrateSchoolFromFirestore: (...a) => m.hydrateSchool(...a),
   setSchoolSyncUser: (...a) => m.setSchoolSyncUser(...a),
   disarmSchoolSync: (...a) => m.disarmSchoolSync(...a),
+  hydrateHotbarFromFirestore: (...a) => m.hydrateHotbar(...a),
+  setHotbarSyncUser: (...a) => m.setHotbarSyncUser(...a),
 }))
+vi.mock('../stores/useHotbarStore', () => ({ useHotbarStore: { getState: () => ({ reset: m.resetHotbar }) } }))
 
 const { bootstrapSession, teardownSession } = await import('./sessionBootstrap')
 
@@ -156,6 +162,12 @@ describe('bootstrapSession', () => {
     await bootstrapSession({ uid: 'u1' })
     expect(m.hydrateSchool).toHaveBeenCalledWith('u1')
     expect(m.setSchoolSyncUser).toHaveBeenCalledWith('u1')
+  })
+
+  it('hydrates the hotbar and arms its sync writer on login', async () => {
+    await bootstrapSession({ uid: 'u1' })
+    expect(m.hydrateHotbar).toHaveBeenCalledWith('u1')
+    expect(m.setHotbarSyncUser).toHaveBeenCalledWith('u1')
   })
 
   it('sets the current map owner to the signed-in user', async () => {
@@ -306,6 +318,12 @@ describe('teardownSession', () => {
     expect(m.resetFocus).toHaveBeenCalled()
     expect(m.resetRoom).toHaveBeenCalled()
     expect(m.cancelRoomSync).toHaveBeenCalled() // a pending save must not outlive the account
+  })
+
+  it('disarms the hotbar sync and resets the bar on logout', () => {
+    teardownSession()
+    expect(m.setHotbarSyncUser).toHaveBeenCalledWith(null)
+    expect(m.resetHotbar).toHaveBeenCalled()
   })
 
   it('clears persisted plans on logout', () => {

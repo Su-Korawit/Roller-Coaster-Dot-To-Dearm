@@ -14,12 +14,13 @@
 //   ดังนั้นจริง ๆ รวม 3 โมดูล (ไม่ใช่ 4) — Select ยังอยู่ไฟล์เดิม
 // ============================================================================
 import { setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
-import { refs } from './db'
+import { refs, shapes } from './db'
 import { useTaskStore } from '../stores/useTaskStore'
 import { useRoadmapStore } from '../stores/useRoadmapStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useWorldStore } from '../stores/useWorldStore'
 import { useSchoolStore } from '../stores/useSchoolStore'
+import { useHotbarStore } from '../stores/useHotbarStore'
 
 /**
  * Build a debounced Firestore sync for a single Zustand store.
@@ -253,6 +254,19 @@ const schoolSync = createFirestoreSync({
 export const hydrateSchoolFromFirestore = schoolSync.hydrate
 export const setSchoolSyncUser = schoolSync.setSyncUser
 export const disarmSchoolSync = () => schoolSync.setSyncUser(null)
+
+// ── Hotbar slot order → users/{uid}.hotbar (accounts; guests use localStorage only) ──
+const hotbarSync = createFirestoreSync({
+  store: useHotbarStore,
+  logName: 'syncHotbar',
+  toDoc: ({ slots }) => ({ hotbar: slots }),
+  fromDoc: (data) => (Array.isArray(data.hotbar) ? { slots: shapes.hotbar(data) } : {}),
+  changed: (s, p) => s.slots !== p.slots,
+  needsSeed: (data) => !Array.isArray(data.hotbar),
+})
+
+export const hydrateHotbarFromFirestore = hotbarSync.hydrate
+export const setHotbarSyncUser = hotbarSync.setSyncUser
 
 // Back to the signed-in user's own world. `mapKey` (optional) switches the map key in the same
 // state update, so presence never briefly joins the user's own world under the previous map's key.

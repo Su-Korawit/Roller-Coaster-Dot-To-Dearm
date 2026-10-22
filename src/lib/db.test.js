@@ -336,3 +336,14 @@ describe('study room refs/cols/shapes', () => {
     expect(shapes.roomLayout(doc)).toEqual({ tier: 1, theme: 'cafe', petId: 'cat', placed: [{ itemId: 'desk_basic', x: 8, y: 16 }] })
   })
 })
+
+describe('shapes.hotbar', () => {
+  it('repairs a missing or corrupt hotbar into 7 unique ids including warp', () => {
+    for (const d of [undefined, {}, { hotbar: ['x'] }, { hotbar: 'nope' }]) {
+      const out = shapes.hotbar(d)
+      expect(out).toHaveLength(7)
+      expect(new Set(out).size).toBe(7)
+      expect(out).toContain('warp')
+    }
+  })
+})

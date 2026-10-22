@@ -15,6 +15,7 @@ vi.mock('./db', () => ({
     user: (uid) => ({ _path: `users/${uid}` }),
     roadmapSheet: (sheetId) => ({ _path: `roadmapSheets/${sheetId}` }),
   },
+  shapes: { hotbar: (d) => d.hotbar },
 }))
 
 // Stub localStorage so Zustand persist doesn't blow up
@@ -36,7 +37,10 @@ const {
   hydrateRoadmapSheetFromFirestore,
   armRoadmapSheetSync,
   disarmRoadmapSheetSync,
+  hydrateHotbarFromFirestore,
+  setHotbarSyncUser,
 } = await import('./syncManager')
+const { useHotbarStore } = await import('../stores/useHotbarStore')
 
 describe('SyncManager (roadmap sheet instance)', () => {
   beforeEach(() => {
@@ -263,5 +267,41 @@ describe('returnHome', () => {
   it('does nothing without a user', async () => {
     await returnHome(null, 'room')
     expect(useWorldStore.getState()).toMatchObject({ currentMapOwnerUid: 'uid-friend', currentMapKey: 'school_hub' })
+  })
+})
+
+describe('hotbar sync', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    setDoc.mockReset(); getDoc.mockReset()
+    setDoc.mockResolvedValue(undefined)
+    useHotbarStore.getState().reset()
+  })
+
+  it('hydrate lets the cloud bar win', async () => {
+    const cloud = ['tasks', 'warp', 'focus', 'letter', 'shop', 'wardrobe', 'calendar']
+    getDoc.mockResolvedValue({ exists: () => true, data: () => ({ hotbar: cloud }) })
+    await hydrateHotbarFromFirestore('u1')
+    expect(useHotbarStore.getState().slots).toEqual(cloud)
+    expect(setDoc).not.toHaveBeenCalled()
+  })
+
+  it('hydrate seeds the cloud from the local bar when the account has none', async () => {
+    getDoc.mockResolvedValue({ exists: () => true, data: () => ({}) })
+    await hydrateHotbarFromFirestore('u1')
+    expect(setDoc).toHaveBeenCalledWith({ _path: 'users/u1' }, { hotbar: useHotbarStore.getState().slots }, { merge: true })
+  })
+
+  it('three quick swaps become one debounced write', async () => {
+    getDoc.mockResolvedValue({ exists: () => true, data: () => ({ hotbar: useHotbarStore.getState().slots }) })
+    await hydrateHotbarFromFirestore('u1')
+    setHotbarSyncUser('u1')
+    useHotbarStore.getState().swap(0, 1)
+    useHotbarStore.getState().swap(1, 2)
+    useHotbarStore.getState().swap(2, 3)
+    await vi.advanceTimersByTimeAsync(1200)
+    expect(setDoc).toHaveBeenCalledTimes(1)
+    setHotbarSyncUser(null)
+    vi.useRealTimers()
   })
 })
