@@ -8,6 +8,7 @@ import { chooseRoom, SCHOOL_HUB_MAP_KEY } from '../lib/schoolRoom'
 import { useWorldStore } from '../stores/useWorldStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useSchoolWorldStore } from '../stores/useSchoolWorldStore'
+import { useLeavesStore } from '../stores/useLeavesStore'
 import { returnHome } from '../lib/syncManager'
 import { startFocus, checkInFocus, endFocus } from './focus'
 import { celebrateXp, fxError } from './fx'
@@ -113,6 +114,9 @@ export const confirmFocus = () =>
 
 export const finishFocus = () =>
   runFocus(endFocus, (r) => {
+    // The server credits Leaves for this session too; keep the room counter in step.
+    const { leaves } = useLeavesStore.getState()
+    useLeavesStore.getState().applyServer({ leaves: leaves + Number(r.leaves ?? 0) })
     const before = useUserStore.getState().focusXp
     useUserStore.getState().addFocusXp(r.xpGained ?? 0)
     celebrateXp({ before, gained: r.xpGained })

@@ -22,10 +22,14 @@ export const useRoomStore = create((set, get) => ({
 
   hydrate: async (uid) => {
     const [catalogSnap, roomSnap] = await Promise.all([getDocs(cols.roomCatalog), getDoc(refs.room(uid))])
-    set({
-      catalog: Object.fromEntries(catalogSnap.docs.map((d) => [d.id, d.data()])),
-      ...(roomSnap.exists() ? { layout: shapes.roomLayout(roomSnap.data()) } : {}),
-    })
+    const catalog = Object.fromEntries(catalogSnap.docs.map((d) => [d.id, d.data()]))
+    const saved = roomSnap.exists() ? shapes.roomLayout(roomSnap.data()) : null
+    // Items removed from the catalog cannot be drawn or validated; drop them so the room
+    // stays editable (skipped when the catalog is empty, i.e. not seeded yet).
+    const layout = saved && Object.keys(catalog).length > 0
+      ? { ...saved, placed: saved.placed.filter((p) => catalog[p?.itemId]) }
+      : saved
+    set({ catalog, ...(layout ? { layout } : {}) })
   },
 
   reset: () => set({ layout: STARTER_LAYOUT, catalog: ROOM_CATALOG, decorating: false, selected: null, lastError: null }),
@@ -64,9 +68,14 @@ export const useRoomStore = create((set, get) => ({
   },
 
   pickUp: (index) => {
-    const { layout } = get()
+    const { layout, catalog } = get()
     if (index < 0 || index >= layout.placed.length) return
-    set({ layout: { ...layout, placed: layout.placed.filter((_, i) => i !== index) } })
+    const target = layout.placed[index]
+    // Whatever stands on a desk goes with it (a slot item without its desk is invalid).
+    const onDesk = catalog[target.itemId]?.kind === 'desk'
+      ? (p) => catalog[p.itemId]?.deskSlot && p.x === target.x && p.y === target.y
+      : () => false
+    set({ layout: { ...layout, placed: layout.placed.filter((p, i) => i !== index && !onDesk(p)) } })
     roomSync.schedule()
   },
 }))

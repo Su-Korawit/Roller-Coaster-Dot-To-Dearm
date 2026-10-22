@@ -45,7 +45,9 @@ service cloud.firestore {
 
     match /users/{uid} {
       allow get, list: if isSignedIn();
-      allow create: if isSignedIn() && (request.auth.uid == uid || isSuperAdmin());
+      // A new doc may not seed the Functions-owned study-room fields.
+      allow create: if isSignedIn() && (request.auth.uid == uid || isSuperAdmin()) &&
+        !request.resource.data.keys().hasAny(['leaves', 'roomInventory', 'welcomePack']);
       // Owners may update their own doc freely EXCEPT the `coins`,
       // `entitlements`, `fileBagUsageBytes`, `focusXp`, `teacherSchoolId`, `leaves`,
       // `roomInventory` and `welcomePack` fields — those are

@@ -10,7 +10,6 @@ vi.mock('../lib/schoolRoom', () => ({
   SCHOOL_HUB_MAP_KEY: 'school_hub',
   chooseRoom: (...a) => chooseRoom(...a),
 }))
-vi.mock('../stores/useFarmStore', () => ({ useFarmStore: { setState: vi.fn() } }))
 const returnHome = vi.fn()
 vi.mock('../lib/syncManager', () => ({ returnHome: (...a) => returnHome(...a) }))
 const playSound = vi.fn()
@@ -130,6 +129,14 @@ describe('focus actions mirror the server answer', () => {
     focusApi.endFocus.mockResolvedValue({ verifiedMs: 30 * 60000, xpGained: 5 })
     await finishFocus()
     expect(useSchoolWorldStore.getState().focus).toMatchObject({ status: 'idle', xpThisSession: 30, verifiedMs: 30 * 60000 })
+  })
+
+  it('ending a session at the School Hub seat adds the Leaves it earned to the room counter', async () => {
+    const { useLeavesStore } = await import('../stores/useLeavesStore')
+    useLeavesStore.setState({ leaves: 10 })
+    focusApi.endFocus.mockResolvedValue({ verifiedMs: 25 * 60000, xpGained: 0, leaves: 27 })
+    await finishFocus()
+    expect(useLeavesStore.getState().leaves).toBe(37)
   })
 
   it('resuming keeps the session XP; a fresh start resets it', async () => {

@@ -214,6 +214,20 @@ describe('Study Room focus: modes, wither and Leaves (real handlers, emulator)',
     expect(await start({ mode: 'flexible', plannedMin: 10 })).toMatchObject({ resumed: true, mode: 'strict', plannedMin: 50 })
   })
 
+  it('resuming a strict session (tab closed and reopened) withers it: the full reward is not kept', async () => {
+    await start({ mode: 'strict', plannedMin: 25 })
+    at(5)
+    expect(await start({ mode: 'strict', plannedMin: 25 })).toMatchObject({ resumed: true, withered: true })
+    at(25)
+    expect(await call(fns.endFocus)).toMatchObject({ leaves: 0, withered: true, tree: 'withered' })
+  })
+
+  it('resuming a flexible session keeps it healthy', async () => {
+    await start({ mode: 'flexible', plannedMin: 25 })
+    at(5)
+    expect(await start({ mode: 'flexible', plannedMin: 25 })).toMatchObject({ resumed: true, withered: false })
+  })
+
   it('a completed flexible 25-minute session credits 27 Leaves and a shrub', async () => {
     await start({ mode: 'flexible', plannedMin: 25 })
     at(25)

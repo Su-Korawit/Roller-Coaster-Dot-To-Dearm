@@ -8,7 +8,7 @@ import { TREE_LABELS } from '../../room/messages'
 
 const PRESETS = [25, 50, 90]
 const MODES = [
-  { id: 'strict', label: 'เข้มงวด', hint: 'ออกจากหน้านี้เกิน 10 วินาที ต้นไม้เหี่ยว · ได้ใบไม้ ×1.5' },
+  { id: 'strict', label: 'เข้มงวด', hint: 'ออกจากหน้านี้หรือล็อกจอเกิน 10 วินาที ต้นไม้เหี่ยว · ได้ใบไม้ ×1.5' },
   { id: 'flexible', label: 'ยืดหยุ่น', hint: 'พักได้ไม่เกิน 2 นาที · ได้ใบไม้ ×1' },
 ]
 

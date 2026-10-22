@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import TreeSprite from './TreeSprite'
 import { useFocusStore } from '../../stores/useFocusStore'
 import { createFocusGuard } from '../../room/focusGuard'
-import { focusProgress, growthStage } from '../../room/focusProgress'
+import { focusProgress, growthStage, isDue } from '../../room/focusProgress'
 import { treeFor } from '../../room/focusRules'
 import { CHECKIN_PROMPT_MS } from '../../services/focus'
 import { Z_HUD } from '../../constants/zIndex'
@@ -30,8 +30,31 @@ export default function FocusHud() {
 
   useEffect(() => {
     if (!running) return undefined
-    const guard = createFocusGuard({ mode, onWither: (why) => useFocusStore.getState().abandon(why).catch(() => {}) })
-    const onVisibility = () => (document.visibilityState === 'hidden' ? guard.onHidden() : guard.onVisible())
+    // The guard fires once, so a failed abandon (offline) is retried here instead.
+    const settleWithered = async (why) => {
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        try {
+          await useFocusStore.getState().abandon(why)
+          return
+        } catch {
+          await new Promise((r) => setTimeout(r, 3000))
+          if (useFocusStore.getState().status !== 'running') return
+        }
+      }
+    }
+    const guard = createFocusGuard({ mode, onWither: settleWithered })
+    // Strict only: keep the screen awake so an auto-lock is not mistaken for leaving.
+    let lock = null
+    const takeLock = () => {
+      if (mode !== 'strict' || !navigator.wakeLock) return
+      navigator.wakeLock.request('screen').then((l) => { lock = l }).catch(() => {})
+    }
+    takeLock()
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') return guard.onHidden()
+      guard.onVisible()
+      takeLock()
+    }
     document.addEventListener('visibilitychange', onVisibility)
     const timer = setInterval(() => {
       guard.tick()
@@ -40,6 +63,7 @@ export default function FocusHud() {
     return () => {
       document.removeEventListener('visibilitychange', onVisibility)
       clearInterval(timer)
+      lock?.release?.().catch(() => {})
     }
   }, [running, mode])
 
@@ -47,19 +71,20 @@ export default function FocusHud() {
 
   // The planned time is up: settle the session once.
   useEffect(() => {
-    if (running && progress >= 1 && !ending.current) {
+    if (running && isDue({ startedAt, plannedMin, now }) && !ending.current) {
       ending.current = true
-      useFocusStore.getState().end().catch(() => { ending.current = false })
+      // A failed end (offline) is retried on a later tick; the store resets itself when the
+      // server has no such session any more.
+      useFocusStore.getState().end().catch(() => {}).finally(() => { ending.current = false })
     }
-    if (!running) ending.current = false
-  }, [running, progress])
+  }, [running, startedAt, plannedMin, now])
 
   if (!running) return null
 
   const needsCheckIn = now - lastCheckInAt >= CHECKIN_PROMPT_MS
 
   return (
-    <div className="absolute top-20 right-4 px-slab flex flex-col items-center gap-2 p-3" style={{ zIndex: Z_HUD }} aria-live="polite">
+    <div className="absolute top-20 right-4 px-slab flex flex-col items-center gap-2 p-3" style={{ zIndex: Z_HUD }}>
       <TreeSprite species={treeFor({ plannedMin, withered: false })} stage={growthStage(progress)} scale={2} />
       <span className="pixel-font text-lg text-ink">{clock(plannedMin * 60000 - (now - startedAt))}</span>
       <span className="text-xs font-bold text-ink-soft">{MODE_LABELS[mode]}</span>

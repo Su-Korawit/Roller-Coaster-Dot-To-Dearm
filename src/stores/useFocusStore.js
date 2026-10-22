@@ -4,6 +4,8 @@ import { useLeavesStore } from './useLeavesStore'
 
 const IDLE = { status: 'idle', mode: null, plannedMin: null, startedAt: null, lastCheckInAt: null, verifiedMs: 0, result: null, witherReason: null }
 
+const isNoActive = (e) => /NO_ACTIVE_SESSION/.test(String(e?.message ?? '')) || e?.code === 'functions/failed-precondition'
+
 // Client view of the one running focus session. The server owns time and credit; this store
 // only remembers what it said and applies the finished result to the Leaves balance.
 export const useFocusStore = create((set, get) => {
@@ -13,12 +15,32 @@ export const useFocusStore = create((set, get) => {
     return r
   }
 
+  // Settles the session at most once at a time: `settling` is set synchronously, so an
+  // end() racing an abandon() (or two auto-ends) never sends a second call. A failed call
+  // goes back to running so it can be retried; a session the server no longer has is idle.
+  const settle = async (call, witherReason) => {
+    if (get().status !== 'running') return null
+    set({ status: 'settling' })
+    try {
+      return finish(await call(), witherReason)
+    } catch (e) {
+      if (isNoActive(e)) {
+        set({ ...IDLE })
+        return null
+      }
+      set({ status: 'running' })
+      throw e
+    }
+  }
+
   return {
     ...IDLE,
 
     start: async ({ mode, plannedMin } = {}) => {
       const r = await startFocus({ mode, plannedMin })
       set({ ...IDLE, status: 'running', mode: r.mode, plannedMin: r.plannedMin, startedAt: r.startedAt, lastCheckInAt: r.lastCheckInAt, verifiedMs: r.verifiedMs ?? 0 })
+      // A resumed Strict session has already withered on the server: show the outcome.
+      if (r.withered) await get().abandon('hidden')
       return r
     },
 
@@ -31,13 +53,10 @@ export const useFocusStore = create((set, get) => {
       return r
     },
 
-    end: async () => finish(await endFocus()),
+    end: () => settle(endFocus, null),
 
     // reason: 'hidden' (Strict, left the page) | 'away' (Flexible, away too long) — for the explanation.
-    abandon: async (reason = null) => {
-      if (get().status === 'idle') return null
-      return finish(await abandonFocus(), reason)
-    },
+    abandon: (reason = null) => settle(abandonFocus, reason),
 
     reset: () => set({ ...IDLE }),
   }

@@ -129,6 +129,41 @@ describe('useRoomStore.place / pickUp', () => {
   })
 })
 
+describe('useRoomStore with a desk and a removed catalog item (review fixes)', () => {
+  const deskCatalog = {
+    ...catalog,
+    desk_basic: { kind: 'desk', footprint: [4, 2] },
+    lamp_desk: { kind: 'decor', footprint: [1, 1], deskSlot: true },
+  }
+  beforeEach(() => {
+    useLeavesStore.setState({ inventory: { chair_basic: 2, theme_minimal: 1, desk_basic: 1, lamp_desk: 1 } })
+    useRoomStore.setState({
+      catalog: deskCatalog,
+      layout: { tier: 0, theme: 'minimal', petId: null, placed: [{ itemId: 'desk_basic', x: 32, y: 32 }, { itemId: 'lamp_desk', x: 32, y: 32, slot: 'left' }] },
+    })
+  })
+
+  it('picking up the desk also picks up what stands on it, so the room stays editable', () => {
+    useRoomStore.getState().pickUp(0)
+    expect(useRoomStore.getState().layout.placed).toEqual([])
+    expect(useRoomStore.getState().place('desk_basic', 64, 64)).toBe(true)
+  })
+
+  it('hydrate drops layout entries whose catalog item no longer exists', async () => {
+    m.getDocs.mockResolvedValue({ docs: Object.entries(deskCatalog).map(([id, d]) => ({ id, data: () => d })) })
+    m.getDoc.mockResolvedValue({ exists: () => true, data: () => ({ tier: 0, theme: 'minimal', placed: [{ itemId: 'chair_basic', x: 8, y: 8 }, { itemId: 'gone_item', x: 48, y: 48 }] }) })
+    await useRoomStore.getState().hydrate('u1')
+    expect(useRoomStore.getState().layout.placed).toEqual([{ itemId: 'chair_basic', x: 8, y: 8 }])
+  })
+
+  it('hydrate keeps everything when the catalog is empty (not seeded yet)', async () => {
+    m.getDocs.mockResolvedValue({ docs: [] })
+    m.getDoc.mockResolvedValue({ exists: () => true, data: () => ({ tier: 0, theme: 'minimal', placed: [{ itemId: 'gone_item', x: 48, y: 48 }] }) })
+    await useRoomStore.getState().hydrate('u1')
+    expect(useRoomStore.getState().layout.placed).toHaveLength(1)
+  })
+})
+
 describe('useRoomStore.hydrate', () => {
   it('loads the catalog and the saved layout', async () => {
     m.getDocs.mockResolvedValue({ docs: [{ id: 'chair_basic', data: () => catalog.chair_basic }] })
@@ -188,7 +223,52 @@ describe('useFocusStore', () => {
   })
 })
 
+describe('useFocusStore settling (review fixes)', () => {
+  beforeEach(() => useFocusStore.getState().reset())
+  const running = (mode = 'strict') => useFocusStore.setState({ status: 'running', mode, plannedMin: 25, startedAt: 0 })
+
+  it('end after abandon started does nothing: only one settle call reaches the server', async () => {
+    running()
+    let release
+    m.abandonFocus.mockReturnValue(new Promise((r) => { release = r }))
+    const first = useFocusStore.getState().abandon('hidden')
+    expect(await useFocusStore.getState().end()).toBeNull()
+    expect(m.endFocus).not.toHaveBeenCalled()
+    release({ ok: true, leaves: 0, tree: 'withered', withered: true })
+    await first
+    expect(useFocusStore.getState().status).toBe('withered')
+  })
+
+  it('a failed settle returns to running so it can be retried', async () => {
+    running('flexible')
+    m.endFocus.mockRejectedValueOnce(new Error('offline'))
+    await expect(useFocusStore.getState().end()).rejects.toThrow('offline')
+    expect(useFocusStore.getState().status).toBe('running')
+  })
+
+  it('NO_ACTIVE_SESSION on end resets to idle instead of freezing the HUD', async () => {
+    running('flexible')
+    m.endFocus.mockRejectedValueOnce(Object.assign(new Error('NO_ACTIVE_SESSION'), { code: 'functions/failed-precondition' }))
+    expect(await useFocusStore.getState().end()).toBeNull()
+    expect(useFocusStore.getState().status).toBe('idle')
+  })
+
+  it('starting onto a resumed strict session settles it as withered', async () => {
+    m.startFocus.mockResolvedValue({ ok: true, resumed: true, withered: true, mode: 'strict', plannedMin: 25, startedAt: 1, lastCheckInAt: 1, verifiedMs: 0 })
+    m.abandonFocus.mockResolvedValue({ ok: true, leaves: 0, tree: 'withered', withered: true })
+    await useFocusStore.getState().start({ mode: 'strict', plannedMin: 25 })
+    expect(m.abandonFocus).toHaveBeenCalled()
+    expect(useFocusStore.getState().status).toBe('withered')
+  })
+})
+
 describe('focusProgress', () => {
+  it('is only due for auto-end a short grace after the planned time (clock skew)', async () => {
+    const { isDue } = await import('../room/focusProgress')
+    expect(isDue({ startedAt: 0, plannedMin: 10, now: 600000 })).toBe(false)
+    expect(isDue({ startedAt: 0, plannedMin: 10, now: 603000 })).toBe(true)
+  })
+
   it('is elapsed over planned, clamped to 0..1, from timestamps', () => {
     expect(focusProgress({ startedAt: 0, plannedMin: 10, now: 0 })).toBe(0)
     expect(focusProgress({ startedAt: 0, plannedMin: 10, now: 300000 })).toBe(0.5)

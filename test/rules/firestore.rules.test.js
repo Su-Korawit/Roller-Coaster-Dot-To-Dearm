@@ -535,6 +535,14 @@ describe('focus collections + focusXp (ADR 0018)', () => {
     await assertFails(updateDoc(doc(alice, 'users/alice'), { welcomePack: 'v2' }))
   })
 
+  it('BLOCKS a new account from creating its user doc with Leaves, inventory or a welcome-pack flag', async () => {
+    const carol = testEnv.authenticatedContext('carol').firestore()
+    await assertFails(setDoc(doc(carol, 'users/carol'), { uid: 'carol', leaves: 1000000 }))
+    await assertFails(setDoc(doc(carol, 'users/carol'), { uid: 'carol', roomInventory: { laptop: 60 } }))
+    await assertFails(setDoc(doc(carol, 'users/carol'), { uid: 'carol', welcomePack: 'v2' }))
+    await assertSucceeds(setDoc(doc(carol, 'users/carol'), { uid: 'carol', mbti: 'INTJ' }))
+  })
+
   it('BLOCKS every client write to focusActive / focusDaily / focusSessions', async () => {
     const alice = testEnv.authenticatedContext('alice').firestore()
     await assertFails(setDoc(doc(alice, 'focusActive/alice'), { verifiedMs: 99999999 }))

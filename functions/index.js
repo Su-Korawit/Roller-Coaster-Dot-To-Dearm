@@ -446,8 +446,11 @@ exports.startFocus = onCall(async (req) => {
     if (activeSnap.exists) {
       const a = activeSnap.data()
       if (nowMs - a.lastCheckInAt <= CHECKIN_WINDOW_MS) {
-        // Idempotent: a second tab / a reload resumes the running session.
-        return { ok: true, resumed: true, startedAt: a.startedAt, lastCheckInAt: a.lastCheckInAt, verifiedMs: a.verifiedMs ?? 0, temperament: a.temperament ?? null, mode: a.mode ?? 'flexible', plannedMin: a.plannedMin ?? 25 }
+        // Idempotent: a second tab / a reload resumes the running session. A Strict session
+        // cannot survive that (the page was left, and closing the tab never reports it), so
+        // it withers here — otherwise closing the tab and coming back would keep the reward.
+        if (a.mode === 'strict' && !a.withered) tx.update(activeRef, { withered: true })
+        return { ok: true, resumed: true, withered: a.mode === 'strict' ? true : (a.withered ?? false), startedAt: a.startedAt, lastCheckInAt: a.lastCheckInAt, verifiedMs: a.verifiedMs ?? 0, temperament: a.temperament ?? null, mode: a.mode ?? 'flexible', plannedMin: a.plannedMin ?? 25 }
       }
       // Stale: close it with nothing extra credited, then start fresh.
       tx.set(db.collection('focusSessions').doc(), {
