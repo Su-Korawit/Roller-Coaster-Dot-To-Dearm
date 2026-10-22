@@ -22,12 +22,12 @@ export default function SlipUploadButton({ onUpload, disabled }) {
       <button
         onClick={() => inputRef.current?.click()}
         disabled={disabled}
-        className="neo-btn rpg-btn-primary pixel-font flex items-center gap-2 rounded-lg px-3 py-2 text-[9px] disabled:cursor-not-allowed disabled:opacity-50"
+        className="px-btn rpg-btn-primary pixel-font flex items-center gap-2 rounded-lg px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
       >
         📷 อัปโหลดสลิป
       </button>
       {preview && (
-        <img src={preview} alt="Slip preview" className="h-24 w-24 rounded-lg border-2 border-edge object-cover" />
+        <img src={preview} alt="Slip preview" className="h-24 w-24 rounded-lg border-2 border-line object-cover" />
       )}
     </div>
   )

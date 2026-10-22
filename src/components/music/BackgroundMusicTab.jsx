@@ -5,7 +5,7 @@ export default function BackgroundMusicTab({ tracks, currentTrackIdx, isPlaying,
     <>
       <div className="px-4 py-3 border-b-2 border-ink flex items-center justify-between shrink-0">
         <div className="min-w-0 flex-1">
-          <p className="pixel-font text-[10px] text-ink">BACKGROUND MUSIC</p>
+          <p className="pixel-font text-xs text-ink">BACKGROUND MUSIC</p>
           {isPlaying && (
             <p className="thai-font text-xs text-brand-strong mt-0.5 truncate">
               {tracks[currentTrackIdx].title}
@@ -15,7 +15,7 @@ export default function BackgroundMusicTab({ tracks, currentTrackIdx, isPlaying,
         <button
           onClick={onTogglePlay}
           aria-label={isPlaying ? 'หยุดเพลง' : 'เล่นเพลง'}
-          className="ml-3 shrink-0 neo-btn w-9 h-9 rounded-lg bg-brand-soft flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          className="ml-3 shrink-0 px-btn w-9 h-9 rounded-lg bg-brand-soft flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
           <span aria-hidden="true">{isPlaying ? <Pause size={14} strokeWidth={2.5}/> : <Play size={14} strokeWidth={2.5}/>}</span>
         </button>

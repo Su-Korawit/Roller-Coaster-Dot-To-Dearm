@@ -9,7 +9,7 @@ const STYLES = {
 export default function PaymentStatusBadge({ status }) {
   const { label, className } = STYLES[status] ?? STYLES.WAITING_PAYMENT
   return (
-    <span className={`pixel-font inline-block rounded-md border-2 px-2 py-1 text-[8px] leading-none ${className}`}>
+    <span className={`pixel-font inline-block rounded-md border-2 px-2 py-1 text-xs leading-none ${className}`}>
       {label}
     </span>
   )

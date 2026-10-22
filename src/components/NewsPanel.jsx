@@ -82,7 +82,7 @@ function ShareSheet({ item, onClose }) {
  {chats.length === 0 ? (
  <div className="flex flex-col items-center gap-2 py-8 opacity-50">
  <span className="text-3xl">💬</span>
- <p className="pixel-font text-[7px] text-ink-soft text-center leading-relaxed">
+ <p className="pixel-font text-xs text-ink-soft text-center leading-relaxed">
  ยังไม่มีการสนทนา
  </p>
  </div>
@@ -104,7 +104,7 @@ function ShareSheet({ item, onClose }) {
  : <Gamepad2 size={16} strokeWidth={2.5} className="text-ink" aria-hidden="true" />}
  </div>
  <div className="flex-1 min-w-0">
- <p className="pixel-font text-[8px] text-ink truncate">
+ <p className="pixel-font text-xs text-ink truncate">
  {other?.displayName ?? '...'}
  </p>
  <p
@@ -167,7 +167,7 @@ function AddUpdateSheet({ onClose }) {
  <button
  key={key}
  onClick={() => setType(key)}
- className={`px-3 py-1 rounded-lg text-[11px] font-semibold transition-all ${
+ className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
  type === key ? t.color + ' ring-2 ring-offset-1 ring-brand/30' : 'bg-brand-soft text-ink-soft'
  }`}
  >
@@ -232,10 +232,10 @@ function UpdateDetailSheet({ update, onClose }) {
  )}
  <div className="px-5 pt-4 pb-2">
  <div className="flex items-center gap-2 mb-2">
- <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${badge.color}`}>
+ <span className={`px-2 py-0.5 rounded-md text-xs font-semibold ${badge.color}`}>
  {badge.label}
  </span>
- <span className="text-[10px] text-ink-soft">
+ <span className="text-xs text-ink-soft">
  {new Date(update._ts).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
  </span>
  </div>
@@ -318,7 +318,7 @@ export default function NewsPanel({ onClose }) {
  <button
  onClick={onClose}
  aria-label="ปิด"
- className="neo-btn w-9 h-9 flex items-center justify-center rounded-lg bg-surface text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+ className="px-btn w-9 h-9 flex items-center justify-center rounded-lg bg-paper text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
  >
  <X size={16} strokeWidth={2.5} aria-hidden="true" />
  </button>
@@ -334,7 +334,7 @@ export default function NewsPanel({ onClose }) {
  <button
  key={tab.key}
  onClick={() => setActiveTab(tab.key)}
- className={`flex-1 py-2.5 pixel-font text-[10px] transition-colors relative ${
+ className={`flex-1 py-2.5 pixel-font text-xs transition-colors relative ${
  activeTab === tab.key
  ? 'text-brand-strong'
  : 'text-ink-soft'
@@ -367,7 +367,7 @@ export default function NewsPanel({ onClose }) {
  }`}
  >
  <span className="text-[13px] leading-none">{group.icon}</span>
- <span className="pixel-font text-[8px] whitespace-nowrap">{group.label}</span>
+ <span className="pixel-font text-xs whitespace-nowrap">{group.label}</span>
  {owns && !isOpen && (
  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-accent-pink ring-2 ring-white" />
  )}
@@ -391,13 +391,13 @@ export default function NewsPanel({ onClose }) {
  key={it.slug}
  onClick={() => setCategory(it.slug)}
  aria-pressed={selected}
- className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all duration-150 active:scale-95 ${
+ className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all duration-150 active:scale-95 ${
  selected
  ? 'bg-brand-strong text-white'
  : 'bg-white text-ink-soft border border-ink/10 hover:border-brand hover:text-brand-strong'
  }`}
  >
- {selected && <span className="text-[9px] leading-none">✓</span>}
+ {selected && <span className="text-xs leading-none">✓</span>}
  {it.label}
  </button>
  )
@@ -408,9 +408,9 @@ export default function NewsPanel({ onClose }) {
 
  {/* Currently viewing — persistent orientation, even when groups are collapsed */}
  <div className="flex items-center gap-1.5 px-4 py-1.5 bg-paper/60 border-t border-ink/10">
- <span className="pixel-font text-[7px] text-ink-soft">กำลังดู</span>
+ <span className="pixel-font text-xs text-ink-soft">กำลังดู</span>
  <span
- className="text-[11px] font-semibold text-brand-strong"
+ className="text-xs font-semibold text-brand-strong"
  style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
  >
  {labelForCategory(category)}
@@ -444,7 +444,7 @@ export default function NewsPanel({ onClose }) {
  <p className="text-sm text-ink-soft text-center">{error}</p>
  <button
  onClick={fetchCamps}
- className="px-4 py-2 text-[11px] rounded-lg bg-brand-soft text-brand-strong hover:bg-brand-soft/80"
+ className="px-4 py-2 text-xs rounded-lg bg-brand-soft text-brand-strong hover:bg-brand-soft/80"
  >
  ลองใหม่
  </button>
@@ -477,7 +477,7 @@ export default function NewsPanel({ onClose }) {
  <div className="px-4 pt-3 pb-2">
  <div className="flex items-center gap-1 mb-1">
  <img src={camphubLogo} alt="" className="w-4 h-4 rounded object-contain" />
- <span className="text-[10px] text-brand-strong font-semibold">CAMPHUB</span>
+ <span className="text-xs text-brand-strong font-semibold">CAMPHUB</span>
  </div>
  <p className="text-sm font-semibold text-ink leading-snug line-clamp-2">
  {camp.title}
@@ -495,7 +495,7 @@ export default function NewsPanel({ onClose }) {
  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-soft text-brand border border-brand/20 active:scale-95 transition-transform"
  >
  <MessageCircle size={13} strokeWidth={2} />
- <span className="pixel-font text-[7px]">Share to chat</span>
+ <span className="pixel-font text-xs">Share to chat</span>
  </button>
  </div>
  </div>
@@ -515,7 +515,7 @@ export default function NewsPanel({ onClose }) {
  className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-brand/30 text-brand active:scale-95 transition-transform"
  >
  <Plus size={16} strokeWidth={2.5} />
- <span className="pixel-font text-[8px]">เพิ่มอัปเดต</span>
+ <span className="pixel-font text-xs">เพิ่มอัปเดต</span>
  </button>
  )}
 
@@ -548,10 +548,10 @@ export default function NewsPanel({ onClose }) {
  )}
  <div className="px-4 pt-3 pb-2">
  <div className="flex items-center gap-2 mb-1.5">
- <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${badge.color}`}>
+ <span className={`px-2 py-0.5 rounded-md text-xs font-semibold ${badge.color}`}>
  {badge.label}
  </span>
- <span className="text-[10px] text-ink-soft">
+ <span className="text-xs text-ink-soft">
  {new Date(u._ts).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
  </span>
  </div>
@@ -568,7 +568,7 @@ export default function NewsPanel({ onClose }) {
  className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-danger/10 text-danger border border-danger/20 active:scale-95 transition-transform"
  >
  <Trash2 size={13} strokeWidth={2} />
- <span className="pixel-font text-[7px]">ลบ</span>
+ <span className="pixel-font text-xs">ลบ</span>
  </button>
  )}
  <button
@@ -576,7 +576,7 @@ export default function NewsPanel({ onClose }) {
  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-soft text-brand border border-brand/20 active:scale-95 transition-transform"
  >
  <MessageCircle size={13} strokeWidth={2} />
- <span className="pixel-font text-[7px]">Share to chat</span>
+ <span className="pixel-font text-xs">Share to chat</span>
  </button>
  </div>
  </div>

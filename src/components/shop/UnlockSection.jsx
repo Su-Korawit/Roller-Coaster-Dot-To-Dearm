@@ -34,8 +34,8 @@ export default function UnlockSection() {
   if (!catalogLoading && catalog.length === 0) return null
 
   return (
-    <div className="border-t-2 border-edge/40 bg-paper px-4 py-3">
-      <p className="pixel-font mb-2 text-[8px] text-ink/50">ปลดล็อกฟีเจอร์</p>
+    <div className="border-t-2 border-line/40 bg-paper px-4 py-3">
+      <p className="pixel-font mb-2 text-xs text-ink/50">ปลดล็อกฟีเจอร์</p>
       {catalogLoading ? (
         <p className="thai-font text-xs text-ink-soft py-2">กำลังโหลด...</p>
       ) : (
@@ -44,12 +44,12 @@ export default function UnlockSection() {
             const isOwned = Boolean(entitlements[item.id])
             const affordable = coins >= (item.priceCoins ?? 0)
             return (
-              <div key={item.id} className="neo-card flex items-center gap-3 p-3" data-testid="unlock-item">
+              <div key={item.id} className="px-card flex items-center gap-3 p-3" data-testid="unlock-item">
                 <Lock size={16} className="text-brand-strong shrink-0" aria-hidden="true" />
                 <span className="flex-1 min-w-0">
                   <span className="thai-font text-sm text-ink block truncate">{item.name}</span>
                   {item.description && (
-                    <span className="thai-font text-[11px] text-ink-soft block truncate">{item.description}</span>
+                    <span className="thai-font text-xs text-ink-soft block truncate">{item.description}</span>
                   )}
                 </span>
                 {isOwned ? (
@@ -60,8 +60,8 @@ export default function UnlockSection() {
                   <button
                     onClick={() => handleBuy(item)}
                     disabled={!affordable}
-                    className={`neo-btn rounded-lg px-3 py-1.5 pixel-font text-[9px] flex items-center gap-1.5 shrink-0 ${
-                      affordable ? 'rpg-btn-primary' : 'bg-surface text-ink-soft opacity-60'
+                    className={`px-btn rounded-lg px-3 py-1.5 pixel-font text-xs flex items-center gap-1.5 shrink-0 ${
+                      affordable ? 'rpg-btn-primary' : 'bg-paper text-ink-soft opacity-60'
                     }`}
                   >
                     <CoinIcon size={12} />
