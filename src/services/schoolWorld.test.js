@@ -101,19 +101,19 @@ describe('enterSchoolHub', () => {
 
 describe('leaveSchoolHub', () => {
   it('clears hub state, returns the user home on the entry map and asks the game to load it', async () => {
-    useSchoolWorldStore.setState({ inHub: true, room: { ownerUid: 'x' }, entryMapKey: 'farm_entry' })
+    useSchoolWorldStore.setState({ inHub: true, room: { ownerUid: 'x' }, entryMapKey: 'room' })
     await leaveSchoolHub('me')
     const s = useSchoolWorldStore.getState()
     expect(s.inHub).toBe(false)
-    expect(s.mapChangeRequest.mapKey).toBe('farm_entry')
-    expect(returnHome).toHaveBeenCalledWith('me', 'farm_entry')
+    expect(s.mapChangeRequest.mapKey).toBe('room')
+    expect(returnHome).toHaveBeenCalledWith('me', 'room')
   })
 
-  it('falls back to test3 when the entry map is not known yet', async () => {
+  it('falls back to the room when the entry map is not known yet', async () => {
     useSchoolWorldStore.setState({ inHub: true, entryMapKey: null })
     await leaveSchoolHub('me')
-    expect(returnHome).toHaveBeenCalledWith('me', 'test3')
-    expect(useSchoolWorldStore.getState().mapChangeRequest.mapKey).toBe('test3')
+    expect(returnHome).toHaveBeenCalledWith('me', 'room')
+    expect(useSchoolWorldStore.getState().mapChangeRequest.mapKey).toBe('room')
   })
 })
 

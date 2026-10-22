@@ -31,7 +31,6 @@ const object = (key, file) => ({
 
 export const GAME_ASSETS = [
   // Tilemaps
-  { key: 'test3',  type: 'tilemapJSON', storagePath: 'maps/test3.json',  localPath: '/maps/test3.json' },
   { key: 'indoor', type: 'tilemapJSON', storagePath: 'maps/indoor.json', localPath: '/maps/indoor.json' },
   // v2: redrawn with the Soft Pixel tileset. The path is versioned so an old copy of the
   // Sprout-tileset map left in Storage can never be loaded together with the new tileset.
@@ -77,15 +76,6 @@ export const GAME_ASSETS = [
   object('Basic_Furniture', 'Basic_Furniture'),
   object('Chest', 'Chest'),
 
-  // Crops — 6×2 grid of 16px frames (turnip/carrot/potato/pumpkin stages)
-  {
-    key: 'crops',
-    type: 'spritesheet',
-    storagePath: 'rc/objects/Basic_Plants.png',
-    localPath: '/assets/sprites/Objects/Basic_Plants.png',
-    frameConfig: { frameWidth: 16, frameHeight: 16 },
-  },
-
   // Characters — one 48×48 spritesheet per MBTI type
   ...MBTI_TYPES.map((m) => ({
     key: m,
@@ -98,11 +88,10 @@ export const GAME_ASSETS = [
 
 // Keys each Phaser scene needs, so a scene only loads what it uses.
 export const GAME_SCENE_KEYS = [
-  'test3',
   'Grass', 'Water', 'Wooden_House', 'Wooden_House_Walls_Tilset',
   'Wooden_House_Roof_Tilset', 'Hills', 'Tilled_Dirt', 'Tilled_Dirt_v2',
   'Tilled_Dirt_Wide', 'Tilled_Dirt_Wide_v2', 'Fences',
-  'Wood_Bridge', 'Basic_Grass_Biom_things_1', 'crops',
+  'Wood_Bridge', 'Basic_Grass_Biom_things_1',
   ...MBTI_TYPES,
 ]
 

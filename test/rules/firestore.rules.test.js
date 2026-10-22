@@ -88,32 +88,38 @@ describe('section-scoped admin writes', () => {
   })
 })
 
-describe('Personal Map rules (maps/{ownerUid})', () => {
+describe('legacy Personal Map documents (maps/{ownerUid})', () => {
   beforeEach(async () => {
     await testEnv.withSecurityRulesDisabled(async (ctx) => {
-      const db = ctx.firestore()
-      await setDoc(doc(db, 'maps/alice'), { objects: [{ key: 'wood_bridge', x: 10, y: 20 }] })
+      await setDoc(doc(ctx.firestore(), 'maps/alice'), { objects: [{ key: 'wood_bridge', x: 10, y: 20 }] })
     })
   })
 
-  it('allows any signed-in user to read a Personal Map', async () => {
+  it('stays readable to signed-in users until the purge script removes it', async () => {
     const bob = testEnv.authenticatedContext('bob').firestore()
     await assertSucceeds(getDoc(doc(bob, 'maps/alice')))
   })
 
-  it('allows the owner to write their own Personal Map', async () => {
+  it('BLOCKS every client write, including the owner', async () => {
     const alice = testEnv.authenticatedContext('alice').firestore()
-    await assertSucceeds(setDoc(doc(alice, 'maps/alice'), { objects: [] }))
+    await assertFails(setDoc(doc(alice, 'maps/alice'), { objects: [] }))
+    await assertFails(updateDoc(doc(alice, 'maps/alice'), { objects: [] }))
+    await assertFails(deleteDoc(doc(alice, 'maps/alice')))
   })
 
-  it('BLOCKS a non-owner from writing another user Personal Map', async () => {
-    const bob = testEnv.authenticatedContext('bob').firestore()
-    await assertFails(setDoc(doc(bob, 'maps/alice'), { objects: [] }))
-  })
-
-  it('BLOCKS an unauthenticated user from reading a Personal Map', async () => {
+  it('BLOCKS an unauthenticated user from reading', async () => {
     const anon = testEnv.unauthenticatedContext().firestore()
     await assertFails(getDoc(doc(anon, 'maps/alice')))
+  })
+})
+
+describe('farm data collections are gone', () => {
+  it('denies everything on farmPlants / farmItems / farmShops, even to the super-admin', async () => {
+    const root = testEnv.authenticatedContext('IaltEhO0mPVfK3ng8npr4CdqnEE3').firestore()
+    for (const path of ['farmPlants/p1', 'farmItems/i1', 'farmShops/s1']) {
+      await assertFails(getDoc(doc(root, path)))
+      await assertFails(setDoc(doc(root, path), { name: 'x' }))
+    }
   })
 })
 

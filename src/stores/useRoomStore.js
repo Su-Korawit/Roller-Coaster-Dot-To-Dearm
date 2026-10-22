@@ -28,6 +28,7 @@ export const useRoomStore = create((set, get) => ({
     })
   },
 
+  reset: () => set({ layout: STARTER_LAYOUT, catalog: ROOM_CATALOG, decorating: false, selected: null, lastError: null }),
   setLayout: (layout) => set({ layout }),
   setDecorating: (decorating) => set({ decorating, ...(decorating ? {} : { selected: null, lastError: null }) }),
   selectItem: (selected) => set({ selected, lastError: null }),

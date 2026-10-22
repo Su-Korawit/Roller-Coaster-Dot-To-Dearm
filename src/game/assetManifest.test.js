@@ -16,15 +16,15 @@ describe('GAME_ASSETS storage paths', () => {
     expect(enfj.storagePath).toBe('rc/characters/ENFJ.png')
   })
 
-  it('the crops spritesheet uses the rc/objects/ prefix', () => {
-    const crops = GAME_ASSETS.find((a) => a.key === 'crops')
-    expect(crops.storagePath).toBe('rc/objects/Basic_Plants.png')
+  it('no longer ships the farm crops sheet or the Personal Map', () => {
+    expect(GAME_ASSETS.find((a) => a.key === 'crops')).toBeUndefined()
+    expect(GAME_ASSETS.find((a) => a.key === 'test3')).toBeUndefined()
   })
 })
 
 describe('localMapPath', () => {
   it('returns the public/ path for maps shipped with the repo', () => {
-    expect(localMapPath('test3')).toBe('/maps/test3.json')
+    expect(localMapPath('room')).toBe('/maps/room.json')
     expect(localMapPath('indoor')).toBe('/maps/indoor.json')
   })
 

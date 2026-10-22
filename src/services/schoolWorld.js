@@ -6,7 +6,6 @@ import { getDoc } from 'firebase/firestore'
 import { refs } from '../lib/db'
 import { chooseRoom, SCHOOL_HUB_MAP_KEY } from '../lib/schoolRoom'
 import { useWorldStore } from '../stores/useWorldStore'
-import { useFarmStore } from '../stores/useFarmStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useSchoolWorldStore } from '../stores/useSchoolWorldStore'
 import { returnHome } from '../lib/syncManager'
@@ -48,9 +47,7 @@ export async function enterSchoolHub(uid) {
     // Owner + map key flip together so presence joins exactly one room.
     useWorldStore.setState({
       currentMapOwnerUid: room.ownerUid, currentMapKey: room.mapKey,
-      objectsByMap: {}, mapObjects: [], editMode: false,
     })
-    useFarmStore.setState({ plotsByMap: {}, plots: {} })
     world().setEntered({ kind: room.kind, shard: room.shard, ownerUid: room.ownerUid, schoolId })
     playSound('open')
     world().requestMapChange(SCHOOL_HUB_MAP_KEY)
@@ -64,7 +61,7 @@ export async function enterSchoolHub(uid) {
 
 // Back to the student's own world. The game falls back to its entry map.
 export async function leaveSchoolHub(uid) {
-  const key = world().entryMapKey ?? 'test3'
+  const key = world().entryMapKey ?? 'room'
   world().setLeft()
   // returnHome flips owner + map key atomically (sync part), then the game loads the map.
   const home = uid ? returnHome(uid, key) : Promise.resolve()

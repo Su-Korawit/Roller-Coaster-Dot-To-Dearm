@@ -183,21 +183,15 @@ describe('refs.assetFolder', () => {
   })
 })
 
-describe('cols.farmPlants/farmItems/farmShops/mapConfigs/assetFolders', () => {
+describe('cols.mapConfigs/assetFolders', () => {
   it('are their respective collection refs', () => {
-    expect(cols.farmPlants).toEqual({ _col: 'farmPlants' })
-    expect(cols.farmItems).toEqual({ _col: 'farmItems' })
-    expect(cols.farmShops).toEqual({ _col: 'farmShops' })
     expect(cols.mapConfigs).toEqual({ _col: 'mapConfigs' })
     expect(cols.assetFolders).toEqual({ _col: 'assetFolders' })
   })
 })
 
-describe('refs.farmItem/farmPlant/farmShop/appUpdate', () => {
-  it('build their respective document refs', () => {
-    expect(refs.farmItem('item-1')).toEqual({ _path: 'farmItems/item-1' })
-    expect(refs.farmPlant('plant-1')).toEqual({ _path: 'farmPlants/plant-1' })
-    expect(refs.farmShop('shop-1')).toEqual({ _path: 'farmShops/shop-1' })
+describe('refs.appUpdate', () => {
+  it('builds its document ref', () => {
     expect(refs.appUpdate('update-1')).toEqual({ _path: 'appUpdates/update-1' })
   })
 })

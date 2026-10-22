@@ -9,7 +9,6 @@ import { useUserStore } from '../stores/useUserStore'
 import { mbtiColor } from '../constants/mbtiColors'
 import { Z_SHEET } from '../constants/zIndex'
 import ShopChatView from './shop/ShopChatView'
-import { visitMap } from '../lib/syncManager'
 import { useChatComposer } from '../hooks/useChatComposer'
 
 const GIFTS = [
@@ -193,7 +192,7 @@ function CreditModal({ msg, friendUser, onDone, onClose }) {
 }
 
 // ─── ChatWindowView ───────────────────────────────────────────────────────────
-function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
+function ChatWindowView({ user, onBack, onAdminContacted }) {
   const activeChat = useChatStore((s) => s.activeChat)
   const messages = useChatStore((s) => s.messages)
   const sendMessage = useChatStore((s) => s.sendMessage)
@@ -463,15 +462,6 @@ function ChatWindowView({ user, onBack, onAdminContacted, onVisitMap }) {
         >
           <Gift size={18} strokeWidth={2.5} className="text-warn" aria-hidden="true" />
         </button>
-        {!isAdminChat && otherUser?.uid && (
-          <button
-            onClick={() => onVisitMap?.(otherUser.uid)}
-            className="w-9 h-9 rounded-xl bg-brand-soft border-2 border-line/50 flex items-center justify-center active:scale-90 transition-transform shrink-0"
-            title={`เข้าแมพ ${otherUser.displayName || ''}`}
-          >
-            <Home size={18} strokeWidth={2.5} className="text-brand-strong" aria-hidden="true" />
-          </button>
-        )}
         <button
           onClick={() => alert('นัดหมาย — เร็วๆ นี้!')}
           className="w-9 h-9 rounded-xl bg-brand-soft border-2 border-line/50 flex items-center justify-center active:scale-90 transition-transform shrink-0"
@@ -880,10 +870,6 @@ export default function ChatPanel({ onClose, initialView = 'list', onAdminContac
               user={user}
               onBack={() => setView('list')}
               onAdminContacted={onAdminContacted}
-              onVisitMap={async (uid) => {
-                await visitMap(uid)
-                onClose()
-              }}
             />
           )}
         </div>

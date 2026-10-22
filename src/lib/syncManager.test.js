@@ -13,7 +13,6 @@ vi.mock('firebase/firestore', () => ({
 vi.mock('./db', () => ({
   refs: {
     user: (uid) => ({ _path: `users/${uid}` }),
-    map:  (uid) => ({ _path: `maps/${uid}` }),
     roadmapSheet: (sheetId) => ({ _path: `roadmapSheets/${sheetId}` }),
   },
 }))
@@ -32,11 +31,6 @@ const { useWorldStore } = await import('../stores/useWorldStore')
 const {
   syncTasksToFirestore,
   hydratePortfolioFromFirestore,
-  syncMapToFirestore,
-  hydrateMapFromFirestore,
-  armMapSync,
-  disarmMapSync,
-  visitMap,
   returnHome,
   pushRoadmapSheetToFirestore,
   hydrateRoadmapSheetFromFirestore,
@@ -246,212 +240,28 @@ describe('SyncManager (portfolio instance)', () => {
   })
 })
 
-describe('SyncManager (map instance)', () => {
+describe('returnHome', () => {
   beforeEach(() => {
-    setDoc.mockReset()
-    getDoc.mockReset()
+    useWorldStore.setState({ currentMapOwnerUid: 'uid-friend', currentMapKey: 'school_hub' })
   })
 
-  it('writes objectsByMap to maps/{uid} (not users/{uid}) with merge:true', async () => {
-    const objectsByMap = { test3: [{ key: 'wood_bridge', x: 100, y: 200 }] }
-    setDoc.mockResolvedValue(undefined)
-
-    await syncMapToFirestore('uid-123', objectsByMap)
-
-    expect(setDoc).toHaveBeenCalledWith(
-      { _path: 'maps/uid-123' },
-      { objectsByMap, mapUpdatedAt: { _type: 'serverTimestamp' } },
-      { merge: true },
-    )
-  })
-
-  it('does nothing when uid is null', async () => {
-    await syncMapToFirestore(null, {})
-    expect(setDoc).not.toHaveBeenCalled()
-  })
-
-  it('loads objectsByMap from maps/{uid} into the useWorldStore', async () => {
-    const cloudObjectsByMap = { test3: [{ key: 'grass_things', x: 50, y: 75 }] }
-    getDoc.mockResolvedValue({
-      exists: () => true,
-      data: () => ({ objectsByMap: cloudObjectsByMap }),
-    })
-
-    useWorldStore.setState({ objectsByMap: {} })
-
-    await hydrateMapFromFirestore('uid-123')
-
-    expect(useWorldStore.getState().objectsByMap).toEqual(cloudObjectsByMap)
-  })
-
-  it('back-compat: migrates old flat objects array into test3 slot', async () => {
-    const cloudObjects = [{ key: 'grass_things', x: 50, y: 75 }]
-    getDoc.mockResolvedValue({
-      exists: () => true,
-      data: () => ({ objects: cloudObjects }),
-    })
-
-    useWorldStore.setState({ objectsByMap: {} })
-
-    await hydrateMapFromFirestore('uid-123')
-
-    expect(useWorldStore.getState().objectsByMap).toEqual({ test3: cloudObjects })
-  })
-
-  it('leaves objectsByMap empty when the map doc has no objects field', async () => {
-    getDoc.mockResolvedValue({ exists: () => true, data: () => ({}) })
-
-    useWorldStore.setState({ objectsByMap: {} })
-
-    await hydrateMapFromFirestore('uid-123')
-
-    expect(useWorldStore.getState().objectsByMap).toEqual({})
-  })
-})
-
-describe('SyncManager (armMapSync / disarmMapSync)', () => {
-  beforeEach(() => {
-    setDoc.mockReset()
-    disarmMapSync()
-    useWorldStore.setState({
-      objectsByMap: {},
-      mapObjects: [],
-      currentMapOwnerUid: null,
-      currentMapKey: null,
-      editMode: false,
-      selectedItemKey: null,
-    })
-  })
-
-  it('debounces a write to maps/{uid} when objectsByMap changes on the owner\'s own map', async () => {
-    vi.useFakeTimers()
-    setDoc.mockResolvedValue(undefined)
-
-    useWorldStore.setState({ currentMapOwnerUid: 'uid-123', currentMapKey: 'test3' })
-    armMapSync('uid-123')
-
-    useWorldStore.getState().addObject({ key: 'wood_bridge', x: 10, y: 20 })
-
-    // Not yet — debounce hasn't fired
-    expect(setDoc).not.toHaveBeenCalled()
-
-    await vi.runAllTimersAsync()
-
-    expect(setDoc).toHaveBeenCalledWith(
-      { _path: 'maps/uid-123' },
-      expect.objectContaining({ objectsByMap: { test3: [{ key: 'wood_bridge', x: 10, y: 20 }] } }),
-      { merge: true },
-    )
-
-    vi.useRealTimers()
-  })
-
-  it('does not write when the signed-in user is viewing someone else\'s map', async () => {
-    vi.useFakeTimers()
-
-    // uid-123 is logged in but viewing uid-other's map
-    useWorldStore.setState({ currentMapOwnerUid: 'uid-other', currentMapKey: 'test3' })
-    armMapSync('uid-123')
-
-    useWorldStore.getState().addObject({ key: 'wood_bridge', x: 10, y: 20 })
-    await vi.runAllTimersAsync()
-
-    expect(setDoc).not.toHaveBeenCalled()
-
-    vi.useRealTimers()
-  })
-
-  it('stops writing after disarmMapSync is called', async () => {
-    vi.useFakeTimers()
-    setDoc.mockResolvedValue(undefined)
-
-    useWorldStore.setState({ currentMapOwnerUid: 'uid-123', currentMapKey: 'test3' })
-    armMapSync('uid-123')
-    disarmMapSync()
-
-    useWorldStore.getState().addObject({ key: 'wood_bridge', x: 10, y: 20 })
-    await vi.runAllTimersAsync()
-
-    expect(setDoc).not.toHaveBeenCalled()
-
-    vi.useRealTimers()
-  })
-})
-
-describe('visitMap / returnHome', () => {
-  beforeEach(() => {
-    setDoc.mockReset()
-    getDoc.mockReset()
-    disarmMapSync()
-    useWorldStore.setState({
-      currentMapOwnerUid: 'uid-self',
-      objectsByMap: { test3: [{ key: 'wood_bridge', x: 0, y: 0 }] },
-      mapObjects: [{ key: 'wood_bridge', x: 0, y: 0 }],
-      editMode: false,
-      selectedItemKey: null,
-    })
-  })
-
-  it('visitMap swaps currentMapOwnerUid to the visited owner', async () => {
-    getDoc.mockResolvedValue({ exists: () => false, data: () => ({}) })
-
-    await visitMap('uid-friend')
-
-    expect(useWorldStore.getState().currentMapOwnerUid).toBe('uid-friend')
-  })
-
-  it('visitMap clears objectsByMap before loading the visited map', async () => {
-    let capturedObjectsByMap = null
-    getDoc.mockImplementation(async () => {
-      capturedObjectsByMap = useWorldStore.getState().objectsByMap
-      return { exists: () => false, data: () => ({}) }
-    })
-
-    await visitMap('uid-friend')
-
-    expect(capturedObjectsByMap).toEqual({})
-  })
-
-  it('visitMap loads the visited owner\'s objectsByMap from Firestore', async () => {
-    const friendObjectsByMap = { test3: [{ key: 'grass_things', x: 100, y: 200 }] }
-    getDoc.mockResolvedValue({
-      exists: () => true,
-      data: () => ({ objectsByMap: friendObjectsByMap }),
-    })
-
-    await visitMap('uid-friend')
-
-    expect(useWorldStore.getState().objectsByMap).toEqual(friendObjectsByMap)
-  })
-
-  it('visitMap resets editMode to false', async () => {
-    useWorldStore.setState({ editMode: true })
-    getDoc.mockResolvedValue({ exists: () => false, data: () => ({}) })
-
-    await visitMap('uid-friend')
-
-    expect(useWorldStore.getState().editMode).toBe(false)
-  })
-
-  it('returnHome swaps currentMapOwnerUid back to the signed-in user', async () => {
-    useWorldStore.setState({ currentMapOwnerUid: 'uid-friend' })
-    getDoc.mockResolvedValue({ exists: () => false, data: () => ({}) })
-
+  it('puts the signed-in user back as owner of their own world', async () => {
     await returnHome('uid-self')
-
     expect(useWorldStore.getState().currentMapOwnerUid).toBe('uid-self')
   })
 
-  it('returnHome loads self\'s objectsByMap from Firestore', async () => {
-    const ownObjectsByMap = { test3: [{ key: 'wood_bridge', x: 50, y: 75 }] }
-    useWorldStore.setState({ currentMapOwnerUid: 'uid-friend', objectsByMap: {} })
-    getDoc.mockResolvedValue({
-      exists: () => true,
-      data: () => ({ objectsByMap: ownObjectsByMap }),
-    })
+  it('switches the map key in the same update when one is given, so presence never joins the wrong room', async () => {
+    await returnHome('uid-self', 'room')
+    expect(useWorldStore.getState()).toMatchObject({ currentMapOwnerUid: 'uid-self', currentMapKey: 'room' })
+  })
 
+  it('leaves the map key alone when none is given', async () => {
     await returnHome('uid-self')
+    expect(useWorldStore.getState().currentMapKey).toBe('school_hub')
+  })
 
-    expect(useWorldStore.getState().objectsByMap).toEqual(ownObjectsByMap)
+  it('does nothing without a user', async () => {
+    await returnHome(null, 'room')
+    expect(useWorldStore.getState()).toMatchObject({ currentMapOwnerUid: 'uid-friend', currentMapKey: 'school_hub' })
   })
 })

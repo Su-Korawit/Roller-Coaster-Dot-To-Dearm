@@ -1,15 +1,10 @@
 import Phaser from 'phaser'
-import { useWorldStore } from '../stores/useWorldStore'
-import { MAP_ITEM_BY_KEY } from '../constants/mapItems'
 import { MBTI_TYPES, GAME_ASSETS, GAME_ASSET_BY_KEY, localMapPath, mapStoragePath } from './assetManifest'
 import { cloudAsset } from '../utils/cloudAsset'
 import { getMapConfig, DEFAULT_MAP_CONFIGS } from '../utils/mapConfig'
 import { updateSelf } from '../lib/presence'
 import { EMOTE_BY_ID } from '../constants/emotes'
 import { parseMapMeta } from '../utils/tiledMapMeta'
-import { useFarmStore } from '../stores/useFarmStore'
-import { currentStage } from '../systems/farmLogic'
-import { useFarmDataStore } from '../stores/useFarmDataStore'
 import { useRoomStore } from '../stores/useRoomStore'
 import { useFocusStore } from '../stores/useFocusStore'
 import { focusProgress } from '../room/focusProgress'
@@ -147,7 +142,7 @@ export async function loadSceneData(mapKey) {
 // One generic, data-driven scene that renders ANY map. It reads `mapKey` and
 // `spawn` from init data; the map's config/tilesets are loaded into the registry
 // by GameCanvas before the scene starts. Capability flags on the config gate
-// presence (multiplayer) and decoration editing (editable). Map switching goes
+// presence (multiplayer) and the study room (room). Map switching goes
 // through a `mapChangeRequested` game event (NOT scene.restart) so React can
 // reload the target map's data before the new scene's preload runs.
 
@@ -218,11 +213,6 @@ export class MapScene extends Phaser.Scene {
         const frame = GAME_ASSET_BY_KEY[key]?.frameConfig
         if (url && frame && !this.textures.exists(key)) this.load.spritesheet(key, url, frame)
       }
-    }
-
-    if (!this.textures.exists('crops')) {
-      const cropsUrl = urlFor(this.registry, 'crops')
-      if (cropsUrl) this.load.spritesheet('crops', cropsUrl, { frameWidth: 16, frameHeight: 16 })
     }
 
     attachLocalFallback(this, localByKey)
@@ -328,8 +318,7 @@ export class MapScene extends Phaser.Scene {
     // back to map center. parseMapMeta needs the raw Tiled JSON, which Phaser
     // caches under the tilemap key.
     const rawJson = this.cache.tilemap.get(this.mapKey)?.data
-    const meta = rawJson ? parseMapMeta(rawJson) : { spawns: [], portals: [], defaultSpawnName: null, farmTiles: new Set(), interactions: [], labels: [] }
-    this._farmTiles = meta.farmTiles ?? new Set()
+    const meta = rawJson ? parseMapMeta(rawJson) : { spawns: [], portals: [], defaultSpawnName: null, interactions: [], labels: [] }
     this._interactions = meta.interactions ?? []
     this._labels = meta.labels ?? []
     const spawnName = this.spawnName ?? cfg.defaultSpawn ?? meta.defaultSpawnName
@@ -397,19 +386,8 @@ export class MapScene extends Phaser.Scene {
     this._initRoofs(layerInfos, map)
     this._spawnCritters(meta.critters ?? [], mapScale)
 
-    this._decorGroup = this.add.group()
     this._mapScale = mapScale
-    this._renderDecorations(mapScale)
     this._renderLabels(mapScale)
-
-    const onMapObjectsChanged = () => this._renderDecorations(this._mapScale)
-    const onEditModeChanged   = () => this._renderDecorations(this._mapScale)
-    this.game.events.on('mapObjectsChanged', onMapObjectsChanged)
-    this.game.events.on('editModeChanged',   onEditModeChanged)
-    this.events.once('shutdown', () => {
-      this.game.events.off('mapObjectsChanged', onMapObjectsChanged)
-      this.game.events.off('editModeChanged',   onEditModeChanged)
-    })
 
     if (cfg.room) {
       renderRoom(this, () => {
@@ -423,18 +401,6 @@ export class MapScene extends Phaser.Scene {
         }
       })
     }
-
-    this._cropGroup = this.add.group()
-    this._renderCrops(mapScale)
-    const onFarmChanged = () => this._renderCrops(this._mapScale)
-    this.game.events.on('farmChanged', onFarmChanged)
-    this.events.once('shutdown', () => this.game.events.off('farmChanged', onFarmChanged))
-
-    // Re-render periodically so deterministic growth advances on screen (1s interval).
-    this._cropTimer = this.time.addEvent({
-      delay: 1000, loop: true, callback: () => this._renderCrops(this._mapScale),
-    })
-    this.events.once('shutdown', () => this._cropTimer?.remove())
 
     this._remoteAvatars = new Map()
     this._currentDir    = 'down'
@@ -532,15 +498,6 @@ export class MapScene extends Phaser.Scene {
         this.game.events.emit('roomTap', { x: pointer.worldX / mapScale, y: pointer.worldY / mapScale })
         return
       }
-      // Decoration placement only on editable maps while edit mode is on.
-      if (cfg.editable && this.registry.get('editMode')) {
-        const selectedKey = this.registry.get('selectedItemKey')
-        if (selectedKey) {
-          useWorldStore.getState().addObject({ key: selectedKey, x: pointer.worldX, y: pointer.worldY })
-        }
-        return
-      }
-
       const controlMode = this.registry.get('controlMode') ?? DEFAULT_CONTROL_MODE
       if (controlMode === 'joystick') {
         // Second finger = pinch-zoom; don't hijack it as a joystick.
@@ -622,34 +579,22 @@ export class MapScene extends Phaser.Scene {
     this._tickRoofs()
     this._tickCritters(delta ?? 16)
 
-    // ── Farm tile detection + interaction zones (runs every frame unconditionally) ──
-    this._farmTick = (this._farmTick ?? 0) + 1
-    if (this._farmTick % 10 === 0) {
-      const tx = Math.floor(this.player.x / this._mapScale / 16)
-      const ty = Math.floor(this.player.y / this._mapScale / 16)
-      const onFarm = this._farmTiles?.has(`${tx}_${ty}`) ?? false
-      const key = onFarm ? `${tx}_${ty}` : null
-      if (key !== this._lastFarmTile) {
-        this._lastFarmTile = key
-        this.game.events.emit('farmTileChanged', onFarm ? { tileX: tx, tileY: ty } : null)
-      }
+    // ── Interaction zones (checked every 10th frame) ──
+    this._zoneTick = (this._zoneTick ?? 0) + 1
+    if (this._zoneTick % 10 === 0) {
       if (this._zoneDefs) {
         for (const def of this._zoneDefs) {
           const overlapping = this.physics.world.overlap(this.player, def.zone)
           const was = this._activeZones.has(def.zone)
           if (overlapping && !was) {
             this._activeZones.add(def.zone)
-            if (def.action === 'shop') this.game.events.emit('shopEntered', { shopId: def.shopId })
-            else if (def.action === 'chest') this.game.events.emit('chestOpened')
-            else if (def.action === 'focusSeat') this.game.events.emit('focusSeatEntered', { seatId: def.seatId })
+            if (def.action === 'focusSeat') this.game.events.emit('focusSeatEntered', { seatId: def.seatId })
             else if (def.action === 'board') this.game.events.emit('boardEntered', { boardId: def.boardId })
             else if (def.action === 'tool') this.game.events.emit('toolEntered', { route: def.route })
             else if (def.action === 'roomSeat') this.game.events.emit('roomSeatEntered', { seatId: def.seatId })
           } else if (!overlapping && was) {
             this._activeZones.delete(def.zone)
-            if (def.action === 'shop') this.game.events.emit('shopExited', { shopId: def.shopId })
-            else if (def.action === 'chest') this.game.events.emit('chestClosed')
-            else if (def.action === 'focusSeat') this.game.events.emit('focusSeatExited', { seatId: def.seatId })
+            if (def.action === 'focusSeat') this.game.events.emit('focusSeatExited', { seatId: def.seatId })
             else if (def.action === 'board') this.game.events.emit('boardExited', { boardId: def.boardId })
             else if (def.action === 'roomSeat') this.game.events.emit('roomSeatExited', { seatId: def.seatId })
           }
@@ -786,55 +731,6 @@ export class MapScene extends Phaser.Scene {
     const animKey = `${this.currentMbti}-${dir}`
     if (this.player.anims.currentAnim?.key !== animKey) {
       this.player.play(animKey)
-    }
-  }
-
-  // Destroy and re-spawn all decoration sprites from the registry's mapObjects.
-  // Sprites sit above tilemap layers (depth 5) but below the player (depth 10).
-  // In edit mode each sprite is interactive — tapping it removes it from the store.
-  _renderDecorations(mapScale) {
-    this._decorGroup.clear(true, true)
-    const objects   = this.registry.get('mapObjects') ?? []
-    const editMode  = this.registry.get('editMode') ?? false
-    objects.forEach(({ key, x, y }, index) => {
-      const item = MAP_ITEM_BY_KEY[key]
-      if (!item || !this.textures.exists(item.spriteKey)) return
-      const img = this.add.image(x, y, item.spriteKey)
-      img.setScale(mapScale * 0.5)
-      img.setDepth(5)
-      if (editMode) {
-        img.setInteractive({ useHandCursor: true })
-        img.on('pointerdown', (ptr) => {
-          ptr.event.stopPropagation()
-          useWorldStore.getState().removeObject(index)
-        })
-        img.setTint(0xddaaff)
-      }
-      this._decorGroup.add(img)
-    })
-  }
-
-  _renderCrops(mapScale) {
-    if (!this._cropGroup || !this.textures.exists('crops')) return
-    this._cropGroup.clear(true, true)
-    const plots = useFarmStore.getState().plots || {}
-    const { plants } = useFarmDataStore.getState()
-    const now = Date.now()
-    for (const [key, plot] of Object.entries(plots)) {
-      if (!plot || plot.anchorKey) continue
-      const plant = plants[plot.plantId]
-      if (!plant) continue
-      const stage = currentStage(plot.plantedAt, plot.plantId, now, plants)
-      const frame = plant.spriteFrames?.[stage] ?? 0
-      const [tx, ty] = key.split('_').map(Number)
-      const img = this.add.image(
-        (tx + 0.5) * 16 * mapScale,
-        (ty + 0.5) * 16 * mapScale,
-        'crops',
-        frame,
-      )
-      img.setScale(mapScale).setDepth(9)
-      this._cropGroup.add(img)
     }
   }
 

@@ -133,11 +133,11 @@ service cloud.firestore {
       );
     }
 
-    // Personal Maps — each user's decoration objects.
-    // Anyone signed-in can visit (read); only the owner can save decorations (write).
+    // Legacy Personal Map documents (removed with the farm, ADR-0023). Read-only until the owner
+    // runs scripts/purgeLegacyWorld.mjs, which deletes them with the Admin SDK.
     match /maps/{ownerUid} {
       allow read:  if isSignedIn();
-      allow write: if isSignedIn() && request.auth.uid == ownerUid;
+      allow write: if false;
     }
 
     // Roadmap Sheets — one document per user-created canvas. Owner has full
@@ -179,20 +179,6 @@ service cloud.firestore {
     // Slip dedup ledger: server-only (no client access at all).
     match /usedSlips/{transRef} {
       allow read, write: if false;
-    }
-
-    // Farm data: plants, items, shops. Signed-in users read; super-admin writes.
-    match /farmPlants/{plantId} {
-      allow read: if request.auth != null;
-      allow write: if isSuperAdmin();
-    }
-    match /farmItems/{itemId} {
-      allow read: if request.auth != null;
-      allow write: if isSuperAdmin();
-    }
-    match /farmShops/{shopId} {
-      allow read: if request.auth != null;
-      allow write: if isSuperAdmin();
     }
 
     // Admin-curated content feeds: app updates (News tab) and TCAS calendar

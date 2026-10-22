@@ -356,7 +356,7 @@ export function buildSchoolHub() {
   ]
 
   const spawns = [obj('entry', { x: SPAWN.x * T, y: SPAWN.y * T, width: T, height: T }, [prop('default', true, 'bool')])]
-  const portals = [obj('to_world', { x: 26 * T, y: 36 * T, width: 3 * T, height: T }, [prop('target', 'test3')])]
+  const portals = [obj('to_world', { x: 26 * T, y: 36 * T, width: 3 * T, height: T }, [prop('target', 'room')])]
 
   // Roamers: ambient wildlife the scene spawns (not tiles). Each wanders inside `radius` px of its start.
   const critters = [

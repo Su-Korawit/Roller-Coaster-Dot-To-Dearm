@@ -60,22 +60,10 @@ describe('parseMapMeta', () => {
   })
 })
 
-describe('parseMapMeta farm extensions', () => {
-  it('builds a farmTiles set from non-zero FarmGround cells', () => {
-    const map = {
-      width: 3, height: 2, tilesets: [], layers: [
-        { name: 'FarmGround', type: 'tilelayer', data: [0, 7, 0, 0, 0, 9] },
-      ],
-    }
-    const m = parseMapMeta(map)
-    expect(m.farmTiles instanceof Set).toBe(true)
-    expect([...m.farmTiles].sort()).toEqual(['1_0', '2_1'])
-  })
-
-  it('returns an empty farmTiles set when FarmGround layer is absent', () => {
-    const m = parseMapMeta({ width: 2, height: 2, tilesets: [], layers: [] })
-    expect(m.farmTiles instanceof Set).toBe(true)
-    expect(m.farmTiles.size).toBe(0)
+describe('parseMapMeta extensions', () => {
+  it('no longer reports farm tiles', () => {
+    const m = parseMapMeta({ width: 3, height: 2, tilesets: [], layers: [{ name: 'FarmGround', type: 'tilelayer', data: [0, 7, 0, 0, 0, 9] }] })
+    expect(m).not.toHaveProperty('farmTiles')
   })
 
   it('parses Interactions objects with action/shopId', () => {
