@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { programName, universityName } from './entryNames'
 
 const ROUND_OPTIONS = [
   { value: '', label: 'ยังไม่เลือกรอบ' },
@@ -12,7 +13,7 @@ const ROUND_OPTIONS = [
 // and add to-dos, move it to another round or take it out. Drag props come from the round-3 list.
 export default function PlanEntryRow({ entry, open, onOpen, onToggle, onAddItem, onRemoveItem, onMove, onRemove, dragProps, innerRef, draggableProps, dragging }) {
   const [text, setText] = useState('')
-  const name = entry.programName ?? entry.program ?? 'หลักสูตร'
+  const name = programName(entry)
   const chips = (entry.scores ?? []).filter((s) => s.weight > 0)
 
   const submit = () => {
@@ -32,7 +33,7 @@ export default function PlanEntryRow({ entry, open, onOpen, onToggle, onAddItem,
         <span className="pixel-font text-base text-ink text-center">{entry.rank ?? ''}</span>
         <button type="button" aria-label={`เปิดรายละเอียด ${name}`} aria-expanded={open} onClick={() => onOpen(entry.id)} className="text-left min-w-0">
           <b className="thai-font text-sm text-ink block leading-tight">{name}</b>
-          <span className="thai-font text-xs text-ink-soft block truncate">{entry.universityName ?? ''}</span>
+          <span className="thai-font text-xs text-ink-soft block truncate">{universityName(entry)}</span>
           {chips.length > 0 && (
             <span className="flex flex-wrap gap-1 mt-1">
               {chips.map((s) => (

@@ -29,6 +29,16 @@ const cleanGoals = (goals) => {
 // Old, partial and malformed entries become valid v2 entries; ranks are repaired.
 const cleanPlans = (plans) => normalizeRanks((Array.isArray(plans) ? plans : []).map(migrateEntry).filter(Boolean))
 
+// Plan state from a profile read (readProfile): old shapes upgraded, ranks and goals repaired.
+export const planStateFromProfile = ({ plans, activePlanId, goalHours } = {}) => {
+  const clean = cleanPlans(plans)
+  return {
+    plans: clean,
+    activePlanId: clean.some((p) => p.id === activePlanId) ? activePlanId : (clean[0]?.id ?? null),
+    goalHours: cleanGoals(goalHours),
+  }
+}
+
 const replaceEntry = (plans, id, fn) => {
   let hit = false
   const next = plans.map((p) => {
@@ -59,7 +69,8 @@ export const usePlansStore = create(
       // (min GPAX, score weights) is copied so the plan never has to re-fetch the index.
       addFromProgram: ({ universityId, universityName, programId, programName, buildingId, round, projectName, minGpax, scores }) => {
         if (!programId || typeof programId !== 'string') return { ok: false, reason: 'bad_program' }
-        if (!isRound(round)) return { ok: false, reason: 'bad_round' }
+        // round null = "not chosen yet" (the student can plan the program first and pick a round later)
+        if (round !== null && !isRound(round)) return { ok: false, reason: 'bad_round' }
         const { plans } = get()
         if (plans.some((p) => p.programId === programId && p.round === round)) return { ok: false, reason: 'duplicate' }
         if (plans.length >= cap()) return { ok: false, reason: 'cap' }
@@ -179,14 +190,7 @@ export const usePlansStore = create(
         }),
 
       // Load from the cloud profile: Firestore wins, old shapes are upgraded here.
-      hydrate: ({ plans, activePlanId, goalHours } = {}) => {
-        const clean = cleanPlans(plans)
-        set({
-          plans: clean,
-          activePlanId: clean.some((p) => p.id === activePlanId) ? activePlanId : (clean[0]?.id ?? null),
-          goalHours: cleanGoals(goalHours),
-        })
-      },
+      hydrate: (profile) => set(planStateFromProfile(profile)),
 
       resetPlans: () => set({ plans: [], activePlanId: null, goalHours: {} }),
     }),

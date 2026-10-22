@@ -93,6 +93,11 @@ export function armGuestDirtyTracking() {
   })
 }
 
+// Did a guest build plan entries in this browser? (the marker is set only by logged-out edits)
+export function hasGuestPlans() {
+  return Boolean(readDirty().plans)
+}
+
 export function hasGuestWork() {
   const dirty = readDirty()
   return Boolean(dirty.roadmap || dirty.school || dirty.plans)
@@ -180,7 +185,10 @@ function applyGuestSchool({ subjects = [], scheduleSlots = [], appointments = []
 // items come along.
 function applyGuestPlans(entries = []) {
   const store = () => usePlansStore.getState()
-  for (const g of entries) {
+  // Round 3 first, in the guest's rank order, so their ranking carries over; the rest keep their order.
+  const inRound3 = entries.filter((g) => g.round === 3).sort((a, b) => (a.rank ?? Infinity) - (b.rank ?? Infinity))
+  const ordered = [...inRound3, ...entries.filter((g) => g.round !== 3)]
+  for (const g of ordered) {
     const r = store().addFromProgram({
       universityId: g.universityId, universityName: g.universityName, programId: g.programId, programName: g.programName,
       buildingId: g.buildingId, round: g.round, projectName: g.projectName, minGpax: g.minGpax, scores: g.scores,

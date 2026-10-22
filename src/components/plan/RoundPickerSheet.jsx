@@ -3,7 +3,7 @@ import Popup from '../ui/Popup'
 import { usePlansStore } from '../../stores/usePlansStore'
 import { useRoomUiStore } from '../../stores/useRoomUiStore'
 import { useTcasEventsStore } from '../../stores/useTcasEventsStore'
-import { eventsWithFallback } from '../../data/tcas70'
+import { eventsForPlan } from '../../data/tcas70'
 import { roundStatus, nextFreeRank, RANK_MAX } from '../../utils/planDerive'
 import { localToday } from '../../lib/hotbarBadges'
 
@@ -22,7 +22,7 @@ const ERRORS = {
 export default function RoundPickerSheet({ program, onClose, today = localToday() }) {
   const plans = usePlansStore((s) => s.plans)
   const storedEvents = useTcasEventsStore((s) => s.events)
-  const events = eventsWithFallback(storedEvents)
+  const events = eventsForPlan(storedEvents)
   const [round, setRound] = useState(null)
   const [projectIdx, setProjectIdx] = useState(0)
   const [error, setError] = useState('')

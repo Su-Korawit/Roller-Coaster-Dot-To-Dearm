@@ -42,6 +42,12 @@ turns picks into a plan. Design: `docs/superpowers/specs/2026-10-16-tcas-plan-de
   marks the work dirty, captures program entries and merges them additively through
   `addFromProgram` (cap, duplicate and rank rules hold), silently into an empty account or via the
   existing dialog otherwise.
+- **Saving and guests.** Every Plan edit is saved to `users/{uid}.profile` through a debounced
+  `syncManager` writer (armed after the select hydrate, disarmed at sign-out; an empty list is
+  written as `[]`). A guest's plan entries survive a reload (the guest-dirty marker decides whether
+  leftover plans are a guest's or a previous account's) and merge at login with their round-3 order
+  and unplaced entries. The calendar for the Plan is `eventsForPlan`: an admin calendar without plan
+  tags no longer switches the countdown off (the tagged built-in rows are added).
 - **Entry point is a store call**: `usePlanUiStore.openAdd(program)` shows `RoundPickerSheet`
   (round status, next free rank, project choice, result with "ดูแผน"); the Open House popup calls it.
 

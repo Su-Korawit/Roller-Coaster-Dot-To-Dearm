@@ -1,4 +1,5 @@
 import { thaiShortDate, daysText } from '../../utils/thaiDate'
+import { programName } from './entryNames'
 
 // "ต้องทำต่อไป": the nearest dated milestone that touches the plan, the programs it touches, and
 // the checklist of the first of them (tick items right here). Pure view over planDerive.nextUp.
@@ -9,7 +10,7 @@ export default function NextUpCard({ next, onToggle }) {
     <section aria-label="ต้องทำต่อไป" className="px-slab bg-warn/30 p-3 flex flex-col gap-1.5">
       <p className="pixel-font text-xs text-danger">{`${thaiShortDate(next.event.date)} (${daysText(next.days)})`}</p>
       <p className="thai-font text-sm font-bold text-ink">{next.event.title}</p>
-      <p className="thai-font text-xs text-ink-soft">{next.entries.map((e) => e.programName ?? e.program ?? 'หลักสูตร').join(' · ')}</p>
+      <p className="thai-font text-xs text-ink-soft">{next.entries.map(programName).join(' · ')}</p>
       {first.checklist.length > 0 && (
         <ul className="flex flex-col gap-1 mt-1">
           {first.checklist.slice(0, 5).map((c) => (

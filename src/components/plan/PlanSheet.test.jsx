@@ -160,6 +160,33 @@ describe('PlanSheet — a plan', () => {
   })
 })
 
+describe('PlanSheet — entries from onboarding', () => {
+  it('shows a program picked in onboarding (no round yet) with its name, so it is not hidden while it still uses a slot', () => {
+    const id = usePlansStore.getState().addPlan()
+    usePlansStore.getState().updatePlan(id, { university: 'cu', program: 'ce-cu' })
+    renderSheet()
+    expect(screen.queryByText(/ยังไม่มีหลักสูตรในแผน/)).toBeNull()
+    expect(screen.getByText('ยังไม่เลือกรอบ')).toBeTruthy()
+    expect(screen.getByText('วิศวกรรมคอมพิวเตอร์')).toBeTruthy()
+    expect(screen.getByText('จุฬาลงกรณ์มหาวิทยาลัย')).toBeTruthy()
+  })
+
+  it('an empty slot (no program yet) is not listed', () => {
+    usePlansStore.getState().addPlan()
+    renderSheet()
+    expect(screen.getByText(/ยังไม่มีหลักสูตรในแผน/)).toBeTruthy()
+  })
+
+  it('such a program can be given a round from the plan', () => {
+    const id = usePlansStore.getState().addPlan()
+    usePlansStore.getState().updatePlan(id, { university: 'cu', program: 'ce-cu' })
+    renderSheet()
+    fireEvent.click(screen.getByRole('button', { name: 'เปิดรายละเอียด วิศวกรรมคอมพิวเตอร์' }))
+    fireEvent.change(screen.getByLabelText('ย้ายไปรอบ'), { target: { value: '3' } })
+    expect(usePlansStore.getState().plans[0]).toMatchObject({ round: 3, rank: 1 })
+  })
+})
+
 describe('PlanSheet — no invented dates', () => {
   it('shows no countdown and no next-up card when the calendar has nothing for the plan', () => {
     eventsState = { events: [{ id: 'x', date: '2027-03-01', title: 'ไม่เกี่ยว', round: 2 }] }
@@ -167,6 +194,13 @@ describe('PlanSheet — no invented dates', () => {
     renderSheet()
     expect(screen.queryByRole('region', { name: 'ต้องทำต่อไป' })).toBeNull()
     expect(screen.queryByText(/วัน ถึง/)).toBeNull()
+  })
+
+  it('keeps working when the admin calendar exists but carries no plan tags (built-in rows are used too)', () => {
+    eventsState = { events: [{ id: 'x', date: '2027-03-01', title: 'ข่าวทั่วไป' }] }
+    add(1)
+    renderSheet('2027-01-20')
+    expect(screen.getByRole('region', { name: 'ต้องทำต่อไป' })).toBeTruthy()
   })
 
   it('falls back to the built-in TCAS70 calendar when no events are stored', () => {

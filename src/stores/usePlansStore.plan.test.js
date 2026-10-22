@@ -50,6 +50,13 @@ describe('usePlansStore.addFromProgram', () => {
     expect(usePlansStore.getState().addFromProgram(prog(4)).ok).toBe(true)
   })
 
+  it('can plan a program before choosing a round (round null), once', () => {
+    const r = usePlansStore.getState().addFromProgram(prog(1, { round: null }))
+    expect(r).toMatchObject({ ok: true, rank: null })
+    expect(usePlansStore.getState().plans[0]).toMatchObject({ programId: 'p1', round: null, rank: null })
+    expect(usePlansStore.getState().addFromProgram(prog(1, { round: null }))).toEqual({ ok: false, reason: 'duplicate' })
+  })
+
   it('refuses a bad round and a missing program', () => {
     expect(usePlansStore.getState().addFromProgram(prog(1, { round: 7 }))).toEqual({ ok: false, reason: 'bad_round' })
     expect(usePlansStore.getState().addFromProgram(prog(1, { programId: '' }))).toEqual({ ok: false, reason: 'bad_program' })

@@ -78,6 +78,29 @@ describe('guest plan entries', () => {
     expect(usePlansStore.getState().plans.map((p) => p.programId)).toEqual(['p1', 'p5', 'p2'])
   })
 
+  it('carries the guest\u2019s round-3 ranking over, not the order the programs were added in', () => {
+    ent.extra = 10
+    enableGuestTracking()
+    for (let n = 1; n <= 3; n++) usePlansStore.getState().addFromProgram(prog(n))
+    usePlansStore.getState().reorderRound3(2, 0) // p3 first
+    const work = captureGuestWork()
+    usePlansStore.getState().hydrate({ plans: [], activePlanId: null })
+    resolveGuestMerge(work)
+    expect(usePlansStore.getState().plans.map((p) => [p.programId, p.rank]).sort((a, b) => a[1] - b[1])).toEqual([['p3', 1], ['p1', 2], ['p2', 3]])
+  })
+
+  it('keeps a program the guest had not given a round yet', () => {
+    ent.extra = 10
+    enableGuestTracking()
+    usePlansStore.getState().addFromProgram(prog(1, { round: null }))
+    usePlansStore.getState().addFromProgram(prog(2))
+    const work = captureGuestWork()
+    expect(work.plans.map((p) => p.programId)).toEqual(['p1', 'p2'])
+    usePlansStore.getState().hydrate({ plans: [], activePlanId: null })
+    resolveGuestMerge(work)
+    expect(usePlansStore.getState().plans.map((p) => [p.programId, p.round]).sort()).toEqual([['p1', null], ['p2', 3]])
+  })
+
   it('a guest with nothing from a program has no work', () => {
     enableGuestTracking()
     usePlansStore.getState().addPlan()

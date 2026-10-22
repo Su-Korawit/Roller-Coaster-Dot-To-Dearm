@@ -13,6 +13,7 @@ const m = vi.hoisted(() => ({
   hydrateHotbar: vi.fn(),
   hydrateResume: vi.fn(),
   hydrateGuide: vi.fn(),
+  setPlansSyncUser: vi.fn(),
   setGuideSyncUser: vi.fn(),
   resetGuide: vi.fn(),
   setResumeSyncUser: vi.fn(),
@@ -105,6 +106,7 @@ vi.mock('../lib/syncManager', () => ({
   setResumeSyncUser: (...a) => m.setResumeSyncUser(...a),
   hydrateGuideFromFirestore: (...a) => m.hydrateGuide(...a),
   setGuideSyncUser: (...a) => m.setGuideSyncUser(...a),
+  setPlansSyncUser: (...a) => m.setPlansSyncUser(...a),
 }))
 vi.mock('../stores/useGuideStore', () => ({ useGuideStore: { getState: () => ({ reset: m.resetGuide }) } }))
 vi.mock('../stores/useResumeStore', () => ({ useResumeStore: { getState: () => ({ reset: m.resetResume }) } }))
@@ -180,6 +182,26 @@ describe('bootstrapSession', () => {
     await bootstrapSession({ uid: 'u1' })
     expect(m.hydrateHotbar).toHaveBeenCalledWith('u1')
     expect(m.setHotbarSyncUser).toHaveBeenCalledWith('u1')
+  })
+
+  it('keeps plans a guest built across a reload, and clears plans left by a previous account', () => {
+    const store = {}
+    vi.stubGlobal('localStorage', { getItem: (k) => store[k] ?? null, setItem: (k, v) => { store[k] = String(v) }, removeItem: (k) => { delete store[k] } })
+    store['rc-guest-dirty'] = JSON.stringify({ plans: true })
+    teardownSession()
+    expect(m.resetPlans).not.toHaveBeenCalled()
+    delete store['rc-guest-dirty']
+    teardownSession()
+    expect(m.resetPlans).toHaveBeenCalledTimes(1)
+    vi.unstubAllGlobals()
+  })
+
+  it('arms the plans writer after the select hydrate on login, and disarms it on logout', async () => {
+    await bootstrapSession({ uid: 'u1' })
+    expect(m.hydrateSelect).toHaveBeenCalledWith('u1')
+    expect(m.setPlansSyncUser).toHaveBeenCalledWith('u1')
+    teardownSession()
+    expect(m.setPlansSyncUser).toHaveBeenCalledWith(null)
   })
 
   it('hydrates the guide and arms its sync writer on login', async () => {

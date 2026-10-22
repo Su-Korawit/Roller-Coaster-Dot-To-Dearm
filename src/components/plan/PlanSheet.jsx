@@ -10,7 +10,8 @@ import { useLeavesStore } from '../../stores/useLeavesStore'
 import { useRoomUiStore } from '../../stores/useRoomUiStore'
 import { useFocusStore } from '../../stores/useFocusStore'
 import { useTcasEventsStore } from '../../stores/useTcasEventsStore'
-import { eventsWithFallback, TCAS_LABEL } from '../../data/tcas70'
+import { eventsForPlan, TCAS_LABEL } from '../../data/tcas70'
+import { isPlanEntry } from './entryNames'
 import { nextUp, aggregateSubjects, defaultGoalHours } from '../../utils/planDerive'
 import { localToday } from '../../lib/hotbarBadges'
 
@@ -26,12 +27,12 @@ export default function PlanSheet({ onClose, today = localToday() }) {
   const studied = useLeavesStore((s) => s.focusBySubject)
   const focusStatus = useFocusStore((s) => s.status)
   const storedEvents = useTcasEventsStore((s) => s.events)
-  const events = eventsWithFallback(storedEvents)
+  const events = eventsForPlan(storedEvents)
   const [filter, setFilter] = useState(null)
   const [openId, setOpenId] = useState(null)
 
   const actions = usePlansStore.getState
-  const entries = plans.filter((p) => p.programId || p.round != null)
+  const entries = plans.filter(isPlanEntry)
   const next = nextUp({ entries, events, today })
   const subjects = aggregateSubjects(entries)
   const goalOf = (s) => goalHours[s.key] ?? defaultGoalHours(s.maxWeight)
@@ -116,8 +117,9 @@ export default function PlanSheet({ onClose, today = localToday() }) {
                   >
                     {(provided) => (
                       <ul ref={provided.innerRef} {...provided.droppableProps} aria-label="รอบ 3 Admission" className="flex flex-col gap-2">
+                        {/* The handle is a <button>, which the library refuses to drag from unless told not to. */}
                         {round3.map((e, i) => (
-                          <Draggable key={e.id} draggableId={e.id} index={i}>
+                          <Draggable key={e.id} draggableId={e.id} index={i} disableInteractiveElementBlocking>
                             {(p, snap) => (
                               <PlanEntryRow {...rowProps(e)} innerRef={p.innerRef} draggableProps={p.draggableProps} dragProps={p.dragHandleProps} dragging={snap.isDragging} />
                             )}

@@ -69,6 +69,15 @@ export function daysUntil(dateIso, todayIso) {
   return Math.round((asUtcDay(dateIso) - asUtcDay(todayIso)) / DAY_MS)
 }
 
+// The events the Plan derives from (ADR-0025). Admin events that carry plan tags (round / kind /
+// examKeys) take over completely; an admin calendar with none would otherwise switch the Plan's
+// countdown and closed-round status off, so the tagged built-in rows are added to it.
+export function eventsForPlan(stored) {
+  const list = Array.isArray(stored) ? stored : []
+  const tagged = list.some((e) => e.round != null || e.kind || (Array.isArray(e.examKeys) && e.examKeys.length > 0))
+  return tagged ? list : [...TCAS70_EVENTS, ...list]
+}
+
 // Admin-added events win; the built-in calendar only fills an otherwise empty board.
 export function eventsWithFallback(events) {
   return events?.length ? events : TCAS70_EVENTS
