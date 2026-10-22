@@ -337,6 +337,7 @@ const {
 const { normalizeSchoolId: normalizeFocusSchoolId } = require('./schoolMembers')
 const { temperamentOf, xpMultiplier, YESTERDAY_MIN_MS } = require('./temperaments')
 const { validateFocusParams, treeFor, leavesFor, practiceLeaves, PRACTICE } = require('./leavesMath')
+const { isSubjectKey } = require('./subjectKeys')
 
 function requireUid(req) {
   const uid = req.auth?.uid
@@ -394,6 +395,14 @@ async function settleActive(uid, { end, forceWither = false }) {
     }
 
     if (end) {
+      // TCAS Plan: the session's verified time counts toward its subject (also when the tree
+      // withered — the minutes were real). Never for a practice session.
+      const subjectKey = !practice && isSubjectKey(active.subjectKey) ? active.subjectKey : null
+      if (subjectKey && after > 0) {
+        tx.set(userRef, { focusBySubject: { [subjectKey]: admin.firestore.FieldValue.increment(after) } }, { merge: true })
+        endExtras.subjectKey = subjectKey
+        endExtras.subjectMs = Number(userSnap.data()?.focusBySubject?.[subjectKey] ?? 0) + after
+      }
       const leaves = practice
         ? practiceLeaves({ verifiedMs: after, withered, rewarded: userSnap.data()?.practiceRewarded === true })
         : leavesFor({ mode, verifiedMs: after, plannedMin, withered })
@@ -406,9 +415,9 @@ async function settleActive(uid, { end, forceWither = false }) {
         uid, schoolId: active.schoolId ?? null,
         startedAt: active.startedAt, endedAt: nowMs, verifiedMs: after,
         day, reason: forceWither ? 'abandoned' : 'ended',
-        mode, plannedMin, subjectKey: null, tree, leaves, withered, practice,
+        mode, plannedMin, subjectKey, tree, leaves, withered, practice,
       })
-      endExtras = { leaves, tree, mode, plannedMin, withered, practice }
+      endExtras = { ...endExtras, leaves, tree, mode, plannedMin, withered, practice }
     } else if (!seg.tooSoon) {
       tx.update(activeRef, {
         lastCheckInAt: nowMs, verifiedMs: after, weightedMs: weightedAfter,
@@ -437,6 +446,12 @@ async function settleActive(uid, { end, forceWither = false }) {
 exports.startFocus = onCall(async (req) => {
   const uid = requireUid(req)
   const practice = req.data?.practice === true
+  // Optional exam subject for the TCAS Plan's focus-hour goals; anything else is refused.
+  const rawSubject = req.data?.subjectKey
+  if (!practice && rawSubject !== undefined && rawSubject !== null && !isSubjectKey(rawSubject)) {
+    throw new HttpsError('invalid-argument', 'Invalid subject.', { code: 'bad_subject' })
+  }
+  const subjectKey = !practice && isSubjectKey(rawSubject) ? rawSubject : null
   // A practice session ignores any mode/plannedMin sent with it.
   const params = practice
     ? { ok: true, mode: 'flexible', plannedMin: PRACTICE.plannedMin }
@@ -459,7 +474,7 @@ exports.startFocus = onCall(async (req) => {
         // cannot survive that (the page was left, and closing the tab never reports it), so
         // it withers here — otherwise closing the tab and coming back would keep the reward.
         if (a.mode === 'strict' && !a.withered) tx.update(activeRef, { withered: true })
-        return { ok: true, resumed: true, withered: a.mode === 'strict' ? true : (a.withered ?? false), startedAt: a.startedAt, lastCheckInAt: a.lastCheckInAt, verifiedMs: a.verifiedMs ?? 0, temperament: a.temperament ?? null, mode: a.mode ?? 'flexible', plannedMin: a.plannedMin ?? 25, practice: a.practice === true }
+        return { ok: true, resumed: true, withered: a.mode === 'strict' ? true : (a.withered ?? false), startedAt: a.startedAt, lastCheckInAt: a.lastCheckInAt, verifiedMs: a.verifiedMs ?? 0, temperament: a.temperament ?? null, mode: a.mode ?? 'flexible', plannedMin: a.plannedMin ?? 25, practice: a.practice === true, subjectKey: a.subjectKey ?? null }
       }
       // Stale: close it with nothing extra credited, then start fresh.
       tx.set(db.collection('focusSessions').doc(), {
@@ -475,9 +490,9 @@ exports.startFocus = onCall(async (req) => {
     tx.set(activeRef, {
       uid, schoolId, startedAt: nowMs, lastCheckInAt: nowMs, verifiedMs: 0,
       weightedMs: 0, temperament, studiedYesterday,
-      mode: params.mode, plannedMin: params.plannedMin, withered: false, practice,
+      mode: params.mode, plannedMin: params.plannedMin, withered: false, practice, subjectKey,
     })
-    return { ok: true, resumed: false, startedAt: nowMs, lastCheckInAt: nowMs, verifiedMs: 0, temperament, mode: params.mode, plannedMin: params.plannedMin, practice }
+    return { ok: true, resumed: false, startedAt: nowMs, lastCheckInAt: nowMs, verifiedMs: 0, temperament, mode: params.mode, plannedMin: params.plannedMin, practice, subjectKey }
   })
 })
 

@@ -615,5 +615,7 @@ describe('practice reward flag (Functions-owned)', () => {
     await assertFails(updateDoc(doc(alice, 'users/alice'), { practiceRewarded: true }))
     const dave = testEnv.authenticatedContext('dave').firestore()
     await assertFails(setDoc(doc(dave, 'users/dave'), { uid: 'dave', practiceRewarded: true }))
+    await assertFails(updateDoc(doc(alice, 'users/alice'), { focusBySubject: { a_lv_64: 99999999 } }))
+    await assertFails(setDoc(doc(dave, 'users/dave'), { uid: 'dave', focusBySubject: { a_lv_64: 1 } }))
   })
 })
