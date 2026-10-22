@@ -38,6 +38,8 @@ export const GAME_ASSETS = [
   // map changes so an old copy in Storage is never loaded with a newer tileset.
   { key: 'room', type: 'tilemapJSON', storagePath: 'maps/room_v1.json', localPath: '/maps/room.json' },
   { key: 'school_hub', type: 'tilemapJSON', storagePath: 'maps/school_hub_v2.json', localPath: '/maps/school_hub.json' },
+  // Open House campus (scripts/buildCampus.mjs); versioned like the room map.
+  { key: 'campus', type: 'tilemapJSON', storagePath: 'maps/campus_v1.json', localPath: '/maps/campus.json' },
 
   // Tilesets
   tileset('Grass'),
@@ -68,6 +70,13 @@ export const GAME_ASSETS = [
   {
     key: 'focus_art', type: 'spritesheet', storagePath: 'rc/objects/focus.png', localPath: '/assets/rc/focus.png',
     frameConfig: { frameWidth: 48, frameHeight: 48 },
+  },
+
+  // Open House campus: generated tileset and the 18 faculty buildings + hall + gate (96×80 frames, one per row)
+  { key: 'Campus Tiles', type: 'image', storagePath: 'rc/tilesets/campus_tiles.png', localPath: '/assets/rc/campus_tiles.png' },
+  {
+    key: 'campus_buildings', type: 'spritesheet', storagePath: 'rc/objects/campus_buildings.png', localPath: '/assets/rc/campus_buildings.png',
+    frameConfig: { frameWidth: 96, frameHeight: 80 },
   },
 
   // Objects

@@ -79,8 +79,8 @@ describe('parseMapMeta extensions', () => {
     }
     const m = parseMapMeta(map)
     expect(m.interactions).toEqual([
-      { x: 32, y: 48, width: 16, height: 16, action: 'shop', shopId: 'seed_shop', seatId: null, boardId: null, route: null },
-      { x: 80, y: 16, width: 16, height: 16, action: 'chest', shopId: null, seatId: null, boardId: null, route: null },
+      { x: 32, y: 48, width: 16, height: 16, action: 'shop', shopId: 'seed_shop', seatId: null, boardId: null, route: null, buildingId: null, name: null },
+      { x: 80, y: 16, width: 16, height: 16, action: 'chest', shopId: null, seatId: null, boardId: null, route: null, buildingId: null, name: null },
     ])
   })
 
@@ -148,5 +148,20 @@ describe('parseMapMeta labels', () => {
     expect(m.labels).toEqual([
       { x: 30, y: 30, text: 'ฟาร์ม', color: '#000000' },
     ])
+  })
+})
+
+describe('parseMapMeta interactions for the campus', () => {
+  it('carries the object name and the buildingId property', () => {
+    const map = {
+      width: 1, height: 1, tilesets: [],
+      layers: [{ type: 'objectgroup', name: 'Interactions', objects: [
+        { id: 1, name: 'door_med', x: 0, y: 0, width: 32, height: 16, properties: [{ name: 'action', value: 'building' }, { name: 'buildingId', value: 'med' }] },
+        { id: 2, x: 0, y: 0, width: 1, height: 1 },
+      ] }],
+    }
+    const { interactions } = parseMapMeta(map)
+    expect(interactions[0]).toMatchObject({ name: 'door_med', action: 'building', buildingId: 'med' })
+    expect(interactions[1]).toMatchObject({ name: null, buildingId: null })
   })
 })
