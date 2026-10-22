@@ -11,7 +11,7 @@ function ProgramRoundBadge({ programId }) {
   const { rounds } = useTcasRounds(programId)
   if (!rounds.length) return null
   return (
-    <span className="inline-block rounded-full bg-warn px-2 py-0.5 text-[10px] font-medium text-ink">
+    <span className="inline-block rounded-full bg-warn px-2 py-0.5 text-xs font-medium text-ink">
       {rounds.map((r) => r.name ?? `รอบ ${r.round}`).join(' · ')}
     </span>
   )
@@ -100,7 +100,7 @@ function ProgramStep({ onNext, onBack }) {
           <button
             type="button"
             onClick={onBack}
-            className="neo-btn mt-3 rounded-xl bg-brand-strong px-4 py-2 thai-font text-sm text-white"
+            className="px-btn mt-3 rounded-xl bg-brand-strong px-4 py-2 thai-font text-sm text-white"
           >
             ไปเลือกมหาวิทยาลัย
           </button>

@@ -42,6 +42,7 @@ describe('migrateSource', () => {
     const r = run("const g = '#EA4335'")
     expect(r.code).toBe("const g = '#EA4335'")
     expect(r.flagged).toEqual([])
+    expect(run("fill='#F25022' fill='#00A4EF'").flagged).toEqual([])
   })
 
   it('flags a hex with no safe mapping instead of guessing', () => {

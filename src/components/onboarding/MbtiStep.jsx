@@ -40,23 +40,23 @@ function MbtiStep({ onNext, onBack }) {
               onClick={() => handleSelect(item.code)}
               aria-pressed={selected}
               aria-label={`${item.code} ${item.name}`}
-              className={`neo-card neo-btn relative flex flex-col items-center p-3 transition-all ${
+              className={`px-card px-btn relative flex flex-col items-center p-3 transition-all ${
                 selected ? 'ring-4 ring-lime bg-brand-soft' : ''
               }`}
             >
               {selected && (
-                <span className="rpg-coin pixel-font absolute -top-2 -right-2 text-[10px]" aria-hidden="true">✓</span>
+                <span className="rpg-coin pixel-font absolute -top-2 -right-2 text-xs" aria-hidden="true">✓</span>
               )}
               <CharacterSprite code={item.code} />
               <p className="pixel-font mt-2 text-xs font-bold text-ink">{item.code}</p>
-              <p className="thai-font text-[10px] text-ink-soft">{item.name}</p>
+              <p className="thai-font text-xs text-ink-soft">{item.name}</p>
             </button>
           )
         })}
       </div>
 
       {description && (
-        <div className="neo-card mx-auto mt-5 max-w-2xl px-5 py-4">
+        <div className="px-card mx-auto mt-5 max-w-2xl px-5 py-4">
           <p className="thai-font text-center text-sm leading-relaxed text-brand-strong">
             {description}
           </p>

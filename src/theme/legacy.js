@@ -46,8 +46,11 @@ const TEXT_SAFE = {
   'zone-arts-soft': 'zone-arts-deep', mist: 'ink', hairline: 'ink-soft',
 }
 
-// Brand marks of other companies (Google sign-in): never recoloured.
-export const THIRD_PARTY_HEX = ['#EA4335', '#FBBC05', '#34A853', '#4285F4']
+// Brand marks of other companies (Google/Microsoft sign-in): never recoloured.
+export const THIRD_PARTY_HEX = [
+  '#EA4335', '#FBBC05', '#34A853', '#4285F4', // Google
+  '#F25022', '#7FBA00', '#00A4EF', '#FFB900', // Microsoft
+]
 
 const PREFIXES = 'bg|text|border|border-[tblrxy]|ring|from|to|via|shadow|fill|stroke|outline|divide|decoration'
 const LEGACY_TOKENS = Object.keys(TOKEN_MAP).sort((a, b) => b.length - a.length).join('|')
