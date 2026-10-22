@@ -5,13 +5,16 @@ import { canPlace } from '../room/placement'
 import { saveRoomLayout } from '../services/roomApi'
 import { createRoomSync } from '../lib/roomSync'
 import { useLeavesStore } from './useLeavesStore'
+import { STARTER_LAYOUT } from '../room/defaultLayout'
+import { ROOM_CATALOG } from '../data/roomCatalogSeed'
 
 // The student's room: catalog rows (read-only), the saved layout, and decorate mode. Every
 // layout change is checked with the same rules the server applies, then saved (debounced)
 // through the saveRoomLayout callable.
 export const useRoomStore = create((set, get) => ({
-  layout: shapes.roomLayout(undefined),
-  catalog: {},
+  // Guests (no account, no callables) and the moment before hydrate see the starter room.
+  layout: STARTER_LAYOUT,
+  catalog: ROOM_CATALOG,
   decorating: false,
 
   hydrate: async (uid) => {

@@ -27,6 +27,7 @@ import { usePlansStore } from '../stores/usePlansStore'
 import { hydrateSelectStoreFromFirestore } from '../utils/syncSelectToFirestore'
 import { hydrateFarmDataFromFirestore } from '../lib/farmDataSync.js'
 import { hydrateSpotify } from './spotifyConnect'
+import { bootstrapStudyRoom } from './studyRoomBootstrap'
 import { resolveConsent } from './consent'
 import { useConsentStore } from '../stores/useConsentStore'
 import { migrateLegacyRoadmap } from '../utils/migrateLegacyRoadmap'
@@ -210,6 +211,7 @@ export async function bootstrapSession(firebaseUser) {
       armFarmSync(uid)
     }),
     step('hydrate spotify', () => hydrateSpotify(uid)),
+    step('study room', () => bootstrapStudyRoom(uid)),
   ])
 
   // Cloud state is hydrated and the sync writers are armed — now merge guest

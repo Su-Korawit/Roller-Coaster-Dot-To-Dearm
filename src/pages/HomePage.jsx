@@ -21,9 +21,8 @@ import { auth } from '../firebase'
 import { useChatStore } from '../stores/useChatStore'
 import { buildChatId, refs } from '../lib/db'
 import { ADMIN_UID, ADMIN_DISPLAY_NAME } from '../constants/admin'
-import { GoldIcon } from '../components/ui/GoldIcon'
+import LeavesCounter from '../components/room/LeavesCounter'
 import { CoinIcon } from '../components/ui/CoinIcon'
-import { useInventoryStore } from '../stores/useInventoryStore'
 import { useCloudAsset } from '../hooks/useCloudAsset'
 import { getMusicConfig, DEFAULT_TRACKS } from '../utils/musicConfig'
 import MusicPanel from '../components/music/MusicPanel'
@@ -56,7 +55,6 @@ function HomePage() {
   const focusXp = useUserStore((s) => s.focusXp)
   const coins = useUserStore((state) => state.coins)
   const totalStacks = useUserStore((s) => s.totalStacks)
-  const gold = useInventoryStore((s) => s.gold)
   const uiVisibility = useUserStore((s) => s.uiVisibility)
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -240,7 +238,7 @@ function HomePage() {
 
         </div>
 
-        {/* Streak + Coins + Gold */}
+        {/* Streak + Coins + Leaves */}
         <div className="pointer-events-auto px-slab flex items-center gap-3 px-4 py-1.5">
           <span className="pixel-font text-xs text-ink flex items-center gap-1">
             <Flame size={14} strokeWidth={2.5} className="text-danger" aria-hidden="true" />
@@ -250,10 +248,7 @@ function HomePage() {
             <CoinIcon size={14} />
             {coins}
           </span>
-          <span className="pixel-font text-xs text-ink flex items-center gap-1">
-            <GoldIcon size={14} />
-            {gold}g
-          </span>
+          <LeavesCounter />
         </div>
       </div>
 

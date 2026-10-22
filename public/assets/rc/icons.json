@@ -34,6 +34,10 @@
     "guide": {
       "row": 7,
       "frames": 1
+    },
+    "leaf": {
+      "row": 8,
+      "frames": 1
     }
   }
 }

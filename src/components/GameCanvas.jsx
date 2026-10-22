@@ -22,7 +22,7 @@ import SchoolWorldLayer from './school/world/SchoolWorldLayer'
 import LoadingScene from './ui/LoadingScene'
 import { MapScene, loadSceneData } from '../game/worldScenes'
 import { createIdleGovernor, setFpsLimit, IDLE_FPS } from '../game/idleGovernor'
-import { listMapConfigs, pickEntryKey } from '../utils/mapConfig'
+import { listMapConfigs, resolveEntryKey } from '../utils/mapConfig'
 import { useFarmDataStore } from '../stores/useFarmDataStore'
 import { tileKey, isReady } from '../systems/farmLogic'
 import { countInSlots } from '../systems/inventoryLogic'
@@ -256,7 +256,7 @@ export default function GameCanvas({ active = true, onOpenView }) {
     // Resolve entry map configs + cloud URLs first, then let the ResizeObserver boot.
     ;(async () => {
       const maps = await listMapConfigs()
-      const entryKey = pickEntryKey(maps) ?? 'test3'
+      const entryKey = resolveEntryKey(maps)
       const data = await loadSceneData(entryKey)
       if (cancelled) return
       assetUrlsRef.current = { ...data, mapKey: entryKey }

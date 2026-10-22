@@ -13,7 +13,7 @@ vi.mock('firebase/firestore', () => ({
 }))
 vi.mock('../firebase', () => ({ db: {} }))
 
-import { saveMapConfig, listMapConfigs, getMapConfig } from './mapConfig'
+import { saveMapConfig, listMapConfigs, getMapConfig, resolveEntryKey } from './mapConfig'
 
 describe('pickEntryKey', () => {
   it('returns the map flagged isEntry', () => {
@@ -102,5 +102,23 @@ describe('getMapConfig for the generated School Hub', () => {
     })
     const cfg = await getMapConfig('school_hub')
     expect(cfg.tilesets['School Hub Tiles']).toBe('rc/tilesets/school_hub_tiles.png')
+  })
+})
+
+describe('entry map', () => {
+  it('counts the built-in room as the entry even before an admin saved a document for it', () => {
+    expect(resolveEntryKey([{ key: 'school_hub', isEntry: false, order: 0 }])).toBe('room')
+    expect(resolveEntryKey([{ key: 'custom', isEntry: false, order: 5 }])).toBe('room')
+  })
+
+  it('boots into the room when the only flagged entry is a retired map', () => {
+    expect(resolveEntryKey([{ key: 'test3', isEntry: true, order: 0 }, { key: 'room', isEntry: true, order: 1 }])).toBe('room')
+    expect(resolveEntryKey([{ key: 'test2', isEntry: true, order: 0 }])).toBe('room')
+  })
+
+  it('honours a flagged entry that is not retired, and falls back to the room when there is none', () => {
+    expect(resolveEntryKey([{ key: 'room', isEntry: true }, { key: 'school_hub' }])).toBe('room')
+    expect(resolveEntryKey([])).toBe('room')
+    expect(resolveEntryKey(null)).toBe('room')
   })
 })

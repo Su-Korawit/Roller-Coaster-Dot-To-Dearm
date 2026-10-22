@@ -33,6 +33,7 @@ const m = vi.hoisted(() => ({
   hydrateSheetsAction: vi.fn(),
   migrateLegacyRoadmap: vi.fn(),
   hydrateSpotify: vi.fn(),
+  bootstrapStudyRoom: vi.fn(),
 }))
 
 vi.mock('firebase/firestore', () => ({
@@ -57,6 +58,9 @@ vi.mock('../lib/db', () => ({
   queries: {
     sheetsSharedWithMe: (uid) => ({ _query: `sheetsSharedWithMe(${uid})` }),
   },
+}))
+vi.mock('./studyRoomBootstrap', () => ({
+  bootstrapStudyRoom: (...a) => m.bootstrapStudyRoom(...a),
 }))
 vi.mock('./spotifyConnect', () => ({
   hydrateSpotify: (...a) => m.hydrateSpotify(...a),
@@ -126,6 +130,7 @@ describe('bootstrapSession', () => {
     m.hydrateFarm.mockResolvedValue(undefined)
     m.hydrateSchool.mockResolvedValue(undefined)
     m.hydrateSpotify.mockResolvedValue(undefined)
+    m.bootstrapStudyRoom.mockResolvedValue(undefined)
     m.migrateLegacyRoadmap.mockReturnValue(null)
   })
 
@@ -137,6 +142,18 @@ describe('bootstrapSession', () => {
     expect(m.hydrateTasks).toHaveBeenCalledWith('u1')
     expect(m.setTaskSyncUser).toHaveBeenCalledWith('u1')
     expect(m.armRoadmapSheetSync).toHaveBeenCalledWith('sheet-1')
+  })
+
+  it('sets up the study room (balance, welcome pack, layout) on login', async () => {
+    m.bootstrapStudyRoom.mockResolvedValue(undefined)
+    await bootstrapSession({ uid: 'u1' })
+    expect(m.bootstrapStudyRoom).toHaveBeenCalledWith('u1')
+  })
+
+  it('keeps hydrating the other stores when the study room setup throws', async () => {
+    m.bootstrapStudyRoom.mockRejectedValue(new Error('room boom'))
+    await bootstrapSession({ uid: 'u1' })
+    expect(m.hydrateTasks).toHaveBeenCalledWith('u1')
   })
 
   it('hydrates the Personal Map on login', async () => {

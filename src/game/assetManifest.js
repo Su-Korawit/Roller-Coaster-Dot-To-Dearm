@@ -110,6 +110,13 @@ export const INDOOR_SCENE_KEYS = ['indoor', 'Wooden_House', 'Basic_Furniture', '
 
 export const GAME_ASSET_BY_KEY = Object.fromEntries(GAME_ASSETS.map((a) => [a.key, a]))
 
+// Storage path of a map JSON: the manifest's (possibly versioned) path for shipped maps,
+// maps/<key>.json for maps uploaded through the admin dashboard.
+export function mapStoragePath(mapKey) {
+  const entry = GAME_ASSET_BY_KEY[mapKey]
+  return entry?.type === 'tilemapJSON' ? entry.storagePath : `maps/${mapKey}.json`
+}
+
 // Local public/ copy of a map JSON — only for maps shipped with the repo.
 // Uploaded maps (Storage-only) return null; callers must NOT fabricate
 // `/maps/<key>.json` for those — on prod the SPA catch-all rewrite would

@@ -84,7 +84,7 @@ function withRegistryDefaults(key, data) {
     hidden:       data.hidden       ?? base.hidden    ?? {},
     displayName:  data.displayName  ?? base.displayName ?? key,
     order:        data.order        ?? 0,
-    isEntry:      data.isEntry      ?? (key === 'test3'),
+    isEntry:      data.isEntry      ?? base.isEntry ?? (key === 'test3'),
     defaultSpawn: data.defaultSpawn ?? base.defaultSpawn ?? null,
     multiplayer:  data.multiplayer  ?? base.multiplayer ?? (key === 'test3'),
     critters:     data.critters     ?? base.critters ?? false,
@@ -126,6 +126,20 @@ export async function listMapConfigs() {
   const maps = snap.docs.map((d) => ({ key: d.id, ...withRegistryDefaults(d.id, d.data()) }))
   maps.sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.key.localeCompare(b.key))
   return maps
+}
+
+// Maps removed by the Study Room (ADR-0023): a stored document or a remembered key for one of
+// these must never decide where the app boots.
+const RETIRED_MAP_KEYS = ['test3', 'test2']
+
+// Pure: the map to boot into, never a retired one; the room when nothing else qualifies.
+// Built-in maps count even before an admin has saved a document for them.
+export function resolveEntryKey(maps) {
+  const stored = (maps ?? []).filter((m) => !RETIRED_MAP_KEYS.includes(m.key))
+  const builtIns = Object.keys(DEFAULT_MAP_CONFIGS)
+    .filter((key) => !RETIRED_MAP_KEYS.includes(key) && !stored.some((m) => m.key === key))
+    .map((key) => ({ key, ...withRegistryDefaults(key, {}) }))
+  return pickEntryKey([...stored, ...builtIns]) ?? 'room'
 }
 
 // Pure: choose which map loads on boot.
