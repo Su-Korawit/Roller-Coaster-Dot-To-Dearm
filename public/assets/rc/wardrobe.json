@@ -1,0 +1,39 @@
+{
+  "name": "wardrobe",
+  "frameW": 48,
+  "frameH": 48,
+  "sprites": {
+    "acc_cap": {
+      "row": 0,
+      "frames": 16
+    },
+    "acc_ribbon": {
+      "row": 1,
+      "frames": 16
+    },
+    "acc_glasses": {
+      "row": 2,
+      "frames": 16
+    },
+    "acc_mask": {
+      "row": 3,
+      "frames": 16
+    },
+    "acc_scarf": {
+      "row": 4,
+      "frames": 16
+    },
+    "acc_bowtie": {
+      "row": 5,
+      "frames": 16
+    },
+    "acc_backpack": {
+      "row": 6,
+      "frames": 16
+    },
+    "acc_wings": {
+      "row": 7,
+      "frames": 16
+    }
+  }
+}

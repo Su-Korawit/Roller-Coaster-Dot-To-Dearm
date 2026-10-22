@@ -17,7 +17,7 @@ export const DEFAULT_MAP_CONFIGS = {
   // The student's study room (ADR-0023): generated map + furniture sprites from their layout.
   room: {
     tilesets: { 'Room Tiles': 'rc/tilesets/room_tiles.png' },
-    collision: { Wall: true },
+    collision: { Wall: true, Wall_t1: true, Wall_t2: true, Wall_t3: true },
     hidden: {},
     displayName: 'My room',
     multiplayer: false,

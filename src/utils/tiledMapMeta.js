@@ -74,6 +74,7 @@ export function parseMapMeta(map) {
     height: o.height,
     target: propValue(o, 'target'),
     targetSpawn: propValue(o, 'targetSpawn'),
+    tier: propValue(o, 'tier'),
   }))
 
   return {

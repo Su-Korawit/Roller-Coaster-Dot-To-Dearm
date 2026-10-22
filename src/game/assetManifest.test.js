@@ -59,16 +59,25 @@ describe('School Hub map path', () => {
 describe('study room assets', () => {
   it('declares the room map, tileset, furniture and focus art', () => {
     const by = (k) => GAME_ASSETS.find((a) => a.key === k)
-    expect(by('room')).toMatchObject({ type: 'tilemapJSON', storagePath: 'maps/room_v1.json', localPath: '/maps/room.json' })
+    expect(by('room')).toMatchObject({ type: 'tilemapJSON', storagePath: 'maps/room_v2.json', localPath: '/maps/room.json' })
     expect(by('Room Tiles')).toMatchObject({ type: 'image', storagePath: 'rc/tilesets/room_tiles.png', localPath: '/assets/rc/room_tiles.png' })
     expect(by('room_items')).toMatchObject({ type: 'spritesheet', frameConfig: { frameWidth: 32, frameHeight: 32 }, localPath: '/assets/rc/room_items.png' })
     expect(by('focus_art')).toMatchObject({ type: 'spritesheet', frameConfig: { frameWidth: 48, frameHeight: 48 }, localPath: '/assets/rc/focus.png' })
+  })
+
+  it('declares the pets and the accessory overlays (part 2)', () => {
+    const by = (k) => GAME_ASSETS.find((a) => a.key === k)
+    expect(by('room_pets')).toMatchObject({ type: 'spritesheet', frameConfig: { frameWidth: 16, frameHeight: 16 }, localPath: '/assets/rc/pets.png' })
+    expect(by('avatar_accessories')).toMatchObject({ type: 'spritesheet', frameConfig: { frameWidth: 48, frameHeight: 48 }, localPath: '/assets/rc/wardrobe.png' })
+  })
+  it('versions the changed room map so cached v1 clients keep their own file', () => {
+    expect(GAME_ASSETS.find((a) => a.key === 'room')).toMatchObject({ storagePath: 'maps/room_v2.json' })
   })
 })
 
 describe('mapStoragePath', () => {
   it('uses the manifest path for shipped maps, so versioned paths really are loaded', () => {
-    expect(mapStoragePath('room')).toBe('maps/room_v1.json')
+    expect(mapStoragePath('room')).toBe('maps/room_v2.json')
     expect(mapStoragePath('school_hub')).toBe('maps/school_hub_v2.json')
   })
 
