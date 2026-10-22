@@ -11,6 +11,10 @@ import { focusProgress } from '../room/focusProgress'
 import { renderRoom } from './roomRender'
 import { isWalkableAt } from './walkable'
 import { nearestLabel } from '../lib/resumeRules'
+import { renderCampus } from './campusRender'
+import { findPath, simplifyPath, nearestFree, createWalker } from './autoWalk'
+import { blockedByFootprints, HALL } from './campusLayout'
+import { shouldPlayIntro, introSeen, markIntroSeen, INTRO_MS } from './campusSigns'
 
 // 0 = Basic_Charakter (1 ตัว)
 // 1 = MBTI rotation (16 ตัว สลับทุก 1 วิ)
@@ -218,6 +222,13 @@ export class MapScene extends Phaser.Scene {
       }
     }
 
+    // The Open House campus draws its buildings from the generated sprite sheet.
+    if (r.get('mapConfig')?.campus) {
+      const url = urlFor(r, 'campus_buildings')
+      const frame = GAME_ASSET_BY_KEY.campus_buildings?.frameConfig
+      if (url && frame && !this.textures.exists('campus_buildings')) this.load.spritesheet('campus_buildings', url, frame)
+    }
+
     attachLocalFallback(this, localByKey)
   }
 
@@ -416,6 +427,8 @@ export class MapScene extends Phaser.Scene {
       })
     }
 
+    if (cfg.campus) this._initCampus(map, mapScale)
+
     this._remoteAvatars = new Map()
     this._currentDir    = 'down'
 
@@ -487,6 +500,7 @@ export class MapScene extends Phaser.Scene {
       this._zoneDefs.push({
         zone, action: it.action, shopId: it.shopId ?? null,
         seatId: it.seatId ?? null, boardId: it.boardId ?? null, route: it.route ?? null,
+        buildingId: it.buildingId ?? null,
       })
     })
 
@@ -507,6 +521,7 @@ export class MapScene extends Phaser.Scene {
     this.joystickPointerId = -1
 
     this.input.on('pointerdown', (pointer) => {
+      this._walker?.cancel()
       // Study room: while decorating, a tap edits the room instead of moving the avatar.
       if (cfg.room && this.registry.get('roomDecorating')) {
         this.game.events.emit('roomTap', { x: pointer.worldX / mapScale, y: pointer.worldY / mapScale })
@@ -584,6 +599,8 @@ export class MapScene extends Phaser.Scene {
     this.scale.on('resize', onResize)
     this.events.once('shutdown', () => this.scale.off('resize', onResize))
 
+    if (cfg.campus) this._campusIntro()
+
     this.game.events.emit('mapSceneReady')
   }
 
@@ -593,6 +610,7 @@ export class MapScene extends Phaser.Scene {
     this._tickResume(time)
     this._tickRoofs()
     this._tickCritters(delta ?? 16)
+    this._campus?.update(this.player.x, this.player.y)
 
     // ── Interaction zones (checked every 10th frame) ──
     this._zoneTick = (this._zoneTick ?? 0) + 1
@@ -607,11 +625,15 @@ export class MapScene extends Phaser.Scene {
             else if (def.action === 'board') this.game.events.emit('boardEntered', { boardId: def.boardId })
             else if (def.action === 'tool') this.game.events.emit('toolEntered', { route: def.route })
             else if (def.action === 'roomSeat') this.game.events.emit('roomSeatEntered', { seatId: def.seatId })
+            else if (def.action === 'building') this.game.events.emit('buildingDoorEntered', { buildingId: def.buildingId })
+            else if (def.action === 'directory') this.game.events.emit('directoryEntered')
           } else if (!overlapping && was) {
             this._activeZones.delete(def.zone)
             if (def.action === 'focusSeat') this.game.events.emit('focusSeatExited', { seatId: def.seatId })
             else if (def.action === 'board') this.game.events.emit('boardExited', { boardId: def.boardId })
             else if (def.action === 'roomSeat') this.game.events.emit('roomSeatExited', { seatId: def.seatId })
+            else if (def.action === 'building') this.game.events.emit('buildingDoorExited', { buildingId: def.buildingId })
+            else if (def.action === 'directory') this.game.events.emit('directoryExited')
           }
         }
       }
@@ -643,6 +665,7 @@ export class MapScene extends Phaser.Scene {
 
     if (wasdActive) {
       this.usingWasd = true
+      this._walker?.cancel()
       this.isMoving = false
       this.marker.setVisible(false)
 
@@ -677,6 +700,7 @@ export class MapScene extends Phaser.Scene {
 
     const controlMode = this.registry.get('controlMode') ?? DEFAULT_CONTROL_MODE
     if (controlMode === 'joystick') {
+      if (this.joystickActive) this._walker?.cancel()
       // Find the specific pointer that started the joystick
       const allPointers = [this.input.pointer1, this.input.pointer2]
       const ptr = allPointers.find(p => p.id === this.joystickPointerId) ?? this.input.activePointer
@@ -717,6 +741,7 @@ export class MapScene extends Phaser.Scene {
       this.player.play(`${this.currentMbti}-idle`)
     }
 
+    if (!this.isMoving) this._feedWalker()
     if (!this.isMoving) return
 
     const spd = SPEED * (this.isSprinting ? SPRINT_MULTIPLIER : 1)
@@ -725,6 +750,8 @@ export class MapScene extends Phaser.Scene {
     const distance = Math.sqrt(dx * dx + dy * dy)
 
     if (distance < ARRIVE_THRESHOLD) {
+      // Auto-walk: slide straight on to the next waypoint instead of idling at the corner.
+      if (this._feedWalker()) return
       this.player.setVelocity(0, 0)
       this.player.play(`${this.currentMbti}-idle`)
       this.isMoving = false
@@ -816,6 +843,77 @@ export class MapScene extends Phaser.Scene {
 
   // Roofs: group the Roof layer's tiles into connected buildings; the one the player is standing
   // under fades out (so the interior shows) and fades back in when they leave.
+  // ── Open House campus ──
+  _initCampus(map, mapScale) {
+    this._campus = renderCampus(this, mapScale)
+    this._walker = null
+    const onWalkTo = ({ tx, ty }) => this.walkTo(tx, ty)
+    this.game.events.on('campusWalkTo', onWalkTo)
+    this.events.once('shutdown', () => {
+      this.game.events.off('campusWalkTo', onWalkTo)
+      this._campus?.destroy()
+      this._campus = null
+      this._walker = null
+    })
+  }
+
+  _tileBlocked(tx, ty) {
+    const t = this._map.tileWidth
+    return !isWalkableAt(this._map, this._collisionLayers, tx * t + t / 2, ty * t + t / 2) || blockedByFootprints(tx, ty)
+  }
+
+  // Walk to a tile along the tile grid (the minimap and the faculty list call this).
+  walkTo(tx, ty) {
+    if (!this.player || !this._map) return false
+    const { width: w, height: h, tileWidth: t } = this._map
+    const blocked = (x, y) => this._tileBlocked(x, y)
+    const here = nearestFree(blocked, w, h, { x: Math.floor(this.player.x / this._mapScale / t), y: Math.floor(this.player.y / this._mapScale / t) })
+    const goal = nearestFree(blocked, w, h, { x: tx, y: ty })
+    const path = here && goal ? findPath(blocked, w, h, here, goal) : null
+    if (!path) return false
+    this._walker = createWalker(simplifyPath(path))
+    this._feedWalker()
+    return true
+  }
+
+  // Hand the next waypoint to the click-to-move machinery. True while there is one.
+  _feedWalker() {
+    const next = this._walker?.next()
+    if (!next) return false
+    const t = this._map.tileWidth * this._mapScale
+    this.targetX = next.x * t + t / 2
+    this.targetY = next.y * t + t / 2
+    this.isMoving = true
+    this.marker.setVisible(false)
+    return true
+  }
+
+  // First visit only: a short pan from the entrance bridge up to the central hall, skippable.
+  _campusIntro() {
+    const reduced = typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    const store = typeof localStorage !== 'undefined' ? localStorage : null
+    if (!shouldPlayIntro({ seen: introSeen(store), reducedMotion: reduced, hasResume: !!this.spawnAt })) return
+    markIntroSeen(store)
+    const cam = this.cameras.main
+    const s = this._mapScale
+    const hall = { x: (HALL.x + 3) * 16 * s, y: (HALL.y + 3) * 16 * s }
+    let finished = false
+    const finish = () => {
+      if (finished) return
+      finished = true
+      cam.panEffect.reset()
+      cam.startFollow(this.player, true, 0.1, 0.1)
+      this.input.off('pointerdown', finish)
+      this.game.events.emit('campusIntroEnded')
+    }
+    cam.stopFollow()
+    cam.pan(hall.x, hall.y, INTRO_MS / 2, 'Sine.easeInOut', true, (_c, progress) => {
+      if (progress === 1) this.time.delayedCall(INTRO_MS / 4, finish)
+    })
+    this.input.once('pointerdown', finish)
+    this.game.events.emit('campusIntroStarted')
+  }
+
   _initRoofs(layerInfos, map) {
     this._roofs = []
     const info = layerInfos.find((l) => l.name === 'Roof')
