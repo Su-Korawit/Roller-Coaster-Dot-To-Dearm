@@ -84,7 +84,7 @@ describe('TcasCalendarTab', () => {
     fireEvent.change(screen.getByLabelText('รายละเอียด'), { target: { value: 'สนามสอบทั่วประเทศ' } })
     fireEvent.click(screen.getByText('บันทึกกิจกรรม'))
     expect(eventsState.addEvent).toHaveBeenCalledWith({
-      title: 'สอบ TGAT', description: 'สนามสอบทั่วประเทศ', date: '2026-12-13', link: '',
+      title: 'สอบ TGAT', description: 'สนามสอบทั่วประเทศ', date: '2026-12-13', link: '', round: '', kind: '', examKeys: '',
     })
   })
 

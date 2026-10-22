@@ -12,8 +12,8 @@ export async function syncSelectToFirestore(uid) {
   if (!uid) return
 
   const { mbti, career, mastery } = useSelectStore.getState()
-  const { plans, activePlanId } = usePlansStore.getState()
-  const profile = shapes.profileFields({ mbti, career, mastery, plans, activePlanId })
+  const { plans, activePlanId, goalHours } = usePlansStore.getState()
+  const profile = shapes.profileFields({ mbti, career, mastery, plans, activePlanId, goalHours })
 
   if (Object.keys(profile).length === 0) return
 
@@ -45,9 +45,9 @@ export async function hydrateSelectStoreFromFirestore(uid) {
 
     // Firestore-wins: read through the canonical shape (handles legacy
     // top-level docs) and overwrite local so it stays consistent across devices.
-    const { mbti, career, masteryTrack, university, program, plans, activePlanId } = shapes.readProfile(data)
+    const { mbti, career, masteryTrack, university, program, plans, activePlanId, goalHours } = shapes.readProfile(data)
     const { setMbti, setCareer, setMastery, setUniversity, setProgram } = useSelectStore.getState()
-    usePlansStore.setState({ plans, activePlanId })
+    usePlansStore.getState().hydrate({ plans, activePlanId, goalHours })
     if (mbti)         setMbti(mbti)
     if (career)       setCareer(career)
     if (masteryTrack) setMastery(masteryTrack)

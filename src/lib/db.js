@@ -168,7 +168,7 @@ export const shapes = {
 
   // Canonical write shape: maps select-store fields onto profile.*, keeping only
   // non-empty values and renaming mastery → masteryTrack.
-  profileFields: ({ mbti, career, mastery, university, program, plans, activePlanId } = {}) => {
+  profileFields: ({ mbti, career, mastery, university, program, plans, activePlanId, goalHours } = {}) => {
     const profile = {}
     if (mbti)    profile.mbti = mbti
     if (career)  profile.career = career
@@ -176,12 +176,23 @@ export const shapes = {
     if (mastery) profile.masteryTracks = [{ masteryId: mastery, milestones: [], progressPct: 0, addedAt: Date.now() }]
 
     if (Array.isArray(plans) && plans.length) {
-      profile.plans = plans.map((pl) => ({
-        id: pl.id,
-        university: pl.university ?? null,
-        program: pl.program ?? null,
-        addedAt: pl.addedAt ?? Date.now(),
-      }))
+      // v2 entries (the Plan, ADR-0025) carry their round, rank, scores and checklist.
+      profile.plans = plans.map((pl) => (pl.v === 2
+        ? {
+            id: pl.id, v: 2, addedAt: pl.addedAt ?? Date.now(),
+            university: pl.university ?? null, program: pl.program ?? null,
+            universityId: pl.universityId ?? null, universityName: pl.universityName ?? null,
+            programId: pl.programId ?? null, programName: pl.programName ?? null, buildingId: pl.buildingId ?? null,
+            round: pl.round ?? null, rank: pl.rank ?? null, projectName: pl.projectName ?? null,
+            scores: pl.scores ?? [], minGpax: pl.minGpax ?? null, checklist: pl.checklist ?? [],
+          }
+        : {
+            id: pl.id,
+            university: pl.university ?? null,
+            program: pl.program ?? null,
+            addedAt: pl.addedAt ?? Date.now(),
+          }))
+      if (goalHours && Object.keys(goalHours).length) profile.goalHours = goalHours
       if (activePlanId) profile.activePlanId = activePlanId
       // Mirror rank-1 (plans[0]) into legacy singular fields for downstream readers.
       const top = profile.plans[0]
@@ -220,6 +231,7 @@ export const shapes = {
       university: singleUni,
       plans,
       activePlanId: p.activePlanId ?? plans[0]?.id ?? null,
+      ...(p.goalHours ? { goalHours: p.goalHours } : {}),
       programs: p.programs ?? (p.program ?? userDoc.program
         ? [{ programId: p.program ?? userDoc.program }]
         : []),
