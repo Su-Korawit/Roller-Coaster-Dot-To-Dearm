@@ -37,7 +37,7 @@ export const useUserStore = create(
       activeMasteryBlockId: null,
       aiLanguage: 'Thai',
       controlMode: 'joystick',
-      uiVisibility: { hotbar: true, shortcuts: true, newsButton: true, musicPill: true, contactFab: true },
+      uiVisibility: { hotbar: true, newsButton: true, musicPill: true, contactFab: true },
       profilePhotoURL: null,
 
       setUser: (user) => set({ user }),
@@ -188,7 +188,7 @@ export const useUserStore = create(
           activeMasteryBlockId: null,
           aiLanguage: 'Thai',
           controlMode: 'joystick',
-          uiVisibility: { hotbar: true, shortcuts: true, newsButton: true, musicPill: true, contactFab: true },
+          uiVisibility: { hotbar: true, newsButton: true, musicPill: true, contactFab: true },
           profilePhotoURL: null,
         }),
     }),

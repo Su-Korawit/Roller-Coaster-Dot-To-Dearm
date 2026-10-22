@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
-import { Calendar, MessageCircle, Map, Newspaper, Trophy, Flame, Gamepad2, GraduationCap, Menu, X } from 'lucide-react'
+import { MessageCircle, Flame, Gamepad2 } from 'lucide-react'
 import LevelBadge from '../components/hud/LevelBadge'
 import { useUserStore } from '../stores/useUserStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { APP_VIEWS, shouldShowNav } from '../constants/appViews'
 import Hotbar from '../components/hotbar/Hotbar'
+import BagSheet from '../components/hotbar/BagSheet'
+import SettingsSheet from '../components/SettingsSheet'
 import { useRoomUiStore } from '../stores/useRoomUiStore'
 import TaskPanel from '../components/TaskPanel'
 import NewsPanel from '../components/NewsPanel'
@@ -58,7 +60,7 @@ function HomePage() {
   const coins = useUserStore((state) => state.coins)
   const totalStacks = useUserStore((s) => s.totalStacks)
   const uiVisibility = useUserStore((s) => s.uiVisibility)
-  const [menuOpen, setMenuOpen] = useState(false)
+  const roomSheet = useRoomUiStore((s) => s.sheet)
 
   // Daily check-in — once per day, on entering Home.
   useEffect(() => {
@@ -113,6 +115,8 @@ function HomePage() {
       else handleTabChange(view)
     },
     openPopup: (id) => openPopup(id),
+    openAdminChat,
+    newsUnread: !newsRead,
     openSheet: (name) => {
       const ui = useRoomUiStore.getState()
       if (ui.sheet === name) ui.close()
@@ -273,51 +277,9 @@ function HomePage() {
         </div>
       </div>
 
-      {/* ── MENU (Calendar · Mastery · Roadmap · Schedule · News) — one button, opens a short list ── */}
-      {uiVisibility.shortcuts && (
-      <div className="absolute top-20 left-4 z-20">
-        <button
-          onClick={() => setMenuOpen((v) => !v)}
-          aria-label="เมนู"
-          aria-expanded={menuOpen}
-          className="relative px-btn w-12 h-12 rounded-lg bg-paper flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-        >
-          {menuOpen ? <X size={22} strokeWidth={2.5} className="text-ink" /> : <Menu size={22} strokeWidth={2.5} className="text-ink" />}
-          {!newsRead && uiVisibility.newsButton && !menuOpen && (
-            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-danger border-2 border-ink" aria-hidden="true" />
-          )}
-        </button>
-        {menuOpen && (
-          <>
-            <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} aria-hidden="true" />
-            <ul role="menu" className="relative z-20 mt-2 px-slab p-1 w-44 flex flex-col">
-              {[
-                { icon: Calendar, label: 'ปฏิทิน', run: handlePlannerTransition },
-                { icon: Trophy, label: 'Mastery', run: () => openPopup('mastery') },
-                { icon: Map, label: 'Roadmap', run: () => openPopup('roadmap') },
-                { icon: GraduationCap, label: 'ตารางเรียน', run: () => handleTabChange(APP_VIEWS.SCHOOL) },
-                ...(uiVisibility.newsButton ? [{ icon: Newspaper, label: 'ข่าวสาร', run: () => handleTabChange(APP_VIEWS.NEWS), dot: !newsRead }] : []),
-              ].map(({ icon, label, run, dot }) => {
-                const MenuIcon = icon
-                return (
-                <li key={label} role="none">
-                  <button
-                    role="menuitem"
-                    onClick={() => { setMenuOpen(false); run() }}
-                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md thai-font text-sm text-ink hover:bg-mist focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-                  >
-                    <MenuIcon size={18} strokeWidth={2.5} aria-hidden="true" />
-                    <span className="flex-1 text-left">{label}</span>
-                    {dot && <span className="w-2.5 h-2.5 rounded-full bg-danger border border-ink" aria-label="ใหม่" />}
-                  </button>
-                </li>
-                )
-              })}
-            </ul>
-          </>
-        )}
-      </div>
-      )}
+      {/* ── BAG (replaces the old ≡ menu: Calendar · Mastery · Roadmap · School · News · … ) ── */}
+      {roomSheet === 'bag' && <BagSheet onClose={() => useRoomUiStore.getState().close()} ctx={hotbarCtx} />}
+      {activePopup === 'settings' && activeTab !== APP_VIEWS.PROFILE && <SettingsSheet onClose={closePopup} />}
 
       {/* ── PANELS ── */}
       {activeTab === APP_VIEWS.TASK && <TaskPanel onClose={closePanel} initialView={taskInitialView} />}

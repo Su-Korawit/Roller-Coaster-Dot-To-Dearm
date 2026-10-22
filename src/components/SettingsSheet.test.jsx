@@ -21,7 +21,7 @@ describe('SettingsSheet', () => {
   beforeEach(() => {
     authState = { user: { uid: 'u1', displayName: 'Test User', photoURL: null }, signOut: vi.fn() }
     useUserStore.setState({
-      uiVisibility: { hotbar: true, shortcuts: true, newsButton: true, musicPill: true, contactFab: true },
+      uiVisibility: { hotbar: true, newsButton: true, musicPill: true, contactFab: true },
     })
   })
 
@@ -50,6 +50,6 @@ describe('SettingsSheet', () => {
     fireEvent.click(screen.getByRole('switch', { name: 'แถบไอเทมด่วน (Hotbar)' }))
     const { uiVisibility } = useUserStore.getState()
     expect(uiVisibility.hotbar).toBe(false)
-    expect(uiVisibility.shortcuts).toBe(true)
+    expect(uiVisibility.newsButton).toBe(true)
   })
 })
