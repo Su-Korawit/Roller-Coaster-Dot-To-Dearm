@@ -69,9 +69,9 @@ export default function NewsHomePage() {
     <main data-testid="news-home" className="min-h-dvh w-full bg-mist overflow-x-hidden">
       <SiteNav currentKey="news" />
 
-      <header className="pixel-checker border-b-2 border-ink bg-surface px-6 py-12 md:py-16">
+      <header className="pixel-checker border-b-2 border-ink bg-paper px-6 py-12 md:py-16">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="wordmark-font mb-4 text-[10px] uppercase text-brand-strong md:text-xs">
+          <p className="wordmark-font mb-4 text-xs uppercase text-brand-strong md:text-xs">
             {SITES.news.pixelName}
           </p>
           <h1 className="thai-font text-3xl font-extrabold leading-tight text-ink md:text-4xl">
@@ -82,7 +82,7 @@ export default function NewsHomePage() {
       </header>
 
       <div className="mx-auto max-w-3xl px-4 py-6">
-        <div className="neo-card overflow-hidden">
+        <div className="px-card overflow-hidden">
           <div className="flex border-b border-ink/10">
             {[
               { key: 'feed', label: 'ข่าวค่าย' },
@@ -133,7 +133,7 @@ export default function NewsHomePage() {
                     <div className="p-3">
                       <div className="flex items-center gap-1 mb-1">
                         <img src={camphubLogo} alt="" className="w-4 h-4 rounded object-contain" />
-                        <span className="thai-font text-[10px] text-brand-strong font-semibold">CAMPHUB</span>
+                        <span className="thai-font text-xs text-brand-strong font-semibold">CAMPHUB</span>
                       </div>
                       <p className="thai-font text-sm font-semibold text-ink line-clamp-2">{camp.title}</p>
                     </div>
@@ -152,9 +152,9 @@ export default function NewsHomePage() {
                     key={update.id}
                     type="button"
                     onClick={() => setDetailUpdate(update)}
-                    className="w-full text-left neo-card p-4 hover:border-brand transition-colors"
+                    className="w-full text-left px-card p-4 hover:border-brand transition-colors"
                   >
-                    <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold mb-2 ${badge.color}`}>
+                    <span className={`inline-block px-2 py-0.5 rounded-md text-xs font-semibold mb-2 ${badge.color}`}>
                       {badge.label}
                     </span>
                     <p className="thai-font text-sm font-semibold text-ink">{update.title}</p>
@@ -196,7 +196,7 @@ export default function NewsHomePage() {
         <div className="fixed inset-0 z-50">
           <Popup variant="center" size="sm" onClose={() => setShowLoginCta(false)}>
             <div className="p-6 text-center">
-              <p className="pixel-font text-[10px] text-ink mb-3">เข้าสู่ระบบ</p>
+              <p className="pixel-font text-xs text-ink mb-3">เข้าสู่ระบบ</p>
               <p className="thai-font text-sm text-ink/70 mb-5">
                 ล็อกอินเพื่อเพิ่มกิจกรรมลงตารางเรียนของคุณ
               </p>
@@ -204,7 +204,7 @@ export default function NewsHomePage() {
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={signingIn}
-                className="neo-btn w-full rounded-xl bg-brand-strong py-3 thai-font text-sm text-white disabled:opacity-50"
+                className="px-btn w-full rounded-xl bg-brand-strong py-3 thai-font text-sm text-white disabled:opacity-50"
               >
                 {signingIn ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบด้วย Google'}
               </button>

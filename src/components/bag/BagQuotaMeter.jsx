@@ -10,11 +10,11 @@ export default function BagQuotaMeter({ used = 0, quota = 1, isAdmin = false, on
   return (
     <div className="px-3 py-2 space-y-1.5 border-t border-ink/10">
       <div className="flex items-center justify-between gap-2">
-        <span className="pixel-font text-[7px] text-ink-soft">
+        <span className="pixel-font text-xs text-ink-soft">
           {isAdmin ? '1TB (Admin)' : `${format(used)} / ${format(quota)}`}
         </span>
         {!isAdmin && onUpgrade && (
-          <button type="button" onClick={onUpgrade} className="text-[10px] text-brand font-semibold">
+          <button type="button" onClick={onUpgrade} className="text-xs text-brand font-semibold">
             Upgrade
           </button>
         )}

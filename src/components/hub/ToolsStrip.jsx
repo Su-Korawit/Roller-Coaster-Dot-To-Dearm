@@ -1,6 +1,6 @@
 import { Map, GraduationCap, Newspaper, NotebookPen } from 'lucide-react'
 import { SITES } from '../../constants/sites'
-import { siteHref } from '../landing/SiteNav'
+import { siteHref } from '../landing/siteHref'
 
 const TOOLS = [
   ['roadmap', Map],

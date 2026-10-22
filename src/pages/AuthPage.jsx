@@ -103,7 +103,7 @@ export default function AuthPage() {
       <SceneBackdrop />
 
       <div className="relative z-10 flex flex-col items-center mb-5">
-        <div className="neo-card px-7 pt-4 pb-5 text-center animate-pop">
+        <div className="px-card px-7 pt-4 pb-5 text-center animate-pop">
           <h1 className="wordmark-font pixel-title text-xl leading-relaxed tracking-wide">I LOVE TCAS</h1>
           <p className="thai-font mt-1 text-sm md:text-base text-ink-soft">เส้นทางสู่ความสำเร็จของคุณ</p>
         </div>
@@ -112,7 +112,7 @@ export default function AuthPage() {
         </div>
       </div>
 
-      <div className="relative z-10 w-full max-w-md md:max-w-lg neo-card bg-paper p-5 md:p-6 animate-pop">
+      <div className="relative z-10 w-full max-w-md md:max-w-lg px-card bg-paper p-5 md:p-6 animate-pop">
         <fieldset className="mb-4 space-y-2 thai-font text-xs text-ink">
             <legend className="sr-only">ข้อกำหนดและความยินยอม</legend>
             <label className="flex items-start gap-2">
@@ -134,7 +134,7 @@ export default function AuthPage() {
           onClick={handleGoogle}
           disabled={busy}
           aria-label="เข้าสู่ระบบด้วย Google"
-          className="neo-btn w-full flex items-center justify-center gap-2.5 bg-surface rounded-xl py-3
+          className="px-btn w-full flex items-center justify-center gap-2.5 bg-paper rounded-xl py-3
             disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1"
         >
           <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -154,7 +154,7 @@ export default function AuthPage() {
         </div>
 
         <div
-          className="flex rounded-xl border-2 border-edge p-0.5 mb-4 bg-surface"
+          className="flex rounded-xl border-2 border-line p-0.5 mb-4 bg-paper"
           role="tablist"
           aria-label="เลือกโหมด"
         >
@@ -166,7 +166,7 @@ export default function AuthPage() {
               onClick={() => switchMode(m)}
               className={`flex-1 py-2.5 rounded-lg thai-font text-sm transition-colors
                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand
-                ${mode === m ? 'neo-pressed text-ink font-semibold border-2 border-edge' : 'text-ink-soft hover:text-ink border-2 border-transparent'}`}
+                ${mode === m ? 'px-pressed text-ink font-semibold border-2 border-line' : 'text-ink-soft hover:text-ink border-2 border-transparent'}`}
             >
               {m === 'login' ? 'เข้าสู่ระบบ' : 'สมัครสมาชิก'}
             </button>
@@ -182,7 +182,7 @@ export default function AuthPage() {
             required
             autoComplete="email"
             aria-label="Email"
-            className="neo-input thai-font px-4 h-11 text-sm text-ink placeholder:text-ink-soft w-full"
+            className="px-input thai-font px-4 h-11 text-sm text-ink placeholder:text-ink-soft w-full"
           />
           <input
             type="password"
@@ -193,7 +193,7 @@ export default function AuthPage() {
             minLength={6}
             autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
             aria-label="Password"
-            className="neo-input thai-font px-4 h-11 text-sm text-ink placeholder:text-ink-soft w-full"
+            className="px-input thai-font px-4 h-11 text-sm text-ink placeholder:text-ink-soft w-full"
           />
 
           {error && (

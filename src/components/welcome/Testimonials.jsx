@@ -5,7 +5,7 @@ export default function Testimonials({ testimonials, loading }) {
         <h2 className="pixel-font text-center text-sm md:text-lg text-ink mb-8">TESTIMONIALS</h2>
         <div className="mx-auto grid max-w-5xl gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="neo-card p-6 animate-pulse">
+            <div key={i} className="px-card p-6 animate-pulse">
               <div className="flex items-center gap-3">
                 <div className="h-11 w-11 rounded-full bg-gray-200" />
                 <div className="space-y-2 flex-1">
@@ -30,7 +30,7 @@ export default function Testimonials({ testimonials, loading }) {
       <h2 className="pixel-font text-center text-sm md:text-lg text-ink mb-8">TESTIMONIALS</h2>
       <div className="mx-auto grid max-w-5xl gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {testimonials.map((t) => (
-          <figure key={t.id} className="neo-card p-6">
+          <figure key={t.id} className="px-card p-6">
             <div className="flex items-center gap-3">
               {t.avatarUrl ? (
                 <img src={t.avatarUrl} alt="" className="h-11 w-11 rounded-full object-cover" />

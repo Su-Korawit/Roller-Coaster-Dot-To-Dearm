@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ChevronDown } from 'lucide-react'
 import { appLink } from '../../content/htmlPages'
-import { siteHref } from '../landing/SiteNav'
+import { siteHref } from '../landing/siteHref'
 
 const QUICK_FACULTIES = ['แพทย์', 'วิศวะ', 'นิติ', 'บริหาร', 'นิเทศ', 'ครุศาสตร์']
 
@@ -23,7 +23,7 @@ export default function HubHero({ config }) {
       className="relative isolate flex min-h-[560px] items-center overflow-hidden border-b-2 border-line"
       style={{
         height: 'calc(100vh - 60px)',
-        backgroundColor: '#DDF1FB',
+        backgroundColor: 'var(--color-zone-sci-soft)',
         backgroundImage: 'url(/assets/hub/campus-hero.svg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',

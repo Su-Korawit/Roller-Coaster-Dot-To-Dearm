@@ -170,7 +170,7 @@ export default function BagCanvas({
         <button
           type="button"
           onClick={handleNewFolder}
-          className="neo-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-surface"
+          className="px-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-paper"
         >
           + Folder
         </button>
@@ -198,7 +198,7 @@ export default function BagCanvas({
           fitView
           className="w-full h-full"
         >
-          <Background gap={20} color="#e2e8f0" />
+          <Background gap={20} color="var(--color-hairline)" />
           <Controls className="rf-touch-controls" />
         </ReactFlow>
       </ReactFlowProvider>

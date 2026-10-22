@@ -22,8 +22,8 @@ export default function LegalPage({ doc, other }) {
 
   return (
     <div className="min-h-dvh bg-paper text-ink overflow-y-auto" style={{ height: '100dvh' }}>
-      <header className="sticky top-0 z-10 bg-surface border-b-2 border-ink px-4 py-3 flex items-center justify-between">
-        <Link to="/" className="wordmark-font text-[11px] text-brand-strong">I LOVE TCAS</Link>
+      <header className="sticky top-0 z-10 bg-paper border-b-2 border-ink px-4 py-3 flex items-center justify-between">
+        <Link to="/" className="wordmark-font text-xs text-brand-strong">I LOVE TCAS</Link>
         <nav aria-label="เอกสารทางกฎหมาย" className="thai-font text-xs flex gap-3">
           <Link to={other.to} className="underline text-ink-soft">{other.label}</Link>
         </nav>
@@ -35,7 +35,7 @@ export default function LegalPage({ doc, other }) {
 
         {doc.intro.map((t) => <p key={t} className="mb-3">{t}</p>)}
 
-        <nav aria-label="สารบัญ" className="neo-slab p-3 my-5">
+        <nav aria-label="สารบัญ" className="px-slab p-3 my-5">
           <p className="text-xs font-bold mb-1.5">สารบัญ</p>
           <ol className="space-y-1 text-xs">
             {doc.sections.map((s) => (

@@ -5,7 +5,7 @@ import { searchSummaries } from '../../content/listing'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import HubLayout from '../../components/hub/HubLayout'
 import ArticleCard from '../../components/hub/ArticleCard'
-import { siteHref } from '../../components/landing/SiteNav'
+import { siteHref } from '../../components/landing/siteHref'
 
 export default function SearchPage() {
   const [params, setParams] = useSearchParams()

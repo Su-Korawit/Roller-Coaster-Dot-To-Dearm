@@ -20,15 +20,15 @@ const SHOWCASE = [
 export default function WelcomePage() {
   const { gamePreview, stats, news, testimonials, faq, loading } = useWelcomeContent()
   return (
-    <main data-testid="welcome-page" className="min-h-dvh w-full bg-[#F4F7FC] overflow-x-hidden">
+    <main data-testid="welcome-page" className="min-h-dvh w-full bg-mist overflow-x-hidden">
       <WelcomeNav />
       <HeroSection gamePreview={gamePreview} loading={loading} />
       <section className="px-6 py-10">
         <h2 className="pixel-font text-center text-sm md:text-lg text-ink mb-8">จุดเด่น</h2>
         <div className="mx-auto grid max-w-5xl gap-6 sm:grid-cols-3">
           {SHOWCASE.map((item) => (
-            <div key={item.title} className="neo-card p-6 text-center">
-              <h3 className="pixel-font text-[10px] text-brand-strong mb-2">{item.title}</h3>
+            <div key={item.title} className="px-card p-6 text-center">
+              <h3 className="pixel-font text-xs text-brand-strong mb-2">{item.title}</h3>
               <p className="thai-font text-sm text-ink/80">{item.description}</p>
             </div>
           ))}
