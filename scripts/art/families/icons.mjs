@@ -68,6 +68,14 @@ const leaf = (c) => { // Leaves currency: a single leaf with a vein
   c.px(16, 13, O); c.px(17, 14, O); c.px(18, 15, O)
 }
 
+const bag = (c) => { // backpack: Bag button (settings & everything else)
+  for (let t = Math.PI; t <= 2 * Math.PI + 0.01; t += 0.1) c.px(10 + Math.round(Math.cos(t) * 3), 4 + Math.round(Math.sin(t) * 2), O)
+  c.rbox(3, 4, 14, 15, 4, '#BFD3F8', O); c.hline(5, 5, 10, '#E6EEFD')
+  c.rbox(5, 12, 10, 6, 2, '#8FB0EE', O2); c.hline(6, 14, 8, '#BFD3F8')
+  c.rect(9, 9, 2, 2, '#E8A93B'); c.px(9, 9, '#FFE08A')
+  c.rect(1, 9, 2, 6, '#8FB0EE'); c.rect(17, 9, 2, 6, '#8FB0EE')
+}
+
 const one = (draw) => ({ frames: 1, draw })
 
 export default {
@@ -77,6 +85,6 @@ export default {
   sprites: {
     focus: one(focus), warp: one(warp), plan: one(plan), tasks: one(tasks),
     friends: one(friends), shop: one(shop), wardrobe: one(wardrobe), guide: one(guide),
-    leaf: one(leaf),
+    leaf: one(leaf), bag: one(bag),
   },
 }

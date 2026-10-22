@@ -38,6 +38,10 @@
     "leaf": {
       "row": 8,
       "frames": 1
+    },
+    "bag": {
+      "row": 9,
+      "frames": 1
     }
   }
 }
