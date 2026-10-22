@@ -14,6 +14,7 @@ import { useResumeStore } from '../stores/useResumeStore'
 import { useSchoolWorldStore } from '../stores/useSchoolWorldStore'
 import SchoolWorldLayer from './school/world/SchoolWorldLayer'
 import LoadingScene from './ui/LoadingScene'
+import WarpTransition from './hotbar/WarpTransition'
 import { MapScene, loadSceneData } from '../game/worldScenes'
 import { createIdleGovernor, setFpsLimit, IDLE_FPS } from '../game/idleGovernor'
 import { listMapConfigs, resolveBootTarget } from '../utils/mapConfig'
@@ -256,7 +257,7 @@ export default function GameCanvas({ active = true, onOpenView }) {
     const game = gameRef.current
     if (!game) return
     const mapKey = mapChangeRequest.mapKey ?? assetUrlsRef.current?.mapKey
-    if (mapKey) game.events.emit('mapChangeRequested', { mapKey, spawn: null })
+    if (mapKey) game.events.emit('mapChangeRequested', { mapKey, spawn: null, spawnAt: mapChangeRequest.spawnAt ?? null })
   }, [mapChangeRequest])
 
   // Leaving the Home screen while inside a school room must not strand the next
@@ -358,11 +359,7 @@ export default function GameCanvas({ active = true, onOpenView }) {
           <LoadingScene />
         </div>
       )}
-      {isSwitchingMap && !isBooting && (
-        <div className="absolute inset-0 z-40 bg-black/40 flex items-end justify-end p-6">
-          <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-        </div>
-      )}
+      <WarpTransition active={isSwitchingMap && !isBooting} />
       <SchoolWorldLayer gameRef={gameRef} onOpenView={onOpenView} active={active} />
       {active && <DayNightOverlay dayNight={null} />}
       {active && <NotificationContainer />}

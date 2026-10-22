@@ -6,6 +6,7 @@ import ShopSheet from './ShopSheet'
 import FocusHud from './FocusHud'
 import FocusCompleteScreen from './FocusCompleteScreen'
 import DecorateBar from './DecorateBar'
+import WarpSheet from '../hotbar/WarpSheet'
 import { useFocusStore } from '../../stores/useFocusStore'
 import { useRoomUiStore } from '../../stores/useRoomUiStore'
 
@@ -25,6 +26,7 @@ export default function RoomLayer() {
       <DecorateBar />
       {sheet === 'focus' && focusStatus === 'idle' && <FocusSetupSheet onClose={close} />}
       {sheet === 'shop' && <ShopSheet onClose={close} />}
+      {sheet === 'warp' && <WarpSheet onClose={close} />}
       <FocusCompleteScreen />
     </>
   )

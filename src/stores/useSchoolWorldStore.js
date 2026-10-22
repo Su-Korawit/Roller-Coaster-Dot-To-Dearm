@@ -23,7 +23,7 @@ export const useSchoolWorldStore = create((set) => ({
 
   panel: null,             // { type: 'focus', seatId } | { type: 'board', id } | { type: 'leaderboard' } | null
   toolRequest: null,       // { route, n } — consumed by SchoolWorldLayer (needs the router)
-  mapChangeRequest: null,  // { mapKey|null, n } — consumed by GameCanvas (owns the Phaser game)
+  mapChangeRequest: null,  // { mapKey|null, spawnAt|null, n } — consumed by GameCanvas (owns the Phaser game)
   ambient: false,          // night-library ambience overlay
   entryMapKey: null,       // the game's entry map, set by GameCanvas; where leaving the hub returns to
 
@@ -38,7 +38,7 @@ export const useSchoolWorldStore = create((set) => ({
   closePanel: () => set({ panel: null }),
   requestTool: (route) => set((s) => ({ toolRequest: { route, n: (s.toolRequest?.n ?? 0) + 1 } })),
   clearToolRequest: () => set({ toolRequest: null }),
-  requestMapChange: (mapKey) => set((s) => ({ mapChangeRequest: { mapKey, n: (s.mapChangeRequest?.n ?? 0) + 1 } })),
+  requestMapChange: (mapKey, opts = {}) => set((s) => ({ mapChangeRequest: { mapKey, spawnAt: opts.spawnAt ?? null, n: (s.mapChangeRequest?.n ?? 0) + 1 } })),
   clearMapChangeRequest: () => set({ mapChangeRequest: null }),
   setEntryMapKey: (key) => set({ entryMapKey: key }),
   toggleAmbient: () => set((s) => ({ ambient: !s.ambient })),
