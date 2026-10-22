@@ -1,0 +1,198 @@
+{
+ "catalog": {
+  "acc_cap": {
+   "kind": "accessory",
+   "slot": "head"
+  },
+  "acc_glasses": {
+   "kind": "accessory",
+   "slot": "face"
+  },
+  "acc_scarf": {
+   "kind": "accessory",
+   "slot": "neck"
+  },
+  "acc_backpack": {
+   "kind": "accessory",
+   "slot": "back"
+  },
+  "desk_basic": {
+   "kind": "desk"
+  }
+ },
+ "cases": [
+  {
+   "name": "empty avatar is fine",
+   "avatar": {
+    "accessories": {},
+    "outfitHue": null
+   },
+   "inventory": {},
+   "codes": []
+  },
+  {
+   "name": "all four slots owned",
+   "avatar": {
+    "accessories": {
+     "head": "acc_cap",
+     "face": "acc_glasses",
+     "neck": "acc_scarf",
+     "back": "acc_backpack"
+    },
+    "outfitHue": 120
+   },
+   "inventory": {
+    "acc_cap": 1,
+    "acc_glasses": 1,
+    "acc_scarf": 1,
+    "acc_backpack": 1
+   },
+   "codes": []
+  },
+  {
+   "name": "accessory not owned",
+   "avatar": {
+    "accessories": {
+     "head": "acc_cap"
+    },
+    "outfitHue": null
+   },
+   "inventory": {},
+   "codes": [
+    "not_owned"
+   ]
+  },
+  {
+   "name": "accessory in the wrong slot",
+   "avatar": {
+    "accessories": {
+     "neck": "acc_cap"
+    },
+    "outfitHue": null
+   },
+   "inventory": {
+    "acc_cap": 1
+   },
+   "codes": [
+    "wrong_slot"
+   ]
+  },
+  {
+   "name": "unknown id",
+   "avatar": {
+    "accessories": {
+     "head": "acc_nope"
+    },
+    "outfitHue": null
+   },
+   "inventory": {
+    "acc_nope": 1
+   },
+   "codes": [
+    "unknown_item"
+   ]
+  },
+  {
+   "name": "an item that is not an accessory",
+   "avatar": {
+    "accessories": {
+     "head": "desk_basic"
+    },
+    "outfitHue": null
+   },
+   "inventory": {
+    "desk_basic": 1
+   },
+   "codes": [
+    "unknown_item"
+   ]
+  },
+  {
+   "name": "a slot that does not exist",
+   "avatar": {
+    "accessories": {
+     "hand": "acc_cap"
+    },
+    "outfitHue": null
+   },
+   "inventory": {
+    "acc_cap": 1
+   },
+   "codes": [
+    "bad_slot"
+   ]
+  },
+  {
+   "name": "hue 359 is the last valid one",
+   "avatar": {
+    "accessories": {},
+    "outfitHue": 359
+   },
+   "inventory": {},
+   "codes": []
+  },
+  {
+   "name": "hue 360",
+   "avatar": {
+    "accessories": {},
+    "outfitHue": 360
+   },
+   "inventory": {},
+   "codes": [
+    "bad_hue"
+   ]
+  },
+  {
+   "name": "hue negative",
+   "avatar": {
+    "accessories": {},
+    "outfitHue": -1
+   },
+   "inventory": {},
+   "codes": [
+    "bad_hue"
+   ]
+  },
+  {
+   "name": "hue not an integer",
+   "avatar": {
+    "accessories": {},
+    "outfitHue": 12.5
+   },
+   "inventory": {},
+   "codes": [
+    "bad_hue"
+   ]
+  },
+  {
+   "name": "hue as text",
+   "avatar": {
+    "accessories": {},
+    "outfitHue": "90"
+   },
+   "inventory": {},
+   "codes": [
+    "bad_hue"
+   ]
+  },
+  {
+   "name": "not an object",
+   "avatar": "x",
+   "inventory": {},
+   "codes": [
+    "bad_avatar"
+   ]
+  },
+  {
+   "name": "accessories not an object",
+   "avatar": {
+    "accessories": [],
+    "outfitHue": null
+   },
+   "inventory": {},
+   "codes": [
+    "bad_avatar"
+   ]
+  }
+ ]
+}

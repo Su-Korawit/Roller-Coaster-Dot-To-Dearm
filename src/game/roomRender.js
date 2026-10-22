@@ -11,9 +11,10 @@ export const FOCUS_SHEET_COLS = 4
 // tree_withered, pot_growth). A test checks this against public/assets/rc/focus.json.
 export const POT_ROW = 5
 
-// Row of each drawn item in the room_items atlas = its order in the catalog seed, themes skipped.
+// Row of each drawn item in the room_items atlas = its order in the catalog seed, drawable kinds only.
+const DRAWABLE = ['furniture', 'decor', 'desk', 'wall']
 export const ROOM_ITEM_ROWS = Object.fromEntries(
-  Object.entries(ROOM_CATALOG).filter(([, item]) => item.kind !== 'theme').map(([id], row) => [id, row]),
+  Object.entries(ROOM_CATALOG).filter(([, item]) => DRAWABLE.includes(item.kind)).map(([id], row) => [id, row]),
 )
 
 // Where a desk item sits on the desk: frame bottom-left offset from the desk's top-left (px).

@@ -42,6 +42,9 @@ function planPurchase({ item, itemId, leaves, inventory, currentTier }) {
   if (UNIQUE_KINDS.includes(item.kind) && Number(inventory?.[itemId] ?? 0) >= 1) {
     throw fail('failed-precondition', 'Already owned.', { reason: 'ALREADY_OWNED' })
   }
+  if (item.requires && Number(inventory?.[item.requires] ?? 0) < 1) {
+    throw fail('failed-precondition', 'Requires another item first.', { reason: 'REQUIRES_MISSING', requires: item.requires })
+  }
   if (Number(item.tierMin ?? 0) > Number(currentTier ?? 0)) {
     throw fail('failed-precondition', 'Room tier too low.', { reason: 'TIER_REQUIRED', tierMin: item.tierMin })
   }

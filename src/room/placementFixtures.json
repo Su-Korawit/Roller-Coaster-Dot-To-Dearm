@@ -1047,6 +1047,241 @@
    "codes": [
     "too_many"
    ]
+  },
+  {
+   "name": "tier 1: a chair past the old 11-tile edge is fine",
+   "layout": {
+    "tier": 1,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "chair_basic",
+      "x": 192,
+      "y": 32
+     }
+    ]
+   },
+   "inventory": {
+    "chair_basic": 3,
+    "desk_basic": 1,
+    "theme_minimal": 1,
+    "tier_1": 1
+   },
+   "codes": []
+  },
+  {
+   "name": "tier 1: nothing beyond 14 tiles",
+   "layout": {
+    "tier": 1,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "chair_basic",
+      "x": 224,
+      "y": 32
+     }
+    ]
+   },
+   "inventory": {
+    "chair_basic": 3,
+    "desk_basic": 1,
+    "theme_minimal": 1,
+    "tier_1": 1
+   },
+   "codes": [
+    "out_of_bounds"
+   ]
+  },
+  {
+   "name": "tier 1 is 10 tiles tall",
+   "layout": {
+    "tier": 1,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "chair_basic",
+      "x": 32,
+      "y": 144
+     }
+    ]
+   },
+   "inventory": {
+    "chair_basic": 3,
+    "desk_basic": 1,
+    "theme_minimal": 1,
+    "tier_1": 1
+   },
+   "codes": []
+  },
+  {
+   "name": "tier 2: a chair on the balcony",
+   "layout": {
+    "tier": 2,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "chair_basic",
+      "x": 240,
+      "y": 32
+     }
+    ]
+   },
+   "inventory": {
+    "chair_basic": 3,
+    "desk_basic": 1,
+    "theme_minimal": 1,
+    "tier_1": 1,
+    "tier_2": 1
+   },
+   "codes": []
+  },
+  {
+   "name": "tier 2: the balcony is not tier 1 space",
+   "layout": {
+    "tier": 1,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "chair_basic",
+      "x": 240,
+      "y": 32
+     }
+    ]
+   },
+   "inventory": {
+    "chair_basic": 3,
+    "desk_basic": 1,
+    "theme_minimal": 1,
+    "tier_1": 1,
+    "tier_2": 1
+   },
+   "codes": [
+    "out_of_bounds"
+   ]
+  },
+  {
+   "name": "tier 2: a desk straddling the wall between room and balcony",
+   "layout": {
+    "tier": 2,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "desk_basic",
+      "x": 208,
+      "y": 32
+     }
+    ]
+   },
+   "inventory": {
+    "chair_basic": 3,
+    "desk_basic": 1,
+    "theme_minimal": 1,
+    "tier_1": 1,
+    "tier_2": 1
+   },
+   "codes": [
+    "out_of_bounds"
+   ]
+  },
+  {
+   "name": "tier 2 owned only as tier 1",
+   "layout": {
+    "tier": 2,
+    "theme": "minimal",
+    "petId": null,
+    "placed": []
+   },
+   "inventory": {
+    "chair_basic": 3,
+    "desk_basic": 1,
+    "theme_minimal": 1,
+    "tier_1": 1
+   },
+   "codes": [
+    "bad_tier"
+   ]
+  },
+  {
+   "name": "tier 3: a chair in the second room",
+   "layout": {
+    "tier": 3,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "chair_basic",
+      "x": 16,
+      "y": 176
+     }
+    ]
+   },
+   "inventory": {
+    "chair_basic": 3,
+    "desk_basic": 1,
+    "theme_minimal": 1,
+    "tier_1": 1,
+    "tier_2": 1,
+    "tier_3": 1
+   },
+   "codes": []
+  },
+  {
+   "name": "tier 3 space is not tier 2 space",
+   "layout": {
+    "tier": 2,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "chair_basic",
+      "x": 16,
+      "y": 176
+     }
+    ]
+   },
+   "inventory": {
+    "chair_basic": 3,
+    "desk_basic": 1,
+    "theme_minimal": 1,
+    "tier_1": 1,
+    "tier_2": 1,
+    "tier_3": 1
+   },
+   "codes": [
+    "out_of_bounds"
+   ]
+  },
+  {
+   "name": "tier 3: nothing right of the second room's wall",
+   "layout": {
+    "tier": 3,
+    "theme": "minimal",
+    "petId": null,
+    "placed": [
+     {
+      "itemId": "chair_basic",
+      "x": 176,
+      "y": 176
+     }
+    ]
+   },
+   "inventory": {
+    "chair_basic": 3,
+    "desk_basic": 1,
+    "theme_minimal": 1,
+    "tier_1": 1,
+    "tier_2": 1,
+    "tier_3": 1
+   },
+   "codes": [
+    "out_of_bounds"
+   ]
   }
  ]
 }

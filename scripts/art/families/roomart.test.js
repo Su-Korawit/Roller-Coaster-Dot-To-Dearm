@@ -52,9 +52,9 @@ describe('room tiles', () => {
 
 describe('room items', () => {
   const built = buildFamily(roomitems)
-  const ids = Object.entries(ROOM_CATALOG).filter(([, i]) => i.kind !== 'theme').map(([id]) => id)
+  const ids = Object.entries(ROOM_CATALOG).filter(([, i]) => ['furniture', 'decor', 'desk', 'wall'].includes(i.kind)).map(([id]) => id)
 
-  it('has a sprite row for every catalog item that is drawn (themes are not)', () => {
+  it('has a sprite row for every catalog item that is drawn (themes, tiers, pets and accessories are not)', () => {
     expect(Object.keys(built.atlas.sprites).sort()).toEqual([...ids].sort())
     for (const id of ids) expect(built.atlas.sprites[id].frames, id).toBe(ROOM_CATALOG[id].frames)
   })
