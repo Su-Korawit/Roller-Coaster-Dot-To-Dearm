@@ -224,5 +224,59 @@
    "ok": false,
    "code": "bad_mode"
   }
+ },
+ {
+  "fn": "practiceLeaves",
+  "input": {
+   "verifiedMs": 60000,
+   "withered": false,
+   "rewarded": false
+  },
+  "output": 10
+ },
+ {
+  "fn": "practiceLeaves",
+  "input": {
+   "verifiedMs": 45000,
+   "withered": false,
+   "rewarded": false
+  },
+  "output": 10
+ },
+ {
+  "fn": "practiceLeaves",
+  "input": {
+   "verifiedMs": 44999,
+   "withered": false,
+   "rewarded": false
+  },
+  "output": 0
+ },
+ {
+  "fn": "practiceLeaves",
+  "input": {
+   "verifiedMs": 60000,
+   "withered": true,
+   "rewarded": false
+  },
+  "output": 0
+ },
+ {
+  "fn": "practiceLeaves",
+  "input": {
+   "verifiedMs": 60000,
+   "withered": false,
+   "rewarded": true
+  },
+  "output": 0
+ },
+ {
+  "fn": "practiceLeaves",
+  "input": {
+   "verifiedMs": 0,
+   "withered": false,
+   "rewarded": false
+  },
+  "output": 0
  }
 ]

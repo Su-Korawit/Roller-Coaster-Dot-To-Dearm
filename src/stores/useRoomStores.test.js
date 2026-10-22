@@ -191,6 +191,13 @@ describe('useFocusStore', () => {
     expect(useFocusStore.getState()).toMatchObject({ status: 'running', mode: 'strict', plannedMin: 50, startedAt: 1000 })
   })
 
+  it('starts a practice session and remembers that it is one', async () => {
+    m.startFocus.mockResolvedValue({ ok: true, practice: true, mode: 'flexible', plannedMin: 1, startedAt: 5, lastCheckInAt: 5, verifiedMs: 0 })
+    await useFocusStore.getState().start({ practice: true })
+    expect(m.startFocus).toHaveBeenCalledWith({ mode: undefined, plannedMin: undefined, practice: true })
+    expect(useFocusStore.getState()).toMatchObject({ status: 'running', practice: true, plannedMin: 1 })
+  })
+
   it('ending a session stores the result and adds the Leaves to the balance', async () => {
     useFocusStore.setState({ status: 'running', mode: 'flexible', plannedMin: 25, startedAt: 0 })
     m.endFocus.mockResolvedValue({ ok: true, leaves: 27, tree: 'shrub', withered: false })

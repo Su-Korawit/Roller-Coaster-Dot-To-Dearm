@@ -336,7 +336,7 @@ const {
 } = require('./focusMath')
 const { normalizeSchoolId: normalizeFocusSchoolId } = require('./schoolMembers')
 const { temperamentOf, xpMultiplier, YESTERDAY_MIN_MS } = require('./temperaments')
-const { validateFocusParams, treeFor, leavesFor } = require('./leavesMath')
+const { validateFocusParams, treeFor, leavesFor, practiceLeaves, PRACTICE } = require('./leavesMath')
 
 function requireUid(req) {
   const uid = req.auth?.uid
@@ -354,10 +354,12 @@ async function settleActive(uid, { end, forceWither = false }) {
 
   return db.runTransaction(async (tx) => {
     let endExtras = {}
-    const [activeSnap, dailySnap] = await Promise.all([tx.get(activeRef), tx.get(dailyRef)])
+    const [activeSnap, dailySnap, userSnap] = await Promise.all([tx.get(activeRef), tx.get(dailyRef), tx.get(userRef)])
     if (!activeSnap.exists) throw new HttpsError('failed-precondition', 'NO_ACTIVE_SESSION')
     const active = activeSnap.data()
-    const dailyUsed = Number(dailySnap.data()?.verifiedMs ?? 0)
+    // The Guide's practice session: no daily cap, no focusDaily (leaderboard) and no XP.
+    const practice = active.practice === true
+    const dailyUsed = practice ? 0 : Number(dailySnap.data()?.verifiedMs ?? 0)
 
     const seg = settleSegment({ lastCheckInAt: active.lastCheckInAt, nowMs, dailyUsedMs: dailyUsed })
     // Study Room: a Strict session whose check-in lapsed has withered (server-decided);
@@ -379,9 +381,9 @@ async function settleActive(uid, { end, forceWither = false }) {
     })
     const weightedBefore = Number(active.weightedMs ?? before)
     const weightedAfter = weightedBefore + seg.creditedMs * multiplier
-    const xpGained = xpDelta(weightedBefore, weightedAfter)
+    const xpGained = practice ? 0 : xpDelta(weightedBefore, weightedAfter)
 
-    if (seg.creditedMs > 0) {
+    if (seg.creditedMs > 0 && !practice) {
       tx.set(dailyRef, {
         uid, day, schoolId: active.schoolId ?? null,
         verifiedMs: dailyUsed + seg.creditedMs,
@@ -392,19 +394,21 @@ async function settleActive(uid, { end, forceWither = false }) {
     }
 
     if (end) {
-      const leaves = leavesFor({ mode, verifiedMs: after, plannedMin, withered })
+      const leaves = practice
+        ? practiceLeaves({ verifiedMs: after, withered, rewarded: userSnap.data()?.practiceRewarded === true })
+        : leavesFor({ mode, verifiedMs: after, plannedMin, withered })
       const tree = treeFor({ plannedMin, withered })
       if (leaves > 0) {
-        tx.set(userRef, { leaves: admin.firestore.FieldValue.increment(leaves) }, { merge: true })
+        tx.set(userRef, { leaves: admin.firestore.FieldValue.increment(leaves), ...(practice ? { practiceRewarded: true } : {}) }, { merge: true })
       }
       tx.delete(activeRef)
       tx.set(db.collection('focusSessions').doc(), {
         uid, schoolId: active.schoolId ?? null,
         startedAt: active.startedAt, endedAt: nowMs, verifiedMs: after,
         day, reason: forceWither ? 'abandoned' : 'ended',
-        mode, plannedMin, subjectKey: null, tree, leaves, withered,
+        mode, plannedMin, subjectKey: null, tree, leaves, withered, practice,
       })
-      endExtras = { leaves, tree, mode, plannedMin, withered }
+      endExtras = { leaves, tree, mode, plannedMin, withered, practice }
     } else if (!seg.tooSoon) {
       tx.update(activeRef, {
         lastCheckInAt: nowMs, verifiedMs: after, weightedMs: weightedAfter,
@@ -432,7 +436,11 @@ async function settleActive(uid, { end, forceWither = false }) {
 
 exports.startFocus = onCall(async (req) => {
   const uid = requireUid(req)
-  const params = validateFocusParams({ mode: req.data?.mode, plannedMin: req.data?.plannedMin })
+  const practice = req.data?.practice === true
+  // A practice session ignores any mode/plannedMin sent with it.
+  const params = practice
+    ? { ok: true, mode: 'flexible', plannedMin: PRACTICE.plannedMin }
+    : validateFocusParams({ mode: req.data?.mode, plannedMin: req.data?.plannedMin })
   if (!params.ok) throw new HttpsError('invalid-argument', 'Invalid focus parameters.', { code: params.code })
   const nowMs = Date.now()
   const activeRef = db.collection('focusActive').doc(uid)
@@ -442,6 +450,7 @@ exports.startFocus = onCall(async (req) => {
     const yesterdayRef = db.collection('focusDaily').doc(`${uid}_${bangkokDay(nowMs - 24 * 60 * 60 * 1000)}`)
     const [activeSnap, userSnap, yesterdaySnap] = await Promise.all([tx.get(activeRef), tx.get(userRef), tx.get(yesterdayRef)])
     if (!userSnap.exists) throw new HttpsError('not-found', 'User not found.')
+    if (practice && userSnap.data().practiceRewarded === true) throw new HttpsError('failed-precondition', 'PRACTICE_DONE')
 
     if (activeSnap.exists) {
       const a = activeSnap.data()
@@ -450,7 +459,7 @@ exports.startFocus = onCall(async (req) => {
         // cannot survive that (the page was left, and closing the tab never reports it), so
         // it withers here — otherwise closing the tab and coming back would keep the reward.
         if (a.mode === 'strict' && !a.withered) tx.update(activeRef, { withered: true })
-        return { ok: true, resumed: true, withered: a.mode === 'strict' ? true : (a.withered ?? false), startedAt: a.startedAt, lastCheckInAt: a.lastCheckInAt, verifiedMs: a.verifiedMs ?? 0, temperament: a.temperament ?? null, mode: a.mode ?? 'flexible', plannedMin: a.plannedMin ?? 25 }
+        return { ok: true, resumed: true, withered: a.mode === 'strict' ? true : (a.withered ?? false), startedAt: a.startedAt, lastCheckInAt: a.lastCheckInAt, verifiedMs: a.verifiedMs ?? 0, temperament: a.temperament ?? null, mode: a.mode ?? 'flexible', plannedMin: a.plannedMin ?? 25, practice: a.practice === true }
       }
       // Stale: close it with nothing extra credited, then start fresh.
       tx.set(db.collection('focusSessions').doc(), {
@@ -466,9 +475,9 @@ exports.startFocus = onCall(async (req) => {
     tx.set(activeRef, {
       uid, schoolId, startedAt: nowMs, lastCheckInAt: nowMs, verifiedMs: 0,
       weightedMs: 0, temperament, studiedYesterday,
-      mode: params.mode, plannedMin: params.plannedMin, withered: false,
+      mode: params.mode, plannedMin: params.plannedMin, withered: false, practice,
     })
-    return { ok: true, resumed: false, startedAt: nowMs, lastCheckInAt: nowMs, verifiedMs: 0, temperament, mode: params.mode, plannedMin: params.plannedMin }
+    return { ok: true, resumed: false, startedAt: nowMs, lastCheckInAt: nowMs, verifiedMs: 0, temperament, mode: params.mode, plannedMin: params.plannedMin, practice }
   })
 })
 

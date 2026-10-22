@@ -21,6 +21,7 @@ export default function FocusHud() {
   const status = useFocusStore((s) => s.status)
   const mode = useFocusStore((s) => s.mode)
   const plannedMin = useFocusStore((s) => s.plannedMin)
+  const practice = useFocusStore((s) => s.practice)
   const startedAt = useFocusStore((s) => s.startedAt)
   const lastCheckInAt = useFocusStore((s) => s.lastCheckInAt)
   const [now, setNow] = useState(() => Date.now())
@@ -87,7 +88,7 @@ export default function FocusHud() {
     <div id="focus-hud" tabIndex={-1} className="absolute top-20 right-4 px-slab flex flex-col items-center gap-2 p-3" style={{ zIndex: Z_HUD }}>
       <TreeSprite species={treeFor({ plannedMin, withered: false })} stage={growthStage(progress)} scale={2} />
       <span className="pixel-font text-lg text-ink">{clock(plannedMin * 60000 - (now - startedAt))}</span>
-      <span className="text-xs font-bold text-ink-soft">{MODE_LABELS[mode]}</span>
+      <span className="text-xs font-bold text-ink-soft">{practice ? 'ลองโฟกัส 1 นาที' : MODE_LABELS[mode]}</span>
       {needsCheckIn && (
         <button type="button" className="px-btn h-11 px-4 text-sm font-bold bg-leaf text-ink" onClick={() => useFocusStore.getState().checkIn().catch(() => {})}>
           ฉันยังอยู่

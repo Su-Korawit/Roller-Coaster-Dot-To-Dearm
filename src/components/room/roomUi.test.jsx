@@ -117,6 +117,13 @@ describe('FocusHud', () => {
     expect(container.firstChild).toBeNull()
   })
 
+  it('labels a practice session instead of a mode', () => {
+    running({ practice: true, mode: 'flexible', plannedMin: 1, startedAt: Date.now() - 10000 })
+    render(<FocusHud />)
+    expect(screen.getByText('ลองโฟกัส 1 นาที')).toBeTruthy()
+    useFocusStore.setState({ practice: false })
+  })
+
   it('shows the remaining time and the mode', () => {
     running({ startedAt: Date.now() - 5 * 60000 })
     render(<FocusHud />)
@@ -195,6 +202,20 @@ describe('FocusCompleteScreen', () => {
     render(<FocusCompleteScreen />)
     expect(screen.getByText('ต้นไม้เหี่ยวแล้ว')).toBeTruthy()
     expect(screen.getByText('ออกจากหน้านี้นานเกินไป ต้นไม้เลยเหี่ยว')).toBeTruthy()
+  })
+
+  it('celebrates a rewarded practice focus as the one-time welcome gift', () => {
+    useFocusStore.setState({ status: 'done', mode: 'flexible', plannedMin: 1, practice: true, result: { leaves: 10, tree: 'sprout', withered: false, practice: true } })
+    render(<FocusCompleteScreen />)
+    expect(screen.getByText('ลองโฟกัสเสร็จแล้ว!')).toBeTruthy()
+    expect(screen.getByText('+10 ใบไม้')).toBeTruthy()
+    expect(screen.getByText('ของขวัญต้อนรับ ได้ครั้งเดียวเท่านั้น')).toBeTruthy()
+  })
+
+  it('tells a too-short practice that it can be retried', () => {
+    useFocusStore.setState({ status: 'done', mode: 'flexible', plannedMin: 1, practice: true, result: { leaves: 0, tree: 'sprout', withered: false, practice: true } })
+    render(<FocusCompleteScreen />)
+    expect(screen.getByText('ต้องครบ 1 นาทีถึงจะได้ของขวัญ ลองใหม่ได้เลย')).toBeTruthy()
   })
 
   it('explains a lapse when no reason was reported', () => {

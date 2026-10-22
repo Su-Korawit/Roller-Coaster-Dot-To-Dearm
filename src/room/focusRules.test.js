@@ -12,8 +12,9 @@ describe('focusRules (client)', () => {
   })
 
   it('exports the same functions and limits as the server module', () => {
-    for (const name of ['leavesFor', 'treeFor', 'validateFocusParams']) expect(typeof client[name]).toBe('function')
+    for (const name of ['leavesFor', 'treeFor', 'validateFocusParams', 'practiceLeaves']) expect(typeof client[name]).toBe('function')
     expect(client.MODES).toEqual(server.MODES)
     expect(client.PLANNED_MIN).toEqual(server.PLANNED_MIN)
+    expect(client.PRACTICE).toEqual(server.PRACTICE)
   })
 })

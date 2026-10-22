@@ -291,3 +291,77 @@ describe('Study Room focus: modes, wither and Leaves (real handlers, emulator)',
     await expect(call(fns.abandonFocus)).rejects.toMatchObject({ code: 'failed-precondition' })
   })
 })
+
+describe('practice focus (the Guide’s one-time gift)', () => {
+  const startPractice = (extra = {}) => call(fns.startFocus, { auth, data: { practice: true, ...extra } })
+  const userDoc = async () => (await db.doc(`users/${UID}`).get()).data()
+  const dailyDocs = async () => (await db.collection('focusDaily').get()).size
+
+  it('stores a flexible 1-minute practice session whatever else is sent', async () => {
+    expect(await startPractice({ mode: 'strict', plannedMin: 50 })).toMatchObject({ mode: 'flexible', plannedMin: 1, practice: true })
+    expect((await db.doc(`focusActive/${UID}`).get()).data()).toMatchObject({ mode: 'flexible', plannedMin: 1, practice: true })
+  })
+
+  it('ended after a minute: pays 10 Leaves once, no XP and no leaderboard row', async () => {
+    await startPractice()
+    at(1)
+    const r = await call(fns.endFocus)
+    expect(r).toMatchObject({ leaves: 10, practice: true, withered: false })
+    expect(await userDoc()).toMatchObject({ leaves: 10, practiceRewarded: true })
+    expect((await userDoc()).focusXp ?? 0).toBe(0)
+    expect(await dailyDocs()).toBe(0)
+    const [session] = (await db.collection('focusSessions').get()).docs.map((d) => d.data())
+    expect(session).toMatchObject({ practice: true, leaves: 10 })
+  })
+
+  it('ended too early earns nothing and leaves the gift available for a retry', async () => {
+    await startPractice()
+    vi.setSystemTime(T0 + 20 * 1000)
+    expect(await call(fns.endFocus)).toMatchObject({ leaves: 0 })
+    expect((await userDoc()).practiceRewarded).toBeUndefined()
+    at(2)
+    await startPractice()
+    at(3)
+    expect(await call(fns.endFocus)).toMatchObject({ leaves: 10 })
+  })
+
+  it('a second practice after the gift is refused', async () => {
+    await startPractice()
+    at(1)
+    await call(fns.endFocus)
+    await expect(startPractice()).rejects.toMatchObject({ code: 'failed-precondition' })
+  })
+
+  it('ending twice, or two ends at once, pays once', async () => {
+    await startPractice()
+    at(1)
+    const results = await Promise.allSettled([call(fns.endFocus), call(fns.endFocus)])
+    expect(results.filter((r) => r.status === 'fulfilled').length).toBeGreaterThanOrEqual(1)
+    await expect(call(fns.endFocus)).rejects.toMatchObject({ code: 'failed-precondition' })
+    expect((await userDoc()).leaves).toBe(10)
+  })
+
+  it('abandoning a practice session pays nothing', async () => {
+    await startPractice()
+    at(1)
+    expect(await call(fns.abandonFocus)).toMatchObject({ leaves: 0, practice: true })
+    expect((await userDoc()).practiceRewarded).toBeUndefined()
+  })
+
+  it('practice while a normal session runs returns that session and pays normal Leaves only', async () => {
+    await call(fns.startFocus, { auth, data: { mode: 'flexible', plannedMin: 25 } })
+    at(2)
+    expect(await startPractice()).toMatchObject({ resumed: true, plannedMin: 25, practice: false })
+    at(25)
+    const r = await call(fns.endFocus)
+    expect(r).toMatchObject({ leaves: 27, practice: false })
+    expect((await userDoc()).practiceRewarded).toBeUndefined()
+  })
+
+  it('a practice session is not held back by an exhausted daily cap', async () => {
+    await db.doc(`focusDaily/${UID}_2026-10-14`).set({ uid: UID, day: '2026-10-14', verifiedMs: 8 * 60 * MIN })
+    await startPractice()
+    at(1)
+    expect(await call(fns.endFocus)).toMatchObject({ leaves: 10 })
+  })
+})

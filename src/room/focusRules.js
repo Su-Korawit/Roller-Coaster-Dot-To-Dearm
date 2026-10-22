@@ -7,6 +7,7 @@ export const PLANNED_MIN = { min: 10, max: 120 }
 const RATE = { strict: 1.5, flexible: 1 }
 const COMPLETION_BONUS = 1.1
 const DEFAULTS = { mode: 'flexible', plannedMin: 25 }
+export const PRACTICE = { plannedMin: 1, leaves: 10, minVerifiedMs: 45000 }
 
 export function validateFocusParams({ mode, plannedMin } = {}) {
   const m = mode === undefined ? DEFAULTS.mode : mode
@@ -28,4 +29,10 @@ export function leavesFor({ mode, verifiedMs, plannedMin, withered }) {
   if (mode === 'strict' && withered) return 0
   const completed = !withered && verifiedMs >= plannedMin * 60000
   return Math.floor((verifiedMs / 60000) * (RATE[mode] ?? 1) * (completed ? COMPLETION_BONUS : 1))
+}
+
+// A practice session pays PRACTICE.leaves once (see functions/leavesMath.js).
+export function practiceLeaves({ verifiedMs, withered, rewarded }) {
+  if (rewarded || withered || !(verifiedMs >= PRACTICE.minVerifiedMs)) return 0
+  return PRACTICE.leaves
 }
