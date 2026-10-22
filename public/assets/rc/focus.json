@@ -1,0 +1,31 @@
+{
+  "name": "focus",
+  "frameW": 48,
+  "frameH": 48,
+  "sprites": {
+    "tree_sprout": {
+      "row": 0,
+      "frames": 4
+    },
+    "tree_shrub": {
+      "row": 1,
+      "frames": 4
+    },
+    "tree_tree": {
+      "row": 2,
+      "frames": 4
+    },
+    "tree_blossom": {
+      "row": 3,
+      "frames": 4
+    },
+    "tree_withered": {
+      "row": 4,
+      "frames": 1
+    },
+    "pot_growth": {
+      "row": 5,
+      "frames": 4
+    }
+  }
+}

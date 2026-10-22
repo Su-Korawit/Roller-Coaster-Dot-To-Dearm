@@ -1,0 +1,51 @@
+{
+  "name": "room_items",
+  "frameW": 32,
+  "frameH": 32,
+  "sprites": {
+    "desk_basic": {
+      "row": 0,
+      "frames": 1
+    },
+    "chair_basic": {
+      "row": 1,
+      "frames": 1
+    },
+    "bed_basic": {
+      "row": 2,
+      "frames": 1
+    },
+    "bookshelf_basic": {
+      "row": 3,
+      "frames": 1
+    },
+    "rug_round": {
+      "row": 4,
+      "frames": 1
+    },
+    "poster_pastel": {
+      "row": 5,
+      "frames": 1
+    },
+    "lamp_desk": {
+      "row": 6,
+      "frames": 2
+    },
+    "mug": {
+      "row": 7,
+      "frames": 1
+    },
+    "books_stack": {
+      "row": 8,
+      "frames": 1
+    },
+    "plant_small": {
+      "row": 9,
+      "frames": 1
+    },
+    "laptop": {
+      "row": 10,
+      "frames": 1
+    }
+  }
+}
