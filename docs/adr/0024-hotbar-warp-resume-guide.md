@@ -70,3 +70,9 @@ the student left it, and a first-run that teaches the loop by doing it. Design:
   Plan, Open House); they appear by flipping `ready` or adding the map.
 - Unread-chat badges need a data model that does not exist; the badge hook (`badge`) is in place.
 - The hotbar height is one constant (`hotbarLayout.js`); `Popup` and `MiniPlayer` follow it.
+- The Settings switch "แถบไอเทมด่วน (Hotbar)" was removed: it had never done anything and now the
+  hotbar is the only navigation, so a persisted `false` must not be able to hide it.
+- Esc closes sheets first and then hands a popup to its own close logic (`popupClose.js`): the
+  calendar restores Home and the daily mood check-in is not dismissable.
+- A warp is refused (`BUSY`) while a map switch is in flight, and a resume map that fails to load
+  is forgotten and replaced by the entry map, so neither can strand the student.

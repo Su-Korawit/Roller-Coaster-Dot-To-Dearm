@@ -10,11 +10,18 @@ describe('GUIDE_STEPS', () => {
   it('has the five steps in order, each with a target, an event and Thai text', () => {
     expect(GUIDE_STEPS.map((s) => s.id)).toEqual(['practice', 'buy', 'decorate', 'warp', 'plan'])
     for (const s of GUIDE_STEPS) {
-      expect(s.target).toMatch(/^\[data-guide=/)
+      if (s.target !== null) expect(s.target).toMatch(/^\[data-guide=/)
       if (s.fallbackTarget) expect(s.fallbackTarget).toMatch(/^\[data-guide=/)
       expect(s.doneOn.length).toBeGreaterThan(0)
       expect(s.textTh.length).toBeGreaterThan(0)
     }
+  })
+
+  it('the practice step points at no element: only its own bubble button starts the practice', () => {
+    const practice = GUIDE_STEPS.find((s) => s.id === 'practice')
+    expect(practice.target).toBeNull()
+    expect(practice.action).toBe('practice')
+    expect(practice.textTh).not.toContain('แตะนาฬิกา')
   })
 
   it('plan is never available until its sub-project ships', () => {

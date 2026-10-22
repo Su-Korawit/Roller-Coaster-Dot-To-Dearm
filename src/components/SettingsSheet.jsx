@@ -40,7 +40,6 @@ const SETTINGS_TABS = [
 ]
 
 const UI_VISIBILITY_ITEMS = [
-  { key: 'hotbar',     label: 'แถบไอเทมด่วน (Hotbar)' },
   { key: 'newsButton', label: 'ปุ่มข่าวสาร' },
   { key: 'contactFab', label: 'ปุ่มติดต่อผู้พัฒนา' },
 ]

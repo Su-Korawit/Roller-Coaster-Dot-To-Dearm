@@ -11,6 +11,7 @@ import { useAuthStore } from '../../stores/useAuthStore'
 import { useFxStore } from '../../stores/useFxStore'
 import { usePopupStore } from '../../stores/usePopupStore'
 import { useHotbarKeys } from '../../hooks/useHotbarKeys'
+import { activateItem } from '../../lib/activateItem'
 import { dueTodayCount } from '../../lib/hotbarBadges'
 
 const NEEDS_ACCOUNT = ['focus', 'shop']
@@ -34,15 +35,15 @@ export default function Hotbar({ ctx }) {
       document.getElementById('focus-hud')?.focus()
       return
     }
-    if (item.sheet) ctx.openSheet(item.sheet)
-    else if (item.popup) ctx.openPopup(item.popup)
-    else ctx.openView(item.view)
+    activateItem(item, ctx)
   }, [ctx, signedIn])
 
   const onEscape = useCallback(() => {
     if (useRoomUiStore.getState().sheet) useRoomUiStore.getState().close()
-    else if (usePopupStore.getState().activePopup) usePopupStore.getState().close()
-  }, [])
+    // The popup's own close logic (not a bare store reset) so the calendar restores Home
+    // and the daily check-in stays until it is answered.
+    else if (usePopupStore.getState().activePopup) ctx.closeTopPopup?.()
+  }, [ctx])
 
   useHotbarKeys({
     onSlot: (i) => activate(slots[i]),

@@ -7,6 +7,7 @@ import { APP_VIEWS, shouldShowNav } from '../constants/appViews'
 import Hotbar from '../components/hotbar/Hotbar'
 import BagSheet from '../components/hotbar/BagSheet'
 import GuideOverlay from '../components/hotbar/GuideOverlay'
+import { closeTopPopup } from '../lib/popupClose'
 import SettingsSheet from '../components/SettingsSheet'
 import { useRoomUiStore } from '../stores/useRoomUiStore'
 import TaskPanel from '../components/TaskPanel'
@@ -117,6 +118,7 @@ function HomePage() {
     },
     openPopup: (id) => openPopup(id),
     openAdminChat,
+    closeTopPopup: () => closeTopPopup({ activePopup, closePopup, setActiveTab }),
     newsUnread: !newsRead,
     openSheet: (name) => {
       const ui = useRoomUiStore.getState()
@@ -235,7 +237,7 @@ function HomePage() {
 
       {/* Study room: focus / shop entry, HUD, decorate bar, completion screen */}
       <RoomLayer />
-      <GuideOverlay />
+      <GuideOverlay suspended={activeTab !== APP_VIEWS.HOME} />
 
       {/* Gradient scrim — top: keeps header pills readable over pixel art */}
       <div className="absolute top-0 inset-x-0 h-24 bg-linear-to-b from-black/30 to-transparent z-10 pointer-events-none" />
@@ -383,7 +385,7 @@ function HomePage() {
       )}
 
       {/* ── BOTTOM NAV ── */}
-      {shouldShowNav(activeTab) && uiVisibility.hotbar !== false && <Hotbar ctx={hotbarCtx} />}
+      {shouldShowNav(activeTab) && <Hotbar ctx={hotbarCtx} />}
     </section>
   )
 }

@@ -22,6 +22,12 @@ export const useResumeStore = create((set, get) => ({
     set({ last: mapKey, points: { ...get().points, [mapKey]: point } })
   },
 
+  // A map that cannot be loaded must not be booted into again: drop its point.
+  forget: (mapKey) => {
+    const { [mapKey]: _gone, ...points } = get().points
+    set(mergeResume(null, { last: null, points }))
+  },
+
   // The newest point per map wins, so a second device's walk is not lost.
   hydrate: (cloud) => set(mergeResume({ last: get().last, points: get().points }, cloud)),
 

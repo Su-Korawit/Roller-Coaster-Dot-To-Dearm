@@ -17,7 +17,8 @@ import LoadingScene from './ui/LoadingScene'
 import WarpTransition from './hotbar/WarpTransition'
 import { MapScene, loadSceneData } from '../game/worldScenes'
 import { createIdleGovernor, setFpsLimit, IDLE_FPS } from '../game/idleGovernor'
-import { listMapConfigs, resolveBootTarget } from '../utils/mapConfig'
+import { listMapConfigs, resolveBootTarget, resolveEntryKey } from '../utils/mapConfig'
+import { loadBootTarget } from '../lib/bootTarget'
 import { useRoomStore } from '../stores/useRoomStore'
 import { useFocusStore } from '../stores/useFocusStore'
 import { useRoomUiStore } from '../stores/useRoomUiStore'
@@ -135,6 +136,8 @@ export default function GameCanvas({ active = true, onOpenView }) {
         setIsSwitchingMap(false)
       })
       game.events.on('mapLoadFailed', ({ mapKey }) => {
+        // Never boot into a map that fails to load again on the next reload.
+        useResumeStore.getState().forget(mapKey)
         console.error('[GameCanvas] map load failed:', mapKey)
         setIsBooting(false)
         setIsSwitchingMap(false)
@@ -210,11 +213,20 @@ export default function GameCanvas({ active = true, onOpenView }) {
     ;(async () => {
       const maps = await listMapConfigs()
       // Boot where the player left off when that spot is usable, else the normal entry map.
-      const { mapKey: entryKey, point } = resolveBootTarget(maps, useResumeStore.getState())
-      const data = await loadSceneData(entryKey)
+      const normalEntry = resolveEntryKey(maps)
+      const { mapKey: entryKey, point, data } = await loadBootTarget({
+        target: resolveBootTarget(maps, useResumeStore.getState()),
+        entryKey: normalEntry,
+        load: loadSceneData,
+        onResumeFailed: (key, e) => {
+          console.warn('[GameCanvas] resume map failed, using the entry map:', key, e)
+          useResumeStore.getState().forget(key)
+        },
+      })
       if (cancelled) return
       assetUrlsRef.current = { ...data, mapKey: entryKey, spawnAt: point ? { x: point.x, y: point.y } : null }
-      useSchoolWorldStore.getState().setEntryMapKey(entryKey)
+      // Leaving the School Hub returns to the normal entry map, not to wherever the app resumed.
+      useSchoolWorldStore.getState().setEntryMapKey(normalEntry)
       useWorldStore.getState().setCurrentMapKey(entryKey)
       if (containerRef.current) {
         const { width, height } = containerRef.current.getBoundingClientRect()
@@ -269,6 +281,11 @@ export default function GameCanvas({ active = true, onOpenView }) {
     const uid = useAuthStore.getState().user?.uid
     if (uid) returnHome(uid)
   }, [])
+
+  // The switch is over (loaded or failed): warping is allowed again.
+  useEffect(() => {
+    if (!isSwitchingMap) useSchoolWorldStore.getState().clearMapSwitching()
+  }, [isSwitchingMap])
 
   // Leaving or hiding the page: send the pending resume point now instead of waiting 10 s.
   useEffect(() => {

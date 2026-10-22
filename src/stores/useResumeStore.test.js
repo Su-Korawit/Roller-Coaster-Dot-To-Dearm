@@ -46,6 +46,17 @@ describe('useResumeStore', () => {
     expect(s.last).toBe('room')
   })
 
+  it('forget drops a map that cannot be loaded and moves last to the newest remaining one', () => {
+    useResumeStore.getState().record('room', { x: 1, y: 1, facing: 'down', label: 'a' })
+    vi.setSystemTime(2000)
+    useResumeStore.getState().record('campus', { x: 2, y: 2, facing: 'down', label: 'b' })
+    useResumeStore.getState().forget('campus')
+    expect(useResumeStore.getState().points.campus).toBeUndefined()
+    expect(useResumeStore.getState().last).toBe('room')
+    useResumeStore.getState().forget('room')
+    expect(useResumeStore.getState().last).toBeNull()
+  })
+
   it('readLocalResume repairs corrupt storage', () => {
     mem['rc-resume'] = 'nope'
     expect(readLocalResume()).toEqual({ last: null, points: {} })

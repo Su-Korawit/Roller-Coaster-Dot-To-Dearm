@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const m = vi.hoisted(() => ({
+  switching: false,
   enterSchoolHub: vi.fn(),
   returnHome: vi.fn(),
   requestMapChange: vi.fn(),
   setLeft: vi.fn(),
+  markSwitching: vi.fn(),
   inHub: false,
   uid: 'u1',
   resume: { last: 'room', points: { room: { x: 40, y: 50, facing: 'down', label: 'ที่โต๊ะ', at: 5 } } },
@@ -15,7 +17,7 @@ vi.mock('../lib/syncManager', () => ({ returnHome: (...a) => m.returnHome(...a) 
 vi.mock('../stores/useAuthStore', () => ({ useAuthStore: { getState: () => ({ user: m.uid ? { uid: m.uid } : null }) } }))
 vi.mock('../stores/useResumeStore', () => ({ useResumeStore: { getState: () => m.resume } }))
 vi.mock('../stores/useSchoolWorldStore', () => ({
-  useSchoolWorldStore: { getState: () => ({ inHub: m.inHub, setLeft: m.setLeft, requestMapChange: m.requestMapChange }) },
+  useSchoolWorldStore: { getState: () => ({ inHub: m.inHub, setLeft: m.setLeft, requestMapChange: m.requestMapChange, isMapSwitching: () => m.switching, markMapSwitching: m.markSwitching }) },
 }))
 
 const { warpTo } = await import('./warp')
@@ -23,6 +25,7 @@ const { warpTo } = await import('./warp')
 beforeEach(() => {
   vi.clearAllMocks()
   m.inHub = false
+  m.switching = false
   m.uid = 'u1'
   m.returnHome.mockResolvedValue(undefined)
 })
@@ -71,6 +74,22 @@ describe('warpTo', () => {
   it('an unknown place fails without touching the game', async () => {
     expect(await warpTo('mars', { resume: true })).toEqual({ ok: false, error: 'FAILED' })
     expect(m.requestMapChange).not.toHaveBeenCalled()
+  })
+})
+
+describe('warpTo while a map is still loading', () => {
+  it('refuses a second warp instead of leaving the world state out of step with the scene', async () => {
+    m.switching = true
+    expect(await warpTo('room', { resume: true })).toEqual({ ok: false, error: 'BUSY' })
+    expect(await warpTo('hub', { resume: true })).toEqual({ ok: false, error: 'BUSY' })
+    expect(m.returnHome).not.toHaveBeenCalled()
+    expect(m.requestMapChange).not.toHaveBeenCalled()
+    expect(m.enterSchoolHub).not.toHaveBeenCalled()
+  })
+
+  it('marks the switch as started when it asks the game to change maps', async () => {
+    await warpTo('room', { resume: true })
+    expect(m.markSwitching).toHaveBeenCalled()
   })
 })
 

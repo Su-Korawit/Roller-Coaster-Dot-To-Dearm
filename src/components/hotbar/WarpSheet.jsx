@@ -18,6 +18,7 @@ export default function WarpSheet({ onClose }) {
   const currentMapKey = useWorldStore((s) => s.currentMapKey)
   const inHub = useSchoolWorldStore((s) => s.inHub)
   const points = useResumeStore((s) => s.points)
+  const switching = useSchoolWorldStore((s) => s.mapSwitchingSince != null)
   const [busy, setBusy] = useState(null)
   const [error, setError] = useState(null)
 
@@ -54,7 +55,7 @@ export default function WarpSheet({ onClose }) {
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    disabled={here || busy !== null}
+                    disabled={here || busy !== null || switching}
                     onClick={() => go(place, true)}
                     className="px-btn h-11 px-4 text-sm font-bold bg-leaf text-ink flex-1 disabled:opacity-50"
                   >
@@ -63,7 +64,7 @@ export default function WarpSheet({ onClose }) {
                   {place.id !== 'hub' && (
                     <button
                       type="button"
-                      disabled={busy !== null}
+                      disabled={busy !== null || switching}
                       onClick={() => go(place, false)}
                       className="px-btn h-11 px-4 text-sm font-bold bg-paper text-ink"
                     >

@@ -17,7 +17,7 @@ const { useTaskStore } = await import('../../stores/useTaskStore')
 const { useFxStore } = await import('../../stores/useFxStore')
 const { usePopupStore } = await import('../../stores/usePopupStore')
 
-const makeCtx = () => ({ activeView: 'home', openView: vi.fn(), openPopup: vi.fn(), openSheet: vi.fn() })
+const makeCtx = () => ({ activeView: 'home', openView: vi.fn(), openPopup: vi.fn(), openSheet: vi.fn(), openAdminChat: vi.fn(), closeTopPopup: vi.fn() })
 
 beforeEach(() => {
   auth.user = { uid: 'u1' }
@@ -67,15 +67,37 @@ describe('Hotbar', () => {
     expect(ctx.openView).not.toHaveBeenCalled()
   })
 
-  it('Escape closes the open sheet first, then the popup', () => {
-    render(<Hotbar ctx={makeCtx()} />)
+  it('Escape closes the open sheet first, then hands the popup to its own close logic', () => {
+    const ctx = makeCtx()
+    render(<Hotbar ctx={ctx} />)
     useRoomUiStore.setState({ sheet: 'shop' })
-    usePopupStore.setState({ activePopup: 'mastery' })
+    usePopupStore.setState({ activePopup: 'calendar' })
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(useRoomUiStore.getState().sheet).toBeNull()
-    expect(usePopupStore.getState().activePopup).toBe('mastery')
+    expect(ctx.closeTopPopup).not.toHaveBeenCalled()
     fireEvent.keyDown(window, { key: 'Escape' })
-    expect(usePopupStore.getState().activePopup).toBeNull()
+    expect(ctx.closeTopPopup).toHaveBeenCalledTimes(1)
+  })
+
+  it('Escape does nothing with no sheet and no popup open', () => {
+    const ctx = makeCtx()
+    render(<Hotbar ctx={ctx} />)
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(ctx.closeTopPopup).not.toHaveBeenCalled()
+  })
+
+  it('a Bag-only item put on the bar still works there: guide replays, contact-developer opens the chat', async () => {
+    const { useGuideStore } = await import('../../stores/useGuideStore')
+    const replay = vi.spyOn(useGuideStore.getState(), 'replay').mockImplementation(() => {})
+    useHotbarStore.setState({ slots: ['guide', 'warp', 'adminChat', 'tasks', 'letter', 'shop', 'wardrobe'] })
+    const ctx = makeCtx()
+    render(<Hotbar ctx={ctx} />)
+    fireEvent.click(screen.getByRole('button', { name: 'คู่มือ' }))
+    expect(replay).toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'ติดต่อผู้พัฒนา' }))
+    expect(ctx.openAdminChat).toHaveBeenCalled()
+    expect(ctx.openSheet).not.toHaveBeenCalled()
+    replay.mockRestore()
   })
 
   it('shows the number of tasks due today on the tasks slot only', () => {

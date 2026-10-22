@@ -7,12 +7,22 @@ import { useGuideStore, isGuideActive } from '../../stores/useGuideStore'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useLeavesStore } from '../../stores/useLeavesStore'
 import { useRoomStore } from '../../stores/useRoomStore'
+import { useRoomUiStore } from '../../stores/useRoomUiStore'
 import { useFocusStore } from '../../stores/useFocusStore'
+import { usePopupStore } from '../../stores/usePopupStore'
 import { buildGuideContext } from '../../lib/guideContext'
 
 const POLL_MS = 400
+const CROWDED_TOP = 76 // px: below the header pills, clear of every sheet's content
 
-// Where on screen is the first of these elements that exists and is visible?
+// Is `el` what the student would actually hit at its own centre? (Not hidden under a panel.)
+function isOnTop(el, r) {
+  if (typeof document.elementFromPoint !== 'function') return true
+  const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+  return !hit || el.contains(hit)
+}
+
+// Where on screen is the first of these elements that exists, is visible and is not covered?
 function useTargetRect(selectors, active) {
   const [rect, setRect] = useState(null)
   const key = selectors.join('|')
@@ -21,7 +31,9 @@ function useTargetRect(selectors, active) {
     const read = () => {
       const el = selectors.map((s) => document.querySelector(s)).find(Boolean)
       const r = el?.getBoundingClientRect()
-      const next = r && r.width > 0 && r.height > 0 ? { left: r.left, top: r.top, width: r.width, height: r.height } : null
+      const next = r && r.width > 0 && r.height > 0 && isOnTop(el, r)
+        ? { left: r.left, top: r.top, width: r.width, height: r.height }
+        : null
       setRect((prev) => (prev && next && prev.left === next.left && prev.top === next.top && prev.width === next.width && prev.height === next.height ? prev : next))
     }
     const raf = requestAnimationFrame(read)
@@ -35,10 +47,12 @@ function useTargetRect(selectors, active) {
   return active ? rect : null
 }
 
-// The hands-on guide: a bubble with the current step and, when its target is on screen, a
-// spotlight around it. The overlay never blocks input: the dimming and the spotlight ignore
-// pointer events, and with no target on screen there is no dimming at all.
-export default function GuideOverlay() {
+// The hands-on guide: a bubble with the current step and, when its target is on screen and
+// uncovered, a spotlight around it. It never blocks input (dimming and spotlight ignore
+// pointer events). While a sheet, a popup, decorate mode or the result screen is up the bubble
+// moves to the top and the dimming stops, so it can never cover what the step sends the student
+// to; behind a full-screen panel it is hidden altogether (`suspended`).
+export default function GuideOverlay({ suspended = false }) {
   const started = useGuideStore((s) => s.started)
   const done = useGuideStore((s) => s.done)
   const skipped = useGuideStore((s) => s.skipped)
@@ -46,10 +60,15 @@ export default function GuideOverlay() {
   const signedIn = useAuthStore((s) => !!s.user)
   const packReady = useLeavesStore((s) => s.welcomePack === 'v2')
   const focusStatus = useFocusStore((s) => s.status)
+  const focusPractice = useFocusStore((s) => s.practice)
+  const roomSheet = useRoomUiStore((s) => s.sheet)
+  const popup = usePopupStore((s) => s.activePopup)
+  const decorating = useRoomStore((s) => s.decorating)
   const [error, setError] = useState('')
 
   const active = isGuideActive({ started, done, skipped, step })
   const current = active ? GUIDE_STEPS[step] : null
+  const crowded = !!roomSheet || !!popup || decorating || focusStatus === 'done' || focusStatus === 'withered' || focusStatus === 'settling'
 
   useEffect(() => {
     useGuideStore.getState().setContextProvider(buildGuideContext)
@@ -69,9 +88,9 @@ export default function GuideOverlay() {
   }, [])
 
   const selectors = current ? [current.target, current.fallbackTarget].filter(Boolean) : []
-  const rect = useTargetRect(selectors, !!current)
+  const rect = useTargetRect(selectors, !!current && !suspended && !crowded)
 
-  if (!current) return null
+  if (!current || suspended) return null
 
   const startPractice = async () => {
     setError('')
@@ -88,11 +107,11 @@ export default function GuideOverlay() {
   }
 
   const below = rect && rect.top < window.innerHeight / 2
-  const place = rect
-    ? below
-      ? { top: rect.top + rect.height + 14 }
-      : { bottom: window.innerHeight - rect.top + 14 }
-    : { bottom: HOTBAR_DOCK }
+  let place = { bottom: HOTBAR_DOCK }
+  if (crowded) place = { top: CROWDED_TOP }
+  else if (rect) place = below ? { top: rect.top + rect.height + 14 } : { bottom: window.innerHeight - rect.top + 14 }
+
+  const isPractice = current.action === 'practice'
 
   return (
     <>
@@ -115,12 +134,15 @@ export default function GuideOverlay() {
         <p className="thai-font text-sm">{current.textTh}</p>
         {error && <p role="alert" className="text-sm text-danger">{error}</p>}
         <div className="flex flex-wrap gap-2">
-          {current.action === 'practice' && focusStatus === 'idle' && (
+          {isPractice && focusStatus === 'idle' && (
             <button type="button" className="px-btn h-11 px-4 text-sm font-bold bg-leaf text-ink" onClick={startPractice}>
               เริ่มลองโฟกัส
             </button>
           )}
-          {current.action === 'practice' && focusStatus !== 'idle' && (
+          {isPractice && focusStatus === 'running' && focusPractice && (
+            <p className="text-xs text-ink-soft">กำลังลองโฟกัส… ครบ 1 นาทีแล้วจะได้ของขวัญเอง</p>
+          )}
+          {isPractice && focusStatus === 'running' && !focusPractice && (
             <p className="text-xs text-ink-soft">จบโฟกัสที่กำลังทำอยู่ก่อน แล้วค่อยลองใหม่</p>
           )}
           <button type="button" className="px-btn h-11 px-4 text-sm font-bold bg-paper text-ink" onClick={() => useGuideStore.getState().skip()}>

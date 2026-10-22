@@ -15,7 +15,7 @@ const IDLE_FOCUS = {
   busy: false,
 }
 
-export const useSchoolWorldStore = create((set) => ({
+export const useSchoolWorldStore = create((set, get) => ({
   inHub: false,
   room: null,              // { kind: 'school' | 'commons', shard, ownerUid }
   enterStatus: 'idle',     // 'idle' | 'entering' | 'error'
@@ -41,6 +41,15 @@ export const useSchoolWorldStore = create((set) => ({
   requestMapChange: (mapKey, opts = {}) => set((s) => ({ mapChangeRequest: { mapKey, spawnAt: opts.spawnAt ?? null, n: (s.mapChangeRequest?.n ?? 0) + 1 } })),
   clearMapChangeRequest: () => set({ mapChangeRequest: null }),
   setEntryMapKey: (key) => set({ entryMapKey: key }),
+  // A map switch was asked for and has not finished (cleared by GameCanvas). Expires on its own
+  // so a request nobody consumed can never block warping for good.
+  mapSwitchingSince: null,
+  markMapSwitching: () => set({ mapSwitchingSince: Date.now() }),
+  clearMapSwitching: () => set({ mapSwitchingSince: null }),
+  isMapSwitching: () => {
+    const since = get().mapSwitchingSince
+    return since != null && Date.now() - since < 15000
+  },
   toggleAmbient: () => set((s) => ({ ambient: !s.ambient })),
 
   setFocus: (patch) => set((s) => ({ focus: { ...s.focus, ...patch } })),

@@ -10,6 +10,7 @@ export const WARP_ERRORS = {
   NO_SCHOOL: 'เลือกโรงเรียนของคุณที่หน้าโซเชียลก่อน แล้วค่อยมาวาร์ปไปโรงเรียน',
   ROOM_FULL: 'ห้องเต็มชั่วคราว ลองใหม่อีกครั้งในอีกสักครู่',
   FAILED: 'วาร์ปไม่สำเร็จ ลองใหม่อีกครั้ง',
+  BUSY: 'กำลังโหลดแผนที่ รอสักครู่แล้วลองใหม่',
 }
 
 // Pure. `hasMap(mapKey)` says whether a map exists in this build.

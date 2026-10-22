@@ -65,8 +65,8 @@ describe('GuideOverlay', () => {
   })
 
   it('shows a spotlight when the target is on screen', async () => {
-    addTarget('slot-focus')
-    useGuideStore.getState().setContextProvider(() => ctx())
+    addTarget('slot-shop')
+    useGuideStore.getState().setContextProvider(() => ctx({ practiceDone: true }))
     useGuideStore.getState().start()
     render(<GuideOverlay />)
     await tick()
@@ -145,5 +145,74 @@ describe('GuideOverlay', () => {
     await tick()
     expect(screen.queryByRole('button', { name: 'เริ่มลองโฟกัส' })).toBeNull()
     expect(screen.getByText(/จบโฟกัสที่กำลังทำอยู่ก่อน/)).toBeTruthy()
+  })
+})
+
+describe('GuideOverlay stays out of the way (review fixes)', () => {
+  // Starts on the buy step (practiceDone) unless told otherwise: that step has a spotlight target.
+  const startGuide = (over = { practiceDone: true }) => {
+    useGuideStore.getState().setContextProvider(() => ctx(over))
+    useGuideStore.getState().start()
+  }
+
+  it('is hidden entirely while a full-screen panel is open', async () => {
+    startGuide()
+    const { container } = render(<GuideOverlay suspended />)
+    await tick()
+    expect(container.firstChild).toBeNull()
+  })
+
+  it('moves to the top and stops dimming while a sheet is open, so it never covers the sheet', async () => {
+    const { useRoomUiStore } = await import('../../stores/useRoomUiStore')
+    addTarget('slot-shop')
+    startGuide()
+    useRoomUiStore.setState({ sheet: 'shop' })
+    render(<GuideOverlay />)
+    await tick()
+    expect(document.querySelector('[data-guide-spotlight]')).toBeNull()
+    expect(screen.getByRole('status').style.top).not.toBe('')
+    expect(screen.getByRole('status').style.bottom).toBe('')
+    useRoomUiStore.setState({ sheet: null })
+  })
+
+  it('moves to the top and stops dimming while a popup is open or decorating', async () => {
+    const { usePopupStore } = await import('../../stores/usePopupStore')
+    const { useRoomStore } = await import('../../stores/useRoomStore')
+    addTarget('slot-shop')
+    startGuide()
+    usePopupStore.setState({ activePopup: 'mastery' })
+    const { unmount } = render(<GuideOverlay />)
+    await tick()
+    expect(document.querySelector('[data-guide-spotlight]')).toBeNull()
+    unmount()
+    usePopupStore.setState({ activePopup: null })
+    useRoomStore.setState({ decorating: true })
+    render(<GuideOverlay />)
+    await tick()
+    expect(document.querySelector('[data-guide-spotlight]')).toBeNull()
+    expect(screen.getByRole('status').style.bottom).toBe('')
+    useRoomStore.setState({ decorating: false })
+  })
+
+  it('does not dim around a target that something else is covering', async () => {
+    const el = addTarget('slot-shop')
+    document.elementFromPoint = () => document.body // something other than the target is on top
+    startGuide()
+    render(<GuideOverlay />)
+    await tick()
+    expect(document.querySelector('[data-guide-spotlight]')).toBeNull()
+    document.elementFromPoint = () => el
+    await tick()
+    expect(document.querySelector('[data-guide-spotlight]')).not.toBeNull()
+    delete document.elementFromPoint
+  })
+
+  it('tells the student the practice is running instead of asking to finish another session', async () => {
+    useFocusStore.setState({ status: 'running', practice: true })
+    startGuide({})
+    render(<GuideOverlay />)
+    await tick()
+    expect(screen.getByText(/กำลังลองโฟกัส/)).toBeTruthy()
+    expect(screen.queryByText(/จบโฟกัสที่กำลังทำอยู่ก่อน/)).toBeNull()
   })
 })

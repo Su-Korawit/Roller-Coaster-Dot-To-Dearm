@@ -34,7 +34,7 @@ describe('SettingsSheet', () => {
     render(<SettingsSheet onClose={() => {}} />)
     fireEvent.click(screen.getByRole('tab', { name: 'Interface' }))
     expect(screen.queryByPlaceholderText('ชื่อของคุณ')).toBeNull()
-    expect(screen.getByText('แถบไอเทมด่วน (Hotbar)')).toBeTruthy()
+    expect(screen.getByText('ปุ่มข่าวสาร')).toBeTruthy()
   })
 
   it('switching to the Privacy tab hides the Interface toggles', () => {
@@ -44,12 +44,10 @@ describe('SettingsSheet', () => {
     expect(screen.queryByText('แถบไอเทมด่วน (Hotbar)')).toBeNull()
   })
 
-  it('toggling the Hotbar switch flips uiVisibility.hotbar in the store, leaving others untouched', () => {
+  it('does not offer a switch that would hide the only navigation (the hotbar)', () => {
     render(<SettingsSheet onClose={() => {}} />)
     fireEvent.click(screen.getByRole('tab', { name: 'Interface' }))
-    fireEvent.click(screen.getByRole('switch', { name: 'แถบไอเทมด่วน (Hotbar)' }))
-    const { uiVisibility } = useUserStore.getState()
-    expect(uiVisibility.hotbar).toBe(false)
-    expect(uiVisibility.newsButton).toBe(true)
+    expect(screen.queryByRole('switch', { name: 'แถบไอเทมด่วน (Hotbar)' })).toBeNull()
+    expect(screen.getByRole('switch', { name: 'ปุ่มข่าวสาร' })).toBeTruthy()
   })
 })

@@ -6,10 +6,10 @@
 export const GUIDE_STEPS = [
   {
     id: 'practice',
-    target: '[data-guide="slot-focus"]',
-    action: 'practice', // the bubble offers a button that starts the practice session
+    target: null, // no spotlight: the bubble's own button starts the practice (the clock slot opens the normal setup)
+    action: 'practice',
     doneOn: 'practiced',
-    textTh: 'แตะนาฬิกา แล้วลองโฟกัส 1 นาที รับของขวัญ 10 ใบไม้',
+    textTh: 'ลองโฟกัส 1 นาทีกับเรา แล้วรับของขวัญ 10 ใบไม้',
     available: (c) => c.signedIn && !c.practiceDone,
   },
   {

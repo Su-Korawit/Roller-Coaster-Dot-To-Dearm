@@ -13,11 +13,17 @@ export async function warpTo(placeId, { resume = true } = {}) {
   const place = WARP_PLACES.find((p) => p.id === placeId)
   const uid = useAuthStore.getState().user?.uid ?? null
   if (!place) return { ok: false, error: 'FAILED' }
+  // A second warp while the first map is still loading would flip owner/map-key state for a
+  // scene that never switches (GameCanvas ignores requests during a switch).
+  if (useSchoolWorldStore.getState().isMapSwitching()) return { ok: false, error: 'BUSY' }
 
   if (place.id === 'hub') {
     if (!uid) return { ok: false, error: 'FAILED' }
     const r = await enterSchoolHub(uid)
-    if (r.ok) emitGuide('warped')
+    if (r.ok) {
+      useSchoolWorldStore.getState().markMapSwitching()
+      emitGuide('warped')
+    }
     return r.ok ? { ok: true } : { ok: false, error: r.error }
   }
 
@@ -28,6 +34,7 @@ export async function warpTo(placeId, { resume = true } = {}) {
   // Owner and map key flip together so presence never joins the wrong room.
   if (uid) await returnHome(uid, place.mapKey)
   world.requestMapChange(place.mapKey, { spawnAt })
+  world.markMapSwitching()
   emitGuide('warped')
   return { ok: true }
 }
