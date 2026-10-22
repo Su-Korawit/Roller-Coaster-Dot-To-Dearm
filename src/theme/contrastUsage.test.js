@@ -35,7 +35,7 @@ describe('inline backgrounds that carry white text', () => {
   const read = (rel) => readFileSync(join(SRC, rel), 'utf8')
 
   it('SocialPanel tierColor never returns a background-only token behind its white score text', () => {
-    const body = /function tierColor[\s\S]*?\n  }/.exec(read('components/SocialPanel.jsx'))[0]
+    const body = /function tierColor[\s\S]*?\n {2}}/.exec(read('components/SocialPanel.jsx'))[0]
     expect(body).not.toMatch(/--color-(warn|leaf|good|lime)\)/)
   })
 })
