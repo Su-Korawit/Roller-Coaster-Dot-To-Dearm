@@ -31,7 +31,7 @@ beforeEach(() => {
 describe('Hotbar', () => {
   it('renders seven slots and the bag with Thai labels', () => {
     render(<Hotbar ctx={makeCtx()} />)
-    for (const name of ['โฟกัส', 'วาร์ป', 'ปฏิทิน', 'งาน', 'แชท', 'ร้านค้า', 'โปรไฟล์', 'กระเป๋า']) {
+    for (const name of ['โฟกัส', 'วาร์ป', 'แผน TCAS', 'งาน', 'แชท', 'ร้านค้า', 'โปรไฟล์', 'กระเป๋า']) {
       expect(screen.getByRole('button', { name })).toBeTruthy()
     }
     expect(screen.getAllByRole('button')).toHaveLength(8)

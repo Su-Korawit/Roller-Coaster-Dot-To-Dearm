@@ -21,8 +21,8 @@ describe('item registry', () => {
     expect(typeof item.ready).toBe('boolean')
   })
 
-  it('plan is not ready yet', () => {
-    expect(HOTBAR_ITEMS.plan.ready).toBe(false)
+  it('plan is ready (the TCAS Plan shipped) and opens the plan sheet', () => {
+    expect(HOTBAR_ITEMS.plan).toMatchObject({ ready: true, sheet: 'plan' })
   })
 
   it('covers every destination the old nav and menu had', () => {

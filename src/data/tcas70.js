@@ -10,6 +10,9 @@
 
 const SRC = 'https://www.mytcas.com/'
 
+// The admission cycle the built-in calendar and the Plan are about (shown as "แผน TCAS70 ของฉัน").
+export const TCAS_LABEL = 'TCAS70'
+
 // [id, ISO date, title, description]
 const ROWS = [
   ['mytcas-open',   '2026-07-15', 'เปิดระบบ myTCAS70', 'ลงทะเบียนบัญชี myTCAS ก่อนสมัครรอบ 1 Portfolio'],

@@ -7,8 +7,11 @@ const ready = (id) => ALL[id]?.ready === true
 const valid = (ids) => ids.length === SLOTS && new Set(ids).size === SLOTS && ids.includes('warp')
 
 describe('defaultHotbar', () => {
-  it('puts the calendar in slot 3 while plan is not ready', () => {
-    expect(defaultHotbar(ready)).toEqual(['focus', 'warp', 'calendar', 'tasks', 'letter', 'shop', 'wardrobe'])
+  it('puts the plan in slot 3 now that it is ready', () => {
+    expect(defaultHotbar(ready)).toEqual(['focus', 'warp', 'plan', 'tasks', 'letter', 'shop', 'wardrobe'])
+  })
+  it('falls back to the calendar in slot 3 while plan is not ready', () => {
+    expect(defaultHotbar((id) => id !== 'plan' && ready(id))).toEqual(['focus', 'warp', 'calendar', 'tasks', 'letter', 'shop', 'wardrobe'])
   })
   it('puts plan in slot 3 once ready', () => {
     expect(defaultHotbar(() => true)[2]).toBe('plan')
@@ -72,7 +75,7 @@ describe('placeFromBag', () => {
     expect(placeFromBag(bar, 'mastery', 1, ready)).toEqual(bar)
   })
   it('refuses an item that is not ready or unknown', () => {
-    expect(placeFromBag(bar, 'plan', 0, ready)).toEqual(bar)
+    expect(placeFromBag(bar, 'plan', 0, (id) => id !== 'plan' && ready(id))).toEqual(bar)
     expect(placeFromBag(bar, 'nope', 0, ready)).toEqual(bar)
   })
 })

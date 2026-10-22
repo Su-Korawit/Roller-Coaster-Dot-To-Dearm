@@ -25,7 +25,7 @@ describe('BagSheet', () => {
     for (const label of ['ปฏิทิน', 'Mastery', 'Roadmap', 'ตารางเรียน', 'ข่าวสาร', 'เพลง', 'เพื่อน', 'ตั้งค่า', 'คู่มือ', 'โฟกัส', 'วาร์ป', 'ร้านค้า']) {
       expect(screen.getByText(label), label).toBeTruthy()
     }
-    expect(screen.queryByText('แผน TCAS')).toBeNull() // not ready yet
+    expect(screen.getByText('แผน TCAS')).toBeTruthy()
   })
 
   it('using an item closes the bag first, then opens it', () => {
