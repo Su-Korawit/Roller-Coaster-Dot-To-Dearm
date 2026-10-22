@@ -76,15 +76,15 @@ export default function FilePickerModal({ nodeId, onClose }) {
   return createPortal(
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="w-full max-w-sm aspect-square max-h-[90vh] neo-card flex flex-col overflow-hidden"
+        className="w-full max-w-sm aspect-square max-h-[90vh] px-card flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="rpg-plank px-4 py-3 flex items-center justify-between shrink-0">
-          <p className="pixel-font text-[11px] font-bold text-ink">Choose file</p>
+          <p className="pixel-font text-xs font-bold text-ink">Choose file</p>
           <button
             onClick={onClose}
             aria-label="ปิด"
-            className="neo-btn w-9 h-9 rounded-lg flex items-center justify-center text-ink-soft hover:bg-brand-soft hover:text-ink"
+            className="px-btn w-9 h-9 rounded-lg flex items-center justify-center text-ink-soft hover:bg-brand-soft hover:text-ink"
           >
             <X size={20} strokeWidth={2.5} />
           </button>
@@ -103,7 +103,7 @@ export default function FilePickerModal({ nodeId, onClose }) {
           >
             {uploading
               ? <Loader size={18} className="animate-spin" />
-              : <><Upload size={16} /><span className="pixel-font text-[10px]">Upload new</span></>}
+              : <><Upload size={16} /><span className="pixel-font text-xs">Upload new</span></>}
           </button>
           <input ref={inputRef} type="file" accept={ACCEPT} className="hidden" onChange={onFileChange} />
         </div>
@@ -116,7 +116,7 @@ export default function FilePickerModal({ nodeId, onClose }) {
 function Section({ title, children }) {
   return (
     <div className="flex flex-col gap-2">
-      <p className="pixel-font text-[10px] text-ink-soft">{title}</p>
+      <p className="pixel-font text-xs text-ink-soft">{title}</p>
       <div className="flex flex-wrap gap-2">{children}</div>
     </div>
   )
@@ -127,14 +127,14 @@ function FileRow({ file, onClick }) {
     <button
       onClick={onClick}
       aria-label={`เลือก ${file.name}`}
-      className="flex items-center gap-2 px-3 py-2 rounded-xl border-2 border-edge/40 hover:border-brand active:scale-95 transition-all w-full text-left"
+      className="flex items-center gap-2 px-3 py-2 rounded-xl border-2 border-line/40 hover:border-brand active:scale-95 transition-all w-full text-left"
     >
       <FileText size={14} className="text-brand shrink-0" />
-      <span className="pixel-font text-[10px] text-ink truncate">{file.name}</span>
+      <span className="pixel-font text-xs text-ink truncate">{file.name}</span>
     </button>
   )
 }
 
 function Empty({ children }) {
-  return <span className="pixel-font text-[10px] text-ink-soft/50">{children}</span>
+  return <span className="pixel-font text-xs text-ink-soft/50">{children}</span>
 }

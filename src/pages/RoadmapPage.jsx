@@ -30,6 +30,7 @@ import { useRoadmapShortcuts } from '../hooks/useRoadmapShortcuts'
 import AnnotationEdge from '../components/roadmap/AnnotationEdge'
 import InvisibleEdge from '../components/roadmap/InvisibleEdge'
 import { saveBlobToBag } from '../services/fileBag'
+import { colors } from '../theme/colors'
 
 const SNAP_THRESHOLD = 40
 
@@ -317,7 +318,7 @@ export default function RoadmapPage({ onClose, backPath }) {
           />
         </div>
       </div>
-      <div className="shrink-0 border-t-2 border-edge bg-hud">
+      <div className="shrink-0 border-t-2 border-line bg-paper">
         <SheetSwitcher />
         <StageBands
           stages={timeline?.stages ?? DEFAULT_STAGES}
@@ -358,21 +359,21 @@ export default function RoadmapPage({ onClose, backPath }) {
           connectionMode="loose"
           deleteKeyCode={['Backspace', 'Delete']}
         >
-          <Background gap={24} size={2} color="#d3b27c" />
+          <Background gap={24} size={2} color={colors.hairline} />
           <Controls className="rf-touch-controls" />
 
           {/* Save/saved status indicator */}
           {syncStatus !== 'idle' && (
             <Panel position="top-right">
-              <div className="neo-slab mt-2 mr-2 px-3 py-1.5">
+              <div className="px-slab mt-2 mr-2 px-3 py-1.5">
                 {syncStatus === 'saving' && (
-                  <span className="pixel-font text-[8px] text-ink-soft">Saving...</span>
+                  <span className="pixel-font text-xs text-ink-soft">Saving...</span>
                 )}
                 {syncStatus === 'saved' && (
-                  <span className="pixel-font text-[8px] text-good">Saved</span>
+                  <span className="pixel-font text-xs text-good">Saved</span>
                 )}
                 {syncStatus === 'error' && (
-                  <span className="pixel-font text-[8px] text-danger">Save failed</span>
+                  <span className="pixel-font text-xs text-danger">Save failed</span>
                 )}
               </div>
             </Panel>
@@ -439,7 +440,7 @@ export default function RoadmapPage({ onClose, backPath }) {
             className="fixed z-50 pointer-events-none flex items-center justify-center rounded-xl border-2 border-brand/60 bg-brand/20 backdrop-blur-sm"
             style={{ left: dragState.x - 24, top: dragState.y - 24, width: 48, height: 48 }}
           >
-            <span className="pixel-font text-[7px] text-brand">{dragState.type}</span>
+            <span className="pixel-font text-xs text-brand">{dragState.type}</span>
           </div>,
           document.body,
         )}

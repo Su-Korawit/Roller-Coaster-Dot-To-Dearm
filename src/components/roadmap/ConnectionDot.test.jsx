@@ -55,7 +55,7 @@ describe('ConnectionDot', () => {
   it('stays grey with no glow while free', () => {
     render(<ConnectionDot type="target" position="left" />)
     const cls = dotClass('left')
-    expect(cls).toContain('!bg-wood-dark')
+    expect(cls).toContain('!bg-hairline')
     expect(cls).not.toContain('shadow-[0_0_8px_2px_rgba(192,212,112,0.85)]')
   })
 
@@ -65,10 +65,10 @@ describe('ConnectionDot', () => {
     ]
     render(<ProcessStyleDots />)
 
-    expect(dotClass('right')).toContain('!bg-wood-dark')
+    expect(dotClass('right')).toContain('!bg-hairline')
     expect(dotClass('right')).not.toContain('!bg-lime')
     expect(dotClass('top')).toContain('!bg-lime')
-    expect(dotClass('bottom')).toContain('!bg-wood-dark')
+    expect(dotClass('bottom')).toContain('!bg-hairline')
   })
 
   it('glows the id-less dot when the connection really uses it', () => {
@@ -78,8 +78,8 @@ describe('ConnectionDot', () => {
     render(<ProcessStyleDots />)
 
     expect(dotClass('right')).toContain('!bg-lime')
-    expect(dotClass('top')).toContain('!bg-wood-dark')
-    expect(dotClass('bottom')).toContain('!bg-wood-dark')
+    expect(dotClass('top')).toContain('!bg-hairline')
+    expect(dotClass('bottom')).toContain('!bg-hairline')
   })
 
   it('focus-highlights only the origin dot during an in-progress connection drag', () => {
@@ -93,6 +93,6 @@ describe('ConnectionDot', () => {
     expect(dotClass('top')).toContain('!bg-brand')
     expect(dotClass('top')).toContain('ring-2')
     expect(dotClass('right')).not.toContain('!bg-brand')
-    expect(dotClass('right')).toContain('!bg-wood-dark')
+    expect(dotClass('right')).toContain('!bg-hairline')
   })
 })

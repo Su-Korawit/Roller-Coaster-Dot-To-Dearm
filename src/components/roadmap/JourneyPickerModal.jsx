@@ -26,15 +26,15 @@ export default function JourneyPickerModal({ nodeId, onClose }) {
   return createPortal(
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="w-full max-w-sm max-h-[80vh] neo-card flex flex-col overflow-hidden"
+        className="w-full max-w-sm max-h-[80vh] px-card flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="rpg-plank px-4 py-3 flex items-center justify-between shrink-0">
-          <p className="pixel-font text-[11px] font-bold text-ink">Link to Journey</p>
+          <p className="pixel-font text-xs font-bold text-ink">Link to Journey</p>
           <button
             onClick={onClose}
             aria-label="ปิด"
-            className="neo-btn w-9 h-9 rounded-lg flex items-center justify-center text-ink-soft hover:bg-brand-soft hover:text-ink"
+            className="px-btn w-9 h-9 rounded-lg flex items-center justify-center text-ink-soft hover:bg-brand-soft hover:text-ink"
           >
             <X size={20} strokeWidth={2.5} />
           </button>
@@ -45,15 +45,15 @@ export default function JourneyPickerModal({ nodeId, onClose }) {
             const items = journeys?.[key] || []
             return (
               <div key={key} className="flex flex-col gap-2">
-                <p className="pixel-font text-[10px] text-ink-soft">{label}</p>
+                <p className="pixel-font text-xs text-ink-soft">{label}</p>
                 {items.length === 0 ? (
-                  <span className="pixel-font text-[10px] text-ink-soft/50">No journey items yet</span>
+                  <span className="pixel-font text-xs text-ink-soft/50">No journey items yet</span>
                 ) : (
                   items.map((item) => (
                     <button
                       key={item.id}
                       onClick={() => pick(key, item)}
-                      className="w-full text-left rounded-xl border border-edge/40 px-3 py-2 hover:border-brand hover:bg-brand/5 active:scale-95 transition-all"
+                      className="w-full text-left rounded-xl border border-line/40 px-3 py-2 hover:border-brand hover:bg-brand/5 active:scale-95 transition-all"
                     >
                       <span className="thai-font text-xs font-semibold text-ink">{item.title || '—'}</span>
                     </button>

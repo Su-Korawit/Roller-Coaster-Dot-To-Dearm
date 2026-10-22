@@ -4,17 +4,17 @@ export const DEFAULT_STAGES = [
   { label: 'University', startMonth: 6, endMonth: 12 },
 ]
 
-const BAND_COLORS = ['bg-lime/50', 'bg-accent-pink/25', 'bg-wood/60']
+const BAND_COLORS = ['bg-lime/50', 'bg-accent-pink/25', 'bg-mist/60']
 
 export default function StageBands({ stages, onRename }) {
   return (
-    <div className="flex w-full h-6 border-b-2 border-edge/50 select-none">
+    <div className="flex w-full h-6 border-b-2 border-line/50 select-none">
       {stages.map((stage, i) => (
         <div
           key={`${stage.label}-${i}`}
           data-testid="stage-band"
           style={{ width: `${((stage.endMonth - stage.startMonth + 1) / 12) * 100}%` }}
-          className={`flex items-center justify-center border-r border-edge/30 ${BAND_COLORS[i % BAND_COLORS.length]}`}
+          className={`flex items-center justify-center border-r border-line/30 ${BAND_COLORS[i % BAND_COLORS.length]}`}
         >
           <button
             aria-label={`แก้ชื่อช่วง ${stage.label}`}
@@ -22,7 +22,7 @@ export default function StageBands({ stages, onRename }) {
               const name = window.prompt('ชื่อช่วง', stage.label)
               if (name && name.trim()) onRename(i, name.trim())
             }}
-            className="pixel-font text-[8px] text-ink truncate px-1"
+            className="pixel-font text-xs text-ink truncate px-1"
           >
             {stage.label}
           </button>

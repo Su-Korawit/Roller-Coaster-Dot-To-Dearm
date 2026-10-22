@@ -12,7 +12,7 @@ function StickerButton({ sticker, onPick, onClose }) {
     <button
       aria-label={sticker.label}
       onClick={() => { onPick(sticker.url); onClose() }}
-      className="neo-card p-2 flex items-center justify-center aspect-square active:scale-95"
+      className="px-card p-2 flex items-center justify-center aspect-square active:scale-95"
     >
       <img src={sticker.url} alt="" className="max-w-full max-h-full object-contain" />
     </button>
@@ -29,10 +29,10 @@ export default function StickerPickerSheet({ onPick, onClose }) {
   return (
     <Popup variant="sheet" size="md" onClose={onClose}>
       <div className="px-5 pb-6 overflow-y-auto">
-        <p className="pixel-font text-[10px] text-center text-ink mb-3">Sticker</p>
+        <p className="pixel-font text-xs text-center text-ink mb-3">Sticker</p>
         {GROUPS.map((g) => (
           <div key={g.key} className="mb-4">
-            <p className="thai-font text-[11px] text-ink-soft mb-2">{g.label}</p>
+            <p className="thai-font text-xs text-ink-soft mb-2">{g.label}</p>
             <div className="grid grid-cols-4 gap-3">
               {STICKER_CATALOG.filter((s) => s.group === g.key).map((s) => (
                 <StickerButton key={s.id} sticker={s} onPick={onPick} onClose={onClose} />
@@ -42,7 +42,7 @@ export default function StickerPickerSheet({ onPick, onClose }) {
         ))}
         {premiumStickers.length > 0 && (
           <div className="mb-4">
-            <p className="thai-font text-[11px] text-ink-soft mb-2">พรีเมียม</p>
+            <p className="thai-font text-xs text-ink-soft mb-2">พรีเมียม</p>
             <div className="grid grid-cols-4 gap-3">
               {premiumStickers.map((s) => (
                 <StickerButton key={s.id} sticker={s} onPick={onPick} onClose={onClose} />

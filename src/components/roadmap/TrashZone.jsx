@@ -14,12 +14,12 @@ const TrashZone = forwardRef(function TrashZone({ visible, over }, ref) {
         visible
           ? over
             ? 'opacity-100 bg-danger/20 border-danger scale-110'
-            : 'opacity-80 bg-surface border-danger/50'
+            : 'opacity-80 bg-paper border-danger/50'
           : 'opacity-0 pointer-events-none',
       ].join(' ')}
     >
       <Trash2 size={22} className={over ? 'text-danger' : 'text-danger/70'} strokeWidth={2} />
-      <span className="pixel-font text-[7px] text-danger">Delete</span>
+      <span className="pixel-font text-xs text-danger">Delete</span>
     </div>
   )
 })

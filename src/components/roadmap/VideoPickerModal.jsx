@@ -66,15 +66,15 @@ export default function VideoPickerModal({ nodeId, onClose }) {
   return createPortal(
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="w-full max-w-sm aspect-square max-h-[90vh] neo-card flex flex-col overflow-hidden"
+        className="w-full max-w-sm aspect-square max-h-[90vh] px-card flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="rpg-plank px-4 py-3 flex items-center justify-between shrink-0">
-          <p className="pixel-font text-[11px] font-bold text-ink">Choose video</p>
+          <p className="pixel-font text-xs font-bold text-ink">Choose video</p>
           <button
             onClick={onClose}
             aria-label="ปิด"
-            className="neo-btn w-9 h-9 rounded-lg flex items-center justify-center text-ink-soft hover:bg-brand-soft hover:text-ink"
+            className="px-btn w-9 h-9 rounded-lg flex items-center justify-center text-ink-soft hover:bg-brand-soft hover:text-ink"
           >
             <X size={20} strokeWidth={2.5} />
           </button>
@@ -93,7 +93,7 @@ export default function VideoPickerModal({ nodeId, onClose }) {
           >
             {uploading
               ? <Loader size={18} className="animate-spin" />
-              : <><Upload size={16} /><span className="pixel-font text-[10px]">Upload new</span></>}
+              : <><Upload size={16} /><span className="pixel-font text-xs">Upload new</span></>}
           </button>
           <input ref={inputRef} type="file" accept="video/*" className="hidden" onChange={onFileChange} />
         </div>

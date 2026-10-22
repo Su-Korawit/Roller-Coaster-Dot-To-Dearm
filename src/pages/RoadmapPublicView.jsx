@@ -44,7 +44,7 @@ export default function RoadmapPublicView() {
   if (state.status === 'loading') {
     return (
       <div className="h-full w-full flex items-center justify-center">
-        <span className="pixel-font text-[10px] text-ink-soft">Loading...</span>
+        <span className="pixel-font text-xs text-ink-soft">Loading...</span>
       </div>
     )
   }
@@ -53,17 +53,17 @@ export default function RoadmapPublicView() {
     return (
       <div className="h-full w-full flex flex-col items-center justify-center gap-2 text-center px-6">
         <span className="text-3xl" aria-hidden="true">🔒</span>
-        <p className="pixel-font text-[10px] text-ink">This Roadmap link isn't public</p>
-        <p className="pixel-font text-[9px] text-ink-soft">It may have been unshared, or the link is wrong.</p>
+        <p className="pixel-font text-xs text-ink">This Roadmap link isn't public</p>
+        <p className="pixel-font text-xs text-ink-soft">It may have been unshared, or the link is wrong.</p>
       </div>
     )
   }
 
   return (
-    <div className="h-full w-full flex flex-col bg-[#F4F7FC]">
+    <div className="h-full w-full flex flex-col bg-mist">
       <div className="shrink-0 px-4 py-2 border-b border-ink/10 bg-white flex items-center gap-2">
-        <span className="pixel-font text-[10px] text-ink font-bold truncate">{state.name}</span>
-        <span className="pixel-font text-[8px] text-ink-soft ml-auto">View only</span>
+        <span className="pixel-font text-xs text-ink font-bold truncate">{state.name}</span>
+        <span className="pixel-font text-xs text-ink-soft ml-auto">View only</span>
       </div>
       <div className="flex-1 relative [&_.react-flow__node]:pointer-events-none">
         <ReactFlow
@@ -78,7 +78,7 @@ export default function RoadmapPublicView() {
           zoomOnScroll
           fitView
         >
-          <Background gap={20} color="#e2e8f0" />
+          <Background gap={20} color="var(--color-hairline)" />
           <Controls showInteractive={false} />
         </ReactFlow>
       </div>
