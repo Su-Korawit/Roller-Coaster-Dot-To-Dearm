@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { startFocus, checkInFocus, endFocus, abandonFocus } from '../services/focus'
 import { useLeavesStore } from './useLeavesStore'
+import { emitGuide } from '../lib/guideEvents'
 
 const IDLE = { status: 'idle', practice: false, mode: null, plannedMin: null, startedAt: null, lastCheckInAt: null, verifiedMs: 0, result: null, witherReason: null }
 
@@ -12,6 +13,11 @@ export const useFocusStore = create((set, get) => {
   const finish = (r, witherReason = null) => {
     useLeavesStore.getState().applyServer({ leaves: useLeavesStore.getState().leaves + Number(r.leaves ?? 0) })
     set({ status: r.withered ? 'withered' : 'done', result: r, witherReason: r.withered ? witherReason : null })
+    // The Guide's practice gift was paid: remember it and let the Guide move on.
+    if (r.practice && Number(r.leaves) > 0) {
+      useLeavesStore.getState().applyServer({ practiceDone: true })
+      emitGuide('practiced')
+    }
     return r
   }
 

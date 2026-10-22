@@ -4,6 +4,7 @@
 import { WARP_PLACES } from '../constants/warpPlaces'
 import { enterSchoolHub } from './schoolWorld'
 import { returnHome } from '../lib/syncManager'
+import { emitGuide } from '../lib/guideEvents'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useResumeStore } from '../stores/useResumeStore'
 import { useSchoolWorldStore } from '../stores/useSchoolWorldStore'
@@ -16,6 +17,7 @@ export async function warpTo(placeId, { resume = true } = {}) {
   if (place.id === 'hub') {
     if (!uid) return { ok: false, error: 'FAILED' }
     const r = await enterSchoolHub(uid)
+    if (r.ok) emitGuide('warped')
     return r.ok ? { ok: true } : { ok: false, error: r.error }
   }
 
@@ -26,5 +28,6 @@ export async function warpTo(placeId, { resume = true } = {}) {
   // Owner and map key flip together so presence never joins the wrong room.
   if (uid) await returnHome(uid, place.mapKey)
   world.requestMapChange(place.mapKey, { spawnAt })
+  emitGuide('warped')
   return { ok: true }
 }

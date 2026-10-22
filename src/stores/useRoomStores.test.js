@@ -326,3 +326,44 @@ describe('useRoomStore decorating by tapping', () => {
     expect(useRoomStore.getState()).toMatchObject({ decorating: false, selected: null, lastError: null })
   })
 })
+
+describe('Guide events from the stores', () => {
+  beforeEach(() => {
+    useFocusStore.getState().reset()
+    useLeavesStore.setState({ practiceDone: false })
+  })
+
+  it('a successful placement emits "placed" and a refused one does not', async () => {
+    const { onGuideEvent } = await import('../lib/guideEvents')
+    const seen = []
+    const off = onGuideEvent((e) => seen.push(e))
+    useRoomStore.getState().place('chair_basic', 32, 32)
+    useRoomStore.getState().place('chair_basic', 32, 32) // overlap: refused
+    off()
+    expect(seen).toEqual(['placed'])
+  })
+
+  it('a rewarded practice session emits "practiced" and remembers the gift was paid', async () => {
+    const { onGuideEvent } = await import('../lib/guideEvents')
+    const seen = []
+    const off = onGuideEvent((e) => seen.push(e))
+    useFocusStore.setState({ status: 'running', practice: true, mode: 'flexible', plannedMin: 1, startedAt: 0 })
+    m.endFocus.mockResolvedValue({ ok: true, leaves: 10, tree: 'sprout', withered: false, practice: true })
+    await useFocusStore.getState().end()
+    off()
+    expect(seen).toEqual(['practiced'])
+    expect(useLeavesStore.getState().practiceDone).toBe(true)
+  })
+
+  it('a practice session that paid nothing does not advance the Guide', async () => {
+    const { onGuideEvent } = await import('../lib/guideEvents')
+    const seen = []
+    const off = onGuideEvent((e) => seen.push(e))
+    useFocusStore.setState({ status: 'running', practice: true, mode: 'flexible', plannedMin: 1, startedAt: 0 })
+    m.endFocus.mockResolvedValue({ ok: true, leaves: 0, tree: 'sprout', withered: false, practice: true })
+    await useFocusStore.getState().end()
+    off()
+    expect(seen).toEqual([])
+    expect(useLeavesStore.getState().practiceDone).toBe(false)
+  })
+})

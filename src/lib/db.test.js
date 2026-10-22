@@ -357,3 +357,12 @@ describe('shapes.resume', () => {
     expect(out.last).toBe('room')
   })
 })
+
+describe('shapes.guide', () => {
+  it('returns a fresh guide for a missing or malformed field', () => {
+    for (const d of [undefined, {}, { guide: 'x' }, { guide: { started: 'yes', step: -1 } }]) {
+      expect(shapes.guide(d)).toEqual({ started: false, step: 0, done: false, skipped: false })
+    }
+    expect(shapes.guide({ guide: { started: true, step: 2 } })).toEqual({ started: true, step: 2, done: false, skipped: false })
+  })
+})

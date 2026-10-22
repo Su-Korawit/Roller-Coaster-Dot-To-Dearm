@@ -6,6 +6,7 @@ import { useAuthStore } from '../stores/useAuthStore'
 import { APP_VIEWS, shouldShowNav } from '../constants/appViews'
 import Hotbar from '../components/hotbar/Hotbar'
 import BagSheet from '../components/hotbar/BagSheet'
+import GuideOverlay from '../components/hotbar/GuideOverlay'
 import SettingsSheet from '../components/SettingsSheet'
 import { useRoomUiStore } from '../stores/useRoomUiStore'
 import TaskPanel from '../components/TaskPanel'
@@ -234,6 +235,7 @@ function HomePage() {
 
       {/* Study room: focus / shop entry, HUD, decorate bar, completion screen */}
       <RoomLayer />
+      <GuideOverlay />
 
       {/* Gradient scrim — top: keeps header pills readable over pixel art */}
       <div className="absolute top-0 inset-x-0 h-24 bg-linear-to-b from-black/30 to-transparent z-10 pointer-events-none" />

@@ -22,6 +22,7 @@ import { useWorldStore } from '../stores/useWorldStore'
 import { useSchoolStore } from '../stores/useSchoolStore'
 import { useHotbarStore } from '../stores/useHotbarStore'
 import { useResumeStore } from '../stores/useResumeStore'
+import { useGuideStore } from '../stores/useGuideStore'
 import { mergeResume } from './resumeRules'
 
 /**
@@ -270,6 +271,19 @@ const hotbarSync = createFirestoreSync({
 
 export const hydrateHotbarFromFirestore = hotbarSync.hydrate
 export const setHotbarSyncUser = hotbarSync.setSyncUser
+
+// ── Guide progress → users/{uid}.guide (accounts; guests use localStorage only) ──
+const guideSync = createFirestoreSync({
+  store: useGuideStore,
+  logName: 'syncGuide',
+  toDoc: ({ started, step, done, skipped }) => ({ guide: { started, step, done, skipped } }),
+  fromDoc: (data) => (data.guide ? shapes.guide(data) : {}),
+  changed: (s, p) => s.started !== p.started || s.step !== p.step || s.done !== p.done || s.skipped !== p.skipped,
+  needsSeed: (data) => !data.guide && useGuideStore.getState().started,
+})
+
+export const hydrateGuideFromFirestore = guideSync.hydrate
+export const setGuideSyncUser = guideSync.setSyncUser
 
 // ── Resume points → users/{uid}.resume (debounced 10 s; flushed when the page is hidden) ──
 const resumeSync = createFirestoreSync({

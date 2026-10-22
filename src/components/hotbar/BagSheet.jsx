@@ -6,6 +6,7 @@ import { ADMIN_UID } from '../../constants/admin'
 import { useHotbarStore } from '../../stores/useHotbarStore'
 import { useUserStore } from '../../stores/useUserStore'
 import { useAuthStore } from '../../stores/useAuthStore'
+import { useGuideStore } from '../../stores/useGuideStore'
 
 // Items a student may see in the Bag, in display order. Hidden by the Interface settings,
 // not-ready items never appear.
@@ -33,6 +34,7 @@ export default function BagSheet({ onClose, ctx }) {
   const use = (item) => {
     onClose()
     if (item.id === 'adminChat') ctx.openAdminChat?.()
+    else if (item.id === 'guide') useGuideStore.getState().replay()
     else if (item.sheet) ctx.openSheet(item.sheet)
     else if (item.popup) ctx.openPopup(item.popup)
     else ctx.openView(item.view)

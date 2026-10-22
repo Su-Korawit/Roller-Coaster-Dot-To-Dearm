@@ -12,6 +12,9 @@ const m = vi.hoisted(() => ({
   disarmSchoolSync: vi.fn(),
   hydrateHotbar: vi.fn(),
   hydrateResume: vi.fn(),
+  hydrateGuide: vi.fn(),
+  setGuideSyncUser: vi.fn(),
+  resetGuide: vi.fn(),
   setResumeSyncUser: vi.fn(),
   resetResume: vi.fn(),
   setHotbarSyncUser: vi.fn(),
@@ -100,7 +103,10 @@ vi.mock('../lib/syncManager', () => ({
   setHotbarSyncUser: (...a) => m.setHotbarSyncUser(...a),
   hydrateResumeFromFirestore: (...a) => m.hydrateResume(...a),
   setResumeSyncUser: (...a) => m.setResumeSyncUser(...a),
+  hydrateGuideFromFirestore: (...a) => m.hydrateGuide(...a),
+  setGuideSyncUser: (...a) => m.setGuideSyncUser(...a),
 }))
+vi.mock('../stores/useGuideStore', () => ({ useGuideStore: { getState: () => ({ reset: m.resetGuide }) } }))
 vi.mock('../stores/useResumeStore', () => ({ useResumeStore: { getState: () => ({ reset: m.resetResume }) } }))
 vi.mock('../stores/useHotbarStore', () => ({ useHotbarStore: { getState: () => ({ reset: m.resetHotbar }) } }))
 
@@ -174,6 +180,12 @@ describe('bootstrapSession', () => {
     await bootstrapSession({ uid: 'u1' })
     expect(m.hydrateHotbar).toHaveBeenCalledWith('u1')
     expect(m.setHotbarSyncUser).toHaveBeenCalledWith('u1')
+  })
+
+  it('hydrates the guide and arms its sync writer on login', async () => {
+    await bootstrapSession({ uid: 'u1' })
+    expect(m.hydrateGuide).toHaveBeenCalledWith('u1')
+    expect(m.setGuideSyncUser).toHaveBeenCalledWith('u1')
   })
 
   it('hydrates resume points and arms their sync writer on login', async () => {
@@ -330,6 +342,12 @@ describe('teardownSession', () => {
     expect(m.resetFocus).toHaveBeenCalled()
     expect(m.resetRoom).toHaveBeenCalled()
     expect(m.cancelRoomSync).toHaveBeenCalled() // a pending save must not outlive the account
+  })
+
+  it('disarms the guide sync and forgets its progress on logout', () => {
+    teardownSession()
+    expect(m.setGuideSyncUser).toHaveBeenCalledWith(null)
+    expect(m.resetGuide).toHaveBeenCalled()
   })
 
   it('disarms the resume sync and forgets the points on logout', () => {

@@ -4,6 +4,7 @@ import { useRoomStore } from '../../stores/useRoomStore'
 import { useLeavesStore } from '../../stores/useLeavesStore'
 import { useFxStore } from '../../stores/useFxStore'
 import { buyRoomItem } from '../../services/roomApi'
+import { emitGuide } from '../../lib/guideEvents'
 import { describeBuyError } from '../../room/messages'
 
 const TABS = [
@@ -31,6 +32,7 @@ export default function ShopSheet({ onClose }) {
       const r = await buyRoomItem(id)
       useLeavesStore.getState().applyServer({ leaves: r.leaves, inventory: { ...useLeavesStore.getState().inventory, [id]: r.owned } })
       useFxStore.getState().push({ kind: 'info', text: `ซื้อ${item.name}แล้ว` })
+      emitGuide('bought')
     } catch (e) {
       useFxStore.getState().push({ kind: 'info', text: describeBuyError(e) })
     } finally {
@@ -87,6 +89,7 @@ export default function ShopSheet({ onClose }) {
         <button
           type="button"
           className="px-btn h-11 text-sm font-bold bg-paper text-ink"
+          data-guide="decorate"
           onClick={() => {
             useRoomStore.getState().setDecorating(true)
             onClose()

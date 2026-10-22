@@ -73,3 +73,18 @@ describe('warpTo', () => {
     expect(m.requestMapChange).not.toHaveBeenCalled()
   })
 })
+
+describe('warpTo guide events', () => {
+  it('emits "warped" after a successful map warp and after entering the hub, but not after a failure', async () => {
+    const { onGuideEvent } = await import('../lib/guideEvents')
+    const seen = []
+    const off = onGuideEvent((e) => seen.push(e))
+    await warpTo('room', { resume: true })
+    m.enterSchoolHub.mockResolvedValue({ ok: true })
+    await warpTo('hub', { resume: true })
+    m.enterSchoolHub.mockResolvedValue({ ok: false, error: 'NO_SCHOOL' })
+    await warpTo('hub', { resume: true })
+    off()
+    expect(seen).toEqual(['warped', 'warped'])
+  })
+})
