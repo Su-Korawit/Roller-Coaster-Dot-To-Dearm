@@ -23,7 +23,7 @@ function SlotGrid({
       position: 'relative',
       width: slotSize,
       height: slotSize,
-      backgroundColor: hasItem ? 'var(--color-line-soft)' : 'var(--color-line-soft)',
+      backgroundColor: hasItem ? 'var(--color-zone-earth-soft)' : 'var(--color-mist)',
       border: `2px solid ${isSelected ? 'var(--color-warn)' : 'var(--color-ink)'}`,
       cursor: 'pointer',
       display: 'flex',
@@ -207,7 +207,7 @@ export function StorageUI({
     closeButton: {
       width: 24,
       height: 24,
-      backgroundColor: 'var(--color-line-soft)',
+      backgroundColor: 'var(--color-hairline)',
       border: '2px solid var(--color-ink)',
       color: 'var(--color-ink)',
       fontFamily: 'pixelFont-7, monospace',
@@ -232,7 +232,7 @@ export function StorageUI({
     },
     divider: {
       height: 2,
-      backgroundColor: 'var(--color-line-soft)',
+      backgroundColor: 'var(--color-hairline)',
       margin: '8px 0',
     },
     arrowDivider: {

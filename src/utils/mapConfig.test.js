@@ -13,7 +13,7 @@ vi.mock('firebase/firestore', () => ({
 }))
 vi.mock('../firebase', () => ({ db: {} }))
 
-import { saveMapConfig, listMapConfigs } from './mapConfig'
+import { saveMapConfig, listMapConfigs, getMapConfig } from './mapConfig'
 
 describe('pickEntryKey', () => {
   it('returns the map flagged isEntry', () => {
@@ -90,5 +90,17 @@ describe('DEFAULT_MAP_CONFIGS tileset paths', () => {
       )
     )
     expect(legacy).toEqual([])
+  })
+})
+
+describe('getMapConfig for the generated School Hub', () => {
+  it('keeps the redrawn tileset even when a stored config still lists the old Sprout tilesets', async () => {
+    const { getDoc } = await import('firebase/firestore')
+    getDoc.mockResolvedValueOnce({
+      exists: () => true,
+      data: () => ({ tilesets: { Grass: 'rc/tilesets/Grass.png', 'Wooden House': 'rc/tilesets/Wooden_House.png' } }),
+    })
+    const cfg = await getMapConfig('school_hub')
+    expect(cfg.tilesets['School Hub Tiles']).toBe('rc/tilesets/school_hub_tiles.png')
   })
 })

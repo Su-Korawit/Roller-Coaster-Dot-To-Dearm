@@ -33,7 +33,9 @@ export const GAME_ASSETS = [
   // Tilemaps
   { key: 'test3',  type: 'tilemapJSON', storagePath: 'maps/test3.json',  localPath: '/maps/test3.json' },
   { key: 'indoor', type: 'tilemapJSON', storagePath: 'maps/indoor.json', localPath: '/maps/indoor.json' },
-  { key: 'school_hub', type: 'tilemapJSON', storagePath: 'maps/school_hub.json', localPath: '/maps/school_hub.json' },
+  // v2: redrawn with the Soft Pixel tileset. The path is versioned so an old copy of the
+  // Sprout-tileset map left in Storage can never be loaded together with the new tileset.
+  { key: 'school_hub', type: 'tilemapJSON', storagePath: 'maps/school_hub_v2.json', localPath: '/maps/school_hub.json' },
 
   // Tilesets
   tileset('Grass'),

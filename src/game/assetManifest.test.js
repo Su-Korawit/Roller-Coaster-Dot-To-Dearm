@@ -47,3 +47,11 @@ describe('School Hub tileset', () => {
     })
   })
 })
+
+describe('School Hub map path', () => {
+  it('is versioned so a stale copy of the old map in Storage can never be paired with the new tileset', () => {
+    const entry = GAME_ASSETS.find((a) => a.key === 'school_hub')
+    expect(entry.storagePath).toBe('maps/school_hub_v2.json')
+    expect(entry.localPath).toBe('/maps/school_hub.json')
+  })
+})

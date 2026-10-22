@@ -55,7 +55,7 @@ export function SeedPicker({ isOpen = false, seeds = [], onSelect = () => {}, on
     closeButton: {
       width: 24,
       height: 24,
-      backgroundColor: 'var(--color-line-soft)',
+      backgroundColor: 'var(--color-hairline)',
       border: '2px solid var(--color-ink)',
       color: 'var(--color-ink)',
       fontFamily: 'pixelFont-7, monospace',
@@ -163,7 +163,7 @@ export function SeedPicker({ isOpen = false, seeds = [], onSelect = () => {}, on
       fontSize: 12,
       fontWeight: 'bold',
       color: 'var(--color-paper)',
-      backgroundColor: selected ? 'var(--color-leaf)' : 'var(--color-ink-soft)',
+      backgroundColor: selected ? 'var(--color-good-strong)' : 'var(--color-ink-soft)',
       border: '2px solid var(--color-ink)',
       padding: '6px 16px',
       cursor: selected ? 'pointer' : 'not-allowed',

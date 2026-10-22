@@ -63,7 +63,11 @@ const cfgRef = (key) => refs.mapConfig(key)
 function withRegistryDefaults(key, data) {
   const base = DEFAULT_MAP_CONFIGS[key] ?? { tilesets: {}, collision: {}, hidden: {} }
   return {
-    tilesets:     data.tilesets     ?? base.tilesets ?? {},
+    // A generated, non-editable map owns its tileset list: stored configs from before a
+    // redraw must not hide the new tileset (the registry entries always win).
+    tilesets:     base.editable === false
+      ? { ...(data.tilesets ?? {}), ...base.tilesets }
+      : data.tilesets ?? base.tilesets ?? {},
     collision:    data.collision    ?? base.collision ?? {},
     hidden:       data.hidden       ?? base.hidden    ?? {},
     displayName:  data.displayName  ?? base.displayName ?? key,

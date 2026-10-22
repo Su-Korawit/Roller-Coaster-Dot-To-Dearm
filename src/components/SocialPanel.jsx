@@ -491,9 +491,10 @@ function MatchedTab({ onUserTap, onOpenChat, following }) {
   const sevenDaysMs = 7 * 24 * 60 * 60 * 1000
 
   function tierColor(score) {
-    if (score >= 90) return 'var(--color-warn)'
+    // white score text sits on these: strong tones only (warn/leaf are background-only)
+    if (score >= 90) return 'var(--color-warn-strong)'
     if (score >= 71) return 'var(--color-brand)'
-    return 'var(--color-leaf)'
+    return 'var(--color-good-strong)'
   }
 
   return (

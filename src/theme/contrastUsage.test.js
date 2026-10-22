@@ -28,3 +28,18 @@ describe('background-only tokens carry readable text', () => {
     expect(offenders).toEqual([])
   })
 })
+
+// Inline styles are invisible to the class-name check above, so guard the two places that
+// pick a background in code: the match-score pill and the farm seed picker.
+describe('inline backgrounds that carry white text', () => {
+  const read = (rel) => readFileSync(join(SRC, rel), 'utf8')
+
+  it('SocialPanel tierColor never returns a background-only token behind its white score text', () => {
+    const body = /function tierColor[\s\S]*?\n  }/.exec(read('components/SocialPanel.jsx'))[0]
+    expect(body).not.toMatch(/--color-(warn|leaf|good|lime)\)/)
+  })
+
+  it('SeedPicker never puts its white label on the background-only leaf colour', () => {
+    expect(read('components/SeedPicker.jsx')).not.toMatch(/selected \? 'var\(--color-leaf\)'/)
+  })
+})

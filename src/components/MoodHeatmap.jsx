@@ -8,9 +8,9 @@ import { colors } from '../theme/colors'
 
 // Mood level → fill colour: an empty cell, then a purple ramp that deepens with mood
 const LEVEL_COLORS = {
-  0: colors.mist, // no entry
-  1: colors.brandSoft, // very low
-  2: colors.zoneSoc, // low
+  0: colors.mist, // no entry (drawn with a hairline outline)
+  1: colors.zoneSoc, // very low
+  2: colors.lineSoft, // low
   3: colors.brand, // neutral
   4: colors.brandStrong, // good
   5: colors.ink, // great
@@ -123,8 +123,8 @@ export default function MoodHeatmap({ feelingNotes = [] }) {
                 rx={2}
                 ry={2}
                 fill={color}
-                stroke={isToday ? colors.warn : 'none'}
-                strokeWidth={isToday ? 1.5 : 0}
+                stroke={isToday ? colors.warn : level === 0 ? colors.hairline : 'none'}
+                strokeWidth={isToday ? 1.5 : level === 0 ? 1 : 0}
               >
                 <title>{dateStr}{level ? ` — ${LEVEL_LABELS[level]}` : ''}</title>
               </rect>

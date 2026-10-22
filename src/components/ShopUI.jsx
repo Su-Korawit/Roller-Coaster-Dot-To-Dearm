@@ -5,7 +5,7 @@ import { GoldIcon } from './ui/GoldIcon'
 const TYPE_COLORS = {
   buy: { btn: 'var(--color-zone-earth-soft)', border: 'var(--color-good-strong)' },
   sell: { btn: 'var(--color-warn)', border: 'var(--color-warn-strong)' },
-  sellAll: { btn: 'var(--color-warn)', border: 'var(--color-warn-strong)' },
+  sellAll: { btn: 'var(--color-zone-health-soft)', border: 'var(--color-zone-health-deep)' },
 }
 
 function QuantitySelector({ value, min = 1, max = 99, onChange }) {
@@ -14,7 +14,7 @@ function QuantitySelector({ value, min = 1, max = 99, onChange }) {
     btn: {
       width: 22,
       height: 22,
-      backgroundColor: 'var(--color-line-soft)',
+      backgroundColor: 'var(--color-hairline)',
       border: '2px solid var(--color-ink)',
       color: 'var(--color-ink)',
       fontFamily: 'pixelFont-7, monospace',
@@ -162,7 +162,7 @@ export function ShopUI({
     },
     closeBtn: {
       width: 24, height: 24,
-      backgroundColor: 'var(--color-line-soft)',
+      backgroundColor: 'var(--color-hairline)',
       border: '2px solid var(--color-ink)',
       color: 'var(--color-ink)',
       fontFamily: 'pixelFont-7, monospace',
@@ -206,7 +206,7 @@ export function ShopUI({
     itemAbbr: {
       width: 32,
       height: 32,
-      backgroundColor: 'var(--color-line-soft)',
+      backgroundColor: 'var(--color-hairline)',
       border: '2px solid var(--color-ink)',
       display: 'flex',
       alignItems: 'center',
