@@ -86,7 +86,7 @@ export default function SubjectDetailPanel({ subjectId, onClose, today }) {
               <button
                 onClick={onClose}
                 aria-label="ปิด"
-                className="neo-btn w-9 h-9 flex items-center justify-center rounded-lg bg-surface text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                className="px-btn w-9 h-9 flex items-center justify-center rounded-lg bg-paper text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
               >
                 <X size={16} strokeWidth={2.5} aria-hidden="true" />
               </button>
@@ -96,10 +96,10 @@ export default function SubjectDetailPanel({ subjectId, onClose, today }) {
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
             {/* Schedule */}
             <section>
-              <h3 className="pixel-font text-[10px] text-ink-soft mb-2">Schedule</h3>
+              <h3 className="pixel-font text-xs text-ink-soft mb-2">Schedule</h3>
               <ul className="space-y-1 mb-3">
                 {scheduleSlots.map((slot) => (
-                  <li key={slot.id} className="neo-card flex items-center justify-between p-2">
+                  <li key={slot.id} className="px-card flex items-center justify-between p-2">
                     <span className="thai-font text-sm text-ink">
                       {DAY_LABELS[slot.day]}. {slot.startTime} - {slot.endTime}
                     </span>
@@ -110,28 +110,28 @@ export default function SubjectDetailPanel({ subjectId, onClose, today }) {
                 ))}
               </ul>
               <div className="flex gap-2 items-end flex-wrap">
-                <label className="flex flex-col text-[10px] thai-font text-ink-soft">
+                <label className="flex flex-col text-xs thai-font text-ink-soft">
                   วัน
                   <select
                     aria-label="วัน"
                     value={slotDay}
                     onChange={(e) => setSlotDay(e.target.value)}
-                    className="neo-input px-2 py-1 text-sm"
+                    className="px-input px-2 py-1 text-sm"
                   >
                     {DAY_KEYS.map((day) => (
                       <option key={day} value={day}>{DAY_LABELS[day]}</option>
                     ))}
                   </select>
                 </label>
-                <label className="flex flex-col text-[10px] thai-font text-ink-soft">
+                <label className="flex flex-col text-xs thai-font text-ink-soft">
                   เวลาเริ่ม
-                  <input aria-label="เวลาเริ่ม" type="time" value={slotStart} onChange={(e) => setSlotStart(e.target.value)} className="neo-input px-2 py-1 text-sm" />
+                  <input aria-label="เวลาเริ่ม" type="time" value={slotStart} onChange={(e) => setSlotStart(e.target.value)} className="px-input px-2 py-1 text-sm" />
                 </label>
-                <label className="flex flex-col text-[10px] thai-font text-ink-soft">
+                <label className="flex flex-col text-xs thai-font text-ink-soft">
                   เวลาสิ้นสุด
-                  <input aria-label="เวลาสิ้นสุด" type="time" value={slotEnd} onChange={(e) => setSlotEnd(e.target.value)} className="neo-input px-2 py-1 text-sm" />
+                  <input aria-label="เวลาสิ้นสุด" type="time" value={slotEnd} onChange={(e) => setSlotEnd(e.target.value)} className="px-input px-2 py-1 text-sm" />
                 </label>
-                <button onClick={handleAddSlot} className="neo-btn rounded-lg bg-brand-soft px-3 py-1.5 text-sm thai-font text-ink">
+                <button onClick={handleAddSlot} className="px-btn rounded-lg bg-brand-soft px-3 py-1.5 text-sm thai-font text-ink">
                   เพิ่มคาบเรียน
                 </button>
               </div>
@@ -139,10 +139,10 @@ export default function SubjectDetailPanel({ subjectId, onClose, today }) {
 
             {/* Appointments */}
             <section>
-              <h3 className="pixel-font text-[10px] text-ink-soft mb-2">Appointment</h3>
+              <h3 className="pixel-font text-xs text-ink-soft mb-2">Appointment</h3>
               <ul className="space-y-1 mb-3">
                 {appointments.map((appt) => (
-                  <li key={appt.id} className="neo-card flex items-center gap-2 p-2">
+                  <li key={appt.id} className="px-card flex items-center gap-2 p-2">
                     <input type="checkbox" checked={appt.completed} onChange={() => toggleAppointment(appt.id)} />
                     <span className={`flex-1 thai-font text-sm text-ink ${appt.completed ? 'line-through text-ink-soft' : ''}`}>
                       <span>{appt.title}</span> · {appt.dueDate}
@@ -154,34 +154,34 @@ export default function SubjectDetailPanel({ subjectId, onClose, today }) {
                 ))}
               </ul>
               <div className="flex gap-2 items-end flex-wrap">
-                <label className="flex flex-col text-[10px] thai-font text-ink-soft flex-1 min-w-32">
+                <label className="flex flex-col text-xs thai-font text-ink-soft flex-1 min-w-32">
                   หัวข้องาน
                   <input
                     aria-label="หัวข้องาน"
                     value={apptTitle}
                     onChange={(e) => setApptTitle(e.target.value)}
-                    className="neo-input px-2 py-1 text-sm"
+                    className="px-input px-2 py-1 text-sm"
                   />
                 </label>
-                <label className="flex flex-col text-[10px] thai-font text-ink-soft">
+                <label className="flex flex-col text-xs thai-font text-ink-soft">
                   ประเภท
-                  <select value={apptKind} onChange={(e) => setApptKind(e.target.value)} className="neo-input px-2 py-1 text-sm">
+                  <select value={apptKind} onChange={(e) => setApptKind(e.target.value)} className="px-input px-2 py-1 text-sm">
                     <option value="homework">Homework</option>
                     <option value="checkpoint">Checkpoint</option>
                   </select>
                 </label>
-                <label className="flex flex-col text-[10px] thai-font text-ink-soft">
+                <label className="flex flex-col text-xs thai-font text-ink-soft">
                   กำหนดส่ง
-                  <input aria-label="กำหนดส่ง" type="date" value={apptDue} onChange={(e) => setApptDue(e.target.value)} className="neo-input px-2 py-1 text-sm" />
+                  <input aria-label="กำหนดส่ง" type="date" value={apptDue} onChange={(e) => setApptDue(e.target.value)} className="px-input px-2 py-1 text-sm" />
                 </label>
-                <button onClick={handleAddAppointment} className="neo-btn rounded-lg bg-brand-soft px-3 py-1.5 text-sm thai-font text-ink">
+                <button onClick={handleAddAppointment} className="px-btn rounded-lg bg-brand-soft px-3 py-1.5 text-sm thai-font text-ink">
                   เพิ่มงาน
                 </button>
               </div>
             </section>
 
             <section>
-              <h3 className="pixel-font text-[10px] text-ink-soft mb-2">Notebook</h3>
+              <h3 className="pixel-font text-xs text-ink-soft mb-2">Notebook</h3>
               <textarea
                 key={todayStr}
                 aria-label="Notebook"
@@ -195,8 +195,8 @@ export default function SubjectDetailPanel({ subjectId, onClose, today }) {
                 {notesForSubject(notes, subjectId)
                   .filter((n) => n.date !== todayStr)
                   .map((n) => (
-                    <li key={n.id} className="neo-card p-2">
-                      <p className="thai-font text-[10px] text-ink-soft">{n.date}</p>
+                    <li key={n.id} className="px-card p-2">
+                      <p className="thai-font text-xs text-ink-soft">{n.date}</p>
                       <p className="thai-font text-sm text-ink">{n.text}</p>
                     </li>
                   ))}
