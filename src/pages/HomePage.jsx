@@ -4,7 +4,8 @@ import LevelBadge from '../components/hud/LevelBadge'
 import { useUserStore } from '../stores/useUserStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { APP_VIEWS, shouldShowNav } from '../constants/appViews'
-import BottomNavBar from '../components/BottomNavBar'
+import Hotbar from '../components/hotbar/Hotbar'
+import { useRoomUiStore } from '../stores/useRoomUiStore'
 import TaskPanel from '../components/TaskPanel'
 import NewsPanel from '../components/NewsPanel'
 import ProfilePanel from '../components/ProfilePanel'
@@ -102,6 +103,22 @@ function HomePage() {
   }
 
   const openChatAction = useChatStore((s) => s.openChat)
+
+  // What the hotbar and the Bag call: they never know how panels are rendered.
+  const hotbarCtx = {
+    activeView: activeTab,
+    openView: (view) => {
+      if (view === APP_VIEWS.PLANNER_CALENDAR) handlePlannerTransition()
+      else if (view === activeTab && view !== APP_VIEWS.HOME) closePanel()
+      else handleTabChange(view)
+    },
+    openPopup: (id) => openPopup(id),
+    openSheet: (name) => {
+      const ui = useRoomUiStore.getState()
+      if (ui.sheet === name) ui.close()
+      else ui.open(name)
+    },
+  }
 
   function closePanel() {
     setActiveTab(APP_VIEWS.HOME)
@@ -402,7 +419,7 @@ function HomePage() {
       )}
 
       {/* ── BOTTOM NAV ── */}
-      {shouldShowNav(activeTab) && <BottomNavBar active={activeTab} onChange={handleTabChange} />}
+      {shouldShowNav(activeTab) && uiVisibility.hotbar !== false && <Hotbar ctx={hotbarCtx} />}
     </section>
   )
 }

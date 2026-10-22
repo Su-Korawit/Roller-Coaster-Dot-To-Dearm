@@ -1,17 +1,18 @@
 import { useEffect } from 'react'
 import DragHandle from './DragHandle'
 import { Z_SHEET, Z_MODAL } from '../../constants/zIndex'
+import { HOTBAR_CLEARANCE } from '../../constants/hotbarLayout'
 import { usePopupStore } from '../../stores/usePopupStore'
 import { playSound } from '../../lib/sfx'
 
 const SIZE_MAXW = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl' }
-const NAV_SAFE_PB = 'calc(env(safe-area-inset-bottom) + 96px)'
+const NAV_SAFE_PB = HOTBAR_CLEARANCE
 
 // Unified popup shell.
 //   variant="sheet"  → bottom sheet (rounded top + drag handle), default
 //   variant="center" → centered modal card
 // size → standardized max-width. navSafe → bottom padding clearing the
-// floating BottomNavBar. z-index comes from the semantic tokens.
+// floating hotbar. z-index comes from the semantic tokens.
 export default function Popup({
   id,
   variant = 'sheet',
