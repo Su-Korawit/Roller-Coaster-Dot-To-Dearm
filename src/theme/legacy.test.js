@@ -45,9 +45,21 @@ describe('migrateSource', () => {
   })
 
   it('flags a hex with no safe mapping instead of guessing', () => {
-    const r = run("const c = '#9DB557'")
-    expect(r.code).toBe("const c = '#9DB557'")
-    expect(r.flagged).toEqual([{ line: 1, kind: 'hex', text: '#9DB557' }])
+    const r = run("const c = '#123ABC'")
+    expect(r.code).toBe("const c = '#123ABC'")
+    expect(r.flagged).toEqual([{ line: 1, kind: 'hex', text: '#123ABC' }])
+  })
+
+  it('turns mapped hex in code into CSS variables, in any case and in compound values', () => {
+    expect(run("const a = '#8a4a70'").code).toBe("const a = 'var(--color-brand)'")
+    expect(run("border: '3px solid #c8a96e'").code).toBe("border: '3px solid var(--color-line-soft)'")
+    expect(run('<path fill="#fff" />').code).toBe('<path fill="var(--color-paper)" />')
+  })
+
+  it('keeps text readable when a background-only colour was used as text', () => {
+    expect(run('"text-[#D99B3B]"').code).toBe('"text-warn-strong"')
+    expect(run('"bg-[#D99B3B]"').code).toBe('"bg-warn"')
+    expect(run('"text-[#7EA04A]"').code).toBe('"text-good-strong"')
   })
 
   it('is idempotent', () => {

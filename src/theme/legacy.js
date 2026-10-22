@@ -22,18 +22,28 @@ export const TOKEN_MAP = {
   'wood-dark': 'hairline',
 }
 
-// Uppercase hex → token, only for roles that stay AA-safe. Anything else is flagged.
+// Uppercase hex → token. Legacy parchment/plum/Tailwind-default colours map to the
+// token that plays the same role in Soft Pixel (surface, line, accent, state).
 export const HEX_MAP = {
-  '#3D2B1F': 'ink',
-  '#FFFFFF': 'paper',
-  '#F3E5C2': 'mist',
-  '#F8EFD6': 'mist',
-  '#F0D9A0': 'mist',
-  '#C8A96E': 'line-soft',
-  '#8B6343': 'line-soft',
-  '#E2E8F0': 'hairline',
-  '#E5E7EB': 'hairline',
-  '#F4F7FC': 'mist',
+  '#3D2B1F': 'ink', '#FFFFFF': 'paper', '#F3E5C2': 'mist', '#F8EFD6': 'mist', '#F0D9A0': 'mist',
+  '#F4F7FC': 'mist', '#C8A96E': 'line-soft', '#8B6343': 'line-soft', '#AA7959': 'line-soft',
+  '#DCB98A': 'hairline', '#E2E8F0': 'hairline', '#E5E7EB': 'hairline',
+  '#8A4A70': 'brand', '#713970': 'brand-strong', '#7C3AED': 'brand',
+  '#D99B3B': 'warn', '#E8B04A': 'warn', '#F5C542': 'warn', '#FBBF24': 'warn', '#F59E0B': 'warn',
+  '#D97706': 'warn-strong',
+  '#7EA04A': 'leaf', '#9DB557': 'leaf', '#6F8A3A': 'good-strong', '#C0D470': 'lime',
+  '#A8E6A3': 'zone-earth-soft', '#F5A3A3': 'zone-health-soft',
+  '#E6A6B4': 'zone-arts', '#D98BA0': 'zone-arts', '#D9B3CF': 'zone-soc-soft', '#FCE7F3': 'zone-arts-soft',
+  '#EC4899': 'accent-pink', '#A78BDA': 'zone-soc', '#C084FC': 'zone-soc', '#9CA3AF': 'ink-soft',
+}
+
+// Tokens that are background-only (fail AA as text): when the old colour was used as
+// text, switch to the readable sibling.
+const TEXT_SAFE = {
+  warn: 'warn-strong', leaf: 'good-strong', lime: 'good-strong', good: 'good-strong',
+  'zone-earth-soft': 'zone-earth-deep', 'zone-health-soft': 'zone-health-deep',
+  'zone-arts': 'zone-arts-deep', 'zone-soc': 'zone-soc-deep', 'zone-soc-soft': 'zone-soc-deep',
+  'zone-arts-soft': 'zone-arts-deep', mist: 'ink', hairline: 'ink-soft',
 }
 
 // Brand marks of other companies (Google sign-in): never recoloured.
@@ -46,6 +56,7 @@ const NEO_RE = /(?<![\w-])neo-(?:btn|card|slab|input|sheet|pressed)(?![\w-])/g
 const UTILITY_RE = new RegExp(`(?<![\\w-])(${PREFIXES})-(${LEGACY_TOKENS})(?=(?:\\/\\d+)?(?![\\w-]))`, 'g')
 const ARBITRARY_HEX_RE = new RegExp(`(?<![\\w-])(${PREFIXES})-\\[(#[0-9a-fA-F]{6})\\]`, 'g')
 const TINY_TEXT_RE = /(?<![\w-])text-\[(\d+(?:\.\d+)?)px\]/g
+const CODE_HEX_RE = /(?<![\w&#-])#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})(?![\w])/g
 const HEX_RE = /(?<![\w&])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6})(?![\w])|(?<=['"`])#[0-9a-fA-F]{3}(?=['"`])/g
 
 function rewrite(text, line, changes) {
@@ -65,9 +76,18 @@ function rewrite(text, line, changes) {
       return to
     })
     .replace(ARBITRARY_HEX_RE, (m, prefix, value) => {
-      const token = HEX_MAP[value.toUpperCase()]
-      if (!token) return m
+      const base = HEX_MAP[value.toUpperCase()]
+      if (!base) return m
+      const token = prefix === 'text' ? TEXT_SAFE[base] ?? base : base
       const to = `${prefix}-${token}`
+      hex(m, to)
+      return to
+    })
+    .replace(CODE_HEX_RE, (m) => {
+      const full = m.length === 4 ? `#${[...m.slice(1)].map((c) => c + c).join('')}` : m
+      const token = HEX_MAP[full.toUpperCase()]
+      if (!token) return m
+      const to = `var(--color-${token})`
       hex(m, to)
       return to
     })

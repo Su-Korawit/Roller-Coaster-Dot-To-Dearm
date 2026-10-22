@@ -17,14 +17,14 @@ function MatchBar({ score }) {
   }, [])
 
   const label = score >= 80 ? '⚡ High Match' : score >= 60 ? '✦ Match' : 'Match Score'
-  const labelColor = score >= 80 ? '#d97706' : score >= 60 ? 'var(--color-brand)' : '#9ca3af'
-  const segmentColor = score >= 80 ? '#f59e0b' : score >= 60 ? 'var(--color-brand)' : '#c084fc'
+  const labelColor = score >= 80 ? 'var(--color-warn-strong)' : score >= 60 ? 'var(--color-brand)' : 'var(--color-ink-soft)'
+  const segmentColor = score >= 80 ? 'var(--color-warn)' : score >= 60 ? 'var(--color-brand)' : 'var(--color-zone-soc)'
 
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-2">
-        <span className="pixel-font text-[7px]" style={{ color: labelColor }}>{label}</span>
-        <span className="pixel-font text-[8px]" style={{ color: labelColor }}>{score}%</span>
+        <span className="pixel-font text-xs" style={{ color: labelColor }}>{label}</span>
+        <span className="pixel-font text-xs" style={{ color: labelColor }}>{score}%</span>
       </div>
       {/* 10-segment pixel bar — each block lights up with a staggered delay */}
       <div className="flex gap-0.5 h-3.5">
@@ -36,7 +36,7 @@ function MatchBar({ score }) {
               key={i}
               className="flex-1 rounded-sm"
               style={{
-                background: isLit ? segmentColor : '#e5e7eb',
+                background: isLit ? segmentColor : 'var(--color-hairline)',
                 transition: `background 0.12s ease`,
                 transitionDelay: isLit ? `${i * 55}ms` : '0ms',
                 boxShadow: isLit && score >= 60 ? `0 0 4px ${segmentColor}80` : 'none',
@@ -53,8 +53,8 @@ function MatchBar({ score }) {
 function StatCell({ value, label }) {
   return (
     <div className="flex flex-col items-center gap-0.5">
-      <span className="pixel-font text-[11px] text-ink">{value}</span>
-      <span className="pixel-font text-[10px] text-ink-soft">{label}</span>
+      <span className="pixel-font text-xs text-ink">{value}</span>
+      <span className="pixel-font text-xs text-ink-soft">{label}</span>
     </div>
   )
 }
@@ -63,7 +63,7 @@ function StatCell({ value, label }) {
 function Tag({ label, color = 'bg-brand-soft text-ink-soft', blurred }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 pixel-font text-[7px] px-2 py-1 rounded-lg ${color} ${blurred ? 'select-none' : ''}`}
+      className={`inline-flex items-center gap-1 pixel-font text-xs px-2 py-1 rounded-lg ${color} ${blurred ? 'select-none' : ''}`}
       style={blurred ? { filter: 'blur(5px)', userSelect: 'none' } : undefined}
     >
       {label}
@@ -149,7 +149,7 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
         {!loading && error && (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <span className="text-3xl">😕</span>
-            <p className="pixel-font text-[10px] text-ink-soft">{error}</p>
+            <p className="pixel-font text-xs text-ink-soft">{error}</p>
           </div>
         )}
 
@@ -180,7 +180,7 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
               {/* MBTI badge */}
               {pMbti && (
                 <span
-                  className="pixel-font text-[8px] px-3 py-1 rounded-xl text-white"
+                  className="pixel-font text-xs px-3 py-1 rounded-xl text-white"
                   style={{ background: mbtiColor(pMbti) }}
                 >
                   {pMbti}
@@ -195,11 +195,11 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
               <StatCell value={(profile.following ?? []).length} label="Following" />
               <div className="w-px h-6 bg-ink/10" />
               <div className="flex flex-col items-center gap-0.5">
-                <span className="pixel-font text-[11px] text-warn flex items-center gap-1">
+                <span className="pixel-font text-xs text-warn flex items-center gap-1">
                   <Flame size={12} />
                   {profile.fireStacks ?? 0}
                 </span>
-                <span className="pixel-font text-[10px] text-ink-soft">Stacks</span>
+                <span className="pixel-font text-xs text-ink-soft">Stacks</span>
               </div>
             </div>
 
@@ -227,7 +227,7 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
                 />
               )}
               {!canSeeDetails && (
-                <span className="inline-flex items-center gap-1 pixel-font text-[10px] px-2 py-1 rounded-lg bg-brand-soft text-ink-soft">
+                <span className="inline-flex items-center gap-1 pixel-font text-xs px-2 py-1 rounded-lg bg-brand-soft text-ink-soft">
                   <Lock size={9} /> Private
                 </span>
               )}
@@ -247,7 +247,7 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
                 <button
                   onClick={handleFollow}
                   disabled={followBusy || iFollow || isPending}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl pixel-font text-[8px] transition-all active:scale-95 disabled:opacity-60 ${
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl pixel-font text-xs transition-all active:scale-95 disabled:opacity-60 ${
                     iFollow
                       ? 'bg-brand-soft text-ink-soft'
                       : isPending
@@ -268,9 +268,9 @@ export default function UserProfileSheet({ userId, onClose, onOpenChat }) {
                 <button
                   onClick={() => isMutual && onOpenChat?.(userId)}
                   disabled={!isMutual}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl pixel-font text-[8px] transition-all active:scale-95 ${
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl pixel-font text-xs transition-all active:scale-95 ${
                     isMutual
-                      ? 'bg-surface border-2 border-brand text-brand shadow-hard-sm'
+                      ? 'bg-paper border-2 border-brand text-brand shadow-hard-sm'
                       : 'bg-brand-soft border border-ink/10 text-ink-soft/50 cursor-not-allowed'
                   }`}
                 >

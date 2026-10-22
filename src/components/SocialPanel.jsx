@@ -21,7 +21,7 @@ function makeUserIcon(user) {
     : `<span style="font-size:13px;line-height:1">🎮</span>`
   return L.divIcon({
     className: '',
-    html: `<div style="width:30px;height:30px;border-radius:50%;border:3px solid ${color};background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.15);">${inner}</div>`,
+    html: `<div style="width:30px;height:30px;border-radius:50%;border:3px solid ${color};background:var(--color-paper);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.15);">${inner}</div>`,
     iconSize: [30, 30],
     iconAnchor: [15, 15],
   })
@@ -33,7 +33,7 @@ function makeMyIcon(photoURL) {
     : `<span style="font-size:18px;line-height:1">🎮</span>`
   return L.divIcon({
     className: '',
-    html: `<div style="width:44px;height:44px;border-radius:50%;border:4px solid #8a4a70;background:#f8efd6;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 0 0 5px rgba(138,74,112,0.2),0 0 18px rgba(138,74,112,0.45);">${inner}</div>`,
+    html: `<div style="width:44px;height:44px;border-radius:50%;border:4px solid var(--color-brand);background:var(--color-mist);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 0 0 5px rgba(138,74,112,0.2),0 0 18px rgba(138,74,112,0.45);">${inner}</div>`,
     iconSize: [44, 44],
     iconAnchor: [22, 22],
   })
@@ -113,7 +113,7 @@ function SchoolPicker({ uid, onSaved }) {
         <p className="thai-font text-xs text-ink-soft mt-1.5 leading-relaxed">เพื่อดูผู้ใช้ในสถานที่เดียวกัน</p>
       </div>
       {error && (
-        <p className="pixel-font text-[7px] text-danger text-center leading-relaxed">{error}</p>
+        <p className="pixel-font text-xs text-danger text-center leading-relaxed">{error}</p>
       )}
       <div className="relative w-full max-w-xs">
         <input
@@ -121,7 +121,7 @@ function SchoolPicker({ uid, onSaved }) {
           type="text"
           placeholder="พิมพ์ชื่อโรงเรียน / มหาวิทยาลัย..."
           disabled={!ready || saving}
-          className="neo-input w-full px-4 py-3 text-[12px] disabled:opacity-50"
+          className="px-input w-full px-4 py-3 text-[12px] disabled:opacity-50"
           style={{ fontFamily: "'Noto Sans Thai', sans-serif" }}
         />
         {(!ready || saving) && (
@@ -148,8 +148,8 @@ function MapTab({ myProfile, nearbyUsers, uid, onSchoolSaved, onUserTap }) {
       {/* School label bar */}
       <div className="rpg-plank px-4 py-2 flex items-center gap-2 shrink-0">
         <span className="text-sm">📍</span>
-        <span className="pixel-font text-[8px] text-ink-soft truncate flex-1">{myProfile.schoolName}</span>
-        <span className="pixel-font text-[7px] text-brand shrink-0">{nearbyUsers.length} คน</span>
+        <span className="pixel-font text-xs text-ink-soft truncate flex-1">{myProfile.schoolName}</span>
+        <span className="pixel-font text-xs text-brand shrink-0">{nearbyUsers.length} คน</span>
       </div>
       {/* Map — flex-1 with minHeight:0 allows it to shrink in flex column */}
       <div className="flex-1" style={{ minHeight: 0 }}>
@@ -224,14 +224,14 @@ function UserCard({ user, following, sentRequests, onFollow, onTap, score = 0, o
     <div
       className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 border transition-colors cursor-pointer active:brightness-95 ${
         isHighMatch ? 'border-warn/30 bg-warn/10/60'
-        : isMatch   ? 'border-edge/60 bg-brand-soft/70'
-        :             'border-edge/40 bg-surface'
+        : isMatch   ? 'border-line/60 bg-brand-soft/70'
+        :             'border-line/40 bg-paper'
       }`}
       onClick={() => onTap?.(user.uid)}
     >
       {/* Avatar with MBTI ring */}
       <div
-        className="w-10 h-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-surface border-2"
+        className="w-10 h-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-paper border-2"
         style={{ borderColor: mbtiColor(shapes.readProfile(user).mbti) }}
       >
         {user.photoURL
@@ -242,22 +242,22 @@ function UserCard({ user, following, sentRequests, onFollow, onTap, score = 0, o
       {/* Name + badges */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
-          <span className="pixel-font text-[9px] text-ink truncate">{user.displayName || 'ผู้ใช้'}</span>
+          <span className="pixel-font text-xs text-ink truncate">{user.displayName || 'ผู้ใช้'}</span>
           {isHighMatch
-            ? <span className="pixel-font text-[6px] text-warn shrink-0">⚡ High Match</span>
+            ? <span className="pixel-font text-xs text-warn shrink-0">⚡ High Match</span>
             : isMatch
-              ? <span className="pixel-font text-[6px] text-brand-strong shrink-0">✦ Match</span>
+              ? <span className="pixel-font text-xs text-brand-strong shrink-0">✦ Match</span>
               : null}
         </div>
         <div className="flex items-center gap-1 mt-0.5 flex-wrap">
           {shapes.readProfile(user).mbti && (
-            <span className="pixel-font text-[6px] px-1.5 py-0.5 rounded-md text-white"
+            <span className="pixel-font text-xs px-1.5 py-0.5 rounded-md text-white"
               style={{ background: mbtiColor(shapes.readProfile(user).mbti) }}>
               {shapes.readProfile(user).mbti}
             </span>
           )}
           {user.program && (
-            <span className="pixel-font text-[6px] px-1.5 py-0.5 rounded-md bg-brand-soft text-brand-strong max-w-22.5 truncate">
+            <span className="pixel-font text-xs px-1.5 py-0.5 rounded-md bg-brand-soft text-brand-strong max-w-22.5 truncate">
               {user.program}
             </span>
           )}
@@ -268,7 +268,7 @@ function UserCard({ user, following, sentRequests, onFollow, onTap, score = 0, o
       <button
         onClick={handleMatch}
         disabled={isChecking || isMatched || (isNoMatch && !canRetry)}
-        className={`shrink-0 px-2 py-1.5 rounded-xl pixel-font text-[7px] transition-all active:scale-95 disabled:cursor-not-allowed ${
+        className={`shrink-0 px-2 py-1.5 rounded-xl pixel-font text-xs transition-all active:scale-95 disabled:cursor-not-allowed ${
           isMatched           ? 'bg-warn text-ink '
           : isChecking        ? 'bg-brand-soft text-brand-strong'
           : (isNoMatch && !canRetry) ? 'bg-brand-soft text-ink-soft'
@@ -285,7 +285,7 @@ function UserCard({ user, following, sentRequests, onFollow, onTap, score = 0, o
       <button
         onClick={handleFollow}
         disabled={busy || isFollowing || isPending}
-        className={`shrink-0 flex items-center gap-1 px-2 py-1.5 rounded-xl pixel-font text-[7px] transition-all active:scale-95 disabled:opacity-60 ${
+        className={`shrink-0 flex items-center gap-1 px-2 py-1.5 rounded-xl pixel-font text-xs transition-all active:scale-95 disabled:opacity-60 ${
           isFollowing ? 'bg-brand-soft text-ink-soft'
           : isPending ? 'bg-warn/10 text-warn border border-warn/30'
           : 'bg-brand text-white '
@@ -326,7 +326,7 @@ function DiscoverTab({ nearbyUsers, following, sentRequests, sendFollowRequest, 
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Search bar */}
       <div className="rpg-plank px-4 py-3 shrink-0">
-        <div className="neo-input flex items-center gap-2 px-3 py-2 focus-within:border-brand transition-colors">
+        <div className="px-input flex items-center gap-2 px-3 py-2 focus-within:border-brand transition-colors">
           <Search size={13} className="text-ink-soft shrink-0" />
           <input
             type="text"
@@ -353,7 +353,7 @@ function DiscoverTab({ nearbyUsers, following, sentRequests, sendFollowRequest, 
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
             <span className="text-3xl">{search.trim() ? '🔍' : '🏫'}</span>
-            <p className="pixel-font text-[8px] text-ink-soft text-center leading-relaxed">
+            <p className="pixel-font text-xs text-ink-soft text-center leading-relaxed">
               {search.trim()
                 ? 'ไม่พบผู้ใช้ที่ค้นหา'
                 : 'ยังไม่มีผู้ใช้ในโรงเรียนเดียวกัน'}
@@ -396,7 +396,7 @@ function RequestCard({ user, onAccept, onDecline }) {
   }
 
   return (
-    <div className="neo-slab flex items-center gap-3 px-3 py-2.5">
+    <div className="px-slab flex items-center gap-3 px-3 py-2.5">
       <div
         className="w-10 h-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-brand-soft border-2"
         style={{ borderColor: mbtiColor(shapes.readProfile(user).mbti) }}
@@ -406,10 +406,10 @@ function RequestCard({ user, onAccept, onDecline }) {
           : <Gamepad2 size={18} strokeWidth={2.5} className="text-ink" aria-hidden="true" />}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="pixel-font text-[9px] text-ink truncate">{user.displayName || 'ผู้ใช้'}</p>
+        <p className="pixel-font text-xs text-ink truncate">{user.displayName || 'ผู้ใช้'}</p>
         <div className="flex gap-1 mt-0.5">
           {shapes.readProfile(user).mbti && (
-            <span className="pixel-font text-[6px] px-1.5 py-0.5 rounded-md text-white"
+            <span className="pixel-font text-xs px-1.5 py-0.5 rounded-md text-white"
               style={{ background: mbtiColor(shapes.readProfile(user).mbti) }}>
               {shapes.readProfile(user).mbti}
             </span>
@@ -420,14 +420,14 @@ function RequestCard({ user, onAccept, onDecline }) {
         <button
           onClick={() => handle('accept')}
           disabled={!!busy}
-          className="px-2.5 py-1.5 rounded-xl bg-brand text-white pixel-font text-[7px] active:scale-95 transition-all disabled:opacity-50 flex items-center gap-1"
+          className="px-2.5 py-1.5 rounded-xl bg-brand text-white pixel-font text-xs active:scale-95 transition-all disabled:opacity-50 flex items-center gap-1"
         >
           {busy === 'accept' ? <Loader2 size={10} className="animate-spin" /> : 'รับ'}
         </button>
         <button
           onClick={() => handle('decline')}
           disabled={!!busy}
-          className="px-2.5 py-1.5 rounded-xl bg-brand-soft text-ink-soft pixel-font text-[7px] active:scale-95 transition-all disabled:opacity-50 flex items-center gap-1"
+          className="px-2.5 py-1.5 rounded-xl bg-brand-soft text-ink-soft pixel-font text-xs active:scale-95 transition-all disabled:opacity-50 flex items-center gap-1"
         >
           {busy === 'decline' ? <Loader2 size={10} className="animate-spin" /> : 'ปฏิเสธ'}
         </button>
@@ -491,9 +491,9 @@ function MatchedTab({ onUserTap, onOpenChat, following }) {
   const sevenDaysMs = 7 * 24 * 60 * 60 * 1000
 
   function tierColor(score) {
-    if (score >= 90) return '#d99b3b'
-    if (score >= 71) return '#8a4a70'
-    return '#7ea04a'
+    if (score >= 90) return 'var(--color-warn)'
+    if (score >= 71) return 'var(--color-brand)'
+    return 'var(--color-leaf)'
   }
 
   return (
@@ -506,7 +506,7 @@ function MatchedTab({ onUserTap, onOpenChat, following }) {
       {!loading && matches.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12 gap-3">
           <span className="text-3xl">⚡</span>
-          <p className="pixel-font text-[8px] text-ink-soft text-center leading-relaxed">
+          <p className="pixel-font text-xs text-ink-soft text-center leading-relaxed">
             ยังไม่มี Match<br />กด ✦ Match ในแท็บ Discover
           </p>
         </div>
@@ -518,7 +518,7 @@ function MatchedTab({ onUserTap, onOpenChat, following }) {
         return (
           <div
             key={m.uid}
-            className="neo-slab flex items-center gap-3 px-3 py-2.5 cursor-pointer active:brightness-95"
+            className="px-slab flex items-center gap-3 px-3 py-2.5 cursor-pointer active:brightness-95"
             onClick={() => onUserTap?.(m.uid)}
           >
             <div
@@ -530,22 +530,22 @@ function MatchedTab({ onUserTap, onOpenChat, following }) {
                 : <Gamepad2 size={18} strokeWidth={2.5} className="text-ink" aria-hidden="true" />}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="pixel-font text-[9px] text-ink truncate">{m.user?.displayName || 'ผู้ใช้'}</p>
+              <p className="pixel-font text-xs text-ink truncate">{m.user?.displayName || 'ผู้ใช้'}</p>
               <div className="flex items-center gap-1 mt-0.5">
                 {m.user?.mbti && (
-                  <span className="pixel-font text-[6px] px-1.5 py-0.5 rounded-md text-white"
+                  <span className="pixel-font text-xs px-1.5 py-0.5 rounded-md text-white"
                     style={{ background: mbtiColor(m.shapes.readProfile(user).mbti) }}>
                     {m.shapes.readProfile(user).mbti}
                   </span>
                 )}
                 {isOld && (
-                  <span className="pixel-font text-[6px] text-ink-soft">· ✦ Match Again?</span>
+                  <span className="pixel-font text-xs text-ink-soft">· ✦ Match Again?</span>
                 )}
               </div>
             </div>
             {/* Score pill */}
             <span
-              className="pixel-font text-[8px] font-bold px-2 py-1 rounded-lg text-white shrink-0"
+              className="pixel-font text-xs font-bold px-2 py-1 rounded-lg text-white shrink-0"
               style={{ background: tierColor(m.score) }}
             >
               {m.score}%
@@ -636,7 +636,7 @@ export default function SocialPanel({ onClose, onOpenChat }) {
 
   return (
     <div
-      className="absolute inset-0 z-50 flex flex-col neo-sheet overflow-hidden md:max-w-2xl md:mx-auto lg:max-w-3xl"
+      className="absolute inset-0 z-50 flex flex-col px-sheet overflow-hidden md:max-w-2xl md:mx-auto lg:max-w-3xl"
       style={{ top: '8%' }}
     >
       {/* Drag handle */}
@@ -645,15 +645,15 @@ export default function SocialPanel({ onClose, onOpenChat }) {
       </div>
 
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3 border-b-2 border-edge/30 shrink-0">
+      <div className="flex items-center justify-between px-5 py-3 border-b-2 border-line/30 shrink-0">
         <div className="flex items-center gap-2">
           <Users size={15} strokeWidth={2} className="text-brand" />
-          <h2 className="pixel-font text-[11px] text-ink">Social</h2>
+          <h2 className="pixel-font text-xs text-ink">Social</h2>
         </div>
         <button
           onClick={onClose}
           aria-label="ปิด"
-          className="neo-btn w-9 h-9 flex items-center justify-center rounded-lg bg-surface text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          className="px-btn w-9 h-9 flex items-center justify-center rounded-lg bg-paper text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
           <X size={16} strokeWidth={2.5} aria-hidden="true" />
         </button>
@@ -677,12 +677,12 @@ export default function SocialPanel({ onClose, onOpenChat }) {
               <div className="relative">
                 <Icon size={16} strokeWidth={isActive ? 2 : 1.5} />
                 {badge > 0 && (
-                  <span className="absolute -top-1.5 -right-2 w-4 h-4 rounded-full bg-danger/100 text-white text-[9px] font-bold flex items-center justify-center">
+                  <span className="absolute -top-1.5 -right-2 w-4 h-4 rounded-full bg-danger/100 text-white text-xs font-bold flex items-center justify-center">
                     {badge > 9 ? '9+' : badge}
                   </span>
                 )}
               </div>
-              <span className="pixel-font text-[6px]">{label}</span>
+              <span className="pixel-font text-xs">{label}</span>
             </button>
           )
         })}
