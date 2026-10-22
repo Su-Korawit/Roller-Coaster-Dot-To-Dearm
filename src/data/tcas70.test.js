@@ -42,3 +42,26 @@ describe('TCAS70 calendar data', () => {
     expect(eventsWithFallback(undefined)).toBe(TCAS70_EVENTS)
   })
 })
+
+describe('plan metadata on the built-in calendar', () => {
+  const byId = (id) => TCAS70_EVENTS.find((e) => e.id === `tcas70-${id}`)
+
+  it('tags each round’s open and result rows with the round and kind', () => {
+    for (const r of [1, 2, 3, 4]) {
+      expect(byId(`r${r}-open`)).toMatchObject({ round: r, kind: 'apply' })
+      expect(byId(`r${r}-result`)).toMatchObject({ round: r, kind: 'announce' })
+    }
+  })
+
+  it('tags exam rows with the score keys they cover, all of them valid subject keys', async () => {
+    const { isSubjectKey } = await import('../utils/planDerive')
+    expect(byId('tpat1-exam').examKeys).toContain('tpat1')
+    expect(byId('alevel-exam').examKeys).toContain('a_lv_64')
+    for (const e of TCAS70_EVENTS) for (const k of e.examKeys ?? []) expect(isSubjectKey(k), k).toBe(true)
+  })
+
+  it('leaves general rows untagged', () => {
+    expect(byId('mytcas-open').round).toBeUndefined()
+    expect(byId('mytcas-open').examKeys).toBeUndefined()
+  })
+})

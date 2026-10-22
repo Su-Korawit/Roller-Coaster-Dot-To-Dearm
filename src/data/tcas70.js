@@ -30,8 +30,32 @@ const ROWS = [
   ['r4-result',     '2027-06-07', 'ประกาศผลรอบ 4 Direct Admission (ครั้งที่ 1)', 'ประกาศครั้งที่ 2 วันที่ 18 มิ.ย. 2570'],
 ]
 
+// Plan metadata (ADR-0025): which round an event belongs to, what kind of milestone it is and,
+// for exam events, which score keys it covers. Events without an entry here carry none.
+const TGAT_KEYS = ['tgat', 'tgat1', 'tgat2', 'tgat3', 'tpat2', 'tpat21', 'tpat3', 'tpat4', 'tpat5']
+const TPAT1_KEYS = ['tpat1', 'tpat11', 'tpat13']
+const ALEVEL_KEYS = ['a_lv_61', 'a_lv_62', 'a_lv_63', 'a_lv_64', 'a_lv_65', 'a_lv_66', 'a_lv_70',
+  'a_lv_81', 'a_lv_82', 'a_lv_83', 'a_lv_84', 'a_lv_85', 'a_lv_86', 'a_lv_87', 'a_lv_88', 'a_lv_89']
+const PLAN_META = {
+  'r1-open':         { round: 1, kind: 'apply' },
+  'r1-result':       { round: 1, kind: 'announce' },
+  'r2-open':         { round: 2, kind: 'apply' },
+  'r2-result':       { round: 2, kind: 'announce' },
+  'r3-open':         { round: 3, kind: 'apply' },
+  'r3-result':       { round: 3, kind: 'announce' },
+  'r4-open':         { round: 4, kind: 'apply' },
+  'r4-result':       { round: 4, kind: 'announce' },
+  'tgat-register':   { kind: 'apply', examKeys: TGAT_KEYS },
+  'alevel-register': { kind: 'apply', examKeys: ALEVEL_KEYS },
+  'tgat-exam':       { kind: 'exam', examKeys: TGAT_KEYS },
+  'tpat1-exam':      { kind: 'exam', examKeys: TPAT1_KEYS },
+  'alevel-exam':     { kind: 'exam', examKeys: ALEVEL_KEYS },
+  'tgat-score':      { kind: 'announce', examKeys: TGAT_KEYS },
+  'alevel-score':    { kind: 'announce', examKeys: ALEVEL_KEYS },
+}
+
 export const TCAS70_EVENTS = ROWS.map(([id, date, title, description]) => ({
-  id: `tcas70-${id}`, date, title, description, link: SRC, builtIn: true,
+  id: `tcas70-${id}`, date, title, description, link: SRC, builtIn: true, ...PLAN_META[id],
 }))
 
 const DAY_MS = 86400000

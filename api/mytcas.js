@@ -29,45 +29,9 @@ const STORAGE_BASE =
 const SNAPSHOT_URL = `${STORAGE_BASE}/${encodeURIComponent("data/mytcas/courses-snapshot.json")}?alt=media`;
 const META_URL     = `${STORAGE_BASE}/${encodeURIComponent("data/mytcas/meta.json")}?alt=media`;
 
-// ── Score key → human-readable label ────────────────────────────────────────
-const SCORE_LABELS = {
-  tgat:          "TGAT ความถนัดทั่วไป",
-  tgat1:         "TGAT1 การสื่อสารภาษาอังกฤษ",
-  tgat2:         "TGAT2 การคิดอย่างมีเหตุผล",
-  tgat3:         "TGAT3 สมรรถนะการทำงาน",
-  tpat1:         "TPAT1 วิชาเฉพาะกสพท",
-  tpat11:        "TPAT11 เชาว์ปัญญา",
-  tpat13:        "TPAT13 ทักษะการเชื่อมโยง",
-  tpat2:         "TPAT2 ความถนัดศิลปกรรมฯ",
-  tpat21:        "TPAT21 ทัศนศิลป์",
-  tpat3:         "TPAT3 ความถนัดวิทยาศาสตร์ฯ",
-  tpat4:         "TPAT4 ความถนัดสถาปัตยกรรมฯ",
-  tpat5:         "TPAT5 ความถนัดครุศาสตร์ฯ",
-  a_lv_61:       "A-Level คณิตศาสตร์ 1",
-  a_lv_62:       "A-Level คณิตศาสตร์ประยุกต์ 2",
-  a_lv_63:       "A-Level วิทยาศาสตร์ประยุกต์",
-  a_lv_64:       "A-Level ฟิสิกส์",
-  a_lv_65:       "A-Level เคมี",
-  a_lv_66:       "A-Level ชีววิทยา",
-  a_lv_70:       "A-Level สังคมศาสตร์",
-  a_lv_81:       "A-Level ภาษาไทย",
-  a_lv_82:       "A-Level ภาษาอังกฤษ",
-  a_lv_83:       "A-Level ภาษาฝรั่งเศส",
-  a_lv_84:       "A-Level ภาษาเยอรมัน",
-  a_lv_85:       "A-Level ภาษาญี่ปุ่น",
-  a_lv_86:       "A-Level ภาษาเกาหลี",
-  a_lv_87:       "A-Level ภาษาจีน",
-  a_lv_88:       "A-Level ภาษาบาลี",
-  a_lv_89:       "A-Level ภาษาอาหรับ",
-  gpax:          "GPAX เกรดเฉลี่ยสะสม",
-  gpax6_score:   "GPAX 6 ภาคเรียน",
-  gpa22:         "GPA กลุ่มสาระคณิตศาสตร์",
-  gpa23:         "GPA กลุ่มสาระวิทยาศาสตร์",
-  gpa28:         "GPA กลุ่มสาระภาษาต่างประเทศ",
-  portfolio:     "Portfolio",
-  interview:     "สัมภาษณ์",
-  priority_score:"คะแนนลำดับการเลือก",
-};
+// Score key → human-readable label (shared module)
+import { SCORE_LABELS } from "../src/constants/scoreLabels.js";
+
 
 // ── Course data caches (live + fallback snapshot) ────────────────────────────
 let _live = null;      // { rows, time }
