@@ -10,6 +10,10 @@ import { parseMapMeta } from '../utils/tiledMapMeta'
 import { useFarmStore } from '../stores/useFarmStore'
 import { currentStage } from '../systems/farmLogic'
 import { useFarmDataStore } from '../stores/useFarmDataStore'
+import { useRoomStore } from '../stores/useRoomStore'
+import { useFocusStore } from '../stores/useFocusStore'
+import { focusProgress } from '../room/focusProgress'
+import { renderRoom } from './roomRender'
 
 // 0 = Basic_Charakter (1 ตัว)
 // 1 = MBTI rotation (16 ตัว สลับทุก 1 วิ)
@@ -207,6 +211,15 @@ export class MapScene extends Phaser.Scene {
       })
     }
 
+    // Study room maps draw furniture and the desk pot from these generated sheets.
+    if (r.get('mapConfig')?.room) {
+      for (const key of ['room_items', 'focus_art']) {
+        const url = urlFor(r, key)
+        const frame = GAME_ASSET_BY_KEY[key]?.frameConfig
+        if (url && frame && !this.textures.exists(key)) this.load.spritesheet(key, url, frame)
+      }
+    }
+
     if (!this.textures.exists('crops')) {
       const cropsUrl = urlFor(this.registry, 'crops')
       if (cropsUrl) this.load.spritesheet('crops', cropsUrl, { frameWidth: 16, frameHeight: 16 })
@@ -397,6 +410,19 @@ export class MapScene extends Phaser.Scene {
       this.game.events.off('mapObjectsChanged', onMapObjectsChanged)
       this.game.events.off('editModeChanged',   onEditModeChanged)
     })
+
+    if (cfg.room) {
+      renderRoom(this, () => {
+        const { layout, catalog } = useRoomStore.getState()
+        const focus = useFocusStore.getState()
+        return {
+          layout,
+          catalog,
+          progress: focus.status === 'running' ? focusProgress({ startedAt: focus.startedAt, plannedMin: focus.plannedMin }) : 0,
+          lit: focus.status === 'running',
+        }
+      })
+    }
 
     this._cropGroup = this.add.group()
     this._renderCrops(mapScale)
@@ -613,12 +639,14 @@ export class MapScene extends Phaser.Scene {
             else if (def.action === 'focusSeat') this.game.events.emit('focusSeatEntered', { seatId: def.seatId })
             else if (def.action === 'board') this.game.events.emit('boardEntered', { boardId: def.boardId })
             else if (def.action === 'tool') this.game.events.emit('toolEntered', { route: def.route })
+            else if (def.action === 'roomSeat') this.game.events.emit('roomSeatEntered', { seatId: def.seatId })
           } else if (!overlapping && was) {
             this._activeZones.delete(def.zone)
             if (def.action === 'shop') this.game.events.emit('shopExited', { shopId: def.shopId })
             else if (def.action === 'chest') this.game.events.emit('chestClosed')
             else if (def.action === 'focusSeat') this.game.events.emit('focusSeatExited', { seatId: def.seatId })
             else if (def.action === 'board') this.game.events.emit('boardExited', { boardId: def.boardId })
+            else if (def.action === 'roomSeat') this.game.events.emit('roomSeatExited', { seatId: def.seatId })
           }
         }
       }

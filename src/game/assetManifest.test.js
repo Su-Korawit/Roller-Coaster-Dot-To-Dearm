@@ -55,3 +55,13 @@ describe('School Hub map path', () => {
     expect(entry.localPath).toBe('/maps/school_hub.json')
   })
 })
+
+describe('study room assets', () => {
+  it('declares the room map, tileset, furniture and focus art', () => {
+    const by = (k) => GAME_ASSETS.find((a) => a.key === k)
+    expect(by('room')).toMatchObject({ type: 'tilemapJSON', storagePath: 'maps/room_v1.json', localPath: '/maps/room.json' })
+    expect(by('Room Tiles')).toMatchObject({ type: 'image', storagePath: 'rc/tilesets/room_tiles.png', localPath: '/assets/rc/room_tiles.png' })
+    expect(by('room_items')).toMatchObject({ type: 'spritesheet', frameConfig: { frameWidth: 32, frameHeight: 32 }, localPath: '/assets/rc/room_items.png' })
+    expect(by('focus_art')).toMatchObject({ type: 'spritesheet', frameConfig: { frameWidth: 48, frameHeight: 48 }, localPath: '/assets/rc/focus.png' })
+  })
+})

@@ -13,6 +13,18 @@ import { refs, cols } from '../lib/db'
 // previously-hardcoded behavior so the game is unchanged until an admin edits it.
 
 export const DEFAULT_MAP_CONFIGS = {
+  // The student's study room (ADR-0023): generated map + furniture sprites from their layout.
+  room: {
+    tilesets: { 'Room Tiles': 'rc/tilesets/room_tiles.png' },
+    collision: { Wall: true },
+    hidden: {},
+    displayName: 'My room',
+    multiplayer: false,
+    editable: false,
+    room: true,
+    isEntry: true,
+    defaultSpawn: 'entry',
+  },
   test3: {
     tilesets: {
       'Grass':                     'rc/tilesets/Grass.png',
