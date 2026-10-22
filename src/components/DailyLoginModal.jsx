@@ -169,8 +169,8 @@ export default function DailyLoginModal({ onClose, today }) {
             </div>
 
             {/* Heatmap */}
-            <div className="bg-ink rounded-2xl p-4">
-              <p className="pixel-font text-xs text-white/70 mb-3">Mood Log — Past Year</p>
+            <div className="bg-mist rounded-2xl p-4">
+              <p className="pixel-font text-xs text-ink-soft mb-3">Mood Log — Past Year</p>
               <MoodHeatmap feelingNotes={feelingNotes} />
             </div>
 

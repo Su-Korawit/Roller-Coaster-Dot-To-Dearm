@@ -4,14 +4,16 @@
 // Each cell is a day; color encodes the mood level (1–5) or empty.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Mood level → fill color (green scale, dark-mode inspired)
+import { colors } from '../theme/colors'
+
+// Mood level → fill colour: an empty cell, then a purple ramp that deepens with mood
 const LEVEL_COLORS = {
-  0: '#2d333b', // no entry
-  1: '#1a1f27', // very low
-  2: '#0e4429', // low
-  3: '#006d32', // neutral
-  4: '#26a641', // good
-  5: '#39d353', // great
+  0: colors.mist, // no entry
+  1: colors.brandSoft, // very low
+  2: colors.zoneSoc, // low
+  3: colors.brand, // neutral
+  4: colors.brandStrong, // good
+  5: colors.ink, // great
 }
 
 const LEVEL_LABELS = ['', 'Rough', 'Low', 'Okay', 'Good', 'Great!']
@@ -95,7 +97,7 @@ export default function MoodHeatmap({ feelingNotes = [] }) {
             key={`m-${wi}`}
             x={wi * STEP}
             y={10}
-            fill="#636e7b"
+            fill={colors.inkSoft}
             fontSize={8}
             fontFamily="'Chakra Petch', 'Noto Sans Thai', sans-serif"
           >
@@ -121,7 +123,7 @@ export default function MoodHeatmap({ feelingNotes = [] }) {
                 rx={2}
                 ry={2}
                 fill={color}
-                stroke={isToday ? '#e3b341' : 'none'}
+                stroke={isToday ? colors.warn : 'none'}
                 strokeWidth={isToday ? 1.5 : 0}
               >
                 <title>{dateStr}{level ? ` — ${LEVEL_LABELS[level]}` : ''}</title>
@@ -133,7 +135,7 @@ export default function MoodHeatmap({ feelingNotes = [] }) {
 
       {/* Legend */}
       <div className="flex items-center gap-1.5 mt-2 justify-end pr-1">
-        <span className="pixel-font text-[10px] text-ink-soft">Less</span>
+        <span className="pixel-font text-xs text-ink-soft">Less</span>
         {[0, 1, 2, 3, 4, 5].map((l) => (
           <div
             key={l}
@@ -141,7 +143,7 @@ export default function MoodHeatmap({ feelingNotes = [] }) {
             style={{ backgroundColor: LEVEL_COLORS[l] }}
           />
         ))}
-        <span className="pixel-font text-[10px] text-ink-soft">More</span>
+        <span className="pixel-font text-xs text-ink-soft">More</span>
       </div>
     </div>
   )

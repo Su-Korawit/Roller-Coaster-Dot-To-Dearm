@@ -7,11 +7,11 @@ export default function MasteryTrackCard({ track, onOpen }) {
     <button
       type="button"
       onClick={() => onOpen(track.id)}
-      className="flex min-w-[140px] flex-col rounded-2xl border border-ink/10 bg-surface p-3 text-left shadow-hard-sm transition hover:border-brand active:scale-[0.98]"
+      className="flex min-w-[140px] flex-col rounded-2xl border border-ink/10 bg-paper p-3 text-left shadow-hard-sm transition hover:border-brand active:scale-[0.98]"
     >
-      <span className="pixel-font text-[10px] text-brand-strong uppercase">{track.round}</span>
-      <p className="pixel-font mt-1 text-[11px] text-ink line-clamp-2">{track.title}</p>
-      <p className="pixel-font mt-2 text-[10px] text-ink-soft">{done}/{total}</p>
+      <span className="pixel-font text-xs text-brand-strong uppercase">{track.round}</span>
+      <p className="pixel-font mt-1 text-xs text-ink line-clamp-2">{track.title}</p>
+      <p className="pixel-font mt-2 text-xs text-ink-soft">{done}/{total}</p>
     </button>
   )
 }

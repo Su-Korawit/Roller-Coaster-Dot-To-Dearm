@@ -18,7 +18,7 @@ export default function MasteryTrackDetail({ trackId, onBack }) {
         aria-label="Back"
       >
         <ArrowLeft size={18} />
-        <span className="pixel-font text-[11px]">Back</span>
+        <span className="pixel-font text-xs">Back</span>
       </button>
       <h2 className="pixel-font text-base text-brand-strong">{track.title}</h2>
       <MilestoneChecklist trackId={trackId} />

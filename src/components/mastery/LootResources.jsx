@@ -28,9 +28,9 @@ export default function LootResources({ trackId }) {
                 rel="noopener noreferrer"
                 className={`block rounded-xl border p-3 ${style.bg} ${style.border}`}
               >
-                <span className="pixel-font text-[10px] text-ink-soft">{style.label}</span>
-                <p className="pixel-font mt-1 text-[11px] text-ink">{r.title}</p>
-                <span className="pixel-font mt-2 inline-block text-[9px] text-brand-strong">{style.cta}</span>
+                <span className="pixel-font text-xs text-ink-soft">{style.label}</span>
+                <p className="pixel-font mt-1 text-xs text-ink">{r.title}</p>
+                <span className="pixel-font mt-2 inline-block text-xs text-brand-strong">{style.cta}</span>
               </a>
             )
           })}

@@ -93,7 +93,7 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
             <button
               onClick={onClose}
               aria-label="ปิด"
-              className="ml-auto neo-btn w-9 h-9 flex items-center justify-center rounded-lg bg-surface text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              className="ml-auto px-btn w-9 h-9 flex items-center justify-center rounded-lg bg-paper text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
             >
               <X size={16} strokeWidth={2.5} aria-hidden="true" />
             </button>
@@ -107,7 +107,7 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                 <>
                   {/* ── 3 Passive Slots ───────────────────────────────── */}
                   <div>
-                    <p className="pixel-font text-[9px] text-ink-soft mb-3">Equipped Passive Slots</p>
+                    <p className="pixel-font text-xs text-ink-soft mb-3">Equipped Passive Slots</p>
                     <div className="flex gap-2">
                       {PASSIVE_UNLOCK_THRESHOLDS.map((threshold, slotIdx) => {
                         const isUnlocked = totalStacks >= threshold
@@ -117,7 +117,7 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                         return (
                           <div key={slotIdx} className="flex-1 flex flex-col gap-1">
                             {/* Slot header label */}
-                            <p className={`pixel-font text-[7px] text-center ${
+                            <p className={`pixel-font text-xs text-center ${
                               isUnlocked ? 'text-accent-pink' : 'text-ink-soft'
                             }`}>
                               {isUnlocked ? `Slot ${slotIdx + 1}` : `🔒 ${threshold} stacks`}
@@ -146,18 +146,18 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                                         ? <img src={equipped.image} alt={equipped.name} className="w-9 h-9 object-contain" />
                                         : <span className="text-3xl leading-none">{equipped.emoji}</span>
                                       }
-                                      <span className="pixel-font text-[8px] text-ink font-bold mt-0.5">{equipped.name}</span>
+                                      <span className="pixel-font text-xs text-ink font-bold mt-0.5">{equipped.name}</span>
                                       {/* Tap-to-clear button */}
                                       <button
                                         onClick={() => clearPassiveSlot(slotIdx)}
-                                        className="absolute top-1 right-1 neo-btn w-5 h-5 rounded-lg bg-surface text-ink-soft flex items-center justify-center active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                                        className="absolute top-1 right-1 px-btn w-5 h-5 rounded-lg bg-paper text-ink-soft flex items-center justify-center active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         aria-label="ถอด skill ออก"
                                       >
                                         <X size={10} strokeWidth={2.5} aria-hidden="true" />
                                       </button>
                                     </>
                                   ) : (
-                                    <p className="pixel-font text-[8px] text-ink-soft text-center px-1">Drop here</p>
+                                    <p className="pixel-font text-xs text-ink-soft text-center px-1">Drop here</p>
                                   )}
                                   {provided.placeholder}
                                 </div>
@@ -171,8 +171,8 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                     {/* Stack progress bar */}
                     <div className="mt-3 px-1">
                       <div className="flex justify-between mb-1">
-                        <p className="pixel-font text-[7px] text-ink-soft">Stacks: {totalStacks}</p>
-                        <p className="pixel-font text-[7px] text-ink-soft">
+                        <p className="pixel-font text-xs text-ink-soft">Stacks: {totalStacks}</p>
+                        <p className="pixel-font text-xs text-ink-soft">
                           Next unlock: {PASSIVE_UNLOCK_THRESHOLDS.find((t) => totalStacks < t) ?? 'MAX ✓'}
                         </p>
                       </div>
@@ -187,7 +187,7 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
 
                   {/* ── Available passive skills ───────────────────────── */}
                   <div>
-                    <p className="pixel-font text-[9px] text-ink-soft mb-2">Available Skills</p>
+                    <p className="pixel-font text-xs text-ink-soft mb-2">Available Skills</p>
                     <Droppable droppableId="list-passive" direction="horizontal" isDropDisabled>
                       {(provided) => (
                         <div ref={provided.innerRef} {...provided.droppableProps} className="flex gap-3">
@@ -206,9 +206,9 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                                     ? <img src={skill.image} alt={skill.name} className="w-10 h-10 object-contain" draggable={false} />
                                     : <span className="text-3xl leading-none">{skill.emoji}</span>
                                   }
-                                  <span className="pixel-font text-[8px] text-ink">{skill.name}</span>
+                                  <span className="pixel-font text-xs text-ink">{skill.name}</span>
                                   {passiveSlots.some((s) => s.equippedSkillId === skill.id) && (
-                                    <span className="pixel-font text-[7px] text-accent-pink">✓ Equipped</span>
+                                    <span className="pixel-font text-xs text-accent-pink">✓ Equipped</span>
                                   )}
                                 </div>
                               )}
@@ -230,7 +230,7 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                             ? <img src={skill.image} alt={skill.name} className="w-10 h-10 object-contain" />
                             : <span className="text-3xl leading-none">{skill.emoji}</span>
                           }
-                          <span className="pixel-font text-[8px] text-ink-soft">{skill.name}</span>
+                          <span className="pixel-font text-xs text-ink-soft">{skill.name}</span>
                           <Lock size={10} className="text-ink-soft" />
                         </div>
                       ))}
@@ -247,12 +247,12 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                           if (!skill) return null
                           return (
                             <div key={skill.id} className="rounded-xl bg-accent-pink/10 border border-accent-pink/20 px-4 py-3">
-                              <p className="pixel-font text-[9px] text-accent-pink font-bold mb-1">{skill.name} — Active Effect</p>
+                              <p className="pixel-font text-xs text-accent-pink font-bold mb-1">{skill.name} — Active Effect</p>
                               <p className="text-xs text-ink-soft leading-relaxed">{skill.description}</p>
                               {skill.id === 'planner' && (
                                 <button
                                   onClick={() => onOpenCalendar?.()}
-                                  className="mt-3 w-full rounded-xl bg-brand-strong text-white py-2.5 pixel-font text-[10px] active:scale-95 transition-transform flex items-center justify-center gap-2"
+                                  className="mt-3 w-full rounded-xl bg-brand-strong text-white py-2.5 pixel-font text-xs active:scale-95 transition-transform flex items-center justify-center gap-2"
                                 >
                                   <Calendar size={14} strokeWidth={2.5} aria-hidden="true" />
                                   Open Calendar
@@ -268,13 +268,13 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                 <>
                   {/* ── Task Drop Zone (TOP) ─────────────────────────────── */}
                   <div>
-                    <p className="pixel-font text-[9px] text-ink-soft mb-2">
+                    <p className="pixel-font text-xs text-ink-soft mb-2">
                       {pendingTasks.length > 0 ? `Tasks (${pendingTasks.length})` : 'No Active Tasks'}
                     </p>
                     {pendingTasks.length === 0 ? (
                       <div className="border-2 border-dashed border-ink/10 rounded-xl py-10 flex flex-col items-center gap-2">
                         <ClipboardList size={28} strokeWidth={2.5} className="text-ink-soft" aria-hidden="true" />
-                        <p className="pixel-font text-[9px] text-ink-soft/50">Create a task first!</p>
+                        <p className="pixel-font text-xs text-ink-soft/50">Create a task first!</p>
                       </div>
                     ) : (
                       <div className="space-y-2 max-h-56 overflow-y-auto pr-0.5">
@@ -309,7 +309,7 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
 
                                 {/* Task info */}
                                 <div className="flex-1 min-w-0">
-                                  <p className="pixel-font text-[10px] text-ink truncate">{task.title}</p>
+                                  <p className="pixel-font text-xs text-ink truncate">{task.title}</p>
                                   <p className="text-xs text-ink-soft mt-0.5">
                                     {task.type} · {task.timeMinutes}min · {task.rewardCoins}💰
                                   </p>
@@ -319,7 +319,7 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                                 {task.assignedSkill && (
                                   <button
                                     onClick={() => setActiveSkillTask(task)}
-                                    className={`pixel-font text-[8px] text-white rounded-xl px-3 py-1.5 active:scale-95 transition-transform shrink-0 shadow ${
+                                    className={`pixel-font text-xs text-white rounded-xl px-3 py-1.5 active:scale-95 transition-transform shrink-0 shadow ${
                                       task.assignedSkill === 'ignite' ? 'bg-warn-strong' : 'bg-brand'
                                     }`}
                                   >
@@ -345,7 +345,7 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                       ? 'bg-brand-soft border border-brand/30'
                       : 'bg-paper border border-ink/10'
                   }`}>
-                    <p className="pixel-font text-[9px] font-bold mb-1 text-ink">
+                    <p className="pixel-font text-xs font-bold mb-1 text-ink">
                       {draggingSkillId === 'ignite' ? '🚀 Ignite — Drop on a task!'
                         : draggingSkillId === 'capsule' ? '⏳ Capsule — Drop on a task!'
                         : '💡 How to Use'}
@@ -361,7 +361,7 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
 
                   {/* ── Available Active Skills — drag source (BOTTOM) ──── */}
                   <div>
-                    <p className="pixel-font text-[9px] text-ink-soft mb-2">Available Skills — Drag onto a Task ↑</p>
+                    <p className="pixel-font text-xs text-ink-soft mb-2">Available Skills — Drag onto a Task ↑</p>
                     <Droppable droppableId="list-active" direction="horizontal" isDropDisabled>
                       {(provided) => (
                         <div ref={provided.innerRef} {...provided.droppableProps} className="flex gap-3">
@@ -382,8 +382,8 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                                     ? <img src={skill.image} alt={skill.name} className="w-12 h-12 object-contain" draggable={false} />
                                     : <span className="text-3xl leading-none">{skill.emoji}</span>
                                   }
-                                  <span className="pixel-font text-[8px] text-ink">{skill.name}</span>
-                                  <span className={`pixel-font text-[7px] ${skill.id === 'ignite' ? 'text-warn' : 'text-brand'}`}>
+                                  <span className="pixel-font text-xs text-ink">{skill.name}</span>
+                                  <span className={`pixel-font text-xs ${skill.id === 'ignite' ? 'text-warn' : 'text-brand'}`}>
                                     {skill.tagline}
                                   </span>
                                 </div>
@@ -406,7 +406,7 @@ export default function SkillPanel({ onClose, onOpenCreateTask, onOpenCalendar }
                               ? <img src={skill.image} alt={skill.name} className="w-10 h-10 object-contain" />
                               : <span className="text-3xl leading-none">{skill.emoji}</span>
                             }
-                            <span className="pixel-font text-[8px] text-ink-soft">{skill.name}</span>
+                            <span className="pixel-font text-xs text-ink-soft">{skill.name}</span>
                             <Lock size={10} className="text-ink-soft" />
                           </div>
                         ))}
@@ -438,9 +438,9 @@ function TabBtn({ active, onClick, children }) {
   return (
     <button
       onClick={onClick}
-      className={`flex-1 py-4 pixel-font text-[10px] transition-colors
+      className={`flex-1 py-4 pixel-font text-xs transition-colors
         ${active
-          ? 'text-accent-pink border-b-2 border-[#c46b9a]'
+          ? 'text-accent-pink border-b-2 border-accent-pink'
           : 'text-ink-soft'
         }`}
     >
@@ -496,13 +496,13 @@ function SkillInfoSheet({ skill, onClose }) {
 
   return (
     <Popup variant="sheet" size="md" onClose={onClose}>
-      <div className="bg-[#fce4ef] px-6 pt-6 pb-8 h-full overflow-y-auto">
+      <div className="bg-zone-arts-soft px-6 pt-6 pb-8 h-full overflow-y-auto">
         {/* Tab strip (just shows type) */}
         <div className="flex gap-2 mb-6">
-          <div className={`px-4 py-2 rounded-xl pixel-font text-[9px] ${isPassive ? 'bg-white text-ink' : 'text-ink-soft'}`}>
+          <div className={`px-4 py-2 rounded-xl pixel-font text-xs ${isPassive ? 'bg-white text-ink' : 'text-ink-soft'}`}>
             Passive Skill
           </div>
-          <div className={`px-4 py-2 rounded-xl pixel-font text-[9px] ${!isPassive ? 'bg-accent-pink/15 text-accent-pink' : 'text-ink-soft'}`}>
+          <div className={`px-4 py-2 rounded-xl pixel-font text-xs ${!isPassive ? 'bg-accent-pink/15 text-accent-pink' : 'text-ink-soft'}`}>
             Active Skill
           </div>
         </div>
@@ -535,7 +535,7 @@ function SkillInfoSheet({ skill, onClose }) {
         <p className="text-sm text-ink-soft leading-relaxed mb-4">{skill.description}</p>
 
         {/* Example button */}
-        <button className="w-full rounded-full border-2 border-ink py-2 pixel-font text-[10px] text-ink mb-3">
+        <button className="w-full rounded-full border-2 border-ink py-2 pixel-font text-xs text-ink mb-3">
           Example
         </button>
 
