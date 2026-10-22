@@ -2,7 +2,7 @@ import Popup from '../ui/Popup'
 import Button from '../ui/Button'
 import TreeSprite from './TreeSprite'
 import { useFocusStore } from '../../stores/useFocusStore'
-import { TREE_LABELS } from './FocusSetupSheet'
+import { TREE_LABELS } from '../../room/messages'
 import { Z_MODAL } from '../../constants/zIndex'
 
 const WITHER_TEXT = {

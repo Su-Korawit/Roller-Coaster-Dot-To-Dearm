@@ -4,9 +4,9 @@ import Button from '../ui/Button'
 import TreeSprite from './TreeSprite'
 import { useFocusStore } from '../../stores/useFocusStore'
 import { validateFocusParams, treeFor, PLANNED_MIN } from '../../room/focusRules'
+import { TREE_LABELS } from '../../room/messages'
 
 const PRESETS = [25, 50, 90]
-export const TREE_LABELS = { sprout: 'ต้นอ่อน', shrub: 'พุ่มไม้', tree: 'ต้นไม้', blossom: 'ต้นไม้ดอก', withered: 'ต้นไม้เหี่ยว' }
 const MODES = [
   { id: 'strict', label: 'เข้มงวด', hint: 'ออกจากหน้านี้เกิน 10 วินาที ต้นไม้เหี่ยว · ได้ใบไม้ ×1.5' },
   { id: 'flexible', label: 'ยืดหยุ่น', hint: 'พักได้ไม่เกิน 2 นาที · ได้ใบไม้ ×1' },

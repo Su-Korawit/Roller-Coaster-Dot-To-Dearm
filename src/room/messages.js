@@ -20,3 +20,5 @@ const PLACE_TEXT = {
   too_many: 'ห้องเต็มแล้ว เก็บของออกก่อน',
 }
 export const describePlaceError = (code) => PLACE_TEXT[code] ?? 'วางตรงนี้ไม่ได้'
+
+export const TREE_LABELS = { sprout: 'ต้นอ่อน', shrub: 'พุ่มไม้', tree: 'ต้นไม้', blossom: 'ต้นไม้ดอก', withered: 'ต้นไม้เหี่ยว' }
