@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { mergeResume, pickBootTarget, nearestLabel, sanitizeResume, EMPTY_RESUME } from './resumeRules'
+import { mergeResume, pickBootTarget, nearestLabel, shouldRecordResume, sanitizeResume, EMPTY_RESUME } from './resumeRules'
 
 const pt = (x, at, label = 'l') => ({ x, y: 1, facing: 'down', label, at })
 
@@ -59,5 +59,13 @@ describe('nearestLabel', () => {
     expect(nearestLabel(zones, 150, 0, 'ที่โต๊ะ')).toBe('ที่โต๊ะ')
     expect(nearestLabel([], 0, 0, 'ที่โต๊ะ')).toBe('ที่โต๊ะ')
     expect(nearestLabel(undefined, 0, 0, 'ที่โต๊ะ')).toBe('ที่โต๊ะ')
+  })
+})
+
+describe('shouldRecordResume (review: a pinned page such as /openhouse must not move the boot point of the app)', () => {
+  it('records on the normal app and not while the first map is pinned by the page', () => {
+    expect(shouldRecordResume(null)).toBe(true)
+    expect(shouldRecordResume(undefined)).toBe(true)
+    expect(shouldRecordResume('campus')).toBe(false)
   })
 })

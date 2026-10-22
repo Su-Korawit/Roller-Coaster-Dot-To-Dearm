@@ -2,6 +2,7 @@
 // markup that crawlers can read without JS; the SPA replaces it on mount, so no
 // classes are needed beyond `article-body`. Everything user-supplied is escaped.
 import { SITES } from '../constants/sites.js'
+import { BUILDINGS } from '../constants/openHouseBuildings.js'
 import { CATEGORIES, categoryLabel } from './schema.js'
 import { groupByCategory, toMillis } from './listing.js'
 import { renderBodyToHtml, parseBody } from './renderBody.js'
@@ -93,6 +94,15 @@ export function searchBody() {
   return `<main><h1>ค้นหาบทความ</h1><p>พิมพ์ชื่อคณะ มหาลัย หรือหัวข้อที่สนใจ</p><p><a href="${SITES.tcas.path}/">ค้นหาคณะและหลักสูตร</a></p><p><a href="/">กลับหน้าแรก</a></p></main>`
 }
 
+// /openhouse on the hub: what link previews and crawlers see before the campus app takes over.
+export const OPEN_HOUSE_TITLE = 'Open House — เดินดูคณะและเส้นทางเข้าทุกมหาลัย | I LOVE TCAS'
+export const OPEN_HOUSE_DESCRIPTION = 'เดินเล่นในแคมปัสพิกเซล เข้าตึกคณะแล้วดูเส้นทางเข้าทุกมหาวิทยาลัยแบบรอบต่อรอบ พร้อมเพิ่มเข้าแผน TCAS ใช้ฟรี ไม่ต้องเข้าสู่ระบบ'
+
+export function openHouseBody() {
+  const links = BUILDINGS.map((b) => `<li><a href="/openhouse?b=${b.id}">${esc(b.nameTh)}</a></li>`).join('')
+  return `<main><h1>Open House: เดินดูคณะและเส้นทางเข้าทุกมหาลัย</h1><p>${esc(OPEN_HOUSE_DESCRIPTION)}</p><ul>${links}</ul><p><a href="/">กลับหน้าแรก</a></p></main>`
+}
+
 export function notFoundBody() {
   return '<main><h1>ไม่พบบทความนี้</h1><p>บทความอาจถูกย้ายหรือยังไม่เผยแพร่</p><p><a href="/">กลับหน้าแรก</a></p></main>'
 }
@@ -128,6 +138,7 @@ export function sitemapXml({ articles }) {
     `  <url><loc>${esc(loc)}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}</url>`
   const lines = [
     url(`${SITE_ORIGIN}/`),
+    url(`${SITE_ORIGIN}/openhouse`),
     ...CATEGORIES.map((c) => url(`${SITE_ORIGIN}/category/${c.id}`)),
     ...articles.map((a) => url(`${SITE_ORIGIN}/blog/${a.slug ?? a.id}`, isoDate(a.updatedAt ?? a.publishedAt))),
   ]

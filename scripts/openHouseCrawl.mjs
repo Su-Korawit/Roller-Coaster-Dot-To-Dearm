@@ -107,18 +107,38 @@ export async function buildIndex({ rows, fetchRounds, year, now = Date.now, conc
     const universities = [...grouped.get(id).values()].sort((a, b) => byId(a.id, b.id))
     for (const u of universities) u.programs.sort((a, b) => byId(a.programId, b.programId))
     buildings[id] = { tcasYear: year, updatedAt, universities }
-    summary[id] = { ...summariseBuilding(universities), rounds: summariseRounds(universities) }
+    const withRounds = universities.reduce((n, u) => n + u.programs.filter((pr) => pr.rounds.some((r) => (r.projects ?? []).length > 0)).length, 0)
+    summary[id] = { ...summariseBuilding(universities), withRounds, rounds: summariseRounds(universities) }
   }
   return { index: { tcasYear: year, updatedAt, failed, skipped, buildings: summary }, buildings }
 }
 
-const totalPrograms = (index) => Object.values(index?.buildings ?? {}).reduce((n, b) => n + (b.programs ?? 0), 0)
+const sumOf = (index, key) => Object.values(index?.buildings ?? {}).reduce((n, b) => n + (b[key] ?? 0), 0)
+const totalPrograms = (index) => sumOf(index, 'programs')
+const hasWithRounds = (index) => Object.values(index?.buildings ?? {}).some((b) => b.withRounds !== undefined)
 
-// Publishing a smaller index than the one live would hide programs (MyTCAS mid-rebuild), and an
-// empty one is never published.
-export function shouldReplaceIndex(existing, next, { force = false } = {}) {
+const MAX_FAILED_SHARE = 0.2 // more failed round requests than this and the run is not trusted
+const MAX_ROUNDS_DROP = 0.1 // programs with rounds may shrink by this much against the live index
+
+// Whether `next` may replace `existing`, and why not. Refused: an empty index; a smaller one than the
+// live one (MyTCAS mid-rebuild); one where the rounds service failed for a fifth of the programs; one
+// where no (or far fewer) programs have a round although the program list is intact, which is what
+// a down or rate-limited rounds service, or a stale TCAS year, looks like. `force` overrides all but
+// the empty index.
+export function indexVerdict(existing, next, { force = false } = {}) {
   const incoming = totalPrograms(next)
-  if (incoming === 0) return false
-  if (!existing || force) return true
-  return incoming >= totalPrograms(existing)
+  if (incoming === 0) return { ok: false, reason: 'the new result is empty' }
+  if (force) return { ok: true, reason: 'forced' }
+  if (existing && incoming < totalPrograms(existing)) return { ok: false, reason: 'the new result has fewer programs than the one live' }
+  if (hasWithRounds(next)) {
+    const withRounds = sumOf(next, 'withRounds')
+    if (withRounds === 0) return { ok: false, reason: 'no program has any round (rounds service down, rate-limited or wrong TCAS year?)' }
+    if ((next.failed ?? 0) > MAX_FAILED_SHARE * incoming) return { ok: false, reason: `round requests failed for ${next.failed} of ${incoming} programs` }
+    if (existing && hasWithRounds(existing) && withRounds < sumOf(existing, 'withRounds') * (1 - MAX_ROUNDS_DROP)) {
+      return { ok: false, reason: `programs with rounds fell from ${sumOf(existing, 'withRounds')} to ${withRounds}` }
+    }
+  }
+  return { ok: true, reason: 'ok' }
 }
+
+export const shouldReplaceIndex = (existing, next, opts) => indexVerdict(existing, next, opts).ok

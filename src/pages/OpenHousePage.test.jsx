@@ -59,6 +59,23 @@ describe('OpenHousePage (a guest)', () => {
     expect(m.canvasProps.active).toBe(false) // game input pauses while the popup is up
   })
 
+  it('a deep link keeps the address as shared, other parameters included (review)', async () => {
+    renderAt('/openhouse?b=med&utm=x')
+    await screen.findByRole('dialog', { name: 'แพทยศาสตร์' })
+    expect(screen.getByTestId('where').textContent).toBe('/openhouse?b=med&utm=x')
+    act(() => ui.getState().openBuilding('law'))
+    expect(screen.getByTestId('where').textContent).toBe('/openhouse?b=law&utm=x')
+    act(() => ui.getState().closeBuilding())
+    expect(screen.getByTestId('where').textContent).toBe('/openhouse?utm=x')
+  })
+
+  it('a deep link survives React StrictMode double effects (dev) and the canvas mounting later', async () => {
+    const { StrictMode } = await import('react')
+    render(<StrictMode><MemoryRouter initialEntries={['/openhouse?b=eng']}><OpenHousePage /><Where /></MemoryRouter></StrictMode>)
+    expect(await screen.findByRole('dialog', { name: 'วิศวกรรมศาสตร์' })).toBeTruthy()
+    expect(screen.getByTestId('where').textContent).toBe('/openhouse?b=eng')
+  })
+
   it('an unknown ?b is ignored: no popup, default spawn', async () => {
     renderAt('/openhouse?b=nope')
     await screen.findByTestId('canvas')

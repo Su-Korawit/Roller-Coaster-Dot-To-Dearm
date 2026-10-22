@@ -152,11 +152,22 @@ describe('api/content', () => {
     expect(res.body).toContain('noindex')
   })
 
+  it('serves /openhouse with its own link-preview head and a crawlable body (shared ?b= links)', async () => {
+    const { res } = await call({ route: 'openhouse', b: 'med' })
+    expect(res.statusCode).toBe(200)
+    expect(res.body).toContain('<title>Open House')
+    expect(res.body).toContain('property="og:title"')
+    expect(res.body).toContain('rel="canonical" href="https://ilovetcas.com/openhouse"')
+    expect(res.body).toContain('<h1>')
+    expect(res.body).not.toContain('noindex')
+  })
+
   it('serves the sitemap as XML', async () => {
     const { res } = await call({ route: 'sitemap' })
     expect(res.statusCode).toBe(200)
     expect(res.headers['content-type']).toContain('application/xml')
     expect(res.body).toContain('<loc>https://ilovetcas.com/blog/medicine-all</loc>')
+    expect(res.body).toContain('<loc>https://ilovetcas.com/openhouse</loc>')
   })
 
   it('still serves real content when only the shell fetch fails', async () => {

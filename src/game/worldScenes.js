@@ -12,8 +12,8 @@ import { renderRoom } from './roomRender'
 import { isWalkableAt } from './walkable'
 import { nearestLabel } from '../lib/resumeRules'
 import { renderCampus } from './campusRender'
-import { findPath, simplifyPath, nearestFree, createWalker } from './autoWalk'
-import { blockedByFootprints, HALL } from './campusLayout'
+import { findPath, simplifyPath, nearestFree, createWalkState, waypointTarget, stuckAction, bodyBlocked } from './autoWalk'
+import { footprints, HALL } from './campusLayout'
 import { shouldPlayIntro, introSeen, markIntroSeen, INTRO_MS } from './campusSigns'
 
 // 0 = Basic_Charakter (1 ตัว)
@@ -412,6 +412,9 @@ export class MapScene extends Phaser.Scene {
     this._spawnCritters(meta.critters ?? [], mapScale)
 
     this._mapScale = mapScale
+    // A scene instance is reused across map switches: never inherit another map's auto-walk.
+    this._walk = createWalkState()
+    this._stuckFrames = 0
     this._renderLabels(mapScale)
 
     if (cfg.room) {
@@ -762,14 +765,20 @@ export class MapScene extends Phaser.Scene {
     const moved = Math.hypot(this.player.x - (this._lastX ?? 0), this.player.y - (this._lastY ?? 0))
     this._lastX = this.player.x
     this._lastY = this.player.y
-    this._stuckFrames = this._autoWalk && moved < 0.2 ? (this._stuckFrames ?? 0) + 1 : 0
-    const stuck = this._autoWalk && this._stuckFrames > 12 && distance < 16
+    this._stuckFrames = this._walk.active && moved < 0.2 ? this._stuckFrames + 1 : 0
+    const stall = this._walk.active
+      ? stuckAction({ stuckFrames: this._stuckFrames, distance: distance / this._mapScale })
+      : 'none'
+    if (stall === 'cancel') {
+      this._cancelWalk() // held up away from the waypoint: the walk cannot continue, so end it
+      return
+    }
 
-    if (distance < ARRIVE_THRESHOLD || stuck) {
+    if (distance < ARRIVE_THRESHOLD || stall === 'advance') {
       this._stuckFrames = 0
       // Auto-walk: slide straight on to the next waypoint instead of idling at the corner.
       if (this._feedWalker()) return
-      this._autoWalk = false
+      this._walk.stop()
       this.player.setVelocity(0, 0)
       this.player.play(`${this.currentMbti}-idle`)
       this.isMoving = false
@@ -864,42 +873,49 @@ export class MapScene extends Phaser.Scene {
   // ── Open House campus ──
   _initCampus(map, mapScale) {
     this._campus = renderCampus(this, mapScale)
-    this._walker = null
+    this._footBlocked = new Set()
+    for (const r of footprints()) {
+      for (let y = r.y; y < r.y + r.h; y++) for (let x = r.x; x < r.x + r.w; x++) this._footBlocked.add(y * map.width + x)
+    }
     const onWalkTo = ({ tx, ty }) => this.walkTo(tx, ty)
+    const onWalkCancel = () => this._cancelWalk()
     this.game.events.on('campusWalkTo', onWalkTo)
+    this.game.events.on('campusWalkCancel', onWalkCancel)
     this.events.once('shutdown', () => {
       this.game.events.off('campusWalkTo', onWalkTo)
+      this.game.events.off('campusWalkCancel', onWalkCancel)
       this._campus?.destroy()
       this._campus = null
-      this._walker = null
+      this._footBlocked = null
+      this._walk?.stop()
     })
   }
 
   _tileBlocked(tx, ty) {
     const t = this._map.tileWidth
-    return !isWalkableAt(this._map, this._collisionLayers, tx * t + t / 2, ty * t + t / 2) || blockedByFootprints(tx, ty)
+    return !isWalkableAt(this._map, this._collisionLayers, tx * t + t / 2, ty * t + t / 2) || !!this._footBlocked?.has(ty * this._map.width + tx)
   }
 
   // Walk to a tile along the tile grid (the minimap and the faculty list call this).
   walkTo(tx, ty) {
     if (!this.player || !this._map) return false
     const { width: w, height: h, tileWidth: t } = this._map
-    const blocked = (x, y) => this._tileBlocked(x, y)
-    const here = nearestFree(blocked, w, h, { x: Math.floor(this.player.x / this._mapScale / t), y: Math.floor(this.player.y / this._mapScale / t) })
+    const blocked = bodyBlocked((x, y) => this._tileBlocked(x, y))
+    const body = this.player.body.center // the body, not the sprite centre, is what stands on a tile
+    const here = nearestFree(blocked, w, h, { x: Math.floor(body.x / this._mapScale / t), y: Math.floor(body.y / this._mapScale / t) })
     const goal = nearestFree(blocked, w, h, { x: tx, y: ty })
     const path = here && goal ? findPath(blocked, w, h, here, goal) : null
     if (!path) return false
-    this._walker = createWalker(simplifyPath(path))
-    this._autoWalk = true
+    if (!this._walk.start(simplifyPath(path))) return false
     this._feedWalker()
     return true
   }
 
   // Any player input ends an auto-walk: the avatar stops where it is.
   _cancelWalk() {
-    if (!this._autoWalk) { this._walker?.cancel(); return }
-    this._autoWalk = false
-    this._walker.cancel()
+    const was = this._walk?.active
+    this._walk?.stop()
+    if (!was) return
     this.isMoving = false
     this.player?.setVelocity(0, 0)
     this.marker?.setVisible(false)
@@ -907,11 +923,11 @@ export class MapScene extends Phaser.Scene {
 
   // Hand the next waypoint to the click-to-move machinery. True while there is one.
   _feedWalker() {
-    const next = this._walker?.next()
+    const next = this._walk?.next()
     if (!next) return false
-    const t = this._map.tileWidth * this._mapScale
-    this.targetX = next.x * t + t / 2
-    this.targetY = next.y * t + t / 2
+    const target = waypointTarget(next, this._mapScale)
+    this.targetX = target.x
+    this.targetY = target.y
     this.isMoving = true
     this.marker.setVisible(false)
     return true

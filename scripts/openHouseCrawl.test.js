@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { buildIndex, formatProgramRounds, shouldReplaceIndex } from './openHouseCrawl.mjs'
+import { buildIndex, formatProgramRounds, shouldReplaceIndex, indexVerdict } from './openHouseCrawl.mjs'
 
 const YEAR = 2570
 const course = (over = {}) => ({
@@ -65,7 +65,7 @@ describe('buildIndex', () => {
 
   it('summarises each building for the index file', async () => {
     const { index } = await run(rows, fetchRounds)
-    expect(index.buildings.med).toEqual({ programs: 1, universities: 1, rounds: { 1: { universities: 0, seats: 0 }, 2: { universities: 0, seats: 0 }, 3: { universities: 1, seats: 24 }, 4: { universities: 0, seats: 0 } } })
+    expect(index.buildings.med).toEqual({ programs: 1, universities: 1, withRounds: 1, rounds: { 1: { universities: 0, seats: 0 }, 2: { universities: 0, seats: 0 }, 3: { universities: 1, seats: 24 }, 4: { universities: 0, seats: 0 } } })
     expect(index.buildings.dent.rounds[1]).toEqual({ universities: 1, seats: 24 })
     expect(index.buildings.law.programs).toBe(1)
   })
@@ -149,5 +149,40 @@ describe('shouldReplaceIndex', () => {
   })
   it('refuses an index with no programs at all', () => {
     expect(shouldReplaceIndex(null, { buildings: {} })).toBe(false)
+  })
+})
+
+describe('rounds-service outage guard (review: a down or stale rounds service must not overwrite a good index)', () => {
+  const idx = (programs, withRounds, failed = 0) => ({ failed, buildings: { med: { programs, withRounds } } })
+
+  it('the built index counts the programs that have at least one project per building', async () => {
+    const rows = [course({ program_id: 'p1' }), course({ program_id: 'p2' }), course({ program_id: 'p3' })]
+    const { index } = await run(rows, async (id) => { if (id === 'p3') throw new Error('down'); return id === 'p2' ? [] : [project()] }, { retries: 1 })
+    expect(index.buildings.med.programs).toBe(3)
+    expect(index.buildings.med.withRounds).toBe(1) // p2 had no projects for the year, p3 failed
+    expect(index.failed).toBe(1)
+  })
+
+  it('refuses an index in which no program has any round, even with nothing live yet', () => {
+    expect(shouldReplaceIndex(null, idx(100, 0))).toBe(false)
+    expect(indexVerdict(null, idx(100, 0)).reason).toMatch(/no program has any round/i)
+    expect(shouldReplaceIndex(null, idx(100, 0), { force: true })).toBe(true)
+  })
+
+  it('refuses when programs with rounds collapse against the live index, although the program count did not', () => {
+    expect(shouldReplaceIndex(idx(100, 90), idx(100, 20))).toBe(false)
+    expect(indexVerdict(idx(100, 90), idx(100, 20)).reason).toMatch(/with rounds/i)
+    expect(shouldReplaceIndex(idx(100, 90), idx(100, 85))).toBe(true) // a small drop is normal
+    expect(shouldReplaceIndex(idx(100, 90), idx(100, 20), { force: true })).toBe(true)
+  })
+
+  it('refuses when more than a fifth of the round requests failed', () => {
+    expect(shouldReplaceIndex(null, idx(100, 70, 30))).toBe(false)
+    expect(indexVerdict(null, idx(100, 70, 30)).reason).toMatch(/failed/i)
+    expect(shouldReplaceIndex(null, idx(100, 95, 5))).toBe(true)
+  })
+
+  it('an index from before this field existed keeps the old behaviour', () => {
+    expect(shouldReplaceIndex({ buildings: { med: { programs: 10 } } }, { failed: 0, buildings: { med: { programs: 12, withRounds: 12 } } })).toBe(true)
   })
 })

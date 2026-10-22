@@ -30,6 +30,27 @@ describe('useOpenHouseUiStore', () => {
     expect(store.getState().openBuildingId).toBeNull()
   })
 
+  it('opening a popup ends any auto-walk first (review: the avatar must not walk out of the door under the popup)', () => {
+    const cancel = vi.fn()
+    store.getState().setCanceller(cancel)
+    store.getState().openBuilding('nope')
+    expect(cancel).not.toHaveBeenCalled()
+    store.getState().openBuilding('med')
+    expect(cancel).toHaveBeenCalledTimes(1)
+    store.getState().openDirectory()
+    expect(cancel).toHaveBeenCalledTimes(2)
+    store.getState().setCanceller('junk')
+    expect(store.getState().canceller).toBeNull()
+  })
+
+  it('clearScene drops what the game scene reported but never a popup the UI opened (StrictMode remounts the canvas)', () => {
+    store.getState().setDoor('med')
+    store.getState().setNearDirectory(true)
+    store.getState().openBuilding('med')
+    store.getState().clearScene()
+    expect(store.getState()).toMatchObject({ doorBuildingId: null, nearDirectory: false, openBuildingId: 'med' })
+  })
+
   it('opening the directory closes a building and vice versa', () => {
     store.getState().openBuilding('eng')
     store.getState().openDirectory()

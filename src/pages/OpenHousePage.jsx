@@ -7,10 +7,7 @@ import { useRoomUiStore } from '../stores/useRoomUiStore'
 import { usePopupStore } from '../stores/usePopupStore'
 import { usePlanUiStore } from '../stores/usePlanUiStore'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
-import FacultyPopup from '../components/openhouse/FacultyPopup'
-import DirectoryBoard from '../components/openhouse/DirectoryBoard'
-import EnterBuildingButton from '../components/openhouse/EnterBuildingButton'
-import Minimap from '../components/openhouse/Minimap'
+import CampusLayer from '../components/openhouse/CampusLayer'
 import GuestHotbar from '../components/openhouse/GuestHotbar'
 import PlanSheet from '../components/plan/PlanSheet'
 import RoundPickerSheet from '../components/plan/RoundPickerSheet'
@@ -50,6 +47,20 @@ export default function OpenHousePage() {
 
   useDocumentTitle(TITLE)
 
+  // Keep the address bar shareable: ?b=<id> while a faculty is open, every other parameter untouched.
+  // It follows the store's open/close transitions instead of rendering state, so a deep link is never
+  // stripped before the store has caught up (React StrictMode runs the effects twice in dev). Declared
+  // before the effect below so its unsubscribe runs first on unmount and the reset there cannot navigate.
+  useEffect(() => useOpenHouseUiStore.subscribe((s, prev) => {
+    if (s.openBuildingId === prev.openBuildingId) return
+    setParams((cur) => {
+      const next = new URLSearchParams(cur)
+      if (s.openBuildingId) next.set('b', s.openBuildingId)
+      else next.delete('b')
+      return next
+    }, { replace: true })
+  }), [setParams])
+
   useEffect(() => {
     if (deepLink) useOpenHouseUiStore.getState().openBuilding(deepLink)
     return () => {
@@ -57,13 +68,6 @@ export default function OpenHousePage() {
       useRoomUiStore.getState().close()
     }
   }, [deepLink])
-
-  // Keep the address bar shareable: ?b=<id> while a faculty is open.
-  useEffect(() => {
-    const cur = params.get('b')
-    if (openBuildingId && cur !== openBuildingId) setParams({ b: openBuildingId }, { replace: true })
-    else if (!openBuildingId && cur) setParams({}, { replace: true })
-  }, [openBuildingId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const overlayOpen = !!openBuildingId || directoryOpen || !!sheet || !!popup || !!adding
 
@@ -73,14 +77,9 @@ export default function OpenHousePage() {
         <GameCanvas active={!overlayOpen} entryMapKey="campus" entrySpawnAt={spawnAt} />
       </Suspense>
 
-      <Minimap />
-      <EnterBuildingButton />
+      <CampusLayer always />
       <GuideOverlay />
 
-      {openBuildingId && (
-        <FacultyPopup key={openBuildingId} buildingId={openBuildingId} onClose={() => useOpenHouseUiStore.getState().closeBuilding()} />
-      )}
-      {directoryOpen && <DirectoryBoard onClose={() => useOpenHouseUiStore.getState().closeDirectory()} />}
       {sheet === 'plan' && <PlanSheet onClose={() => useRoomUiStore.getState().close()} />}
       {adding && <RoundPickerSheet program={adding} onClose={() => usePlanUiStore.getState().closeAdd()} />}
       {popup === 'settings' && <SettingsSheet onClose={() => usePopupStore.getState().close()} />}

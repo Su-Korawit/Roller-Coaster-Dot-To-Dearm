@@ -78,3 +78,47 @@ export function createWalker(waypoints) {
     cancel() { i = list.length },
   }
 }
+
+// The walk the scene is in the middle of: the waypoints still to hand out and whether the avatar is
+// still walking (it is, until stop(), even after the last waypoint was handed out). A fresh state is
+// made in create() so a map switch can never inherit a stale walk.
+export function createWalkState() {
+  let walker = null
+  let active = false
+  return {
+    get active() { return active },
+    start(waypoints) {
+      walker = createWalker(waypoints)
+      active = !walker.done
+      return active
+    },
+    next() { return walker ? walker.next() : null },
+    stop() {
+      walker?.cancel()
+      walker = null
+      active = false
+    },
+  }
+}
+
+// Phaser sprite centre (px) that puts the avatar's body (16×20, spanning y−12…y+8 around the sprite)
+// on a tile row, centred on the tile: aiming at the tile centre would push the body 4 px into the
+// row above, which is a wall on the lanes beside the buildings.
+export function waypointTarget(tile, scale = 1) {
+  return { x: (tile.x * 16 + 8) * scale, y: (tile.y * 16 + 12) * scale }
+}
+
+const ARRIVE_STALL_FRAMES = 12 // ~0.2 s held up close to the waypoint = arrived
+const CANCEL_STALL_FRAMES = 30 // ~0.5 s held up anywhere else = the walk cannot continue
+const NEAR_PX = 16
+
+// What to do about an avatar that is not making progress during an auto-walk.
+export function stuckAction({ stuckFrames, distance }) {
+  if (distance < NEAR_PX && stuckFrames > ARRIVE_STALL_FRAMES) return 'advance'
+  if (stuckFrames > CANCEL_STALL_FRAMES) return 'cancel'
+  return 'none'
+}
+
+// Turns a tile-blocked test into one for the avatar's body: standing on a tile the 20 px body also
+// covers 4 px of the tile below it (a missing tile below, the map edge, counts as blocked).
+export const bodyBlocked = (isBlocked) => (x, y) => isBlocked(x, y) || isBlocked(x, y + 1)

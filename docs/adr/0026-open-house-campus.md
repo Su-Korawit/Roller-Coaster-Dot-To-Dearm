@@ -16,10 +16,13 @@ plan: `docs/superpowers/plans/2026-10-23-open-house-campus.md`.
 - **Precomputed data, never a live crawl from the client.** `scripts/refreshOpenHouseIndex.mjs`
   (owner-run, admin credentials, dry run by default) classifies every MyTCAS program into one of 18
   buildings and writes `data/mytcas/openhouse/index.json` plus one `{buildingId}.json` per building
-  to public Storage. Building files are uploaded first, `index.json` last; a result smaller than the
-  existing index is refused without `--force`; when the live MyTCAS data is thin it falls back to the
-  snapshot like `refreshTcasSnapshot.mjs`. Until the owner runs it the popup says the building is
-  being updated.
+  to public Storage. Building files are uploaded first, `index.json` last. A result is refused
+  without `--force` when it is empty, has fewer programs than the live index, has no program with a
+  round at all, has more than 20 % failed round requests, or its programs-with-rounds fell by more
+  than 10 % (what a down or rate-limited rounds service, or a stale TCAS year, looks like with an
+  intact program list); the refusal says which rule. When the live MyTCAS data is thin it falls back
+  to the snapshot like `refreshTcasSnapshot.mjs`. Until the owner runs it the popup says the building
+  is being updated.
 - **Pure classification shared by script and client** (`src/utils/openHouseIndex.js`, imported with
   explicit `.js` so Node can use it): MyTCAS `group_field_id` maps to a building; group 90 is split
   by keyword rules (law → comm → pol, language fields → hum, default hum); every program lands in
@@ -47,7 +50,10 @@ plan: `docs/superpowers/plans/2026-10-23-open-house-campus.md`.
 - **Wayfinding by tile auto-walk.** `src/game/autoWalk.js` (pure BFS on the tile grid with building
   footprints, simplified to corners) feeds waypoints to the existing click-to-move fields, so it
   also works in joystick mode; any player input cancels it, and pressing against a wall for ~0.2 s
-  counts as arrival (the 20 px body cannot fully enter a door strip). The minimap (every faculty is
+  counts as arrival (the 20 px body cannot fully enter a door strip); waypoints aim so the body fills
+  one tile row (`waypointTarget`), a stall far from the waypoint ends the walk, a fresh walk state is
+  made in `create()` so a map switch never inherits one, and opening a popup cancels the walk (the
+  avatar must not leave the door under it). The minimap (every faculty is
   a button), the directory board and the Warp sheet's "ตึกคณะ" list all call `walkTo` through
   `useOpenHouseUiStore`.
 - **The popup** (`FacultyPopup`) is data-driven from the building file: round tabs with counts
@@ -58,7 +64,11 @@ plan: `docs/superpowers/plans/2026-10-23-open-house-campus.md`.
 - **Guests.** `/openhouse` is a route on the hub and app sites outside `RequireAuth`;
   `OpenHousePage` mounts `GameCanvas` with the new `entryMapKey="campus"` pin (no registry read, no
   resume), a reduced guest hotbar (Plan, Guide, Settings, sign in) and mounts the Plan sheet and
-  `RoundPickerSheet` itself (`RoomLayer` belongs to the signed-in home). Plans persist locally and
+  `RoundPickerSheet` itself (`RoomLayer` belongs to the signed-in home). The campus UI
+  (`CampusLayer`: minimap, door action, popup, directory) is one component mounted by the guest page
+  (always) and by `HomePage` (only while `currentMapKey === 'campus'`, cleared when the student warps
+  away). The page records no resume point (`shouldRecordResume`), so visiting it never changes where
+  the app boots. Plans persist locally and
   merge at login (ADR-0025). `?b=<id>` stands the avatar at that door with its popup open and is kept
   in the address bar while a faculty is open; unknown ids are ignored.
 - **First visit** plays one ≤ 2 s camera pan bridge → hall (skippable by tap; skipped under reduced
@@ -75,8 +85,11 @@ plan: `docs/superpowers/plans/2026-10-23-open-house-campus.md`.
 - **Buildings as tiles.** 18 distinct multi-tile buildings would multiply the tileset and the map
   generator; sprites with a layout table keep art and collision in one place. Rejected.
 - **A new `openhouse` entry in `SITES`.** `SITES` has one entry per host (it drives subdomain
-  detection, prerender and the tool strips); `/openhouse` is a route on existing hosts. Rejected;
-  the page sets its own title. No server-rendered head for the hub path yet.
+  detection, prerender and the tool strips); `/openhouse` is a route on existing hosts. Rejected.
+  Instead the hub serves `/openhouse` through `api/content.js` (`route=openhouse`, rewrites for
+  `ilovetcas.com` and `www`) with its own title, description, Open Graph tags, a crawlable faculty
+  list and a sitemap entry, so shared `?b=` links preview properly; the page itself still sets the
+  title for the app host.
 - **Auto-opening the popup on entering a door.** Walking past a door would keep covering the map.
   Rejected for the explicit action.
 

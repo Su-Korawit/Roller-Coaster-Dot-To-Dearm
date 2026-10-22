@@ -28,6 +28,8 @@ import { buildChatId, refs } from '../lib/db'
 import { ADMIN_UID, ADMIN_DISPLAY_NAME } from '../constants/admin'
 import LeavesCounter from '../components/room/LeavesCounter'
 import RoomLayer from '../components/room/RoomLayer'
+import CampusLayer from '../components/openhouse/CampusLayer'
+import { useOpenHouseUiStore } from '../stores/useOpenHouseUiStore'
 import { CoinIcon } from '../components/ui/CoinIcon'
 import { useCloudAsset } from '../hooks/useCloudAsset'
 import { getMusicConfig, DEFAULT_TRACKS } from '../utils/musicConfig'
@@ -63,6 +65,7 @@ function HomePage() {
   const totalStacks = useUserStore((s) => s.totalStacks)
   const uiVisibility = useUserStore((s) => s.uiVisibility)
   const roomSheet = useRoomUiStore((s) => s.sheet)
+  const campusOverlay = useOpenHouseUiStore((s) => s.openBuildingId !== null || s.directoryOpen)
 
   // Daily check-in — once per day, on entering Home.
   useEffect(() => {
@@ -231,12 +234,14 @@ function HomePage() {
             <div className="w-full h-full px-sky-bg" />
           }
         >
-          <GameCanvas active={activeTab === APP_VIEWS.HOME && activePopup !== 'calendar'} onOpenView={handleTabChange} />
+          <GameCanvas active={activeTab === APP_VIEWS.HOME && activePopup !== 'calendar' && !campusOverlay} onOpenView={handleTabChange} />
         </Suspense>
       </div>
 
       {/* Study room: focus / shop entry, HUD, decorate bar, completion screen */}
       <RoomLayer />
+      {/* Open House campus UI: shown only while the campus is the current map (reached by Warp) */}
+      <CampusLayer />
       <GuideOverlay suspended={activeTab !== APP_VIEWS.HOME} />
 
       {/* Gradient scrim — top: keeps header pills readable over pixel art */}

@@ -10,9 +10,14 @@ export const useOpenHouseUiStore = create((set, get) => ({
   nearDirectory: false,
   directoryOpen: false,
   walker: null,
+  canceller: null,
 
   // Unknown ids are ignored (a stale deep link or a typo never opens an empty popup).
-  openBuilding: (id) => { if (BUILDING_BY_ID[id]) set({ openBuildingId: id, directoryOpen: false }) },
+  openBuilding: (id) => {
+    if (!BUILDING_BY_ID[id]) return
+    get().canceller?.() // an auto-walk must not carry the avatar out of the door under the popup
+    set({ openBuildingId: id, directoryOpen: false })
+  },
   closeBuilding: () => set({ openBuildingId: null }),
 
   setDoor: (id) => set({ doorBuildingId: BUILDING_BY_ID[id] ? id : null }),
@@ -26,11 +31,18 @@ export const useOpenHouseUiStore = create((set, get) => ({
   },
 
   setNearDirectory: (near) => set({ nearDirectory: !!near }),
-  openDirectory: () => set({ directoryOpen: true, openBuildingId: null }),
+  openDirectory: () => {
+    get().canceller?.()
+    set({ directoryOpen: true, openBuildingId: null })
+  },
   closeDirectory: () => set({ directoryOpen: false }),
 
+  setCanceller: (fn) => set({ canceller: typeof fn === 'function' ? fn : null }),
   setWalker: (fn) => set({ walker: typeof fn === 'function' ? fn : null }),
   walkTo: (tx, ty) => { const w = get().walker; if (w) w(tx, ty); return !!w },
+
+  // What the game scene reported (door zone, directory zone); popups belong to the UI and stay.
+  clearScene: () => set({ doorBuildingId: null, nearDirectory: false }),
 
   reset: () => set({ openBuildingId: null, doorBuildingId: null, nearDirectory: false, directoryOpen: false }),
 }))

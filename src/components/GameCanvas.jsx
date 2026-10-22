@@ -23,6 +23,7 @@ import { useRoomStore } from '../stores/useRoomStore'
 import { useFocusStore } from '../stores/useFocusStore'
 import { useRoomUiStore } from '../stores/useRoomUiStore'
 import { useOpenHouseUiStore } from '../stores/useOpenHouseUiStore'
+import { shouldRecordResume } from '../lib/resumeRules'
 
 // `entryMapKey` pins the first map (the guest-usable /openhouse page boots straight into the campus,
 // ignoring the registry and the resume point); `entrySpawnAt` ({ x, y } in map px) stands the avatar
@@ -190,7 +191,9 @@ export default function GameCanvas({ active = true, onOpenView, entryMapKey = nu
         }
       })
       // Where the player stands, every 2 s while moving: remembered so the app resumes there.
-      game.events.on('playerSampled', ({ mapKey, x, y, facing, label }) => useResumeStore.getState().record(mapKey, { x, y, facing, label }))
+      if (shouldRecordResume(entryRef.current.mapKey)) {
+        game.events.on('playerSampled', ({ mapKey, x, y, facing, label }) => useResumeStore.getState().record(mapKey, { x, y, facing, label }))
+      }
       // School Hub zones (ADR 0018) -> UI state; panels render in SchoolWorldLayer.
       game.events.on('focusSeatEntered', ({ seatId }) => useSchoolWorldStore.getState().openPanel({ type: 'focus', seatId }))
       game.events.on('boardEntered', ({ boardId }) => useSchoolWorldStore.getState().openPanel(
@@ -211,6 +214,7 @@ export default function GameCanvas({ active = true, onOpenView, entryMapKey = nu
       game.events.on('directoryEntered', () => campusUi.setNearDirectory(true))
       game.events.on('directoryExited', () => campusUi.setNearDirectory(false))
       campusUi.setWalker((tx, ty) => game.events.emit('campusWalkTo', { tx, ty }))
+      campusUi.setCanceller(() => game.events.emit('campusWalkCancel'))
       game.registry.set('roomDecorating', useRoomStore.getState().decorating)
       unsubs.push(useRoomStore.subscribe((s, prev) => {
         if (s.decorating !== prev.decorating) game.registry.set('roomDecorating', s.decorating)
@@ -279,7 +283,8 @@ export default function GameCanvas({ active = true, onOpenView, entryMapKey = nu
     return () => {
       cancelled = true
       useOpenHouseUiStore.getState().setWalker(null)
-      useOpenHouseUiStore.getState().reset()
+      useOpenHouseUiStore.getState().setCanceller(null)
+      useOpenHouseUiStore.getState().clearScene()
       unsubs.forEach((off) => off())
       ro.disconnect()
       clearTimeout(hideTimerRef.current)

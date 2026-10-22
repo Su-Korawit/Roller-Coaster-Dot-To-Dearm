@@ -15,7 +15,7 @@
 
 import { pathToFileURL } from 'node:url'
 import { pickCourseSource, resolveTcasYear, MIN_LIVE_ROWS } from '../api/mytcasSource.js'
-import { buildIndex, shouldReplaceIndex } from './openHouseCrawl.mjs'
+import { buildIndex, indexVerdict } from './openHouseCrawl.mjs'
 
 const S3_URL = 'https://my-tcas.s3.ap-southeast-1.amazonaws.com/mytcas/courses.json'
 const ROUNDS_URL = 'https://tcas65.as.r.appspot.com/program-projects/program-id'
@@ -51,9 +51,9 @@ export async function runRefresh({ apply = false, force = false, yearArg = null 
   log(`programs:      ${total} (skipped ${index.skipped}, rounds unavailable for ${index.failed})`)
 
   const existing = await storage.read(`${BASE}/index.json`)
-  const replace = shouldReplaceIndex(existing, index, { force })
-  if (!replace) {
-    log('index kept: the new result is empty or smaller than the one live (use --force to override)')
+  const verdict = indexVerdict(existing, index, { force })
+  if (!verdict.ok) {
+    log(`index kept: ${verdict.reason} (use --force to override)`)
     return { published: false, index }
   }
   if (!apply) {

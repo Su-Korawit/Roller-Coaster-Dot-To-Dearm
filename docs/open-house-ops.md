@@ -20,8 +20,10 @@ GOOGLE_APPLICATION_CREDENTIALS=./serviceAccountKey.json npm run refresh-openhous
 
 - Building files are uploaded first and `index.json` last, so a half-finished run never publishes a
   half index.
-- A result smaller than the index already published is refused; pass `--force` only when you know the
-  smaller data is right.
+- The run refuses to publish (and says which rule) when the result is empty, has fewer programs than
+  the live index, has no program with a round at all, had more than 20 % failed round requests, or
+  its programs-with-rounds dropped by more than 10 % (a down/rate-limited rounds service or a wrong
+  year looks like that). Pass `--force` only when you know the data is right.
 - The year comes from `data/mytcas/meta.json` (else 2570); override it with `--year 2570`.
 - When MyTCAS is thin or down the run falls back to the snapshot (same rule as
   `refresh-tcas-snapshot`); it says so in the output, so check that before `--apply`.
@@ -51,4 +53,4 @@ node scripts/buildCampus.mjs                         # public/maps/campus.json f
 - `https://app.ilovetcas.com/openhouse` and `https://ilovetcas.com/openhouse` (guests welcome).
 - Deep link a faculty: `/openhouse?b=med` (ids: med dent pharm vet allied sci it eng arch law comm
   pol hum biz tour fine edu agri).
-- Not done yet (follow-up): server-rendered head tags and a sitemap entry for the hub path.
+- The hub path `/openhouse` is server-rendered for link previews by `api/content.js` and is in the hub sitemap; deploy the `vercel.json` rewrite with the app.

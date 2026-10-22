@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { buildCampus, collisionGrid, reachable } from './buildCampus.mjs'
 import { TILE_NAMES, FIRSTGID } from './art/families/campus.mjs'
 import { parseMapMeta } from '../src/utils/tiledMapMeta.js'
+import { findPath, bodyBlocked } from '../src/game/autoWalk.js'
 import { MAP, PLACEMENTS, SPAWN, BRIDGE, LAKE_TOP, doorTile, hallDoorTile, HALL, footprints, QUADS, PROMENADE_ROWS } from '../src/game/campusLayout.js'
 
 const { map } = buildCampus()
@@ -96,6 +97,17 @@ describe('campus walkability', () => {
     expect(reach.has(`${hall.x},${hall.y}`)).toBe(true)
     const directory = parseMapMeta(map).interactions.find((i) => i.action === 'directory')
     expect(reach.has(`${Math.floor(directory.x / 16)},${Math.floor(directory.y / 16)}`)).toBe(true)
+  })
+
+  it('every door is reachable for the avatar BODY (20 px tall, reaching 4 px into the row below), not just for a point', () => {
+    const blocked = bodyBlocked((x, y) => y < 0 || x < 0 || y >= MAP.h || x >= MAP.w || grid[y][x])
+    const start = { x: SPAWN.tx, y: SPAWN.ty }
+    expect(blocked(start.x, start.y)).toBe(false)
+    const doors = [...PLACEMENTS.map(doorTile), hallDoorTile()]
+    for (const d of doors) {
+      expect(findPath(blocked, MAP.w, MAP.h, start, { x: d.x, y: d.y }), `door at ${d.x},${d.y}`).not.toBeNull()
+      expect(findPath(blocked, MAP.w, MAP.h, start, { x: d.x + 1, y: d.y }), `door at ${d.x + 1},${d.y}`).not.toBeNull()
+    }
   })
 
   it('both quad squares can be walked around (the fountain and the stage are solid, their rings are not)', () => {
