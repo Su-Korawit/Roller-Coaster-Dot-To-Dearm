@@ -38,7 +38,7 @@ function FramePicker({ frameIndex, onChange, imgUrl }) {
                 backgroundSize: `${SHEET_COLS * FRAME_PX * SCALE}px ${SHEET_ROWS * FRAME_PX * SCALE}px`,
                 imageRendering: 'pixelated',
                 cursor: 'pointer',
-                border: selected ? '3px solid #7c3aed' : col === 0 ? '3px solid #86efac' : '3px solid transparent',
+                border: selected ? '3px solid var(--color-brand)' : col === 0 ? '3px solid var(--color-lime)' : '3px solid transparent',
                 borderRadius: 4,
               }}
             />
@@ -115,7 +115,7 @@ export default function FarmItemsTab() {
       </div>
 
       {editing && (
-        <div className="neo-card p-5 space-y-4 border-brand">
+        <div className="px-card p-5 space-y-4 border-brand">
           <p className="font-semibold text-gray-800">{editing === 'new' ? '➕ ไอเทมใหม่' : `✏️ แก้ไข ${editing}`}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {editing === 'new' && (
@@ -173,7 +173,7 @@ export default function FarmItemsTab() {
         </div>
       )}
 
-      <div className="neo-card overflow-x-auto">
+      <div className="px-card overflow-x-auto">
         {Object.values(items).length === 0 ? (
           <div className="py-16 text-center text-gray-400 text-sm">ยังไม่มีไอเทม</div>
         ) : (

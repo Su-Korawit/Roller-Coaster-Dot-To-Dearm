@@ -444,7 +444,7 @@ export default function GameCanvas({ active = true, onOpenView }) {
       />
       {bootError && (
         <div className="absolute inset-0 z-50 flex items-center justify-center px-6 px-sky-bg">
-          <div className="neo-card px-6 py-6 flex flex-col items-center gap-4 max-w-sm text-center animate-pop">
+          <div className="px-card px-6 py-6 flex flex-col items-center gap-4 max-w-sm text-center animate-pop">
             <span className="text-4xl" aria-hidden="true">🛠️</span>
             <span className="thai-font text-sm text-ink leading-relaxed">
               โหลดแผนที่ไม่สำเร็จ — เซิร์ฟเวอร์ asset อาจไม่พร้อมใช้งานชั่วคราว
@@ -452,7 +452,7 @@ export default function GameCanvas({ active = true, onOpenView }) {
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="neo-btn rpg-btn-primary pixel-font text-[10px] px-5 py-2.5 rounded-lg"
+              className="px-btn rpg-btn-primary pixel-font text-xs px-5 py-2.5 rounded-lg"
             >
               ลองใหม่
             </button>
@@ -523,7 +523,7 @@ export default function GameCanvas({ active = true, onOpenView }) {
         <span style={{
           fontFamily: "'pixelFont-7', monospace",
           fontSize: 10,
-          color: '#3d2b1f',
+          color: 'var(--color-ink)',
           fontWeight: 'bold',
           lineHeight: 1,
           userSelect: 'none',

@@ -191,7 +191,7 @@ export default function IdeaRequestSection() {
   return (
     <div
       ref={canvasRef}
-      className="relative w-full h-full min-h-0 flex-1 bg-surface"
+      className="relative w-full h-full min-h-0 flex-1 bg-paper"
       onDragOver={onCanvasDragOver}
       onDrop={onCanvasDrop}
     >
@@ -223,7 +223,7 @@ export default function IdeaRequestSection() {
             fitView
             className="w-full h-full"
           >
-            <Background gap={20} color="#e2e8f0" />
+            <Background gap={20} color="var(--color-hairline)" />
             <Controls className="rf-touch-controls" />
             <RoadmapToolbar
               paletteItems={IR_PALETTE_ITEMS}
@@ -252,7 +252,7 @@ export default function IdeaRequestSection() {
                 setMobileSelectMode(false)
               }}
               paletteExtra={
-                <span className="text-[10px] text-ink-soft self-center ml-1 flex-shrink-0 whitespace-nowrap">
+                <span className="text-xs text-ink-soft self-center ml-1 flex-shrink-0 whitespace-nowrap">
                   sync: {syncStatus}
                 </span>
               }
@@ -273,7 +273,7 @@ export default function IdeaRequestSection() {
           className="fixed z-50 pointer-events-none flex items-center justify-center rounded-xl border-2 border-brand/60 bg-brand/20 backdrop-blur-sm"
           style={{ left: dragState.x - 24, top: dragState.y - 24, width: 48, height: 48 }}
         >
-          <span className="pixel-font text-[7px] text-brand">{dragState.type}</span>
+          <span className="pixel-font text-xs text-brand">{dragState.type}</span>
         </div>,
         document.body,
       )}

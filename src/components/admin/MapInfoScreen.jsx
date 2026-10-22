@@ -67,7 +67,7 @@ function TilesetUploadRow({ storagePath, onSuccess, disabled }) {
           <div className="h-full bg-brand transition-all" style={{ width: `${progress}%` }} />
         </div>
       )}
-      {error && <span className="text-red-500 text-[10px] truncate">{error}</span>}
+      {error && <span className="text-red-500 text-xs truncate">{error}</span>}
       <input
         ref={inputRef}
         type="file"
@@ -335,7 +335,7 @@ export default function MapInfoScreen({ mapKey, adminUid, onClose, onSaved }) {
                       />
                       <span className="text-sm text-gray-800">{s.name}</span>
                       {s.isDefault && (
-                        <span className="text-[10px] text-brand font-semibold ml-1">(default ใน Tiled)</span>
+                        <span className="text-xs text-brand font-semibold ml-1">(default ใน Tiled)</span>
                       )}
                     </label>
                   ))}
@@ -395,7 +395,7 @@ export default function MapInfoScreen({ mapKey, adminUid, onClose, onSaved }) {
                         value={tilesets[name] ?? ''}
                         onChange={(e) => setTilesets((p) => ({ ...p, [name]: e.target.value }))}
                         placeholder="rc/tilesets/..."
-                        className={`w-full px-2 py-1 rounded border text-[11px] font-mono focus:outline-none focus:ring-1 focus:ring-brand/40 ${
+                        className={`w-full px-2 py-1 rounded border text-xs font-mono focus:outline-none focus:ring-1 focus:ring-brand/40 ${
                           tilesets[name]
                             ? 'border-gray-200 text-gray-600 bg-white'
                             : 'border-red-200 text-red-500 bg-red-50'
@@ -460,7 +460,7 @@ export default function MapInfoScreen({ mapKey, adminUid, onClose, onSaved }) {
                     <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50">
                       <span className="text-sm text-gray-800">
                         {p.name || `Portal ${i + 1}`}
-                        <span className="ml-2 text-[11px] text-gray-400 font-mono">({Math.round(p.x)}, {Math.round(p.y)})</span>
+                        <span className="ml-2 text-xs text-gray-400 font-mono">({Math.round(p.x)}, {Math.round(p.y)})</span>
                       </span>
                       <span className={`text-xs font-mono font-semibold ${p.target ? 'text-brand' : 'text-red-400'}`}>
                         {p.target

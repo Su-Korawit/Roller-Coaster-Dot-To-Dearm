@@ -33,7 +33,7 @@ export default function MapPalette() {
             background: 'rgba(26,16,53,0.85)',
             border: '2px solid rgba(167,139,218,0.5)',
             borderRadius: 20,
-            color: '#fff',
+            color: 'var(--color-paper)',
             padding: '7px 20px',
             fontSize: 13,
             fontFamily: 'Noto Sans Thai, sans-serif',
@@ -77,10 +77,10 @@ export default function MapPalette() {
                   key={item.key}
                   onClick={() => setSelectedItem(active ? null : item.key)}
                   style={{
-                    background: active ? '#a78bda' : 'rgba(26,16,53,0.85)',
-                    border: active ? '2px solid #fff' : '2px solid rgba(167,139,218,0.5)',
+                    background: active ? 'var(--color-zone-soc)' : 'rgba(26,16,53,0.85)',
+                    border: active ? '2px solid var(--color-paper)' : '2px solid rgba(167,139,218,0.5)',
                     borderRadius: 10,
-                    color: '#fff',
+                    color: 'var(--color-paper)',
                     padding: '6px 14px',
                     fontSize: 12,
                     fontFamily: 'Noto Sans Thai, sans-serif',
@@ -99,10 +99,10 @@ export default function MapPalette() {
           <button
             onClick={handleSave}
             style={{
-              background: 'linear-gradient(135deg, #a78bda, #7c3aed)',
+              background: 'linear-gradient(135deg, var(--color-zone-soc), var(--color-brand))',
               border: 'none',
               borderRadius: 10,
-              color: '#fff',
+              color: 'var(--color-paper)',
               padding: '7px 28px',
               fontSize: 13,
               fontFamily: 'Noto Sans Thai, sans-serif',
@@ -123,11 +123,11 @@ export default function MapPalette() {
         }}
         style={{
           background: editMode
-            ? 'linear-gradient(135deg, #7c3aed, #a78bda)'
+            ? 'linear-gradient(135deg, var(--color-brand), var(--color-zone-soc))'
             : 'rgba(26,16,53,0.80)',
-          border: editMode ? '2px solid #fff' : '2px solid rgba(167,139,218,0.5)',
+          border: editMode ? '2px solid var(--color-paper)' : '2px solid rgba(167,139,218,0.5)',
           borderRadius: 20,
-          color: '#fff',
+          color: 'var(--color-paper)',
           padding: '7px 20px',
           fontSize: 13,
           fontFamily: 'Noto Sans Thai, sans-serif',

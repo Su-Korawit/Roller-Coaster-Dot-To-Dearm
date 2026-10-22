@@ -108,7 +108,7 @@ export default function MusicSection() {
 
         <div className="space-y-2">
           {tracks.map((t, i) => (
-            <div key={i} className="flex items-center gap-2 p-2 neo-slab">
+            <div key={i} className="flex items-center gap-2 p-2 px-slab">
               <div className="flex flex-col">
                 <button onClick={() => moveRow(i, -1)} disabled={i === 0} className="text-gray-400 hover:text-brand disabled:opacity-30 text-xs leading-none">▲</button>
                 <button onClick={() => moveRow(i, 1)} disabled={i === tracks.length - 1} className="text-gray-400 hover:text-brand disabled:opacity-30 text-xs leading-none">▼</button>

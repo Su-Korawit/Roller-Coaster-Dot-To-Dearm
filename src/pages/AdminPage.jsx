@@ -51,9 +51,9 @@ export default function AdminPage() {
     <ToastProvider>
       <div className="relative min-h-screen bg-brand-soft flex flex-col">
         {/* Header */}
-        <header className="sticky top-0 z-10 neo-slab rounded-none border-x-0 border-t-0 px-3 sm:px-6 py-4 flex items-center justify-between flex-shrink-0">
+        <header className="sticky top-0 z-10 px-slab rounded-none border-x-0 border-t-0 px-3 sm:px-6 py-4 flex items-center justify-between flex-shrink-0">
           <div>
-            <h1 className="pixel-font text-[11px] text-ink">Admin Dashboard</h1>
+            <h1 className="pixel-font text-xs text-ink">Admin Dashboard</h1>
             <p className="text-xs text-gray-500 mt-0.5">{ADMIN_DISPLAY_NAME} · {user?.email}</p>
           </div>
           <a href="/home" className="text-xs text-brand hover:underline flex-shrink-0">← Back to app</a>

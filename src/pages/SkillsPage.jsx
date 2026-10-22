@@ -12,24 +12,24 @@ function SkillsPage() {
 
       <button
         onClick={() => addOwnedSkill('spark')}
-        className="neo-btn rounded-lg bg-brand-strong px-4 py-2 text-sm font-semibold text-white"
+        className="px-btn rounded-lg bg-brand-strong px-4 py-2 text-sm font-semibold text-white"
       >
         Add Spark Skill
       </button>
 
-      <div className="neo-card rounded-xl p-4">
+      <div className="px-card rounded-xl p-4">
         <h3 className="text-sm font-semibold text-ink">Owned</h3>
         <p className="mt-1 text-sm text-ink-soft thai-font">{ownedSkills.join(', ') || 'ยังไม่มี skill'}</p>
       </div>
 
       <button
         onClick={() => equipSkill('spark')}
-        className="neo-btn rounded-lg bg-good px-4 py-2 text-sm font-semibold text-ink"
+        className="px-btn rounded-lg bg-good px-4 py-2 text-sm font-semibold text-ink"
       >
         Equip Spark
       </button>
 
-      <div className="neo-card rounded-xl p-4">
+      <div className="px-card rounded-xl p-4">
         <h3 className="text-sm font-semibold text-ink">Equipped</h3>
         <p className="mt-1 text-sm text-ink-soft thai-font">{equippedSkills.join(', ') || 'ยังไม่ได้ใส่ skill'}</p>
       </div>

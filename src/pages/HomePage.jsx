@@ -228,7 +228,7 @@ function HomePage() {
           <button
             onClick={() => handleTabChange(APP_VIEWS.PROFILE)}
             aria-label="โปรไฟล์"
-            className="pointer-events-auto neo-btn w-10 h-10 md:w-12 md:h-12 rounded-full bg-hud flex items-center justify-center shrink-0 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            className="pointer-events-auto px-btn w-10 h-10 md:w-12 md:h-12 rounded-full bg-paper flex items-center justify-center shrink-0 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             {(profilePhotoURL || authUser?.photoURL)
               ? <img src={profilePhotoURL || authUser.photoURL} alt="avatar" className="w-full h-full object-cover rounded-full" />
@@ -241,16 +241,16 @@ function HomePage() {
         </div>
 
         {/* Streak + Coins + Gold */}
-        <div className="pointer-events-auto neo-slab flex items-center gap-3 px-4 py-1.5">
-          <span className="pixel-font text-[11px] text-ink flex items-center gap-1">
+        <div className="pointer-events-auto px-slab flex items-center gap-3 px-4 py-1.5">
+          <span className="pixel-font text-xs text-ink flex items-center gap-1">
             <Flame size={14} strokeWidth={2.5} className="text-danger" aria-hidden="true" />
             {totalStacks}
           </span>
-          <span className="pixel-font text-[11px] text-ink flex items-center gap-1">
+          <span className="pixel-font text-xs text-ink flex items-center gap-1">
             <CoinIcon size={14} />
             {coins}
           </span>
-          <span className="pixel-font text-[11px] text-ink flex items-center gap-1">
+          <span className="pixel-font text-xs text-ink flex items-center gap-1">
             <GoldIcon size={14} />
             {gold}g
           </span>
@@ -264,7 +264,7 @@ function HomePage() {
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="เมนู"
           aria-expanded={menuOpen}
-          className="relative neo-btn w-12 h-12 rounded-lg bg-hud flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          className="relative px-btn w-12 h-12 rounded-lg bg-paper flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
           {menuOpen ? <X size={22} strokeWidth={2.5} className="text-ink" /> : <Menu size={22} strokeWidth={2.5} className="text-ink" />}
           {!newsRead && uiVisibility.newsButton && !menuOpen && (
@@ -274,7 +274,7 @@ function HomePage() {
         {menuOpen && (
           <>
             <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} aria-hidden="true" />
-            <ul role="menu" className="relative z-20 mt-2 neo-slab p-1 w-44 flex flex-col">
+            <ul role="menu" className="relative z-20 mt-2 px-slab p-1 w-44 flex flex-col">
               {[
                 { icon: Calendar, label: 'ปฏิทิน', run: handlePlannerTransition },
                 { icon: Trophy, label: 'Mastery', run: () => openPopup('mastery') },
@@ -288,7 +288,7 @@ function HomePage() {
                   <button
                     role="menuitem"
                     onClick={() => { setMenuOpen(false); run() }}
-                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md thai-font text-sm text-ink hover:bg-wood-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md thai-font text-sm text-ink hover:bg-mist focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                   >
                     <MenuIcon size={18} strokeWidth={2.5} aria-hidden="true" />
                     <span className="flex-1 text-left">{label}</span>
@@ -385,14 +385,14 @@ function HomePage() {
         <div className="absolute bottom-18 right-4 z-55 group">
           {/* Tooltip — left of button */}
           <div className="absolute right-14 top-1/2 -translate-y-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-            <div className="thai-font text-[11px] bg-gray-900/90 text-white rounded-full px-3 py-1 shadow-lg">
+            <div className="thai-font text-xs bg-gray-900/90 text-white rounded-full px-3 py-1 shadow-lg">
               ติดต่อผู้พัฒนา
             </div>
           </div>
           <button
             onClick={openAdminChat}
             aria-label="ติดต่อผู้พัฒนา"
-            className="relative neo-btn w-12 h-12 rounded-lg bg-brand-strong flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1"
+            className="relative px-btn w-12 h-12 rounded-lg bg-brand-strong flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1"
           >
             {!contactedAdmin && (
               <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-danger border-2 border-ink" />

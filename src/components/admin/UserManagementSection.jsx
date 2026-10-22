@@ -142,7 +142,7 @@ export default function UserManagementSection() {
         </div>
       </div>
 
-      <div className="overflow-x-auto neo-card">
+      <div className="overflow-x-auto px-card">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 text-left text-xs text-gray-500">

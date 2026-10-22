@@ -54,7 +54,7 @@ export default function BottomNavBar({ active, onChange }) {
       className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-md z-30"
       style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="neo-slab px-2 py-2 md:px-3 md:py-2.5 flex items-center justify-around">
+      <div className="px-slab px-2 py-2 md:px-3 md:py-2.5 flex items-center justify-around">
         {tabs.map((tab) => {
           const isActive = active === tab.id
           return (
@@ -66,13 +66,13 @@ export default function BottomNavBar({ active, onChange }) {
               className={`flex flex-col items-center gap-0.5 px-3 py-1.5 md:px-4 md:py-2 rounded-lg
                 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand
                 ${isActive
-                  ? 'neo-pressed text-brand-strong border-2 border-ink'
+                  ? 'px-pressed text-brand-strong border-2 border-ink'
                   : 'text-ink-soft hover:text-ink border-2 border-transparent'
                 }`}
             >
               {tab.icon}
               <span
-                className={`pixel-font text-[10px] leading-tight ${isActive ? 'text-brand-strong' : 'text-ink-soft'}`}
+                className={`pixel-font text-xs leading-tight ${isActive ? 'text-brand-strong' : 'text-ink-soft'}`}
                 aria-hidden="true"
               >
                 {tab.label}

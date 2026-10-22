@@ -31,7 +31,7 @@ export default function FolderPickerModal({ excludePath, onPick, onClose }) {
                 >
                   <span>📁</span>
                   <span className="text-sm text-gray-800 flex-1">{f.displayName}</span>
-                  <span className="text-[10px] text-gray-400 font-mono">{f.path}</span>
+                  <span className="text-xs text-gray-400 font-mono">{f.path}</span>
                 </button>
               ))}
         </div>

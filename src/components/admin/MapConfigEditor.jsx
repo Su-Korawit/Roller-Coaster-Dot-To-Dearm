@@ -170,10 +170,10 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
                   className="px-3 py-1.5 rounded-lg border border-brand text-brand text-xs font-semibold hover:bg-brand/5"
                 >📁 Browse Storage</button>
                 {jsonPickedMsg && (
-                  <span className="text-[11px] text-emerald-600 font-semibold">✓ โหลดแล้ว</span>
+                  <span className="text-xs text-emerald-600 font-semibold">✓ โหลดแล้ว</span>
                 )}
                 {jsonDirty && !jsonPickedMsg && (
-                  <span className="text-[11px] text-amber-600">• จะอัปโหลดทับตอนกด Save</span>
+                  <span className="text-xs text-amber-600">• จะอัปโหลดทับตอนกด Save</span>
                 )}
                 <input ref={jsonInputRef} type="file" accept=".json" className="hidden"
                   onChange={(e) => handleJsonFile(e.target.files?.[0])} />
@@ -212,7 +212,7 @@ export default function MapConfigEditor({ mapKey, adminUid, onClose, onSaved }) 
                   <div key={name} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-50">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-800">{name}</p>
-                      <p className={`text-[11px] truncate ${tilesets[name] ? 'text-gray-500' : 'text-red-500'}`}>
+                      <p className={`text-xs truncate ${tilesets[name] ? 'text-gray-500' : 'text-red-500'}`}>
                         {tilesets[name] || '⚠ ยังไม่ได้กำหนด asset'}
                       </p>
                     </div>
