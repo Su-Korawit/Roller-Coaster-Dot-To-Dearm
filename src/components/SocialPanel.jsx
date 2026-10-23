@@ -10,6 +10,7 @@ import PublicProfileSheet from './PublicProfileSheet'
 import KawaiiMatchOverlay from './KawaiiMatchOverlay'
 import { mbtiColor } from '../constants/mbtiColors'
 import { shapes } from '../lib/db'
+import { visitRoom } from '../services/visitRoom'
 
 const MATCH_THRESHOLD = 70
 
@@ -478,7 +479,7 @@ function RequestsTab({ pendingRequests, acceptFollowRequest, rejectFollowRequest
 }
 
 // ─── MatchedTab ──────────────────────────────────────────────────────────────
-function MatchedTab({ onUserTap, onOpenChat, following }) {
+function MatchedTab({ onUserTap, onOpenChat, onVisitRoom, following }) {
   const matches = useSocialStore((s) => s.matches)
   const loadMatches = useSocialStore((s) => s.loadMatches)
   const [loading, setLoading] = useState(true)
@@ -551,6 +552,18 @@ function MatchedTab({ onUserTap, onOpenChat, following }) {
             >
               {m.score}%
             </span>
+            {/* Visit the friend's study room (mutual follows only) */}
+            {isMutual && onVisitRoom && (
+              <button
+                type="button"
+                aria-label="เยี่ยมห้อง"
+                title="เยี่ยมห้อง"
+                onClick={(e) => { e.stopPropagation(); onVisitRoom(m.uid) }}
+                className="shrink-0 px-2 h-8 rounded-xl bg-brand/10 text-brand text-xs font-bold hover:bg-brand/20 transition-colors"
+              >
+                เยี่ยมห้อง
+              </button>
+            )}
             {/* Chat button (mutual follows only) */}
             {isMutual && (
               <button
@@ -728,6 +741,7 @@ export default function SocialPanel({ onClose, onOpenChat }) {
             <MatchedTab
               onUserTap={openPublicProfile}
               onOpenChat={onOpenChat}
+              onVisitRoom={async (uid) => { const r = await visitRoom(uid); if (r.ok) onClose?.() }}
               following={following}
             />
           )}

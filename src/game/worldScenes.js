@@ -443,11 +443,12 @@ export class MapScene extends Phaser.Scene {
     if (cfg.room) {
       this._initRoomStyle(layerInfos, roomTier)
       renderRoom(this, () => {
-        const { layout, catalog } = currentRoomView()
+        const { layout, catalog, readOnly } = currentRoomView()
         const focus = useFocusStore.getState()
         return {
           layout,
           catalog,
+          readOnly,
           progress: focus.status === 'running' ? focusProgress({ startedAt: focus.startedAt, plannedMin: focus.plannedMin }) : 0,
           lit: focus.status === 'running',
         }

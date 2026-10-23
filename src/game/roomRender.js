@@ -75,13 +75,14 @@ export function renderRoom(scene, getState) {
   const pot = scene.add.sprite(0, 0, 'focus_art', potFrame(0)).setOrigin(0, 1).setScale(scale).setVisible(false)
 
   const refresh = () => {
-    const { layout, catalog, progress = 0, lit = true } = getState()
+    const { layout, catalog, progress = 0, lit = true, readOnly = false } = getState()
     group.clear(true, true)
     for (const s of furnitureSprites({ layout, catalog, lit })) {
       group.add(scene.add.sprite(s.x * scale, s.y * scale, s.key, s.frame).setOrigin(0, 1).setScale(scale).setDepth(s.depth))
     }
     // Trophy shelf: the last three trees as little coloured markers on its three shelves.
-    const trophies = shelfTrophies(useFocusHistoryStore.getState().sessions)
+    // (a visitor's shelf is not theirs to read: it stays bare)
+    const trophies = readOnly ? [] : shelfTrophies(useFocusHistoryStore.getState().sessions)
     for (const p of layout.placed) {
       if (p.itemId !== 'trophy_shelf') continue
       const bottom = p.y + catalog[p.itemId].footprint[1] * TILE

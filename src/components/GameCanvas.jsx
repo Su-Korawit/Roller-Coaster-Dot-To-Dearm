@@ -24,6 +24,7 @@ import { useFocusStore } from '../stores/useFocusStore'
 import { useRoomUiStore } from '../stores/useRoomUiStore'
 import { useOpenHouseUiStore } from '../stores/useOpenHouseUiStore'
 import { shouldRecordResume } from '../lib/resumeRules'
+import { useVisitStore } from '../stores/useVisitStore'
 
 // `entryMapKey` pins the first map (the guest-usable /openhouse page boots straight into the campus,
 // ignoring the registry and the resume point); `entrySpawnAt` ({ x, y } in map px) stands the avatar
@@ -160,6 +161,8 @@ export default function GameCanvas({ active = true, onOpenView, entryMapKey = nu
       let switching = false
       game.events.on('mapChangeRequested', async ({ mapKey, spawn, spawnAt }) => {
         if (switching) return
+        // Leaving the room (a portal, a warp) ends a visit; the room-to-room restart keeps it.
+        if (mapKey !== 'room') useVisitStore.getState().end()
         switching = true
         setIsSwitchingMap(true)
         try {
@@ -202,6 +205,7 @@ export default function GameCanvas({ active = true, onOpenView, entryMapKey = nu
       game.events.on('toolEntered', ({ route }) => useSchoolWorldStore.getState().requestTool(route))
       // Study room (ADR-0023): the desk seat opens the focus setup; taps edit the room while decorating.
       game.events.on('roomSeatEntered', () => {
+        if (useVisitStore.getState().visiting) return // a friend's desk is not yours to sit at
         if (useAuthStore.getState().user && useFocusStore.getState().status === 'idle') useRoomUiStore.getState().open('focus')
       })
       game.events.on('roomTap', ({ x, y }) => {
@@ -284,6 +288,7 @@ export default function GameCanvas({ active = true, onOpenView, entryMapKey = nu
       cancelled = true
       useOpenHouseUiStore.getState().setWalker(null)
       useOpenHouseUiStore.getState().setCanceller(null)
+      useVisitStore.getState().end()
       useOpenHouseUiStore.getState().clearScene()
       unsubs.forEach((off) => off())
       ro.disconnect()
