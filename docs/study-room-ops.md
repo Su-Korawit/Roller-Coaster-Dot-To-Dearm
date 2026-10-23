@@ -96,3 +96,29 @@ Check: a focus session started with a subject (Plan → อ่าน) adds its v
 without a subject and a practice session write nothing; a bad `subjectKey` is refused with
 `invalid-argument`. Rollback: old clients never send `subjectKey`; the new profile fields
 (`plans[].v2`, `goalHours`) are ignored by older readers, and `focusBySubject` is Functions-owned.
+
+## 8. Part 2: tiers, themes, pets, wardrobe, card, history, visits (ADR-0027)
+
+Order matters: rules and indexes → functions → seed → assets → hosting.
+
+```bash
+firebase deploy --only firestore:rules,firestore:indexes
+firebase deploy --only functions:buyRoomItem,functions:saveRoomLayout,functions:saveAvatar
+GOOGLE_APPLICATION_CREDENTIALS=./serviceAccountKey.json node scripts/seedRoomCatalog.mjs           # dry run
+GOOGLE_APPLICATION_CREDENTIALS=./serviceAccountKey.json node scripts/seedRoomCatalog.mjs --apply   # creates missing rows only
+GOOGLE_APPLICATION_CREDENTIALS=./serviceAccountKey.json node scripts/uploadAssets.mjs
+```
+
+- The seed adds `tier_1..3`, `theme_library_wood|cafe|night_sky`, four pets, `pet_bed`, `trophy_shelf` and eight
+  accessories; it never overwrites a price you tuned. Prices can still be changed in Admin → Rooms.
+- The room map is now `maps/room_v2.json` (20×19 with a shell per tier); old clients keep using `room_v1`.
+- The history index (`focusSessions`: `uid` asc, `endedAt` desc) may take a few minutes to build; until it is
+  ready the history sheet still works (unordered read, sorted on the device).
+
+Check: buy tier 1 → the room widens; tier 2 needs tier 1 first (message "ต้องซื้อห้องขั้นก่อนหน้าก่อน"); a theme
+swaps floor and walls at once; a pet walks, sleeps on the pet bed and sits beside you during a focus session;
+an accessory bought in the shop appears from the wardrobe on the avatar and survives a reload; the card shows no
+name; a visitor sees the friend's room but cannot place, buy or start a focus session.
+
+Rollback: old clients ignore `tier > 0` layouts' extra space (they show the starter shell) and never read `avatar`;
+the functions are additive. Do not delete the new catalog rows while players own them.
