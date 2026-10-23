@@ -1,9 +1,8 @@
 // Phaser half of the room pet (the behaviour is src/game/petBehaviour.js, unit-tested). Draws the
 // active pet from the `room_pets` sheet (7 frames per row, one row per pet, then the heart), keeps
 // it in step with the layout, and reacts to taps. Used by MapScene for maps with `room: true`.
-import { createPet, stepPet, petFloor, petFrame, walkableAt } from './petBehaviour'
+import { createPet, stepPet, petFloor, petFrame, walkableAt, PET_ROWS } from './petBehaviour'
 
-const PET_ROWS = { pet_cat_orange: 0, pet_cat_black: 1, pet_shiba: 2, pet_bunny: 3 }
 const FRAMES_PER_ROW = 7
 const HEART_FRAME = 4 * FRAMES_PER_ROW
 const TAP_RADIUS = 14 // px (unscaled)

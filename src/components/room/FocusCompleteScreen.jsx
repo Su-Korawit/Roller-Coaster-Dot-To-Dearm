@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import Popup from '../ui/Popup'
+import StudygramCard from './StudygramCard'
 import Button from '../ui/Button'
 import TreeSprite from './TreeSprite'
 import { useFocusStore } from '../../stores/useFocusStore'
@@ -17,11 +19,13 @@ export default function FocusCompleteScreen() {
   const result = useFocusStore((s) => s.result)
   const witherReason = useFocusStore((s) => s.witherReason)
   const reset = useFocusStore((s) => s.reset)
+  const [cardOpen, setCardOpen] = useState(false)
 
   if ((status !== 'done' && status !== 'withered') || !result) return null
   const withered = status === 'withered'
 
   return (
+    <>
     <Popup variant="center" size="sm" zIndex={Z_MODAL} onClose={reset}>
       <div className="p-6 flex flex-col items-center gap-3 text-center">
         <h2 className="pixel-font text-lg text-ink">{withered ? 'ต้นไม้เหี่ยวแล้ว' : result.practice ? 'ลองโฟกัสเสร็จแล้ว!' : 'โฟกัสสำเร็จ!'}</h2>
@@ -34,8 +38,16 @@ export default function FocusCompleteScreen() {
             {result.leaves > 0 ? 'ของขวัญต้อนรับ ได้ครั้งเดียวเท่านั้น' : 'ต้องครบ 1 นาทีถึงจะได้ของขวัญ ลองใหม่ได้เลย'}
           </p>
         )}
+        {!withered && !result.practice && <Button onClick={() => setCardOpen(true)}>ทำการ์ดแชร์</Button>}
         <Button onClick={reset}>ปิด</Button>
       </div>
     </Popup>
+    {cardOpen && (
+      <StudygramCard
+        session={{ tree: result.tree, withered, mode: result.mode, verifiedMs: result.verifiedMs, plannedMin: result.plannedMin, endedAt: Date.now() }}
+        onClose={() => setCardOpen(false)}
+      />
+    )}
+    </>
   )
 }

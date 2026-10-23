@@ -12,6 +12,9 @@ const SEAT_OFFSETS = [[14, 0], [-14, 0], [0, 14], [0, -14], [12, 12], [-12, 12],
 const HEART_MS = 1200
 const MAX_CHUNK = 100
 
+// Row of each pet in the generated pets sheet (the heart row follows the pets).
+export const PET_ROWS = { pet_cat_orange: 0, pet_cat_black: 1, pet_shiba: 2, pet_bunny: 3 }
+
 export const PET_FRAMES = { idle: 0, walkA: 1, walkB: 2, groomA: 3, groomB: 4, sleep: 5, sit: 6 }
 
 const inside = (r, x, y) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h
