@@ -5,10 +5,12 @@ import { getMapConfig, DEFAULT_MAP_CONFIGS } from '../utils/mapConfig'
 import { updateSelf } from '../lib/presence'
 import { EMOTE_BY_ID } from '../constants/emotes'
 import { parseMapMeta } from '../utils/tiledMapMeta'
-import { useRoomStore } from '../stores/useRoomStore'
 import { useFocusStore } from '../stores/useFocusStore'
 import { focusProgress } from '../room/focusProgress'
 import { renderRoom } from './roomRender'
+import { layerActive, layerTier, shellBounds, themeGid, tierSpawnName, portalActive } from './roomShell'
+import { currentRoomView } from '../room/currentLayout'
+import { TILE_NAMES as ROOM_TILE_NAMES, FIRSTGID as ROOM_FIRSTGID } from '../../scripts/art/families/room.mjs'
 import { isWalkableAt } from './walkable'
 import { nearestLabel } from '../lib/resumeRules'
 import { renderCampus } from './campusRender'
@@ -246,7 +248,9 @@ export class MapScene extends Phaser.Scene {
 
     const tilesets = map.tilesets.map((ts) => map.addTilesetImage(ts.name, ts.name)).filter(Boolean)
 
-    const layerInfos = map.layers.map((ld, i) => {
+    // The study room map holds a shell per tier; only the owned tier's layers are created.
+    const roomTier = cfg.room ? (currentRoomView().layout.tier ?? 0) : 0
+    const layerInfos = map.layers.filter((ld) => !cfg.room || layerActive(ld.name, roomTier)).map((ld, i) => {
       const layer = map.createLayer(ld.name, tilesets, 0, 0)
       if (layer) {
         layer.setDepth(OVERHEAD_DEPTH[ld.name] ?? i)
@@ -256,8 +260,10 @@ export class MapScene extends Phaser.Scene {
     })
     const layers = layerInfos.map(l => l.layer).filter(Boolean)
 
-    const scaleX   = this.scale.width / map.widthInPixels
-    const scaleY   = this.scale.height / map.heightInPixels
+    // The room is fitted to the owned space, not to the whole (tier 3 sized) map.
+    const fit = cfg.room ? shellBounds(roomTier) : { w: map.widthInPixels, h: map.heightInPixels }
+    const scaleX   = this.scale.width / fit.w
+    const scaleY   = this.scale.height / fit.h
     const mapScale = Math.ceil(Math.max(scaleX, scaleY))
 
     layers.forEach(layer => layer && layer.setScale(mapScale))
@@ -335,7 +341,9 @@ export class MapScene extends Phaser.Scene {
     const meta = rawJson ? parseMapMeta(rawJson) : { spawns: [], portals: [], defaultSpawnName: null, interactions: [], labels: [] }
     this._interactions = meta.interactions ?? []
     this._labels = meta.labels ?? []
-    const spawnName = this.spawnName ?? cfg.defaultSpawn ?? meta.defaultSpawnName
+    const spawnName = cfg.room
+      ? tierSpawnName(this.spawnName ?? cfg.defaultSpawn ?? meta.defaultSpawnName, roomTier, meta.spawns.map((sp) => sp.name))
+      : this.spawnName ?? cfg.defaultSpawn ?? meta.defaultSpawnName
     const spawnObj = meta.spawns.find((s) => s.name === spawnName) ?? meta.spawns[0] ?? null
     const spawnX = (spawnObj ? spawnObj.x : (map.width / 2) * 16) * mapScale
     const spawnY = (spawnObj ? spawnObj.y : (map.height / 2) * 16) * mapScale
@@ -418,8 +426,9 @@ export class MapScene extends Phaser.Scene {
     this._renderLabels(mapScale)
 
     if (cfg.room) {
+      this._initRoomStyle(layerInfos, roomTier)
       renderRoom(this, () => {
-        const { layout, catalog } = useRoomStore.getState()
+        const { layout, catalog } = currentRoomView()
         const focus = useFocusStore.getState()
         return {
           layout,
@@ -469,7 +478,7 @@ export class MapScene extends Phaser.Scene {
     // Portals: one overlap zone per Portals-layer object. Switching maps goes
     // through the game event so GameCanvas can reload the target's data (config/
     // tilesets) into the registry before the next scene's preload runs.
-    meta.portals.forEach((p) => {
+    meta.portals.filter((p) => !cfg.room || portalActive(p, roomTier)).forEach((p) => {
       if (!p.target) return
       const dz = this.add.zone(
         p.x * mapScale + (p.width * mapScale) / 2,
@@ -563,7 +572,8 @@ export class MapScene extends Phaser.Scene {
     this.input.on('pointerup', cancelJoystick)
     this.input.on('pointerupoutside', cancelJoystick)
 
-    this.cameras.main.setBounds(0, 0, worldW, worldH)
+    this.cameras.main.setBounds(0, 0, cfg.room ? fit.w * mapScale : worldW, cfg.room ? fit.h * mapScale : worldH)
+    if (cfg.room) this.cameras.main.setBackgroundColor('#D9D5EA') // outside the owned space
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1)
     const initZoom = this.registry.get('savedZoom') ?? getZoom(this.scale.width)
     this.registry.set('savedZoom', null)
@@ -870,6 +880,45 @@ export class MapScene extends Phaser.Scene {
 
   // Roofs: group the Roof layer's tiles into connected buildings; the one the player is standing
   // under fades out (so the interior shows) and fades back in when they leave.
+  // ── Study room style (tier shell and theme) ──
+  // Theme tiles are remapped in place (tile.index) from the minimal tiles the map holds; a tier change
+  // needs another shell, so the scene restarts itself at the same spot.
+  _initRoomStyle(layerInfos, tier) {
+    this._roomTier = tier
+    this._roomTheme = 'minimal'
+    this._roomRestarting = false
+    this._roomTiles = []
+    for (const { name, layer } of layerInfos) {
+      if (!layer || layerTier(name) === null) continue
+      for (const tile of layer.getTilesWithin(0, 0, layer.width, layer.height, { isNotEmpty: true })) {
+        this._roomTiles.push([tile, tile.index])
+      }
+    }
+    const onChanged = () => this._syncRoomStyle()
+    this.game.events.on('roomChanged', onChanged)
+    this.events.once('shutdown', () => {
+      this.game.events.off('roomChanged', onChanged)
+      this._roomTiles = []
+    })
+    this._syncRoomStyle()
+  }
+
+  _syncRoomStyle() {
+    if (this._roomRestarting) return
+    const { layout } = currentRoomView()
+    if ((layout.tier ?? 0) !== this._roomTier) {
+      this._roomRestarting = true
+      const s = this._mapScale || 1
+      this._cancelWalk?.()
+      this.game.events.emit('mapChangeRequested', { mapKey: this.mapKey, spawn: null, spawnAt: { x: this.player.x / s, y: this.player.y / s } })
+      return
+    }
+    const theme = layout.theme ?? 'minimal'
+    if (theme === this._roomTheme) return
+    this._roomTheme = theme
+    for (const [tile, base] of this._roomTiles) tile.index = themeGid(base, theme, { tileNames: ROOM_TILE_NAMES, firstgid: ROOM_FIRSTGID })
+  }
+
   // ── Open House campus ──
   _initCampus(map, mapScale) {
     this._campus = renderCampus(this, mapScale)

@@ -56,6 +56,25 @@ export const useRoomStore = create((set, get) => ({
     return true
   },
 
+  // Style changes (tier, theme, pet) go through the same layout rules as placement: owned, and every
+  // placed item still inside the owned floor areas. A refusal keeps the layout and says why.
+  applyStyle: (patch) => {
+    const { layout, catalog } = get()
+    const candidate = { ...layout, ...patch }
+    const inventory = useLeavesStore.getState().inventory
+    const { ok, errors } = validateLayout({ layout: candidate, catalog, inventory })
+    if (!ok) {
+      set({ lastError: errors[0]?.code ?? 'invalid' })
+      return false
+    }
+    set({ layout: candidate, lastError: null })
+    roomSync.schedule()
+    return true
+  },
+  setTier: (tier) => get().applyStyle({ tier }),
+  setTheme: (theme) => get().applyStyle({ theme }),
+  setPet: (petId) => get().applyStyle({ petId: petId ?? null }),
+
   // A tap on the room while decorating: place the armed item there, or pick up what is under it.
   tapRoom: (x, y) => {
     const { layout, catalog, selected } = get()
