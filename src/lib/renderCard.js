@@ -19,7 +19,7 @@ const SKY = {
   night: ['#463C74', '#2B2550'],
 }
 const WALL = { minimal: '#FFFFFF', library_wood: '#E8D2B2', cafe: '#FBE6C2', night_sky: '#463C74' }
-const SLOT_AT = { left: [4, 90], centre: [50, 90], right: [99, 90], back: [88, 52] }
+const SLOT_AT = { left: [4, 92], centre: [52, 100], right: [99, 92], back: [88, 60] }
 const SHEETS = { items: '/assets/rc/room_items.png', focus: '/assets/rc/focus.png', pets: '/assets/rc/pets.png' }
 const PET_SIT = 6
 
@@ -76,14 +76,14 @@ function drawScene(ctx, layers, images) {
     } else if (l.kind === 'tree' && images.focus) {
       const row = focusAtlas.sprites[l.species === 'withered' ? 'tree_withered' : `tree_${l.species}`]?.row ?? 0
       const col = l.species === 'withered' ? 0 : Math.min(3, Math.max(0, l.stage ?? 3))
-      ctx.drawImage(images.focus, col * 48, row * 48, 48, 48, 43, 48, 48, 48)
+      ctx.drawImage(images.focus, col * 48, row * 48, 48, 48, 43, 62, 48, 48)
     } else if (l.kind === 'pet' && images.pets && PET_ROWS[l.petId] !== undefined) {
       ctx.drawImage(images.pets, PET_SIT * 16, PET_ROWS[l.petId] * 16, 16, 16, 10, 128, 32, 32)
     } else if (l.kind === 'phone') {
       ctx.fillStyle = LINE
-      ctx.fillRect(95, 131, 24, 14)
+      ctx.fillRect(55, 144, 24, 14)
       ctx.fillStyle = INK
-      ctx.fillRect(96, 132, 22, 12)
+      ctx.fillRect(56, 145, 22, 12)
     }
   }
 }
