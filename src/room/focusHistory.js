@@ -33,3 +33,7 @@ export const shelfTrophies = (list) => recentTrees(list, 3).map((s, shelf) => ({
 
 // The trees on the shelf: the latest real sessions (a practice run is not a trophy).
 export const recentTrees = (list, n) => sortSessions((Array.isArray(list) ? list : []).filter((s) => !s.practice)).slice(0, n)
+
+// A stored session that really ended with a tree. Stale sessions that startFocus closes as
+// `lapsed` carry no tree and no outcome: they are neither trophies nor shareable cards.
+export const isTreeSession = (d) => !!d && typeof d === 'object' && d.reason !== 'lapsed' && typeof d.tree === 'string'

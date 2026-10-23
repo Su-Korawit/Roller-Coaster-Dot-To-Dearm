@@ -25,6 +25,7 @@ import { useRoomUiStore } from '../stores/useRoomUiStore'
 import { useOpenHouseUiStore } from '../stores/useOpenHouseUiStore'
 import { shouldRecordResume } from '../lib/resumeRules'
 import { useVisitStore } from '../stores/useVisitStore'
+import { endVisitOnLeaving } from '../services/visitRoom'
 
 // `entryMapKey` pins the first map (the guest-usable /openhouse page boots straight into the campus,
 // ignoring the registry and the resume point); `entrySpawnAt` ({ x, y } in map px) stands the avatar
@@ -161,8 +162,8 @@ export default function GameCanvas({ active = true, onOpenView, entryMapKey = nu
       let switching = false
       game.events.on('mapChangeRequested', async ({ mapKey, spawn, spawnAt }) => {
         if (switching) return
-        // Leaving the room (a portal, a warp) ends a visit; the room-to-room restart keeps it.
-        if (mapKey !== 'room') useVisitStore.getState().end()
+        // Leaving the room (a portal, a warp) ends a visit and brings presence home; the room-to-room restart keeps it.
+        endVisitOnLeaving(mapKey)
         switching = true
         setIsSwitchingMap(true)
         try {
@@ -195,7 +196,9 @@ export default function GameCanvas({ active = true, onOpenView, entryMapKey = nu
       })
       // Where the player stands, every 2 s while moving: remembered so the app resumes there.
       if (shouldRecordResume(entryRef.current.mapKey)) {
-        game.events.on('playerSampled', ({ mapKey, x, y, facing, label }) => useResumeStore.getState().record(mapKey, { x, y, facing, label }))
+        game.events.on('playerSampled', ({ mapKey, x, y, facing, label }) => {
+          if (shouldRecordResume(null, useVisitStore.getState().visiting !== null)) useResumeStore.getState().record(mapKey, { x, y, facing, label })
+        })
       }
       // School Hub zones (ADR 0018) -> UI state; panels render in SchoolWorldLayer.
       game.events.on('focusSeatEntered', ({ seatId }) => useSchoolWorldStore.getState().openPanel({ type: 'focus', seatId }))

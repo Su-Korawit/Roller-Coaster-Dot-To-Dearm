@@ -60,4 +60,5 @@ export function nearestLabel(zones, x, y, fallback) {
 }
 
 // A page that pins its first map (the guest /openhouse page) must not change where the app boots next.
-export const shouldRecordResume = (pinnedMapKey) => !pinnedMapKey
+// A friend's room is not where the student stands next time either: a visit records nothing.
+export const shouldRecordResume = (pinnedMapKey, visiting = false) => !pinnedMapKey && !visiting

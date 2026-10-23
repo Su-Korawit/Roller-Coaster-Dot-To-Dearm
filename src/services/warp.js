@@ -17,19 +17,19 @@ export async function warpTo(placeId, { resume = true } = {}) {
   // A second warp while the first map is still loading would flip owner/map-key state for a
   // scene that never switches (GameCanvas ignores requests during a switch).
   if (useSchoolWorldStore.getState().isMapSwitching()) return { ok: false, error: 'BUSY' }
-  // Any warp leaves a friend's room: the scene must draw the student's own room again.
-  useVisitStore.getState().end()
 
   if (place.id === 'hub') {
     if (!uid) return { ok: false, error: 'FAILED' }
     const r = await enterSchoolHub(uid)
     if (r.ok) {
+      useVisitStore.getState().end() // only once the warp is certain: a failed one leaves the scene on the friend's room
       useSchoolWorldStore.getState().markMapSwitching()
       emitGuide('warped')
     }
     return r.ok ? { ok: true } : { ok: false, error: r.error }
   }
 
+  useVisitStore.getState().end() // the room and the campus cannot fail: the scene is about to change
   const world = useSchoolWorldStore.getState()
   if (world.inHub) world.setLeft()
   const point = resume ? useResumeStore.getState().points?.[place.mapKey] : null

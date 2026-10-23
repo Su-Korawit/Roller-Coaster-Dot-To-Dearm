@@ -74,7 +74,10 @@ function withRegistryDefaults(key, data) {
     tilesets:     base.editable === false
       ? { ...(data.tilesets ?? {}), ...base.tilesets }
       : data.tilesets ?? base.tilesets ?? {},
-    collision:    data.collision    ?? base.collision ?? {},
+    // A generated room/campus owns its collision layers: a stored (older) list cannot switch walls off.
+    collision:    base.room || base.campus
+      ? { ...(data.collision ?? {}), ...base.collision }
+      : data.collision ?? base.collision ?? {},
     hidden:       data.hidden       ?? base.hidden    ?? {},
     displayName:  data.displayName  ?? base.displayName ?? key,
     order:        data.order        ?? 0,

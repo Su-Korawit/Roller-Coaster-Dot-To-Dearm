@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { layerTier, layerActive, shellBounds, themeGid, tierSpawnName, portalActive } from './roomShell'
+import { layerTier, layerActive, shellBounds, themeGid, tierSpawnName, portalActive, insideOwnedArea } from './roomShell'
 import { TILE_NAMES, FIRSTGID } from '../../scripts/art/families/room.mjs'
 import { TIER_AREAS } from '../room/placement'
 
@@ -83,5 +83,23 @@ describe('object filters', () => {
     expect(portalActive({ tier: 2 }, 2)).toBe(true)
     expect(portalActive({ tier: 1 }, 2)).toBe(false)
     expect(portalActive({ tier: 0 }, 0)).toBe(true)
+  })
+})
+
+describe('insideOwnedArea (review C1: never start outside the owned walls)', () => {
+  it('is true on the floor of an owned area and false in the void around it', () => {
+    expect(insideOwnedArea(0, 88, 72)).toBe(true) // middle of the starter room
+    expect(insideOwnedArea(0, 12 * 16, 4 * 16)).toBe(false) // east of the 11-tile room
+    expect(insideOwnedArea(1, 12 * 16, 4 * 16)).toBe(true)
+    expect(insideOwnedArea(1, 16 * 16, 4 * 16)).toBe(false) // the balcony is not tier 1
+    expect(insideOwnedArea(2, 16 * 16, 4 * 16)).toBe(true)
+    expect(insideOwnedArea(2, 4 * 16, 12 * 16)).toBe(false) // the second room is not tier 2
+    expect(insideOwnedArea(3, 4 * 16, 12 * 16)).toBe(true)
+  })
+  it('rejects junk and an unknown tier is the starter room', () => {
+    expect(insideOwnedArea(0, NaN, 10)).toBe(false)
+    expect(insideOwnedArea(0, undefined, undefined)).toBe(false)
+    expect(insideOwnedArea(9, 88, 72)).toBe(true)
+    expect(insideOwnedArea(9, 12 * 16, 4 * 16)).toBe(false)
   })
 })

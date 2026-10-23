@@ -41,6 +41,15 @@ export async function visitRoom(ownerUid) {
   return { ok: true }
 }
 
+// A portal or warp takes the student out of a friend's room: end the visit and put presence back on
+// their own world (a visit left presence in the friend's), on the map they are walking to.
+export function endVisitOnLeaving(mapKey) {
+  if (mapKey === ROOM_KEY || !useVisitStore.getState().visiting) return
+  const me = useAuthStore.getState().user?.uid ?? null
+  useVisitStore.getState().end()
+  if (me) returnHome(me, mapKey)
+}
+
 export async function leaveVisit() {
   if (!useVisitStore.getState().visiting) return
   const me = useAuthStore.getState().user?.uid ?? null

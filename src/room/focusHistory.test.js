@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { shapeSession, sortSessions, recentTrees, shelfTrophies, SHELF_COLORS, HISTORY_LIMIT } from './focusHistory'
+import { shapeSession, sortSessions, recentTrees, shelfTrophies, SHELF_COLORS, HISTORY_LIMIT, isTreeSession } from './focusHistory'
 
 const raw = (over = {}) => ({ uid: 'u1', startedAt: 1000, endedAt: 5000, verifiedMs: 25 * 60000, mode: 'strict', plannedMin: 25, tree: 'shrub', leaves: 41, withered: false, practice: false, subjectKey: 'a_lv_64', reason: 'ended', ...over })
 
@@ -64,4 +64,18 @@ describe('shelfTrophies', () => {
 
 describe('HISTORY_LIMIT', () => {
   it('is 50', () => expect(HISTORY_LIMIT).toBe(50))
+})
+
+describe('isTreeSession (review I3: a lapsed session is not a tree)', () => {
+  it('counts sessions that ended with a tree', () => {
+    expect(isTreeSession(raw())).toBe(true)
+    expect(isTreeSession(raw({ withered: true }))).toBe(true)
+  })
+  it('skips stale sessions closed as lapsed, and documents without a tree', () => {
+    expect(isTreeSession(raw({ reason: 'lapsed' }))).toBe(false)
+    const { tree, ...noTree } = raw()
+    expect(tree).toBe('shrub')
+    expect(isTreeSession(noTree)).toBe(false)
+    expect(isTreeSession(null)).toBe(false)
+  })
 })

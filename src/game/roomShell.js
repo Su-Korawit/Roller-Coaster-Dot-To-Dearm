@@ -56,3 +56,11 @@ export function tierSpawnName(base, tier, spawnNames) {
 
 // Portals tagged with a tier exist only in that tier's shell.
 export const portalActive = (portal, tier) => portal.tier == null || portal.tier === knownTier(tier)
+
+// Is this point (map px) on the floor of an area the tier owns? The map has no tiles outside the
+// owned walls, so a point out there looks walkable to the tile checks: resume points, restarts and
+// spawns must be validated against the owned areas instead.
+export function insideOwnedArea(tier, x, y) {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return false
+  return TIER_AREAS[knownTier(tier)].some((a) => x >= a.x * TILE && x < (a.x + a.w) * TILE && y >= a.y * TILE && y < (a.y + a.h) * TILE)
+}

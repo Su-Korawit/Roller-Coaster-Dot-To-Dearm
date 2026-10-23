@@ -11,7 +11,7 @@ import { renderRoom } from './roomRender'
 import { renderPet } from './petRender'
 import { createAvatarRender } from './avatarRender'
 import { useLeavesStore } from '../stores/useLeavesStore'
-import { layerActive, layerTier, shellBounds, themeGid, tierSpawnName, portalActive } from './roomShell'
+import { layerActive, layerTier, shellBounds, themeGid, tierSpawnName, portalActive, insideOwnedArea } from './roomShell'
 import { currentRoomView, currentAvatar } from '../room/currentLayout'
 import { TILE_NAMES as ROOM_TILE_NAMES, FIRSTGID as ROOM_FIRSTGID } from '../../scripts/art/families/room.mjs'
 import { isWalkableAt } from './walkable'
@@ -423,7 +423,7 @@ export class MapScene extends Phaser.Scene {
     this._map = map
     this._collisionLayers = layerInfos.filter(({ name, layer }) => layer && cfg.collision?.[name]).map(({ layer }) => layer)
     // Resume point: stand where the player last was, but only if that spot is still walkable.
-    if (this.spawnAt && isWalkableAt(map, this._collisionLayers, this.spawnAt.x, this.spawnAt.y)) {
+    if (this.spawnAt && isWalkableAt(map, this._collisionLayers, this.spawnAt.x, this.spawnAt.y) && (!cfg.room || insideOwnedArea(roomTier, this.spawnAt.x, this.spawnAt.y))) {
       this.player.setPosition(this.spawnAt.x * mapScale, this.spawnAt.y * mapScale)
     }
     this._resumeZones = [

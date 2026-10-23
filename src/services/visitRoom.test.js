@@ -13,7 +13,7 @@ vi.mock('../lib/syncManager', () => ({ returnHome: (...a) => m.returnHome(...a) 
 vi.mock('../stores/useAuthStore', () => ({ useAuthStore: { getState: () => ({ user: m.uid ? { uid: m.uid } : null }) } }))
 vi.mock('./roomApi', () => ({ saveRoomLayout: vi.fn(), buyRoomItem: vi.fn(), claimWelcomePack: vi.fn() }))
 
-const { visitRoom, leaveVisit } = await import('./visitRoom')
+const { visitRoom, leaveVisit, endVisitOnLeaving } = await import('./visitRoom')
 const { useVisitStore } = await import('../stores/useVisitStore')
 const { useWorldStore } = await import('../stores/useWorldStore')
 const { useSchoolWorldStore } = await import('../stores/useSchoolWorldStore')
@@ -106,5 +106,22 @@ describe('leaveVisit', () => {
   it('is harmless when not visiting', async () => {
     await expect(leaveVisit()).resolves.toBeUndefined()
     expect(m.returnHome).not.toHaveBeenCalled()
+  })
+})
+
+describe('endVisitOnLeaving (review I1: a portal out of a friend’s room must not leave you in their world)', () => {
+  it('ends the visit and puts the student’s presence back home on the map they walk to', async () => {
+    await visitRoom('friend-1')
+    m.returnHome.mockClear()
+    endVisitOnLeaving('school_hub')
+    expect(useVisitStore.getState().visiting).toBeNull()
+    expect(m.returnHome).toHaveBeenCalledWith('me', 'school_hub')
+  })
+  it('does nothing for the room itself (the restart keeps the visit) or when not visiting', async () => {
+    endVisitOnLeaving('school_hub')
+    expect(m.returnHome).not.toHaveBeenCalled()
+    await visitRoom('friend-1')
+    endVisitOnLeaving('room')
+    expect(useVisitStore.getState().visiting).not.toBeNull()
   })
 })

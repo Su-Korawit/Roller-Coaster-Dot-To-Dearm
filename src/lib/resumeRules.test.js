@@ -62,6 +62,14 @@ describe('nearestLabel', () => {
   })
 })
 
+describe('shouldRecordResume while visiting (review C1)', () => {
+  it('a visit never records a resume point', () => {
+    expect(shouldRecordResume(null, true)).toBe(false)
+    expect(shouldRecordResume(null, false)).toBe(true)
+    expect(shouldRecordResume('campus', true)).toBe(false)
+  })
+})
+
 describe('shouldRecordResume (review: a pinned page such as /openhouse must not move the boot point of the app)', () => {
   it('records on the normal app and not while the first map is pinned by the page', () => {
     expect(shouldRecordResume(null)).toBe(true)

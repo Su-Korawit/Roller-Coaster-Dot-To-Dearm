@@ -43,6 +43,12 @@ describe('useFocusHistoryStore', () => {
     expect(m.getDocs).toHaveBeenCalledTimes(2)
   })
 
+  it('does not list lapsed sessions or documents without a tree (review I3)', async () => {
+    m.getDocs.mockResolvedValue(snap([row('ok', 5), row('stale', 9, { reason: 'lapsed' }), ['bare', { uid: 'u1', endedAt: 8 }]]))
+    await useFocusHistoryStore.getState().load('u1')
+    expect(useFocusHistoryStore.getState().sessions.map((x) => x.id)).toEqual(['ok'])
+  })
+
   it('an empty history is ready with no sessions, not an error', async () => {
     m.getDocs.mockResolvedValue(snap([]))
     await useFocusHistoryStore.getState().load('u1')

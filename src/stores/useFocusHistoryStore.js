@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { getDocs, query, where, orderBy, limit } from 'firebase/firestore'
 import { cols } from '../lib/db'
-import { shapeSession, sortSessions, HISTORY_LIMIT } from '../room/focusHistory'
+import { shapeSession, sortSessions, isTreeSession, HISTORY_LIMIT } from '../room/focusHistory'
 
 let ticket = 0
 
@@ -25,7 +25,7 @@ export const useFocusHistoryStore = create((set, get) => ({
         snap = await getDocs(query(cols.focusSessions, where('uid', '==', uid), limit(200)))
       }
       if (mine !== ticket) return
-      const sessions = sortSessions(snap.docs.map((d) => shapeSession(d.id, d.data()))).slice(0, HISTORY_LIMIT)
+      const sessions = sortSessions(snap.docs.filter((d) => isTreeSession(d.data())).map((d) => shapeSession(d.id, d.data()))).slice(0, HISTORY_LIMIT)
       set({ status: 'ready', sessions })
     } catch {
       if (mine === ticket) set({ status: 'error' })

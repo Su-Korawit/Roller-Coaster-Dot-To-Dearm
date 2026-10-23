@@ -47,6 +47,16 @@ describe('warpTo', () => {
     expect(useVisitStore.getState().visiting).toBeNull()
   })
 
+  it('a warp that fails keeps the visit (review I2): the scene is still the friend’s room', async () => {
+    m.enterSchoolHub.mockResolvedValue({ ok: false, error: 'NO_SCHOOL' })
+    useVisitStore.getState().begin({ ownerUid: 'f1', layout: { tier: 0, theme: 'minimal', petId: null, placed: [] } })
+    expect((await warpTo('hub')).ok).toBe(false)
+    expect(useVisitStore.getState().visiting).not.toBeNull()
+    m.enterSchoolHub.mockResolvedValue({ ok: true, room: {} })
+    await warpTo('hub')
+    expect(useVisitStore.getState().visiting).toBeNull()
+  })
+
   it('a refused warp (busy) keeps the visit', async () => {
     m.switching = true
     useVisitStore.getState().begin({ ownerUid: 'f1', layout: { tier: 0, theme: 'minimal', petId: null, placed: [] } })
