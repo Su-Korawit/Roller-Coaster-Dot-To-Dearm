@@ -4,7 +4,7 @@
 // transaction. STARTER_ITEMS mirrors src/data/roomCatalogSeed.js (roomLogic.test.js checks).
 
 const WELCOME_LEAVES = 100
-const UNIQUE_KINDS = ['theme', 'tier', 'pet']
+const UNIQUE_KINDS = ['theme', 'tier', 'pet', 'accessory']
 
 const STARTER_ITEMS = {
   desk_basic: 1, chair_basic: 1, bed_basic: 1, bookshelf_basic: 1,

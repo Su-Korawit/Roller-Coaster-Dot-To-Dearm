@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { createRequire } from 'node:module'
-import { validateAvatar, AVATAR_SLOTS, EMPTY_AVATAR } from './avatar'
+import { validateAvatar, sanitizeAvatar, AVATAR_SLOTS, EMPTY_AVATAR } from './avatar'
 import fixtures from './avatarFixtures.json'
 
 const require = createRequire(import.meta.url)
@@ -26,5 +26,21 @@ describe('validateAvatar (client)', () => {
     expect(server.AVATAR_SLOTS).toEqual(AVATAR_SLOTS)
     expect(EMPTY_AVATAR).toEqual({ accessories: {}, outfitHue: null })
     expect(validateAvatar({ avatar: EMPTY_AVATAR, catalog: {}, inventory: {} }).ok).toBe(true)
+  })
+})
+
+describe('sanitizeAvatar (reading what is stored)', () => {
+  it('keeps valid slots and a valid hue', () => {
+    expect(sanitizeAvatar({ accessories: { head: 'acc_cap', back: 'acc_wings' }, outfitHue: 200 })).toEqual({ accessories: { head: 'acc_cap', back: 'acc_wings' }, outfitHue: 200 })
+  })
+  it('drops unknown slots, non-string ids and a bad hue instead of throwing', () => {
+    expect(sanitizeAvatar({ accessories: { hand: 'x', head: 5, face: null, neck: 'acc_scarf' }, outfitHue: 400 })).toEqual({ accessories: { neck: 'acc_scarf' }, outfitHue: null })
+  })
+  it('turns anything that is not an avatar into the empty one', () => {
+    for (const v of [undefined, null, 'x', 5, [], { accessories: [] }]) expect(sanitizeAvatar(v)).toEqual(EMPTY_AVATAR)
+  })
+  it('never shares the empty avatar object', () => {
+    expect(sanitizeAvatar(null)).not.toBe(EMPTY_AVATAR)
+    expect(sanitizeAvatar(null).accessories).not.toBe(EMPTY_AVATAR.accessories)
   })
 })

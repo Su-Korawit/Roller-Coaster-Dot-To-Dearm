@@ -254,10 +254,11 @@ describe('ShopSheet', () => {
     expect(useLeavesStore.getState().leaves).toBe(200)
   })
 
-  it('marks an owned theme as owned and does not offer it again', () => {
+  it('marks the theme in use and does not offer it again', () => {
     render(<ShopSheet onClose={() => {}} />)
     fireEvent.click(screen.getByRole('tab', { name: 'ธีม' }))
-    expect(screen.getByRole('button', { name: 'มีแล้ว ธีมมินิมอล' }).disabled).toBe(true)
+    // the theme in use is marked and cannot be applied again
+    expect(screen.getByRole('button', { name: 'ใช้อยู่' }).disabled).toBe(true)
   })
 
   it('hides items an admin switched off', () => {

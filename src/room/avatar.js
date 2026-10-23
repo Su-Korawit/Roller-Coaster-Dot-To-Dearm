@@ -29,3 +29,13 @@ export function validateAvatar({ avatar, catalog, inventory }) {
   }
   return { ok: errors.length === 0, errors }
 }
+
+// What was stored, made safe to draw: only known slots with a string id, a hue that is an integer
+// 0-359. Anything else becomes the empty avatar (a fresh object each time).
+export function sanitizeAvatar(raw) {
+  if (!isObject(raw) || !isObject(raw.accessories)) return { accessories: {}, outfitHue: null }
+  const accessories = {}
+  for (const slot of AVATAR_SLOTS) if (typeof raw.accessories[slot] === 'string') accessories[slot] = raw.accessories[slot]
+  const hue = Number.isInteger(raw.outfitHue) && raw.outfitHue >= 0 && raw.outfitHue <= 359 ? raw.outfitHue : null
+  return { accessories, outfitHue: hue }
+}
