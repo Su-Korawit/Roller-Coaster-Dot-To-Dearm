@@ -8,8 +8,11 @@ import { parseMapMeta } from '../utils/tiledMapMeta'
 import { useFocusStore } from '../stores/useFocusStore'
 import { focusProgress } from '../room/focusProgress'
 import { renderRoom } from './roomRender'
+import { renderPet } from './petRender'
+import { createAvatarRender } from './avatarRender'
+import { useLeavesStore } from '../stores/useLeavesStore'
 import { layerActive, layerTier, shellBounds, themeGid, tierSpawnName, portalActive } from './roomShell'
-import { currentRoomView } from '../room/currentLayout'
+import { currentRoomView, currentAvatar } from '../room/currentLayout'
 import { TILE_NAMES as ROOM_TILE_NAMES, FIRSTGID as ROOM_FIRSTGID } from '../../scripts/art/families/room.mjs'
 import { isWalkableAt } from './walkable'
 import { nearestLabel } from '../lib/resumeRules'
@@ -216,8 +219,14 @@ export class MapScene extends Phaser.Scene {
     }
 
     // Study room maps draw furniture and the desk pot from these generated sheets.
+    // Everyone's avatar can wear accessories; only the room has furniture and pets.
+    if (!this.textures.exists('avatar_accessories')) {
+      const url = urlFor(r, 'avatar_accessories')
+      const frame = GAME_ASSET_BY_KEY.avatar_accessories?.frameConfig
+      if (url && frame) this.load.spritesheet('avatar_accessories', url, frame)
+    }
     if (r.get('mapConfig')?.room) {
-      for (const key of ['room_items', 'focus_art']) {
+      for (const key of ['room_items', 'focus_art', 'room_pets']) {
         const url = urlFor(r, key)
         const frame = GAME_ASSET_BY_KEY[key]?.frameConfig
         if (url && frame && !this.textures.exists(key)) this.load.spritesheet(key, url, frame)
@@ -332,6 +341,7 @@ export class MapScene extends Phaser.Scene {
       const chosen = this.registry.get('selectedMbti')
       this.mbtiIndex   = Math.max(0, MBTI_TYPES.indexOf(chosen))
       this.currentMbti = MBTI_TYPES[this.mbtiIndex]
+      this.baseMbti = this.currentMbti // the texture family; currentMbti becomes a recoloured copy's key
     }
 
     // Spawn at the named Spawns-layer object (or this map's default), falling
@@ -404,6 +414,11 @@ export class MapScene extends Phaser.Scene {
     this.player.setCollideWorldBounds(true)
     this.player.play(`${this.currentMbti}-idle`)
 
+    // Accessories and outfit hue from the avatar the wardrobe saved.
+    this._avatar = createAvatarRender(this, currentAvatar)
+    const offAvatar = useLeavesStore.subscribe((s, prev) => { if (s.avatar !== prev.avatar) this._avatar?.sync() })
+    this.events.once('shutdown', () => { offAvatar(); this._avatar = null })
+
     applyCollision(this, map, layerInfos, cfg, this.player)
     this._map = map
     this._collisionLayers = layerInfos.filter(({ name, layer }) => layer && cfg.collision?.[name]).map(({ layer }) => layer)
@@ -437,6 +452,17 @@ export class MapScene extends Phaser.Scene {
           lit: focus.status === 'running',
         }
       })
+      this._pet = renderPet(this, () => {
+        const { layout, catalog } = currentRoomView()
+        const s = this._mapScale || 1
+        return {
+          layout,
+          catalog,
+          focusing: useFocusStore.getState().status === 'running',
+          playerAt: { x: this.player.x / s, y: this.player.y / s },
+        }
+      })
+      this.events.once('shutdown', () => { this._pet = null })
     }
 
     if (cfg.campus) this._initCampus(map, mapScale)
@@ -624,6 +650,8 @@ export class MapScene extends Phaser.Scene {
     this._tickRoofs()
     this._tickCritters(delta ?? 16)
     this._campus?.update(this.player.x, this.player.y)
+    this._pet?.update(time, delta)
+    this._avatar?.update()
 
     // ── Interaction zones (checked every 10th frame) ──
     this._zoneTick = (this._zoneTick ?? 0) + 1
@@ -1180,7 +1208,7 @@ export class MapScene extends Phaser.Scene {
         y:      this.player.y,
         dir:    this._currentDir ?? 'down',
         moving: this.isMoving || this.usingWasd || this.joystickActive,
-        mbti:   this.currentMbti,
+        mbti:   this.baseMbti ?? this.currentMbti,
         name:   this.registry.get('selfName') ?? '',
       }
       // RTDB set() throws on undefined, so only include the key while an emote is active.
