@@ -28,6 +28,7 @@ import { hydrateSelectStoreFromFirestore } from '../utils/syncSelectToFirestore'
 import { hydrateSpotify } from './spotifyConnect'
 import { bootstrapStudyRoom } from './studyRoomBootstrap'
 import { useLeavesStore } from '../stores/useLeavesStore'
+import { useFocusHistoryStore } from '../stores/useFocusHistoryStore'
 import { useFocusStore } from '../stores/useFocusStore'
 import { useRoomStore, roomSync } from '../stores/useRoomStore'
 import { resolveConsent } from './consent'
@@ -257,6 +258,7 @@ export function teardownSession() {
   useWorldStore.getState().setMapOwner(null)
   // Study room: nothing of the previous account may show for the next one.
   useLeavesStore.getState().reset()
+  useFocusHistoryStore.getState().reset()
   useFocusStore.getState().reset()
   roomSync.cancel() // a pending save must not run for the next account
   useRoomStore.getState().reset()

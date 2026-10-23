@@ -3,6 +3,7 @@
 // next, and nothing here can block sign-in (the caller wraps it in a step).
 import { useLeavesStore } from '../stores/useLeavesStore'
 import { useRoomStore } from '../stores/useRoomStore'
+import { useFocusHistoryStore } from '../stores/useFocusHistoryStore'
 import { claimWelcomePack } from './roomApi'
 
 const safely = async (name, fn) => {
@@ -22,4 +23,5 @@ export async function bootstrapStudyRoom(uid) {
     if (claimed) await safely('leaves after claim', () => useLeavesStore.getState().hydrate(uid))
   }
   await safely('room', () => useRoomStore.getState().hydrate(uid))
+  await safely('history', () => useFocusHistoryStore.getState().load(uid)) // the trophy shelf
 }

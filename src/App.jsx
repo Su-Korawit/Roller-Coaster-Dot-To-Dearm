@@ -31,6 +31,7 @@ const MusicCallback = lazy(() => import('./pages/MusicCallback'))
 const PrivacyPage = lazy(() => import('./pages/legal/PrivacyPage'))
 const TermsPage = lazy(() => import('./pages/legal/TermsPage'))
 // Dev-only style guide; the import is tree-shaken from production builds.
+const DevRoomHarness = lazy(() => import('./pages/DevRoomHarness'))
 const DevUiKit = import.meta.env.DEV ? lazy(() => import('./pages/DevUiKit')) : null
 
 // Feature-site pages — separate lazy chunks so hub/roadmap/tcas/news/school
@@ -129,6 +130,7 @@ function AppSiteRoutes() {
           </FeatureLayout>
         )}
       />
+      <Route path="/dev/room" element={<DevRoomHarness />} />
       {DevUiKit && <Route path="/dev/ui" element={<DevUiKit />} />}
 
       <Route element={<MobileLayout />}>
