@@ -49,7 +49,7 @@ describe('parseMapMeta', () => {
   it('reads portal target and targetSpawn from properties', () => {
     const m = parseMapMeta(sampleMap)
     expect(m.portals).toEqual([
-      { name: 'p1', x: 10, y: 20, width: 16, height: 16, target: 'cave', targetSpawn: 'entry', tier: undefined },
+      { name: 'p1', x: 10, y: 20, width: 16, height: 16, target: 'cave', targetSpawn: 'entry', tier: null },
     ])
   })
   it('returns empty spawns/portals and null default when layers absent', () => {
