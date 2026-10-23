@@ -7,3 +7,4 @@ const call = async (name, data) => (await httpsCallable(getFunctions(), name)(da
 export const buyRoomItem = (itemId) => call('buyRoomItem', { itemId })
 export const claimWelcomePack = () => call('claimWelcomePack')
 export const saveRoomLayout = (layout) => call('saveRoomLayout', { layout })
+export const saveAvatar = (avatar) => call('saveAvatar', { avatar })

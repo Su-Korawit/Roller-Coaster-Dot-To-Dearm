@@ -609,6 +609,17 @@ describe('study room: roomCatalog + rooms', () => {
   })
 })
 
+describe('avatar (Functions-owned: written only by saveAvatar)', () => {
+  it('BLOCKS a client from writing or seeding avatar, and lets others read it', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(updateDoc(doc(alice, 'users/alice'), { avatar: { accessories: { head: 'acc_cap' }, outfitHue: 1 } }))
+    const dave = testEnv.authenticatedContext('dave').firestore()
+    await assertFails(setDoc(doc(dave, 'users/dave'), { uid: 'dave', avatar: { accessories: {}, outfitHue: null } }))
+    await testEnv.withSecurityRulesDisabled(async (ctx) => setDoc(doc(ctx.firestore(), 'users/erin'), { uid: 'erin', avatar: { accessories: {}, outfitHue: 9 } }))
+    await assertSucceeds(getDoc(doc(dave, 'users/erin')))
+  })
+})
+
 describe('practice reward flag (Functions-owned)', () => {
   it('BLOCKS a client from writing or seeding practiceRewarded', async () => {
     const alice = testEnv.authenticatedContext('alice').firestore()
