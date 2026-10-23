@@ -19,7 +19,7 @@ export default function FocusCompleteScreen() {
   const result = useFocusStore((s) => s.result)
   const witherReason = useFocusStore((s) => s.witherReason)
   const reset = useFocusStore((s) => s.reset)
-  const [cardOpen, setCardOpen] = useState(false)
+  const [cardAt, setCardAt] = useState(null) // when the card was opened (it dates the card's sky)
 
   if ((status !== 'done' && status !== 'withered') || !result) return null
   const withered = status === 'withered'
@@ -38,14 +38,14 @@ export default function FocusCompleteScreen() {
             {result.leaves > 0 ? 'ของขวัญต้อนรับ ได้ครั้งเดียวเท่านั้น' : 'ต้องครบ 1 นาทีถึงจะได้ของขวัญ ลองใหม่ได้เลย'}
           </p>
         )}
-        {!withered && !result.practice && <Button onClick={() => setCardOpen(true)}>ทำการ์ดแชร์</Button>}
+        {!withered && !result.practice && <Button onClick={() => setCardAt(Date.now())}>ทำการ์ดแชร์</Button>}
         <Button onClick={reset}>ปิด</Button>
       </div>
     </Popup>
-    {cardOpen && (
+    {cardAt && (
       <StudygramCard
-        session={{ tree: result.tree, withered, mode: result.mode, verifiedMs: result.verifiedMs, plannedMin: result.plannedMin, endedAt: Date.now() }}
-        onClose={() => setCardOpen(false)}
+        session={{ tree: result.tree, withered, mode: result.mode, verifiedMs: result.verifiedMs, plannedMin: result.plannedMin, endedAt: cardAt }}
+        onClose={() => setCardAt(null)}
       />
     )}
     </>
