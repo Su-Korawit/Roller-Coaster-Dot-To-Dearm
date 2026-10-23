@@ -21,6 +21,7 @@ vi.mock('../stores/useSchoolWorldStore', () => ({
 }))
 
 const { warpTo } = await import('./warp')
+const { useVisitStore } = await import('../stores/useVisitStore')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -35,6 +36,23 @@ describe('warpTo', () => {
     expect(await warpTo('room', { resume: true })).toEqual({ ok: true })
     expect(m.returnHome).toHaveBeenCalledWith('u1', 'room')
     expect(m.requestMapChange).toHaveBeenCalledWith('room', { spawnAt: { x: 40, y: 50 } })
+  })
+
+  it('warping home from a friend’s room ends the visit, so the scene draws the student’s own room', async () => {
+    useVisitStore.getState().begin({ ownerUid: 'f1', layout: { tier: 0, theme: 'minimal', petId: null, placed: [] } })
+    await warpTo('room', { resume: false })
+    expect(useVisitStore.getState().visiting).toBeNull()
+    useVisitStore.getState().begin({ ownerUid: 'f1', layout: { tier: 0, theme: 'minimal', petId: null, placed: [] } })
+    await warpTo('campus')
+    expect(useVisitStore.getState().visiting).toBeNull()
+  })
+
+  it('a refused warp (busy) keeps the visit', async () => {
+    m.switching = true
+    useVisitStore.getState().begin({ ownerUid: 'f1', layout: { tier: 0, theme: 'minimal', petId: null, placed: [] } })
+    await warpTo('room')
+    expect(useVisitStore.getState().visiting).not.toBeNull()
+    useVisitStore.getState().end()
   })
 
   it('goes to the map spawn when not resuming', async () => {
