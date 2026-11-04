@@ -1,13 +1,9 @@
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { SITES } from '../../constants/sites'
+import { siteHref } from './siteHref'
 
 const TOOL_KEYS = ['roadmap', 'tcas', 'news', 'school']
-
-export function siteHref(key) {
-  if (import.meta.env.DEV) return `/?site=${key}`
-  return SITES[key].path
-}
 
 // Shared public-site top nav (design.md §13/§16): wordmark → hub, tool links
 // inline on desktop / behind a neo-card dropdown on mobile, ONE brand-strong
@@ -16,7 +12,7 @@ export default function SiteNav({ currentKey = 'hub' }) {
   const [open, setOpen] = useState(false)
 
   return (
-    <nav className="sticky top-0 z-40 border-b-2 border-ink bg-surface">
+    <nav className="sticky top-0 z-40 border-b-2 border-ink bg-paper">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 md:px-6">
         <a
           href={siteHref('hub')}
@@ -30,7 +26,7 @@ export default function SiteNav({ currentKey = 'hub' }) {
             height={32}
             className="h-8 w-8 rounded border-2 border-ink"
           />
-          <span className="wordmark-font pixel-title text-[11px] md:text-[13px]">I LOVE TCAS</span>
+          <span className="wordmark-font pixel-title text-xs md:text-[13px]">I LOVE TCAS</span>
         </a>
 
         <div className="hidden md:flex items-center gap-1">
@@ -63,7 +59,7 @@ export default function SiteNav({ currentKey = 'hub' }) {
               <ChevronDown size={16} strokeWidth={2.5} aria-hidden="true" />
             </button>
             {open && (
-              <div className="neo-card absolute right-0 top-full z-50 mt-2 min-w-[13rem] py-1">
+              <div className="px-card absolute right-0 top-full z-50 mt-2 min-w-[13rem] py-1">
                 {TOOL_KEYS.map((key) => (
                   <a
                     key={key}
@@ -79,7 +75,7 @@ export default function SiteNav({ currentKey = 'hub' }) {
 
           <a
             href={siteHref('app')}
-            className="neo-btn thai-font rounded-lg bg-brand-strong px-4 py-2 text-sm font-semibold text-white"
+            className="px-btn thai-font rounded-lg bg-brand-strong px-4 py-2 text-sm font-semibold text-white"
           >
             เข้าแอป
           </a>

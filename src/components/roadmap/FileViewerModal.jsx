@@ -49,12 +49,12 @@ export default function FileViewerModal({ url, name, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         <FileText size={16} className="text-brand shrink-0" />
-        <span className="pixel-font text-[11px] text-ink font-bold truncate flex-1">{name}</span>
+        <span className="pixel-font text-xs text-ink font-bold truncate flex-1">{name}</span>
         <button
           type="button"
           onClick={download}
           aria-label="ดาวน์โหลดไฟล์"
-          className="neo-btn w-9 h-9 rounded-lg flex items-center justify-center text-ink-soft hover:text-brand"
+          className="px-btn w-9 h-9 rounded-lg flex items-center justify-center text-ink-soft hover:text-brand"
         >
           {downloading ? <Loader size={16} className="animate-spin" /> : <Download size={16} />}
         </button>
@@ -63,7 +63,7 @@ export default function FileViewerModal({ url, name, onClose }) {
           target="_blank"
           rel="noopener noreferrer"
           aria-label="เปิดในแท็บใหม่"
-          className="neo-btn w-9 h-9 rounded-lg flex items-center justify-center text-ink-soft hover:text-brand"
+          className="px-btn w-9 h-9 rounded-lg flex items-center justify-center text-ink-soft hover:text-brand"
         >
           <ExternalLink size={16} />
         </a>
@@ -71,7 +71,7 @@ export default function FileViewerModal({ url, name, onClose }) {
           type="button"
           onClick={onClose}
           aria-label="ปิด"
-          className="neo-btn w-9 h-9 rounded-lg flex items-center justify-center text-ink-soft hover:text-ink"
+          className="px-btn w-9 h-9 rounded-lg flex items-center justify-center text-ink-soft hover:text-ink"
         >
           <X size={18} strokeWidth={2.5} />
         </button>
@@ -83,8 +83,8 @@ export default function FileViewerModal({ url, name, onClose }) {
         ) : (
           <div className="h-full flex flex-col items-center justify-center gap-3 text-center px-6">
             <FileText size={48} strokeWidth={1.5} className="text-white/50" />
-            <p className="pixel-font text-[11px] text-white">ไฟล์ {fileExt(name)} ยังไม่รองรับการเปิดดูในแอป</p>
-            <p className="pixel-font text-[10px] text-white/60">กด Download หรือเปิดในแท็บใหม่แทน</p>
+            <p className="pixel-font text-xs text-white">ไฟล์ {fileExt(name)} ยังไม่รองรับการเปิดดูในแอป</p>
+            <p className="pixel-font text-xs text-white/60">กด Download หรือเปิดในแท็บใหม่แทน</p>
           </div>
         )}
       </div>

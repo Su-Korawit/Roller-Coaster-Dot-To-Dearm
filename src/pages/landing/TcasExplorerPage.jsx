@@ -57,9 +57,9 @@ export default function TcasExplorerPage() {
     <main data-testid="tcas-explorer" className="min-h-dvh w-full bg-mist overflow-x-hidden">
       <SiteNav currentKey="tcas" />
 
-      <header className="pixel-checker border-b-2 border-ink bg-surface px-6 py-12 md:py-16">
+      <header className="pixel-checker border-b-2 border-ink bg-paper px-6 py-12 md:py-16">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="wordmark-font mb-4 text-[10px] uppercase text-brand-strong md:text-xs">
+          <p className="wordmark-font mb-4 text-xs uppercase text-brand-strong md:text-xs">
             {SITES.tcas.pixelName}
           </p>
           <h1 className="thai-font text-3xl font-extrabold leading-tight text-ink md:text-4xl">
@@ -74,7 +74,7 @@ export default function TcasExplorerPage() {
           {BENEFITS.map((b) => {
             const Icon = b.icon
             return (
-              <div key={b.title} className="neo-card p-4">
+              <div key={b.title} className="px-card p-4">
                 <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg border-2 border-ink bg-brand-soft">
                   <Icon size={20} strokeWidth={2.5} className="text-brand-strong" aria-hidden="true" />
                 </span>
@@ -85,7 +85,7 @@ export default function TcasExplorerPage() {
           })}
         </div>
 
-        <div className="mx-auto max-w-3xl neo-card p-4 md:p-6">
+        <div className="mx-auto max-w-3xl px-card p-4 md:p-6">
           <label className="thai-font text-sm font-semibold text-ink block mb-2">
             ค้นหามหาวิทยาลัย / คณะ / หลักสูตร
           </label>
@@ -120,7 +120,7 @@ export default function TcasExplorerPage() {
                       aria-label={uni.university_name_th}
                     >
                       <UniversityLogo uni={uni} />
-                      <p className="thai-font text-[10px] text-ink mt-2 line-clamp-2">{uni.university_name_th}</p>
+                      <p className="thai-font text-xs text-ink mt-2 line-clamp-2">{uni.university_name_th}</p>
                     </button>
                   ))}
                 </div>
@@ -170,7 +170,7 @@ export default function TcasExplorerPage() {
               ) : (
                 <div className="space-y-2">
                   {filteredPrograms.map((prog) => (
-                    <div key={prog.program_id} className="neo-card p-4">
+                    <div key={prog.program_id} className="px-card p-4">
                       <p className="thai-font text-sm font-semibold text-ink">{prog.program_name_th}</p>
                       {prog.field_name_th && (
                         <p className="thai-font text-xs text-ink-soft mt-1">{prog.field_name_th}</p>

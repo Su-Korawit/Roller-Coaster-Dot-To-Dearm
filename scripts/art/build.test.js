@@ -39,6 +39,24 @@ describe('buildFamily', () => {
     expect(sheet.getPixel(4, 0).slice(0, 3)).toEqual([255, 255, 255])
   })
 
+  it('lays sprites out in a grid when the family asks for columns', () => {
+    const fake = {
+      name: 'grid', frameW: 4, frameH: 4, columns: 2,
+      sprites: {
+        a: { frames: 1, draw: (c) => c.rect(0, 0, 4, 4, '#5c4e92') },
+        b: { frames: 1, draw: (c) => c.rect(0, 0, 4, 4, '#FFFFFF') },
+        c: { frames: 1, draw: (c) => c.rect(0, 0, 4, 4, '#F4F3F9') },
+      },
+    }
+    const { sheet, atlas } = buildFamily(fake)
+    expect(sheet.w).toBe(8)
+    expect(sheet.h).toBe(8)
+    expect(atlas.columns).toBe(2)
+    expect(atlas.sprites.c).toEqual({ col: 0, row: 1, frames: 1 })
+    expect(sheet.getPixel(4, 0).slice(0, 3)).toEqual([255, 255, 255])
+    expect(sheet.getPixel(0, 4).slice(0, 3)).toEqual([0xf4, 0xf3, 0xf9])
+  })
+
   it('keeps every icon on the soft pixel palette', () => {
     expect(lintPalette(buildFamily(icons).sheet).ok).toBe(true)
   })

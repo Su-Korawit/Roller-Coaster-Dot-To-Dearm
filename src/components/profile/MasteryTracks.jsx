@@ -120,11 +120,11 @@ export default function MasteryTracks() {
     <>
       <div>
         <div className="flex items-center justify-between mb-2">
-          <p className="pixel-font text-[10px] text-ink-soft">Journey of Mastery</p>
+          <p className="pixel-font text-xs text-ink-soft">Journey of Mastery</p>
           <button
             onClick={generateRoadmap}
             disabled={isGenerating}
-            className="flex items-center gap-1.5 bg-linear-to-r from-purple-500 to-pink-500 text-white text-[10px] rounded-xl px-3 py-1.5 font-semibold disabled:opacity-60 disabled:cursor-not-allowed transition-opacity"
+            className="flex items-center gap-1.5 bg-linear-to-r from-purple-500 to-pink-500 text-white text-xs rounded-xl px-3 py-1.5 font-semibold disabled:opacity-60 disabled:cursor-not-allowed transition-opacity"
           >
             {isGenerating ? (
               <>
@@ -167,19 +167,19 @@ export default function MasteryTracks() {
                           style={{ height: isPinned ? '96px' : '80px' }}
                         >
                           {isPinned && (
-                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-purple-500 text-white text-[7px] rounded-full px-1.5 py-0.5 whitespace-nowrap z-10 pixel-font">
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-purple-500 text-white text-xs rounded-full px-1.5 py-0.5 whitespace-nowrap z-10 pixel-font">
                               Focus
                             </div>
                           )}
                           <div
                             {...provided.dragHandleProps}
-                            className="absolute top-1 right-1 text-ink-soft/50 hover:text-ink-soft cursor-grab active:cursor-grabbing leading-none text-[10px] select-none"
+                            className="absolute top-1 right-1 text-ink-soft/50 hover:text-ink-soft cursor-grab active:cursor-grabbing leading-none text-xs select-none"
                           >
                             ⠿
                           </div>
                           <button
                             onClick={() => setActiveMasteryBlockId(isPinned ? null : item.id)}
-                            className={`absolute bottom-1 left-1 text-[11px] leading-none ${
+                            className={`absolute bottom-1 left-1 text-xs leading-none ${
                               isPinned ? 'text-brand-strong' : 'text-ink-soft/50 hover:text-brand'
                             }`}
                             title={isPinned ? 'Unpin block' : 'Set as active focus'}
@@ -194,7 +194,7 @@ export default function MasteryTracks() {
                               {item.title || '—'}
                             </span>
                             {item.progress !== undefined && (
-                              <span className="text-[8px] text-purple-600 font-semibold">{item.progress}%</span>
+                              <span className="text-xs text-purple-600 font-semibold">{item.progress}%</span>
                             )}
                           </button>
                         </div>
@@ -234,12 +234,12 @@ export default function MasteryTracks() {
                     style={{ width: `${Math.min(100, liveBlock.progress || 0)}%` }}
                   />
                 </div>
-                <span className="text-[10px] text-purple-600 font-semibold">{liveBlock.progress || 0}%</span>
+                <span className="text-xs text-purple-600 font-semibold">{liveBlock.progress || 0}%</span>
               </div>
             )}
             {notes.length > 0 && (
               <div className="space-y-1.5">
-                <p className="pixel-font text-[10px] text-ink-soft uppercase tracking-wide">Progress History</p>
+                <p className="pixel-font text-xs text-ink-soft uppercase tracking-wide">Progress History</p>
                 {notes.map((note, i) => (
                   <div key={i} className="bg-purple-50 rounded-xl px-3 py-2">
                     <p className="thai-font text-xs text-ink-soft leading-snug">{note}</p>
@@ -269,14 +269,14 @@ export default function MasteryTracks() {
             value={journeyEdit.title}
             onChange={(e) => setJourneyEdit({ ...journeyEdit, title: e.target.value })}
             placeholder="Title"
-            className="neo-input thai-font px-4 py-3 text-sm w-full"
+            className="px-input thai-font px-4 py-3 text-sm w-full"
           />
           <textarea
             value={journeyEdit.desc}
             onChange={(e) => setJourneyEdit({ ...journeyEdit, desc: e.target.value })}
             placeholder="Description"
             rows={4}
-            className="neo-input thai-font px-4 py-3 text-sm w-full resize-none"
+            className="px-input thai-font px-4 py-3 text-sm w-full resize-none"
           />
           <button
             onClick={handleSaveJourney}

@@ -59,7 +59,7 @@ export default function HeroSection({ gamePreview, loading }) {
         <button
           onClick={onPlay}
           aria-label="Play"
-          className="neo-btn mt-16 pixel-font text-[10px] text-white rounded-xl px-8 py-3 bg-brand-strong flex items-center gap-2"
+          className="px-btn mt-16 pixel-font text-xs text-white rounded-xl px-8 py-3 bg-brand-strong flex items-center gap-2"
         >
           <Play size={14} strokeWidth={2.5} aria-hidden="true" /> PLAY
         </button>
@@ -70,7 +70,7 @@ export default function HeroSection({ gamePreview, loading }) {
         className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/40 animate-scroll-hint"
         aria-hidden="true"
       >
-        <span className="pixel-font text-[10px] tracking-widest">SCROLL</span>
+        <span className="pixel-font text-xs tracking-widest">SCROLL</span>
         <span className="text-lg">↓</span>
       </div>
     </section>

@@ -79,18 +79,18 @@ export default function ShopChatView({ onBack }) {
   }
 
   return (
-    <div className="flex h-full flex-col bg-surface">
+    <div className="flex h-full flex-col bg-paper">
       {/* Top bar */}
       <div className="rpg-plank flex items-center gap-3 px-4 py-3">
         <button
           onClick={onBack}
-          className="neo-btn rounded-lg bg-surface px-2 py-0.5 text-ink"
+          className="px-btn rounded-lg bg-paper px-2 py-0.5 text-ink"
         >
           ←
         </button>
         <span className="text-xl">🛒</span>
         <div>
-          <p className="pixel-font text-[10px] text-ink">SHOP AI</p>
+          <p className="pixel-font text-xs text-ink">SHOP AI</p>
           <p className="thai-font text-xs text-ink/50">ซื้อเหรียญด้วย PromptPay</p>
         </div>
       </div>
@@ -107,8 +107,8 @@ export default function ShopChatView({ onBack }) {
                   <div
                     className={`max-w-[78%] rounded-2xl px-4 py-2 text-sm ${
                       isUser
-                        ? 'rounded-tr-none border-2 border-edge/60 bg-brand text-white'
-                        : 'neo-slab rounded-tl-none text-ink'
+                        ? 'rounded-tr-none border-2 border-line/60 bg-brand text-white'
+                        : 'px-slab rounded-tl-none text-ink'
                     }`}
                   >
                     <p className="thai-font leading-relaxed">{msg.text}</p>
@@ -148,8 +148,8 @@ export default function ShopChatView({ onBack }) {
           {sending && (
             <div className="flex justify-start">
               <span className="mr-2 mt-1 text-lg">🛒</span>
-              <div className="neo-slab rounded-tl-none px-4 py-2">
-                <span className="pixel-font text-[9px] text-ink/60 animate-pulse">...</span>
+              <div className="px-slab rounded-tl-none px-4 py-2">
+                <span className="pixel-font text-xs text-ink/60 animate-pulse">...</span>
               </div>
             </div>
           )}
@@ -160,8 +160,8 @@ export default function ShopChatView({ onBack }) {
 
       {/* Product grid */}
       {products.length > 0 && (
-        <div className="border-t-2 border-edge/40 bg-paper px-4 py-3">
-          <p className="pixel-font mb-2 text-[8px] text-ink/50">COIN PACKAGES</p>
+        <div className="border-t-2 border-line/40 bg-paper px-4 py-3">
+          <p className="pixel-font mb-2 text-xs text-ink/50">COIN PACKAGES</p>
           <div className="grid grid-cols-3 gap-2">
             {products.map((p) => (
               <ProductCard key={p.id} product={p} onBuy={handleBuy} disabled={buying} />
@@ -174,7 +174,7 @@ export default function ShopChatView({ onBack }) {
       <UnlockSection />
 
       {/* Chat input */}
-      <div className="border-t-2 border-edge/40 bg-hud px-4 py-3">
+      <div className="border-t-2 border-line/40 bg-paper px-4 py-3">
         <div className="flex items-center gap-2">
           <textarea
             ref={textareaRef}
@@ -184,13 +184,13 @@ export default function ShopChatView({ onBack }) {
             onKeyDown={handleKeyDown}
             placeholder="พิมพ์ข้อความ..."
             disabled={sending}
-            className="neo-input thai-font flex-1 px-3 py-2 text-sm text-ink placeholder-ink/40 disabled:opacity-50 resize-none leading-relaxed"
+            className="px-input thai-font flex-1 px-3 py-2 text-sm text-ink placeholder-ink/40 disabled:opacity-50 resize-none leading-relaxed"
             style={{ maxHeight: 120, overflowY: 'auto' }}
           />
           <button
             onClick={() => handleSend(input)}
             disabled={!input.trim() || sending}
-            className="neo-btn rpg-btn-primary rounded-xl px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+            className="px-btn rpg-btn-primary rounded-xl px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
           >
             ส่ง
           </button>

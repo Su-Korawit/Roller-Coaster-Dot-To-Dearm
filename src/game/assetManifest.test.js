@@ -36,3 +36,22 @@ describe('localMapPath', () => {
     expect(localMapPath('Grass')).toBe(null)
   })
 })
+
+describe('School Hub tileset', () => {
+  it('is declared as a Storage-backed image with a local fallback', () => {
+    const entry = GAME_ASSETS.find((a) => a.key === 'School Hub Tiles')
+    expect(entry).toMatchObject({
+      type: 'image',
+      storagePath: 'rc/tilesets/school_hub_tiles.png',
+      localPath: '/assets/rc/school_hub_tiles.png',
+    })
+  })
+})
+
+describe('School Hub map path', () => {
+  it('is versioned so a stale copy of the old map in Storage can never be paired with the new tileset', () => {
+    const entry = GAME_ASSETS.find((a) => a.key === 'school_hub')
+    expect(entry.storagePath).toBe('maps/school_hub_v2.json')
+    expect(entry.localPath).toBe('/maps/school_hub.json')
+  })
+})

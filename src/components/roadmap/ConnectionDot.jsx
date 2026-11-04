@@ -29,14 +29,14 @@ export default function ConnectionDot({ type, position, id }) {
     ? '!bg-brand ring-2 ring-brand/40 shadow-[0_0_8px_2px_rgba(167,139,218,0.6)]'
     : connected
       ? '!bg-lime shadow-[0_0_8px_2px_rgba(192,212,112,0.85)]'
-      : '!bg-wood-dark'
+      : '!bg-hairline'
 
   return (
     <Handle
       type={type}
       position={position}
       id={id}
-      className={`!w-3 !h-3 !border-surface !border-2 ${tone}`}
+      className={`!w-3 !h-3 !border-paper !border-2 ${tone}`}
     />
   )
 }

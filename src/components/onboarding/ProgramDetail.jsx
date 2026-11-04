@@ -59,7 +59,7 @@ function RoundCard({ round, expanded, onToggle }) {
     ? `${projects.length > 1 ? `${projects.length} โครงการ · ` : ''}รับรวม ${round.seats_total} คน`
     : (round.quota != null ? `โควตา ${round.quota}% · GPA ขั้นต่ำ ${round.minGpa ?? round.min_gpa ?? '—'}` : null)
   return (
-    <div className="rounded-xl border-2 border-edge/50 bg-surface overflow-hidden">
+    <div className="rounded-xl border-2 border-line/50 bg-paper overflow-hidden">
       <button
         type="button"
         onClick={onToggle}
@@ -73,7 +73,7 @@ function RoundCard({ round, expanded, onToggle }) {
         <span className="text-ink-soft">{expanded ? '▲' : '▼'}</span>
       </button>
       {expanded && (
-        <div className="border-t border-edge/30 px-4 py-3 space-y-3">
+        <div className="border-t border-line/30 px-4 py-3 space-y-3">
           {projects.map((pr, i) => <ProjectBlock key={pr.project_id ?? i} project={pr} />)}
           {criteria.length > 0 && <ScoreBars scores={criteria} />}
           {projects.length === 0 && criteria.length === 0 && (
@@ -119,18 +119,18 @@ export default function ProgramDetail({ programId, programName, onBack, onConfir
         )}
       </div>
 
-      <div className="sticky bottom-0 bg-hud border-t-2 border-edge px-6 py-3 flex gap-3">
+      <div className="sticky bottom-0 bg-paper border-t-2 border-line px-6 py-3 flex gap-3">
         <button
           type="button"
           onClick={onBack}
-          className="neo-btn flex-1 rounded-xl border-2 border-edge bg-surface py-3 thai-font text-sm text-ink"
+          className="px-btn flex-1 rounded-xl border-2 border-line bg-paper py-3 thai-font text-sm text-ink"
         >
           ย้อนกลับ
         </button>
         <button
           type="button"
           onClick={onConfirm}
-          className="neo-btn flex-1 rounded-xl bg-brand-strong py-3 thai-font text-sm font-semibold text-white"
+          className="px-btn flex-1 rounded-xl bg-brand-strong py-3 thai-font text-sm font-semibold text-white"
         >
           เลือกแล้ว
         </button>

@@ -23,16 +23,16 @@ function TasksPage() {
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           placeholder="เพิ่มงานใหม่"
-          className="neo-input thai-font flex-1 px-3 py-2 text-sm"
+          className="px-input thai-font flex-1 px-3 py-2 text-sm"
         />
-        <button type="submit" className="neo-btn rounded-lg bg-brand-strong px-4 py-2 text-sm font-semibold text-white">
+        <button type="submit" className="px-btn rounded-lg bg-brand-strong px-4 py-2 text-sm font-semibold text-white">
           Add
         </button>
       </form>
 
       <ul className="space-y-2">
         {tasks.map((task) => (
-          <li key={task.id} className="neo-card rounded-lg p-3">
+          <li key={task.id} className="px-card rounded-lg p-3">
             <label className="flex items-center gap-2 text-sm text-ink thai-font">
               <input
                 type="checkbox"

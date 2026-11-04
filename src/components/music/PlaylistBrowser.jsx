@@ -50,7 +50,7 @@ export default function PlaylistBrowser() {
           <button
             onClick={() => playAll(openPl)}
             aria-label="เล่นทั้งหมด"
-            className="pixel-font text-[9px] text-white bg-brand rounded-full px-3 py-1.5 flex items-center gap-1"
+            className="pixel-font text-xs text-white bg-brand rounded-full px-3 py-1.5 flex items-center gap-1"
           >
             <Play size={12} /> เล่นทั้งหมด
           </button>

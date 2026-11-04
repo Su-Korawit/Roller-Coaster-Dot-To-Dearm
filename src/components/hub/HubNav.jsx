@@ -4,7 +4,7 @@ import { ChevronDown, Search } from 'lucide-react'
 import { CATEGORIES } from '../../content/schema'
 import { appLink } from '../../content/htmlPages'
 import { SITES } from '../../constants/sites'
-import { siteHref } from '../landing/SiteNav'
+import { siteHref } from '../landing/siteHref'
 
 const TOOL_KEYS = ['roadmap', 'tcas', 'news', 'school']
 
@@ -18,7 +18,7 @@ export default function HubNav() {
       <div className="mx-auto flex h-[60px] max-w-6xl items-center gap-4 px-4 md:px-6">
         <Link to="/" className="flex shrink-0 items-center gap-2" aria-label="I LOVE TCAS หน้าแรก">
           <img src="/brand/logo-96.png" alt="" width={32} height={32} className="h-8 w-8 rounded-ui border-2 border-line" />
-          <span className="wordmark-font hidden text-[11px] text-ink sm:inline md:text-[12px]">I LOVE TCAS</span>
+          <span className="wordmark-font hidden text-xs text-ink sm:inline md:text-[12px]">I LOVE TCAS</span>
         </Link>
 
         <div className="ml-2 hidden flex-1 items-center gap-1 lg:flex">

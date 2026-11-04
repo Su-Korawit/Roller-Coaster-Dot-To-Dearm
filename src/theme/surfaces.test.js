@@ -6,9 +6,10 @@ const tokens = readThemeTokens(css)
 
 describe('Soft Pixel surfaces', () => {
   it.each(['card', 'btn', 'slab', 'sheet', 'pressed', 'input'])(
-    'pairs .neo-%s with its px alias',
+    'defines .px-%s and no .neo alias for it',
     (n) => {
-      expect(css).toMatch(new RegExp(`\\.px-${n}\\s*,\\s*\\.neo-${n}\\b`))
+      expect(css).toMatch(new RegExp('[.]px-' + n + '\\s*[,{:]'))
+      expect(css).not.toContain('.neo-' + n)
     },
   )
 
@@ -28,7 +29,7 @@ describe('Soft Pixel surfaces', () => {
 
   it('draws input borders at a visible (>=3:1) line colour', () => {
     expect(css).toMatch(
-      /\.px-input,\s*\.neo-input\s*{[^}]*border:\s*2px solid var\(--color-line-soft\)/,
+      /\.px-input\s*{[^}]*border:\s*2px solid var\(--color-line-soft\)/,
     )
   })
 

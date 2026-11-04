@@ -5,7 +5,7 @@ export default function GamePreview({ gamePreview }) {
   return (
     <section className="px-6 py-14">
       <h2 className="pixel-font text-center text-sm md:text-lg text-ink mb-8">GAME PREVIEW</h2>
-      <div className="mx-auto max-w-3xl neo-card overflow-hidden p-2">
+      <div className="mx-auto max-w-3xl px-card overflow-hidden p-2">
         {mediaType === 'video' ? (
           <video
             src={mediaUrl}

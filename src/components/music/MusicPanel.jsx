@@ -8,7 +8,7 @@ export default function MusicPanel({ onClose, tracks, currentTrackIdx, isPlaying
   const [tab, setTab] = useState('background')
   return (
     <div
-      className="absolute bottom-28 left-1/2 -translate-x-1/2 w-[90%] max-w-sm md:max-w-md neo-card flex flex-col overflow-hidden max-h-[65vh]"
+      className="absolute bottom-28 left-1/2 -translate-x-1/2 w-[90%] max-w-sm md:max-w-md px-card flex flex-col overflow-hidden max-h-[65vh]"
       style={{ zIndex: Z_NAV }}
     >
       <div className="flex items-center border-b-2 border-ink shrink-0">
@@ -16,7 +16,7 @@ export default function MusicPanel({ onClose, tracks, currentTrackIdx, isPlaying
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`flex-1 py-2.5 pixel-font text-[9px] ${tab === t.key ? 'text-brand-strong bg-brand-soft' : 'text-ink-soft'}`}
+            className={`flex-1 py-2.5 pixel-font text-xs ${tab === t.key ? 'text-brand-strong bg-brand-soft' : 'text-ink-soft'}`}
           >
             {t.label}
           </button>

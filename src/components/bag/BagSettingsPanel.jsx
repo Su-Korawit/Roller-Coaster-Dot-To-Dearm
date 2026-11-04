@@ -15,11 +15,11 @@ export default function BagSettingsPanel({ visibleCategories, onChange, onClose 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
       <div
-        className="neo-card w-full max-w-sm p-5 space-y-4"
+        className="px-card w-full max-w-sm p-5 space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h2 className="pixel-font text-[10px] text-ink">Bag Settings</h2>
+          <h2 className="pixel-font text-xs text-ink">Bag Settings</h2>
           <button type="button" onClick={onClose} className="text-sm text-brand">ปิด</button>
         </div>
         <p className="text-xs text-ink-soft">เลือกไอคอนที่แสดงในแถบด้านซ้าย</p>

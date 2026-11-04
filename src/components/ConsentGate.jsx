@@ -39,7 +39,7 @@ export default function ConsentGate() {
       className="relative h-dvh w-full overflow-hidden flex items-center justify-center p-5 thai-font"
     >
       <SceneBackdrop />
-      <div className="relative z-10 neo-card bg-paper w-full max-w-md p-5 flex flex-col gap-3 text-sm text-ink animate-pop">
+      <div className="relative z-10 px-card bg-paper w-full max-w-md p-5 flex flex-col gap-3 text-sm text-ink animate-pop">
         <h1 className="pixel-font text-[12px] text-brand-strong">ก่อนใช้งานต่อ</h1>
         <p>
           เรามีการปรับนโยบายความเป็นส่วนตัวและข้อกำหนดการใช้งาน กรุณาอ่านและยืนยันเพื่อใช้ I LOVE TCAS ต่อ
@@ -64,7 +64,7 @@ export default function ConsentGate() {
         <button
           onClick={accept}
           disabled={!terms || !age || busy}
-          className="neo-btn bg-brand text-white py-3 rounded-xl font-semibold disabled:opacity-40"
+          className="px-btn bg-brand text-white py-3 rounded-xl font-semibold disabled:opacity-40"
         >
           {busy ? 'กำลังบันทึก…' : 'ยอมรับและใช้งานต่อ'}
         </button>

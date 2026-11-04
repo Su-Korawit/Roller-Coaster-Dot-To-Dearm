@@ -19,7 +19,7 @@ export default function HowToPlay() {
             <div className="pixel-font relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-strong text-sm text-white">
               {i + 1}
             </div>
-            <div className="neo-card flex-1 p-5">
+            <div className="px-card flex-1 p-5">
               <div className="mb-1 flex items-center gap-2">
                 <span className="text-xl" aria-hidden="true">{s.icon}</span>
                 <p className="thai-font font-bold text-ink">{s.th}</p>

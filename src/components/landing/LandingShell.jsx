@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { SITES } from '../../constants/sites'
-import SiteNav, { siteHref } from './SiteNav'
+import SiteNav from './SiteNav'
+import { siteHref } from './siteHref'
 import WelcomeFooter from '../welcome/WelcomeFooter'
 
 // Feature-landing skeleton per design.md §13: SiteNav → split hero (copy left,
@@ -24,10 +25,10 @@ export default function LandingShell({
       <SiteNav currentKey={siteKey} />
 
       {/* Split hero */}
-      <header className="border-b-2 border-ink bg-surface">
+      <header className="border-b-2 border-ink bg-paper">
         <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-12 md:grid-cols-2 md:px-6 md:py-16">
           <div className="text-center md:text-left">
-            <p className="wordmark-font mb-4 text-[10px] uppercase text-brand-strong md:text-xs">
+            <p className="wordmark-font mb-4 text-xs uppercase text-brand-strong md:text-xs">
               {site.pixelName}
             </p>
             <h1 className="thai-font text-3xl font-extrabold leading-tight text-ink md:text-4xl">
@@ -37,7 +38,7 @@ export default function LandingShell({
             <div className="mt-7 flex flex-wrap items-center justify-center gap-4 md:justify-start">
               <Link
                 to={toolPath}
-                className="neo-btn thai-font inline-flex items-center gap-2 rounded-lg bg-brand-strong px-6 py-3 text-base font-semibold text-white"
+                className="px-btn thai-font inline-flex items-center gap-2 rounded-lg bg-brand-strong px-6 py-3 text-base font-semibold text-white"
               >
                 {toolLabel}
                 <ArrowRight size={18} strokeWidth={2.5} aria-hidden="true" />
@@ -51,7 +52,7 @@ export default function LandingShell({
             </div>
           </div>
 
-          <div className="neo-card overflow-hidden">
+          <div className="px-card overflow-hidden">
             {screenshot ? (
               <div className="h-52 md:h-72">
                 <img
@@ -78,7 +79,7 @@ export default function LandingShell({
           {benefits.map((b) => {
             const Icon = b.icon
             return (
-              <div key={b.title} className="neo-card p-6">
+              <div key={b.title} className="px-card p-6">
                 <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg border-2 border-ink bg-brand-soft">
                   <Icon size={22} strokeWidth={2.5} className="text-brand-strong" aria-hidden="true" />
                 </span>
@@ -93,12 +94,12 @@ export default function LandingShell({
       {children}
 
       {/* Closing CTA */}
-      <section className="border-t-2 border-ink bg-surface">
+      <section className="border-t-2 border-ink bg-paper">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-12 text-center md:px-6">
           <p className="thai-font text-lg font-bold text-ink">พร้อมเริ่มไหม? ใช้ฟรี ไม่ต้องสมัคร</p>
           <Link
             to={toolPath}
-            className="neo-btn thai-font inline-flex items-center gap-2 rounded-lg bg-brand-strong px-6 py-3 text-base font-semibold text-white"
+            className="px-btn thai-font inline-flex items-center gap-2 rounded-lg bg-brand-strong px-6 py-3 text-base font-semibold text-white"
           >
             {toolLabel}
             <ArrowRight size={18} strokeWidth={2.5} aria-hidden="true" />

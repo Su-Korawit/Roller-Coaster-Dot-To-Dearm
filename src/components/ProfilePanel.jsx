@@ -78,7 +78,7 @@ export default function ProfilePanel({ onClose, onOpenRoadmap }) {
         <button
           onClick={onClose}
           aria-label="ปิด"
-          className="neo-btn w-9 h-9 flex items-center justify-center rounded-lg bg-surface text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ml-1"
+          className="px-btn w-9 h-9 flex items-center justify-center rounded-lg bg-paper text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ml-1"
         >
           <X size={16} strokeWidth={2.5} aria-hidden="true" />
         </button>
@@ -98,12 +98,12 @@ export default function ProfilePanel({ onClose, onOpenRoadmap }) {
         ) : (
           <div className="flex flex-col items-center gap-2 pt-2">
             <div className="relative">
-              <div className="w-20 h-20 rounded-full overflow-hidden bg-brand-soft flex items-center justify-center shadow-hard-sm border-4 border-surface">
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-brand-soft flex items-center justify-center shadow-hard-sm border-4 border-paper">
                 {photoURL
                   ? <img src={photoURL} alt="" className="w-full h-full object-cover" />
                   : <span className="text-3xl font-bold text-brand-strong">{initials}</span>}
               </div>
-              <div className="absolute bottom-1 right-1 w-3 h-3 bg-good rounded-full border-2 border-surface" />
+              <div className="absolute bottom-1 right-1 w-3 h-3 bg-good rounded-full border-2 border-paper" />
             </div>
             <p className="pixel-font text-[13px] text-ink">{displayName}</p>
             <p className="text-xs text-ink-soft text-center leading-snug max-w-50">
@@ -121,7 +121,7 @@ export default function ProfilePanel({ onClose, onOpenRoadmap }) {
         {/* Roadmap preview — live embed of the same useRoadmapStore canvas the
             Roadmap FAB opens, so Profile and Roadmap are one tap apart */}
         <div>
-          <p className="pixel-font text-[10px] text-ink-soft mb-2">Your Roadmap</p>
+          <p className="pixel-font text-xs text-ink-soft mb-2">Your Roadmap</p>
           <Suspense fallback={<div className="w-full h-40 rounded-2xl bg-brand-soft/40 animate-pulse" />}>
             <RoadmapPreview onOpen={onOpenRoadmap} />
           </Suspense>

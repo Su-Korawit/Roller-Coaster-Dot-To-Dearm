@@ -4,10 +4,10 @@ import { notify } from '../systems/NotificationSystem'
 const MAX_VISIBLE = 4
 
 const TYPE_STYLES = {
-  success: { background: '#a8e6a3', border: '#3d8b3d' },
-  error:   { background: '#f5a3a3', border: '#8b3d3d' },
-  info:    { background: '#a3c4f5', border: '#3d5d8b' },
-  warning: { background: '#f5e6a3', border: '#8b7d3d' },
+  success: { background: 'var(--color-zone-earth-soft)', border: 'var(--color-good-strong)' },
+  error:   { background: 'var(--color-zone-health-soft)', border: 'var(--color-danger)' },
+  info:    { background: 'var(--color-zone-sci-soft)', border: 'var(--color-zone-sci-deep)' },
+  warning: { background: 'var(--color-zone-biz-soft)', border: 'var(--color-zone-biz-deep)' },
 }
 
 function NotificationCard({ notification }) {
@@ -45,7 +45,7 @@ function NotificationCard({ notification }) {
       fontFamily: 'pixelFont-7, monospace',
       fontSize: 11,
       fontWeight: 'bold',
-      color: '#3d2b1f',
+      color: 'var(--color-ink)',
       display: 'flex',
       alignItems: 'center',
       gap: 6,
@@ -67,7 +67,7 @@ function NotificationCard({ notification }) {
       cursor: 'pointer',
       fontFamily: 'pixelFont-7, monospace',
       fontSize: 10,
-      color: '#3d2b1f',
+      color: 'var(--color-ink)',
       padding: '0 2px',
       lineHeight: 1,
       opacity: 0.6,

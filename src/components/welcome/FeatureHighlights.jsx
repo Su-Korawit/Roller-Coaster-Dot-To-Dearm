@@ -40,7 +40,7 @@ export default function FeatureHighlights() {
       </p>
       <div className="mx-auto grid max-w-5xl gap-6 sm:grid-cols-3">
         {FEATURES.map((f, i) => (
-          <div key={f.en} className={`neo-card p-6 ${i === 1 ? 'sm:mt-6' : ''}`}>
+          <div key={f.en} className={`px-card p-6 ${i === 1 ? 'sm:mt-6' : ''}`}>
             <div
               className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl text-2xl"
               style={{ background: 'linear-gradient(135deg, var(--color-brand), var(--color-accent-pink))' }}
@@ -48,7 +48,7 @@ export default function FeatureHighlights() {
             >
               {f.icon}
             </div>
-            <h3 className="pixel-font text-[10px] text-brand-strong mb-1">{f.en}</h3>
+            <h3 className="pixel-font text-xs text-brand-strong mb-1">{f.en}</h3>
             <p className="thai-font font-bold text-ink mb-3">{f.th}</p>
             <ul className="thai-font space-y-1.5 text-sm text-ink/70">
               {f.points.map((p) => (

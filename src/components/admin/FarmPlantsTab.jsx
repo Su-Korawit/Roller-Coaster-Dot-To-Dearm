@@ -35,7 +35,7 @@ function FramePicker({ frameIndex, onChange, imgUrl }) {
               backgroundSize: `${SHEET_COLS * FRAME_PX * SCALE}px ${SHEET_ROWS * FRAME_PX * SCALE}px`,
               imageRendering: 'pixelated',
               cursor: 'pointer',
-              border: selected ? '3px solid #7c3aed' : '3px solid transparent',
+              border: selected ? '3px solid var(--color-brand)' : '3px solid transparent',
               borderRadius: 4,
             }}
           />
@@ -141,7 +141,7 @@ export default function FarmPlantsTab() {
       </div>
 
       {editing && (
-        <div className="neo-card p-5 space-y-5 border-brand">
+        <div className="px-card p-5 space-y-5 border-brand">
           <p className="font-semibold text-gray-800">{editing === 'new' ? '➕ พืชใหม่' : `✏️ แก้ไข ${editing}`}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {editing === 'new' && (
@@ -217,7 +217,7 @@ export default function FarmPlantsTab() {
         </div>
       )}
 
-      <div className="neo-card overflow-x-auto">
+      <div className="px-card overflow-x-auto">
         {Object.values(plants).length === 0 ? (
           <div className="py-16 text-center text-gray-400 text-sm">ยังไม่มีพืช</div>
         ) : (

@@ -23,7 +23,7 @@ export default function IdeaRootNode({ id, data, selected }) {
     >
       <ConnectionDot type="target" position={Position.Left} />
       <ConnectionDot id="top" type="source" position={Position.Top} />
-      <p className="pixel-font text-[8px] text-brand">IDEA</p>
+      <p className="pixel-font text-xs text-brand">IDEA</p>
       <input
         className="nodrag w-full text-[12px] font-semibold text-ink bg-transparent outline-none"
         placeholder="Idea title"
@@ -32,7 +32,7 @@ export default function IdeaRootNode({ id, data, selected }) {
       />
       <select
         aria-label="Idea status"
-        className="nodrag w-full text-[10px] text-ink bg-surface border border-edge/50 rounded px-1 py-0.5"
+        className="nodrag w-full text-xs text-ink bg-paper border border-line/50 rounded px-1 py-0.5"
         value={data.status ?? 'idea'}
         onChange={onStatus}
       >

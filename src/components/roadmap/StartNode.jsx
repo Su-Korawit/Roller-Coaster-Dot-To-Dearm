@@ -33,16 +33,16 @@ export default function StartNode({ id, data, selected }) {
 
   return (
     <div
-      className={`relative w-32 h-32 rounded-2xl border-2 bg-surface shadow-hard-sm p-2 flex flex-col gap-1 transition-all ${
+      className={`relative w-32 h-32 rounded-2xl border-2 bg-paper shadow-hard-sm p-2 flex flex-col gap-1 transition-all ${
         selected ? 'border-good-strong ring-2 ring-lime' : 'border-good-strong/50'
       }`}
     >
-      <span className="pixel-font text-[8px] text-good-strong font-bold">START</span>
+      <span className="pixel-font text-xs text-good-strong font-bold">START</span>
 
       {!journeyRef && (
         <button
           onClick={() => setPickerOpen(true)}
-          className="flex-1 flex items-center justify-center rounded-xl border-2 border-dashed border-good/70 text-good-strong text-[10px] px-2 hover:bg-good/15 active:scale-95 transition-all"
+          className="flex-1 flex items-center justify-center rounded-xl border-2 border-dashed border-good/70 text-good-strong text-xs px-2 hover:bg-good/15 active:scale-95 transition-all"
         >
           Link to Journey
         </button>
@@ -50,12 +50,12 @@ export default function StartNode({ id, data, selected }) {
 
       {isBroken && (
         <div className="flex-1 flex flex-col items-center justify-center gap-1.5">
-          <span className="text-[9px] text-danger text-center leading-tight">
+          <span className="text-xs text-danger text-center leading-tight">
             Linked journey was removed
           </span>
           <button
             onClick={unlink}
-            className="text-[9px] text-good-strong underline hover:brightness-90"
+            className="text-xs text-good-strong underline hover:brightness-90"
           >
             Choose another
           </button>
@@ -64,21 +64,21 @@ export default function StartNode({ id, data, selected }) {
 
       {linked && (
         <div className="flex-1 flex flex-col gap-1.5">
-          <span className="text-[11px] font-semibold text-ink leading-tight line-clamp-1">
+          <span className="text-xs font-semibold text-ink leading-tight line-clamp-1">
             {linked.title || '—'}
           </span>
           <div className="flex items-center gap-2">
-            <div className="flex-1 h-2 bg-wood/50 rounded-full overflow-hidden">
+            <div className="flex-1 h-2 bg-mist/50 rounded-full overflow-hidden">
               <div
                 className="h-full bg-brand rounded-full transition-all"
                 style={{ width: `${Math.min(100, linked.progress || 0)}%` }}
               />
             </div>
-            <span className="text-[10px] text-brand-strong font-semibold">{linked.progress || 0}%</span>
+            <span className="text-xs text-brand-strong font-semibold">{linked.progress || 0}%</span>
           </div>
           <button
             onClick={gainProgress}
-            className="mt-auto text-[9px] bg-good-strong text-white rounded-lg py-1 hover:brightness-110 active:scale-95 transition-all"
+            className="mt-auto text-xs bg-good-strong text-white rounded-lg py-1 hover:brightness-110 active:scale-95 transition-all"
           >
             +{PROGRESS_GAIN}% progress
           </button>

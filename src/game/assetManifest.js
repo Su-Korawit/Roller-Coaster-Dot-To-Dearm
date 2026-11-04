@@ -33,7 +33,9 @@ export const GAME_ASSETS = [
   // Tilemaps
   { key: 'test3',  type: 'tilemapJSON', storagePath: 'maps/test3.json',  localPath: '/maps/test3.json' },
   { key: 'indoor', type: 'tilemapJSON', storagePath: 'maps/indoor.json', localPath: '/maps/indoor.json' },
-  { key: 'school_hub', type: 'tilemapJSON', storagePath: 'maps/school_hub.json', localPath: '/maps/school_hub.json' },
+  // v2: redrawn with the Soft Pixel tileset. The path is versioned so an old copy of the
+  // Sprout-tileset map left in Storage can never be loaded together with the new tileset.
+  { key: 'school_hub', type: 'tilemapJSON', storagePath: 'maps/school_hub_v2.json', localPath: '/maps/school_hub.json' },
 
   // Tilesets
   tileset('Grass'),
@@ -47,6 +49,13 @@ export const GAME_ASSETS = [
   tileset('Tilled_Dirt_Wide'),
   tileset('Tilled_Dirt_Wide_v2'),
   tileset('Fences'),
+  // School Hub: generated Soft Pixel tileset (scripts/art/families/schoolhub.mjs)
+  {
+    key: 'School Hub Tiles',
+    type: 'image',
+    storagePath: 'rc/tilesets/school_hub_tiles.png',
+    localPath: '/assets/rc/school_hub_tiles.png',
+  },
 
   // Objects
   object('Wood_Bridge', 'Wood_Bridge'),

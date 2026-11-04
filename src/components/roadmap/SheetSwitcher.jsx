@@ -39,7 +39,7 @@ export default function SheetSwitcher() {
           onClick={() => switchSheetAndSync(sheet.id)}
           onDoubleClick={() => sheet.myRole === 'owner' && handleRename(sheet)}
           className={[
-            'pixel-font text-[9px] px-3 py-1.5 rounded-full whitespace-nowrap transition-all active:scale-95',
+            'pixel-font text-xs px-3 py-1.5 rounded-full whitespace-nowrap transition-all active:scale-95',
             sheet.id === activeSheetId ? 'bg-brand text-white' : 'bg-brand/10 text-ink hover:bg-brand/20',
           ].join(' ')}
           aria-current={sheet.id === activeSheetId}
@@ -72,7 +72,7 @@ export default function SheetSwitcher() {
       )}
 
       {shareTarget && <ShareSheetModal sheetId={shareTarget} onClose={() => setShareTarget(null)} />}
-      {!canEdit && <span className="pixel-font text-[10px] text-ink-soft ml-1">View only</span>}
+      {!canEdit && <span className="pixel-font text-xs text-ink-soft ml-1">View only</span>}
     </div>
   )
 }

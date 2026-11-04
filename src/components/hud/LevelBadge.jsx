@@ -13,7 +13,7 @@ export default function LevelBadge({ xp = 0 }) {
   return (
     <>
       <span
-        className="rpg-coin absolute -bottom-1.5 -right-2 pixel-font text-[9px] text-ink pointer-events-none"
+        className="rpg-coin absolute -bottom-1.5 -right-2 pixel-font text-xs text-ink pointer-events-none"
         style={{ minWidth: '1.5rem', height: '1.5rem' }}
         data-testid="level-coin"
         aria-label={`เลเวล ${p.level}`}

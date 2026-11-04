@@ -21,7 +21,7 @@ export default function BagIconRail({
     : CATEGORIES.map((c) => c.id))
 
   return (
-    <aside className="flex md:flex-col items-center gap-1 p-2 border-b md:border-b-0 md:border-r border-ink/10 bg-surface flex-shrink-0 overflow-x-auto no-scrollbar">
+    <aside className="flex md:flex-col items-center gap-1 p-2 border-b md:border-b-0 md:border-r border-ink/10 bg-paper flex-shrink-0 overflow-x-auto no-scrollbar">
       {CATEGORIES.filter((c) => visible.has(c.id)).map(({ id, label, Icon }) => (
         <button
           key={id}
@@ -37,7 +37,7 @@ export default function BagIconRail({
           ].join(' ')}
         >
           <Icon size={20} strokeWidth={2} />
-          <span className="pixel-font text-[6px] mt-0.5 hidden md:block">{label}</span>
+          <span className="pixel-font text-xs mt-0.5 hidden md:block">{label}</span>
         </button>
       ))}
       <button

@@ -24,7 +24,7 @@ export default function MapPreview({ mapKey, width = '100%', height = 240 }) {
           antialias: false,
           width: w,
           height: h,
-          backgroundColor: '#1a1a2e',
+          backgroundColor: 'var(--color-ink)',
           physics: { default: 'arcade', arcade: { gravity: { y: 0 }, debug: false } },
           scene: [MapScene],
         })
@@ -47,7 +47,7 @@ export default function MapPreview({ mapKey, width = '100%', height = 240 }) {
   return (
     <div
       ref={containerRef}
-      style={{ width, height: typeof height === 'number' ? height : height, overflow: 'hidden', borderRadius: 12, background: '#1a1a2e' }}
+      style={{ width, height: typeof height === 'number' ? height : height, overflow: 'hidden', borderRadius: 12, background: 'var(--color-ink)' }}
     />
   )
 }

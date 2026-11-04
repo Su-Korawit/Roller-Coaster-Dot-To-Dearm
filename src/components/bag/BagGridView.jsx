@@ -62,11 +62,11 @@ export default function BagGridView({
   return (
     <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3">
       <div className="flex gap-2">
-        <label className="neo-btn px-3 py-2 rounded-xl text-xs font-semibold bg-brand text-white cursor-pointer inline-flex items-center gap-1">
+        <label className="px-btn px-3 py-2 rounded-xl text-xs font-semibold bg-brand text-white cursor-pointer inline-flex items-center gap-1">
           <Plus size={14} /> Upload
           <input type="file" className="hidden" onChange={onUpload} />
         </label>
-        <button type="button" onClick={onNewFolder} className="neo-btn px-3 py-2 rounded-xl text-xs font-semibold bg-surface">
+        <button type="button" onClick={onNewFolder} className="px-btn px-3 py-2 rounded-xl text-xs font-semibold bg-paper">
           + Folder
         </button>
       </div>
@@ -77,10 +77,10 @@ export default function BagGridView({
             <button
               type="button"
               onClick={() => onOpenFolder?.(f.id)}
-              className="w-full aspect-square neo-card flex flex-col items-center justify-center gap-1 p-2"
+              className="w-full aspect-square px-card flex flex-col items-center justify-center gap-1 p-2"
             >
               <Folder size={28} className="text-brand" />
-              <span className="text-[10px] text-ink line-clamp-2 text-center">{f.name}</span>
+              <span className="text-xs text-ink line-clamp-2 text-center">{f.name}</span>
             </button>
             <TileMenu
               open={menuId === f.id}
@@ -102,9 +102,9 @@ export default function BagGridView({
           const Icon = KIND_ICON[item.kind] ?? FileText
           return (
             <div key={item.id} className="relative">
-              <div className="w-full aspect-square neo-card flex flex-col items-center justify-center gap-1 p-2">
+              <div className="w-full aspect-square px-card flex flex-col items-center justify-center gap-1 p-2">
                 <Icon size={28} className="text-brand" />
-                <span className="text-[10px] text-ink line-clamp-2 text-center">{item.name}</span>
+                <span className="text-xs text-ink line-clamp-2 text-center">{item.name}</span>
               </div>
               <TileMenu
                 open={menuId === item.id}
@@ -156,12 +156,12 @@ function TileMenu({ open, onToggle, actions }) {
         type="button"
         aria-label="More"
         onClick={(e) => { e.stopPropagation(); onToggle() }}
-        className="w-7 h-7 rounded-lg bg-surface/90 border border-ink/10 flex items-center justify-center"
+        className="w-7 h-7 rounded-lg bg-paper/90 border border-ink/10 flex items-center justify-center"
       >
         <MoreVertical size={14} />
       </button>
       {open && (
-        <ul className="absolute right-0 mt-1 z-20 neo-slab py-1 min-w-[8rem]">
+        <ul className="absolute right-0 mt-1 z-20 px-slab py-1 min-w-[8rem]">
           {actions.map((a) => (
             <li key={a.label}>
               <button

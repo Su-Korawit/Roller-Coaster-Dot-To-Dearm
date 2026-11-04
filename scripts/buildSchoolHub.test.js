@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { buildSchoolHub, W, H, LAYOUT, LAWNS, ROOF_VARIANTS } from './buildSchoolHub.mjs'
+import { buildSchoolHub, W, H, LAYOUT, LAWNS, ROOF_COLOURS } from './buildSchoolHub.mjs'
+import { TILE_NAMES, FIRSTGID } from './art/families/schoolhub.mjs'
 import { parseMapMeta } from '../src/utils/tiledMapMeta'
 import { DEFAULT_MAP_CONFIGS } from '../src/utils/mapConfig'
 
@@ -8,6 +9,7 @@ const { map, unresolvedPathCells, seats } = buildSchoolHub()
 const layerData = (name) => map.layers.find((l) => l.name === name).data
 const meta = parseMapMeta(map)
 const T = 16
+const G = Object.fromEntries(TILE_NAMES.map((n, i) => [n, FIRSTGID + i]))
 
 // Collision exactly as the game configures it for school_hub (see DEFAULT_MAP_CONFIGS).
 const collisionLayers = Object.keys(DEFAULT_MAP_CONFIGS.school_hub.collision)
@@ -60,11 +62,18 @@ describe('school_hub map', () => {
     }
   })
 
-  it('declares exactly the tilesets that DEFAULT_MAP_CONFIGS maps to Storage images', () => {
-    // roof colour variants are derived from the Wooden House image at load time, not Storage images
-    const stored = meta.tilesetNames.filter((n) => !n.startsWith('Wooden House Roof '))
-    expect(stored.sort()).toEqual(Object.keys(DEFAULT_MAP_CONFIGS.school_hub.tilesets).sort())
-    expect(meta.tilesetNames.filter((n) => n.startsWith('Wooden House Roof ')).length).toBe(Object.keys(ROOF_VARIANTS).length)
+  it('declares exactly the Soft Pixel tileset that DEFAULT_MAP_CONFIGS maps to a Storage image', () => {
+    expect(meta.tilesetNames).toEqual(['School Hub Tiles'])
+    expect(Object.keys(DEFAULT_MAP_CONFIGS.school_hub.tilesets)).toEqual(['School Hub Tiles'])
+    const [ts] = map.tilesets
+    expect(ts).toMatchObject({ firstgid: FIRSTGID, columns: 16, tilecount: TILE_NAMES.length, tilewidth: 16, tileheight: 16 })
+  })
+
+  it('only uses gids that exist in the Soft Pixel tileset (no leftover Sprout Lands gids)', () => {
+    const max = FIRSTGID + TILE_NAMES.length - 1
+    for (const l of map.layers.filter((x) => x.type === 'tilelayer')) {
+      for (const g of l.data) if (g) expect(g, l.name).toBeLessThanOrEqual(max)
+    }
   })
 
   it('autotiles every path cell (no 1-wide corridors)', () => {
@@ -161,16 +170,13 @@ describe('school_hub visual layers (production polish)', () => {
     }
   })
 
-  it('roofs come in several colours: at least 4 distinct roof tilesets across the 5 buildings', () => {
-    const colours = new Set(buildings.map((b) => b.roof ?? 'brown'))
-    expect(colours.size).toBeGreaterThanOrEqual(4)
-    const firstgids = new Set(Object.values(ROOF_VARIANTS))
-    for (const b of buildings.filter((x) => x.roof)) {
-      const g = at('Roof', b.x + 1, b.y - 1)
-      const base = ROOF_VARIANTS[b.roof]
-      expect(g, b.roof).toBeGreaterThanOrEqual(base)
-      expect(g, b.roof).toBeLessThan(base + 35)
-      expect(firstgids.has(base)).toBe(true)
+  const roofColour = (b) => b.roof ?? 'sky'
+
+  it('roofs come in several colours: at least 4 distinct colours across the 5 buildings', () => {
+    expect(new Set(buildings.map(roofColour)).size).toBeGreaterThanOrEqual(4)
+    for (const b of buildings) {
+      expect(ROOF_COLOURS).toContain(roofColour(b))
+      expect(at('Roof', b.x + 1, b.y - 1), roofColour(b)).toBe(G[`roof_${roofColour(b)}_t`])
     }
   })
 
@@ -178,7 +184,7 @@ describe('school_hub visual layers (production polish)', () => {
     for (const b of buildings) {
       const mid = b.x + 1
       const ridges = []
-      for (let y = b.y - 1; y <= b.y + b.h - 1; y++) if (at('Roof', mid, y) === 101 + (b.roof ? ROOF_VARIANTS[b.roof] - 82 : 0)) ridges.push(y)
+      for (let y = b.y - 1; y <= b.y + b.h - 1; y++) if (at('Roof', mid, y) === G[`roof_${roofColour(b)}_m`]) ridges.push(y)
       expect(ridges, b.name ?? 'building').toHaveLength(1)
     }
   })
@@ -215,10 +221,10 @@ describe('school_hub visual layers (production polish)', () => {
 
   it('garden beds are fully drawn on the Lawn layer (corners, edges, and fill) and carry flowers', () => {
     for (const [lx, ly, lw, lh] of LAWNS) {
-      expect(at('Lawn', lx, ly), 'TL').toBe(1)
-      expect(at('Lawn', lx + lw - 1, ly), 'TR').toBe(3)
-      expect(at('Lawn', lx, ly + lh - 1), 'BL').toBe(23)
-      expect(at('Lawn', lx + lw - 1, ly + lh - 1), 'BR').toBe(25)
+      expect(at('Lawn', lx, ly), 'TL').toBe(G.lawn_tl)
+      expect(at('Lawn', lx + lw - 1, ly), 'TR').toBe(G.lawn_tr)
+      expect(at('Lawn', lx, ly + lh - 1), 'BL').toBe(G.lawn_bl)
+      expect(at('Lawn', lx + lw - 1, ly + lh - 1), 'BR').toBe(G.lawn_br)
     }
     expect(layerData('Decor').filter(Boolean).length).toBeGreaterThan(60)
   })
@@ -231,8 +237,8 @@ describe('school_hub visual layers (production polish)', () => {
   })
 
   it('ground has texture: meadow variants are mixed into the base grass', () => {
-    const grass = layerData('Grass').filter((g) => g && g !== 97)
-    const variants = grass.filter((g) => g !== 13)
+    const grass = layerData('Grass').filter((g) => g && g !== G.floor)
+    const variants = grass.filter((g) => g !== G.grass)
     expect(variants.length / grass.length).toBeGreaterThan(0.1)
     expect(variants.length / grass.length).toBeLessThan(0.3)
   })

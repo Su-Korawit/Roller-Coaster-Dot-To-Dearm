@@ -74,13 +74,13 @@ export default function ImagePickerModal({ nodeId, onClose }) {
       <div className="aspect-square max-h-[90vh] flex flex-col overflow-hidden">
         <div className="rpg-plank px-4 py-3 flex items-center justify-between shrink-0">
           <div>
-            <p className="pixel-font text-[11px] font-bold text-ink">Choose image</p>
-            <p className="pixel-font text-[10px] text-ink-soft mt-0.5">Tap to add — close when you're done</p>
+            <p className="pixel-font text-xs font-bold text-ink">Choose image</p>
+            <p className="pixel-font text-xs text-ink-soft mt-0.5">Tap to add — close when you're done</p>
           </div>
           <button
             onClick={onClose}
             aria-label="ปิด"
-            className="neo-btn w-9 h-9 rounded-lg flex items-center justify-center text-ink-soft hover:bg-brand-soft hover:text-ink"
+            className="px-btn w-9 h-9 rounded-lg flex items-center justify-center text-ink-soft hover:bg-brand-soft hover:text-ink"
           >
             <X size={20} strokeWidth={2.5} />
           </button>
@@ -105,7 +105,7 @@ export default function ImagePickerModal({ nodeId, onClose }) {
           >
             {uploading
               ? <Loader size={18} className="animate-spin" />
-              : <><Upload size={16} /><span className="pixel-font text-[10px]">Upload new</span></>}
+              : <><Upload size={16} /><span className="pixel-font text-xs">Upload new</span></>}
           </button>
           <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onFileChange} />
         </div>
@@ -118,7 +118,7 @@ export default function ImagePickerModal({ nodeId, onClose }) {
 function Section({ title, children }) {
   return (
     <div className="flex flex-col gap-2">
-      <p className="pixel-font text-[10px] text-ink-soft">{title}</p>
+      <p className="pixel-font text-xs text-ink-soft">{title}</p>
       <div className="flex flex-wrap gap-2">{children}</div>
     </div>
   )
@@ -128,16 +128,16 @@ function Thumb({ url, label, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="w-16 h-16 rounded-xl border-2 border-edge/40 overflow-hidden hover:border-brand active:scale-95 transition-all relative"
+      className="w-16 h-16 rounded-xl border-2 border-line/40 overflow-hidden hover:border-brand active:scale-95 transition-all relative"
     >
       <img src={url} alt={label ?? 'image'} className="w-full h-full object-contain p-1" draggable={false} />
       {label && (
-        <span className="absolute bottom-0 inset-x-0 bg-surface/80 pixel-font text-[10px] text-ink-soft text-center">{label}</span>
+        <span className="absolute bottom-0 inset-x-0 bg-paper/80 pixel-font text-xs text-ink-soft text-center">{label}</span>
       )}
     </button>
   )
 }
 
 function Empty({ children }) {
-  return <span className="pixel-font text-[10px] text-ink-soft/50">{children}</span>
+  return <span className="pixel-font text-xs text-ink-soft/50">{children}</span>
 }

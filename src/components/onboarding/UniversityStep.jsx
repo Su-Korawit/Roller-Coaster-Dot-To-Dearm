@@ -94,7 +94,7 @@ export function UniversityLogo({ uni }) {
 
   return (
     <div className="mx-auto flex h-14 w-14 md:h-16 md:w-16 lg:h-20 lg:w-20 items-center justify-center rounded-full bg-brand-strong">
-      <span className="pixel-font text-[10px] md:text-[11px] font-bold text-white">{badgeText(uni)}</span>
+      <span className="pixel-font text-xs md:text-xs font-bold text-white">{badgeText(uni)}</span>
     </div>
   )
 }
@@ -138,9 +138,9 @@ function UniversityStep({ onNext, onBack }) {
       onBack={onBack}
       nextDisabled={!selected}
     >
-      <div className="mx-auto max-w-5xl neo-card bg-surface p-4 md:p-6">
+      <div className="mx-auto max-w-5xl px-card bg-paper p-4 md:p-6">
         {dataSource === 'snapshot' && (
-          <p className="thai-font mb-3 rounded-lg border-2 border-edge/50 bg-brand-soft px-3 py-2 text-center text-xs text-ink-soft">
+          <p className="thai-font mb-3 rounded-lg border-2 border-line/50 bg-brand-soft px-3 py-2 text-center text-xs text-ink-soft">
             ข้อมูล TCAS กำลังอัปเดตสำหรับรอบใหม่ — แสดงข้อมูลรอบก่อนหน้าไปพลางก่อน
           </p>
         )}
@@ -160,9 +160,9 @@ function UniversityStep({ onNext, onBack }) {
                 onClick={() => commitUniversity(university.university_id)}
                 aria-label={university.university_name_th}
                 aria-pressed={selected === university.university_id}
-                className={`relative rounded-xl bg-surface border-2 p-3 transition-all active:scale-95
+                className={`relative rounded-xl bg-paper border-2 p-3 transition-all active:scale-95
                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1
-                  ${selected === university.university_id ? 'border-edge shadow-hard-sm bg-brand-soft ring-2 ring-lime' : 'border-edge/50 hover:border-edge'}`}
+                  ${selected === university.university_id ? 'border-line shadow-hard-sm bg-brand-soft ring-2 ring-lime' : 'border-line/50 hover:border-line'}`}
               >
                 <UniversityLogo uni={university} />
               </button>

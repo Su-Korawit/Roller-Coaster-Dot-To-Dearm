@@ -42,9 +42,9 @@ export default function FeatureLayout({ children }) {
   }
 
   return (
-    <div className="h-dvh w-full flex flex-col bg-[#F4F7FC] overflow-hidden">
-      <header className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 border-b-2 border-ink bg-surface z-20">
-        <h1 className="wordmark-font text-[10px] uppercase text-ink truncate min-w-0">
+    <div className="h-dvh w-full flex flex-col bg-mist overflow-hidden">
+      <header className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 border-b-2 border-ink bg-paper z-20">
+        <h1 className="wordmark-font text-xs uppercase text-ink truncate min-w-0">
           {site.pixelName}
         </h1>
 
@@ -59,7 +59,7 @@ export default function FeatureLayout({ children }) {
               เครื่องมืออื่น ▾
             </button>
             {toolsOpen && (
-              <div className="absolute right-0 top-full mt-1 neo-card py-1 z-50 min-w-[11rem]">
+              <div className="absolute right-0 top-full mt-1 px-card py-1 z-50 min-w-[11rem]">
                 <a
                   href={hubHref()}
                   className="block px-4 py-2 thai-font text-xs text-ink hover:bg-brand-soft border-b border-ink/10"
@@ -91,7 +91,7 @@ export default function FeatureLayout({ children }) {
               {user.photoURL ? (
                 <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full border-2 border-ink/20 object-cover" />
               ) : (
-                <span className="w-8 h-8 rounded-full bg-brand-soft pixel-font text-[10px] flex items-center justify-center text-ink">
+                <span className="w-8 h-8 rounded-full bg-brand-soft pixel-font text-xs flex items-center justify-center text-ink">
                   U
                 </span>
               )}
@@ -101,7 +101,7 @@ export default function FeatureLayout({ children }) {
               type="button"
               onClick={handleSignIn}
               disabled={authBusy}
-              className="neo-btn rounded-lg px-3 py-1.5 thai-font text-xs bg-brand-strong text-white disabled:opacity-50"
+              className="px-btn rounded-lg px-3 py-1.5 thai-font text-xs bg-brand-strong text-white disabled:opacity-50"
             >
               {authBusy ? '...' : 'บันทึก'}
             </button>

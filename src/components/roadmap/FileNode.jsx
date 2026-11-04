@@ -24,8 +24,8 @@ export default function FileNode({ id, data, selected }) {
   return (
     <div className="relative w-32 h-32">
       <div
-        className={`w-full h-full rounded-xl border-2 bg-surface overflow-hidden flex flex-col items-center justify-center gap-1 p-2 transition-all cursor-pointer ${
-          selected ? 'border-edge shadow-hard-sm ring-2 ring-lime' : 'border-edge/60 shadow-hard-sm'
+        className={`w-full h-full rounded-xl border-2 bg-paper overflow-hidden flex flex-col items-center justify-center gap-1 p-2 transition-all cursor-pointer ${
+          selected ? 'border-line shadow-hard-sm ring-2 ring-lime' : 'border-line/60 shadow-hard-sm'
         }`}
         onClick={() => (hasFile ? setViewerOpen(true) : setPickerOpen(true))}
         role="button"
@@ -34,11 +34,11 @@ export default function FileNode({ id, data, selected }) {
         <FileText size={28} strokeWidth={1.5} className={hasFile ? 'text-brand' : 'text-brand/50'} />
         {hasFile ? (
           <>
-            <span className="pixel-font text-[9px] text-ink text-center break-all leading-tight line-clamp-2">{data.name}</span>
-            <span className="px-1.5 py-0.5 rounded-full bg-brand/10 border border-brand/30 pixel-font text-[8px] text-brand">{fileExt(data.name)}</span>
+            <span className="pixel-font text-xs text-ink text-center break-all leading-tight line-clamp-2">{data.name}</span>
+            <span className="px-1.5 py-0.5 rounded-full bg-brand/10 border border-brand/30 pixel-font text-xs text-brand">{fileExt(data.name)}</span>
           </>
         ) : (
-          <span className="pixel-font text-[10px] text-ink-soft">tap to choose</span>
+          <span className="pixel-font text-xs text-ink-soft">tap to choose</span>
         )}
       </div>
 
@@ -48,7 +48,7 @@ export default function FileNode({ id, data, selected }) {
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => { e.stopPropagation(); setPickerOpen(true) }}
           aria-label="เปลี่ยนไฟล์"
-          className="nodrag absolute top-1 right-1 w-6 h-6 rounded-lg bg-surface border-2 border-edge flex items-center justify-center text-ink-soft hover:text-brand"
+          className="nodrag absolute top-1 right-1 w-6 h-6 rounded-lg bg-paper border-2 border-line flex items-center justify-center text-ink-soft hover:text-brand"
         >
           <Pencil size={13} />
         </button>
@@ -60,7 +60,7 @@ export default function FileNode({ id, data, selected }) {
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => { e.stopPropagation(); setViewerOpen(true) }}
           aria-label="เปิดไฟล์"
-          className="nodrag absolute bottom-1 right-1 w-6 h-6 rounded-lg bg-surface border-2 border-edge flex items-center justify-center text-ink-soft hover:text-brand"
+          className="nodrag absolute bottom-1 right-1 w-6 h-6 rounded-lg bg-paper border-2 border-line flex items-center justify-center text-ink-soft hover:text-brand"
         >
           <Maximize2 size={13} />
         </button>

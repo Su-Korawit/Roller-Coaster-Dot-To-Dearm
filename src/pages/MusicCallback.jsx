@@ -30,7 +30,7 @@ export default function MusicCallback() {
       {failed ? (
         <>
           <p className="thai-font text-ink">เชื่อม Spotify ไม่สำเร็จ ลองใหม่อีกครั้ง</p>
-          <button onClick={() => navigate('/home', { replace: true })} className="pixel-font text-[10px] text-brand">
+          <button onClick={() => navigate('/home', { replace: true })} className="pixel-font text-xs text-brand">
             กลับหน้าหลัก
           </button>
         </>

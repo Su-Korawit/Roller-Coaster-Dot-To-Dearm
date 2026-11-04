@@ -33,7 +33,7 @@ export default function MiniPlayer() {
         {status !== 'connected' ? (
           <button
             onClick={openSheet}
-            className="w-full neo-btn neo-slab px-4 py-2.5 flex items-center gap-2 pixel-font text-[10px] text-brand-strong"
+            className="w-full px-btn px-slab px-4 py-2.5 flex items-center gap-2 pixel-font text-xs text-brand-strong"
           >
             <Music size={16} /> เชื่อม Spotify
           </button>
@@ -41,7 +41,7 @@ export default function MiniPlayer() {
           <div
             onClick={openSheet}
             role="button"
-            className="w-full neo-slab px-3 py-2 flex items-center gap-3"
+            className="w-full px-slab px-3 py-2 flex items-center gap-3"
           >
             {track?.albumArt
               ? <img src={track.albumArt} alt="" className="w-9 h-9 rounded-lg border-2 border-ink" />

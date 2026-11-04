@@ -35,23 +35,23 @@ export default function ProcessEditorModal({ nodeId, data, onClose }) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg neo-card flex flex-col overflow-hidden max-h-[85vh]"
+        className="w-full max-w-lg px-card flex flex-col overflow-hidden max-h-[85vh]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="shrink-0 flex items-center gap-2 rpg-plank px-4 py-3">
-          <span className="pixel-font text-[11px] text-ink font-bold flex-1">Edit Process</span>
+          <span className="pixel-font text-xs text-ink font-bold flex-1">Edit Process</span>
           <button
             type="button"
             onClick={onClose}
             aria-label="ปิด"
-            className="neo-btn w-9 h-9 rounded-lg flex items-center justify-center text-ink-soft hover:text-ink"
+            className="px-btn w-9 h-9 rounded-lg flex items-center justify-center text-ink-soft hover:text-ink"
           >
             <X size={18} strokeWidth={2.5} />
           </button>
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto p-4 flex flex-col gap-3">
           <input
-            className="w-full text-[14px] font-semibold text-ink bg-transparent border-b-2 border-edge/30 outline-none focus:border-brand pb-2 placeholder:text-ink-soft/50"
+            className="w-full text-[14px] font-semibold text-ink bg-transparent border-b-2 border-line/30 outline-none focus:border-brand pb-2 placeholder:text-ink-soft/50"
             placeholder="Title"
             value={data.label}
             onChange={onLabelChange}

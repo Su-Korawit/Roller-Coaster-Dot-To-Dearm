@@ -32,7 +32,7 @@ export default function WelcomeNav() {
       <nav
         className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-3 transition-all duration-300 ${
           scrolled
-            ? 'bg-[#1a1035] border-b border-white/10 shadow-lg'
+            ? 'bg-ink border-b border-white/10 shadow-lg'
             : 'bg-transparent'
         }`}
       >
@@ -61,7 +61,7 @@ export default function WelcomeNav() {
               height={32}
               className="h-8 w-8 rounded border-2 border-white/80"
             />
-            <span className="wordmark-font hidden text-[10px] text-white sm:inline">I LOVE TCAS</span>
+            <span className="wordmark-font hidden text-xs text-white sm:inline">I LOVE TCAS</span>
           </a>
         </div>
 
@@ -69,13 +69,13 @@ export default function WelcomeNav() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate('/auth')}
-            className="neo-btn pixel-font text-[9px] text-ink rounded-xl px-4 py-2.5 bg-surface"
+            className="px-btn pixel-font text-xs text-ink rounded-xl px-4 py-2.5 bg-paper"
           >
             เข้าสู่ระบบ
           </button>
           <button
             onClick={onPlay}
-            className="neo-btn pixel-font text-[9px] text-white rounded-xl px-4 py-2.5 bg-brand-strong"
+            className="px-btn pixel-font text-xs text-white rounded-xl px-4 py-2.5 bg-brand-strong"
           >
             ▶ PLAY
           </button>
@@ -93,12 +93,12 @@ export default function WelcomeNav() {
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-[#1a1035] border-r border-white/10 flex flex-col transition-transform duration-300 ${
+        className={`fixed top-0 left-0 z-50 h-full w-64 bg-ink border-r border-white/10 flex flex-col transition-transform duration-300 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-          <span className="pixel-font text-[10px] text-white/50">MENU</span>
+          <span className="pixel-font text-xs text-white/50">MENU</span>
           <button
             onClick={() => setOpen(false)}
             aria-label="ปิดเมนู"
@@ -113,7 +113,7 @@ export default function WelcomeNav() {
               key={l.href}
               href={l.href}
               onClick={() => setOpen(false)}
-              className="pixel-font text-[10px] text-white/60 hover:text-white hover:bg-white/5 px-5 py-3.5 transition-colors border-b border-white/5 last:border-0"
+              className="pixel-font text-xs text-white/60 hover:text-white hover:bg-white/5 px-5 py-3.5 transition-colors border-b border-white/5 last:border-0"
             >
               {l.label}
             </a>

@@ -21,13 +21,13 @@ function HealthPill({ map }) {
   const ready = map.displayName && map.defaultSpawn
   if (ready) {
     return (
-      <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-semibold whitespace-nowrap">
+      <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold whitespace-nowrap">
         ✓ พร้อม
       </span>
     )
   }
   return (
-    <span className="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-semibold whitespace-nowrap">
+    <span className="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold whitespace-nowrap">
       ⚠ ยังไม่ตั้งค่า
     </span>
   )
@@ -208,7 +208,7 @@ function UploadPanel({ existingKeys, maxOrder, adminUid, onDone, onCancel }) {
   const busy = phase === 'validating' || phase === 'uploading'
 
   return (
-    <div className="mt-4 p-4 neo-card space-y-4 border-brand">
+    <div className="mt-4 p-4 px-card space-y-4 border-brand">
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-gray-800">อัปโหลดแมพใหม่</p>
         <button onClick={onCancel} disabled={busy} className="text-gray-400 hover:text-gray-700 text-xl leading-none">×</button>
@@ -249,7 +249,7 @@ function UploadPanel({ existingKeys, maxOrder, adminUid, onDone, onCancel }) {
             className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand/40 disabled:opacity-50"
           />
           {nameInput.trim() && (
-            <p className="text-[11px] text-gray-400">key: <span className="font-mono text-gray-600">{key}</span></p>
+            <p className="text-xs text-gray-400">key: <span className="font-mono text-gray-600">{key}</span></p>
           )}
         </div>
       )}
@@ -399,7 +399,7 @@ export default function MapDashboard() {
             const isDeleting = deletingKey === map.key
             const isPendingDelete = deleteKey === map.key
             return (
-              <div key={map.key} className="neo-card">
+              <div key={map.key} className="px-card">
                 <div className="flex items-center gap-4 p-4">
                   {/* Info */}
                   <div className="flex-1 min-w-0">
@@ -410,7 +410,7 @@ export default function MapDashboard() {
                       <span className="text-xs text-gray-400 font-mono">{map.key}</span>
                       <HealthPill map={map} />
                       {map.isEntry && (
-                        <span className="px-1.5 py-0.5 rounded-full bg-brand/10 text-brand text-[10px] font-semibold">entry</span>
+                        <span className="px-1.5 py-0.5 rounded-full bg-brand/10 text-brand text-xs font-semibold">entry</span>
                       )}
                     </div>
                     <p className="text-xs text-gray-500 mt-0.5">

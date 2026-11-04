@@ -137,7 +137,7 @@ export default function SchoolPanel({ onClose, onOpenSubject, initialDate, today
               <button
                 onClick={onClose}
                 aria-label="ปิด"
-                className="neo-btn w-9 h-9 flex items-center justify-center rounded-lg bg-surface text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                className="px-btn w-9 h-9 flex items-center justify-center rounded-lg bg-paper text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
               >
                 <X size={16} strokeWidth={2.5} aria-hidden="true" />
               </button>
@@ -160,7 +160,7 @@ export default function SchoolPanel({ onClose, onOpenSubject, initialDate, today
                   >
                     {subject.name.slice(0, 1).toUpperCase()}
                   </span>
-                  <span className="thai-font text-[10px] text-ink truncate max-w-full px-1">{subject.name}</span>
+                  <span className="thai-font text-xs text-ink truncate max-w-full px-1">{subject.name}</span>
                 </button>
               ))}
               <button
@@ -190,7 +190,7 @@ export default function SchoolPanel({ onClose, onOpenSubject, initialDate, today
                     <label
                       key={appt.id}
                       data-testid="school-appointment-item"
-                      className={`neo-card flex items-center gap-3 p-3 ${appt.completed ? 'opacity-50' : ''} ${overdue ? 'school-overdue border-danger' : ''}`}
+                      className={`px-card flex items-center gap-3 p-3 ${appt.completed ? 'opacity-50' : ''} ${overdue ? 'school-overdue border-danger' : ''}`}
                     >
                       <input
                         type="checkbox"
@@ -206,14 +206,14 @@ export default function SchoolPanel({ onClose, onOpenSubject, initialDate, today
                         <span className={`thai-font text-sm block truncate ${appt.completed ? 'line-through text-ink-soft' : overdue ? 'text-danger' : 'text-ink'}`}>
                           {appt.title}
                         </span>
-                        {overdue && <span className="thai-font text-[10px] text-danger block">เลยกำหนดส่ง</span>}
+                        {overdue && <span className="thai-font text-xs text-danger block">เลยกำหนดส่ง</span>}
                       </span>
                     </label>
                   )
                 })
               )}
               <div className="pt-2">
-                <h3 className="pixel-font text-[10px] text-ink-soft mb-2">Notebook</h3>
+                <h3 className="pixel-font text-xs text-ink-soft mb-2">Notebook</h3>
                 <textarea
                   key={date}
                   aria-label="Notebook"

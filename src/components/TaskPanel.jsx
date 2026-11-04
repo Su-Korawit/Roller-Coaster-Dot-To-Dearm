@@ -80,15 +80,15 @@ function TaskShareSheet({ task, onClose }) {
   return (
     <Popup variant="sheet" size="md" onClose={onClose}>
       <div className="pb-4">
-        <p className="pixel-font text-[9px] text-center text-ink mb-1 px-5">ส่ง Task ให้เพื่อน</p>
-        <p className="flex items-center justify-center gap-1.5 text-center text-ink-soft mb-4 px-6 thai-font text-[11px]">
+        <p className="pixel-font text-xs text-center text-ink mb-1 px-5">ส่ง Task ให้เพื่อน</p>
+        <p className="flex items-center justify-center gap-1.5 text-center text-ink-soft mb-4 px-6 thai-font text-xs">
           <ClipboardList size={12} strokeWidth={2.5} className="shrink-0 text-brand" aria-hidden="true" />
           <span className="truncate">{task.title}</span>
         </p>
         {chats.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-8 opacity-50">
             <span className="text-3xl">💬</span>
-            <p className="pixel-font text-[7px] text-ink-soft text-center leading-relaxed">ยังไม่มีการสนทนา</p>
+            <p className="pixel-font text-xs text-ink-soft text-center leading-relaxed">ยังไม่มีการสนทนา</p>
           </div>
         ) : (
           <div className="max-h-60 overflow-y-auto">
@@ -108,7 +108,7 @@ function TaskShareSheet({ task, onClose }) {
                       : <Gamepad2 size={16} strokeWidth={2.5} className="text-ink" aria-hidden="true" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="pixel-font text-[8px] text-ink truncate">
+                    <p className="pixel-font text-xs text-ink truncate">
                       {other?.displayName ?? '...'}
                     </p>
                     <p className="text-ink-soft truncate mt-0.5" style={{ fontFamily: "'Noto Sans Thai', sans-serif", fontSize: 11 }}>
@@ -158,7 +158,7 @@ function ReflectionSheet({ task, onSubmit, onClose, isEvaluating }) {
         <button
           onClick={() => onSubmit(reflection)}
           disabled={isEvaluating || !reflection.trim()}
-          className="mt-3 w-full rounded-xl border border-brand/40 bg-brand-soft py-3 pixel-font text-[10px] text-brand-strong disabled:opacity-50 shrink-0"
+          className="mt-3 w-full rounded-xl border border-brand/40 bg-brand-soft py-3 pixel-font text-xs text-brand-strong disabled:opacity-50 shrink-0"
         >
           {isEvaluating ? '🤖 AI is evaluating your progress...' : 'Submit Reflection'}
         </button>
@@ -384,7 +384,7 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
                 >
                   <Trash size={16} />
                   {trash.length > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-danger pixel-font text-[7px] text-white flex items-center justify-center leading-none">
+                    <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-danger pixel-font text-xs text-white flex items-center justify-center leading-none">
                       {trash.length > 9 ? '9+' : trash.length}
                     </span>
                   )}
@@ -401,7 +401,7 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
               <button
                 onClick={onClose}
                 aria-label="ปิด"
-                className="neo-btn w-9 h-9 flex items-center justify-center rounded-lg bg-surface text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                className="px-btn w-9 h-9 flex items-center justify-center rounded-lg bg-paper text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
               >
                 <X size={16} strokeWidth={2.5} aria-hidden="true" />
               </button>
@@ -475,12 +475,12 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
           className="absolute bottom-4 left-4 right-4 flex items-center justify-between bg-ink text-white rounded-2xl px-4 py-3 shadow-hard-sm"
           style={{ zIndex: Z_TOAST }}
         >
-          <span className="pixel-font text-[9px] opacity-80 truncate mr-3">
+          <span className="pixel-font text-xs opacity-80 truncate mr-3">
             Deleted: {deletedTask.title}
           </span>
           <button
             onClick={handleUndoDelete}
-            className="pixel-font text-[9px] text-brand-soft shrink-0 active:opacity-70"
+            className="pixel-font text-xs text-brand-soft shrink-0 active:opacity-70"
           >
             Undo
           </button>
@@ -495,9 +495,9 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
         >
           <div className="bg-white rounded-2xl p-5 w-full max-w-xs shadow-hard-sm text-center">
             <p className="text-2xl mb-2">🎉</p>
-            <p className="pixel-font text-[10px] text-brand-strong mb-3">AI Progress Report</p>
+            <p className="pixel-font text-xs text-brand-strong mb-3">AI Progress Report</p>
             <p className="text-sm text-ink mb-3">{evalResult.note}</p>
-            <p className="pixel-font text-[9px] text-good mb-4">+{evalResult.gainedPercent}% Journey Progress</p>
+            <p className="pixel-font text-xs text-good mb-4">+{evalResult.gainedPercent}% Journey Progress</p>
             <button
               onClick={() => setEvalResult(null)}
               className="w-full rounded-xl bg-brand-soft0 text-white py-2 text-sm font-medium"
@@ -510,7 +510,7 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
       {showAiLoginCta && (
         <Popup variant="center" size="sm" onClose={() => setShowAiLoginCta(false)}>
           <div className="p-6 text-center">
-            <p className="pixel-font text-[10px] text-ink mb-3">ฟีเจอร์ AI ต้องล็อกอิน</p>
+            <p className="pixel-font text-xs text-ink mb-3">ฟีเจอร์ AI ต้องล็อกอิน</p>
             <p className="thai-font text-sm text-ink/70 mb-5">
               งาน AI ใช้ Gemini มีค่าใช้จ่าย — ล็อกอินเพื่อสร้างและประเมินงาน AI การแก้ไขด้วยมือยังฟรีไม่จำกัด
             </p>
@@ -528,7 +528,7 @@ export default function TaskPanel({ onClose, initialView = 'list' }) {
                   setAiLoginBusy(false)
                 }
               }}
-              className="neo-btn w-full rounded-xl bg-brand-strong py-3 thai-font text-sm text-white disabled:opacity-50"
+              className="px-btn w-full rounded-xl bg-brand-strong py-3 thai-font text-sm text-white disabled:opacity-50"
             >
               {aiLoginBusy ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบด้วย Google'}
             </button>
@@ -552,7 +552,7 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onShare, on
             >
               {tasks.length === 0 && (
                 <div className="px-6 pt-20 text-center text-ink-soft">
-                  <p className="pixel-font text-[10px]">No tasks yet</p>
+                  <p className="pixel-font text-xs">No tasks yet</p>
                   <p className="text-sm mt-2">Tap + to create your first task</p>
                 </div>
               )}
@@ -588,7 +588,7 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onShare, on
 
                         {/* Task info (tap to edit) */}
                         <button onClick={() => onEdit(task)} className="flex-1 min-w-0 text-left">
-                          <p className={`pixel-font text-[11px] line-clamp-2 ${task.completed ? 'line-through text-ink-soft' : 'text-ink'}`}>
+                          <p className={`pixel-font text-xs line-clamp-2 ${task.completed ? 'line-through text-ink-soft' : 'text-ink'}`}>
                             {task.isAIGenerated && !task.completed && <span className="mr-1">✨</span>}
                             {task.assignedSkill === 'ignite' && !task.completed && <span className="mr-1">🚀</span>}
                             {task.assignedSkill === 'capsule' && !task.completed && <span className="mr-1">⏳</span>}
@@ -651,20 +651,20 @@ function TaskListView({ tasks, onToggle, onEdit, onRemove, onCreate, onShare, on
             ) : (
               <span>✨</span>
             )}
-            <span className="pixel-font text-[9px] text-brand-strong">
+            <span className="pixel-font text-xs text-brand-strong">
               {isAutoGenerating ? 'Generating...' : "Today's Mastery Task"}
             </span>
           </button>
           <button
             onClick={onCreate}
-            className="w-10 h-10 rounded-full border-2 border-ink text-2xl leading-none bg-surface shrink-0 flex items-center justify-center"
+            className="w-10 h-10 rounded-full border-2 border-ink text-2xl leading-none bg-paper shrink-0 flex items-center justify-center"
             aria-label="Create task"
           >
             +
           </button>
         </div>
         {autoGenError && (
-          <p className="pixel-font text-[8px] text-danger bg-danger/10 rounded-xl px-3 py-1.5">{autoGenError}</p>
+          <p className="pixel-font text-xs text-danger bg-danger/10 rounded-xl px-3 py-1.5">{autoGenError}</p>
         )}
       </div>
     </>
@@ -678,13 +678,13 @@ function TrashView({ trash, onRestore, onPurge, onEmpty }) {
         {trash.length === 0 ? (
           <div className="px-6 pt-20 text-center text-ink-soft">
             <p className="text-3xl mb-3">🗑️</p>
-            <p className="pixel-font text-[10px]">Trash is empty</p>
+            <p className="pixel-font text-xs">Trash is empty</p>
           </div>
         ) : (
           trash.map((task) => (
             <div key={task.id} className="flex items-center gap-3 px-4 py-3 border-b border-ink/10">
               <div className="flex-1 min-w-0">
-                <p className="pixel-font text-[11px] text-ink-soft line-through truncate">
+                <p className="pixel-font text-xs text-ink-soft line-through truncate">
                   {task.title}
                 </p>
                 <p className="text-xs text-ink-soft/50 mt-0.5">
@@ -693,7 +693,7 @@ function TrashView({ trash, onRestore, onPurge, onEmpty }) {
               </div>
               <button
                 onClick={() => onRestore(task.id)}
-                className="pixel-font text-[9px] text-brand-strong shrink-0 px-2 py-1 rounded-lg hover:bg-brand-soft active:scale-95 transition-all"
+                className="pixel-font text-xs text-brand-strong shrink-0 px-2 py-1 rounded-lg hover:bg-brand-soft active:scale-95 transition-all"
               >
                 Restore
               </button>
@@ -713,7 +713,7 @@ function TrashView({ trash, onRestore, onPurge, onEmpty }) {
         <div className="shrink-0 px-5 py-3 border-t border-ink/10 bg-white">
           <button
             onClick={onEmpty}
-            className="w-full rounded-xl border border-danger/30 py-2.5 pixel-font text-[9px] text-danger hover:bg-danger/10 active:scale-95 transition-all"
+            className="w-full rounded-xl border border-danger/30 py-2.5 pixel-font text-xs text-danger hover:bg-danger/10 active:scale-95 transition-all"
           >
             Empty Trash ({trash.length})
           </button>

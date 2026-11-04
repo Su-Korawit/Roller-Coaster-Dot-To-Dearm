@@ -43,7 +43,7 @@ export default function FocusPanel({ seatId, onClose }) {
             <button
               onClick={beginFocus}
               disabled={focus.busy}
-              className="neo-btn rpg-btn-primary pixel-font text-[11px] py-3 rounded-lg disabled:opacity-50"
+              className="px-btn rpg-btn-primary pixel-font text-xs py-3 rounded-lg disabled:opacity-50"
             >
               {focus.busy ? 'กำลังเริ่ม…' : 'เริ่มอ่านหนังสือ'}
             </button>
@@ -52,7 +52,7 @@ export default function FocusPanel({ seatId, onClose }) {
 
         {active && (
           <>
-            <div className="neo-slab p-3 flex items-center justify-between">
+            <div className="px-slab p-3 flex items-center justify-between">
               <div>
                 <div className="thai-font text-xs text-ink/60">เวลาที่ยืนยันแล้ว</div>
                 <div className="pixel-font text-lg text-ink" data-testid="focus-verified">{formatVerified(focus.verifiedMs)}</div>
@@ -65,7 +65,7 @@ export default function FocusPanel({ seatId, onClose }) {
 
             {focusXp > 0 && (
               <div className="flex items-center gap-2" data-testid="focus-level">
-                <span className="rpg-coin pixel-font text-[10px]" aria-label={`เลเวล ${level.level}`}>{level.level}</span>
+                <span className="rpg-coin pixel-font text-xs" aria-label={`เลเวล ${level.level}`}>{level.level}</span>
                 <div className="rpg-bar flex-1" style={{ '--pct': Math.round(level.ratio * 100) }}><i /></div>
               </div>
             )}
@@ -86,14 +86,14 @@ export default function FocusPanel({ seatId, onClose }) {
             <button
               onClick={confirmFocus}
               disabled={focus.busy}
-              className={`neo-btn pixel-font text-[11px] py-3 rounded-lg disabled:opacity-50 ${due ? 'rpg-btn-primary animate-pulse' : 'bg-surface text-ink'}`}
+              className={`px-btn pixel-font text-xs py-3 rounded-lg disabled:opacity-50 ${due ? 'rpg-btn-primary animate-pulse' : 'bg-paper text-ink'}`}
             >
               ฉันยังอยู่ ✓
             </button>
             <button
               onClick={finishFocus}
               disabled={focus.busy}
-              className="neo-btn bg-surface text-ink pixel-font text-[11px] py-3 rounded-lg disabled:opacity-50"
+              className="px-btn bg-paper text-ink pixel-font text-xs py-3 rounded-lg disabled:opacity-50"
             >
               จบการอ่าน
             </button>
@@ -107,7 +107,7 @@ export default function FocusPanel({ seatId, onClose }) {
           </p>
         )}
         {message && <p role="status" className="thai-font text-xs text-accent-pink">{message}</p>}
-        {seatId && <p className="thai-font text-[10px] text-ink/40">โต๊ะ {seatId}</p>}
+        {seatId && <p className="thai-font text-xs text-ink/40">โต๊ะ {seatId}</p>}
       </div>
     </Popup>
   )

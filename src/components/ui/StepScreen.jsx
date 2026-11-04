@@ -57,7 +57,7 @@ export default function StepScreen({
             </Button>
           </div>
           {attribution && (
-            <p className="thai-font text-center text-[10px] text-ink-soft">
+            <p className="thai-font text-center text-xs text-ink-soft">
               {attribution}
             </p>
           )}

@@ -111,35 +111,35 @@ export default function SchoolWorldLayer({ gameRef, onOpenView, active = true })
           <button
             onClick={() => enterSchoolHub(uid)}
             disabled={enterStatus === 'entering'}
-            className="pointer-events-auto neo-btn rpg-btn-primary pixel-font text-[10px] px-3 py-2 rounded-lg disabled:opacity-60"
+            className="pointer-events-auto px-btn rpg-btn-primary pixel-font text-xs px-3 py-2 rounded-lg disabled:opacity-60"
           >
             🏫 {enterStatus === 'entering' ? 'กำลังเข้า…' : 'เข้าโรงเรียน'}
           </button>
         )}
         {!inHub && enterError && (
-          <p role="alert" className="pointer-events-auto neo-slab max-w-56 p-2 thai-font text-xs text-accent-pink">
+          <p role="alert" className="pointer-events-auto px-slab max-w-56 p-2 thai-font text-xs text-accent-pink">
             {ENTER_ERRORS[enterError] ?? ENTER_ERRORS.FAILED}
           </p>
         )}
 
         {inHub && (
           <>
-            <div className="pointer-events-auto neo-slab px-2 py-1 thai-font text-[11px] text-ink">{roomLabel}</div>
+            <div className="pointer-events-auto px-slab px-2 py-1 thai-font text-xs text-ink">{roomLabel}</div>
             <button
               onClick={() => leaveSchoolHub(uid)}
-              className="pointer-events-auto neo-btn bg-hud text-ink thai-font text-xs px-3 py-1.5 rounded-lg"
+              className="pointer-events-auto px-btn bg-paper text-ink thai-font text-xs px-3 py-1.5 rounded-lg"
             >
               ← ออกจากโรงเรียน
             </button>
             <div className="pointer-events-auto flex gap-1.5">
               <button onClick={() => setEmoteOpen((v) => !v)} aria-label="อีโมจิ" aria-expanded={emoteOpen}
-                className="neo-btn w-10 h-10 bg-hud rounded-lg text-xl">😀</button>
+                className="px-btn w-10 h-10 bg-paper rounded-lg text-xl">😀</button>
               <button onClick={() => useSchoolWorldStore.getState().toggleAmbient()} aria-label="โหมดบรรยากาศกลางคืน" aria-pressed={ambient}
-                className={`neo-btn w-10 h-10 rounded-lg text-xl ${ambient ? 'bg-brand-soft' : 'bg-hud'}`}>🌧</button>
+                className={`px-btn w-10 h-10 rounded-lg text-xl ${ambient ? 'bg-brand-soft' : 'bg-paper'}`}>🌧</button>
               <button onClick={share} aria-label="แชร์ภาพห้อง"
-                className="neo-btn w-10 h-10 bg-hud rounded-lg text-xl">📷</button>
+                className="px-btn w-10 h-10 bg-paper rounded-lg text-xl">📷</button>
             </div>
-            {shareMsg && <p role="status" className="pointer-events-auto neo-slab max-w-56 p-2 thai-font text-xs text-ink">{shareMsg}</p>}
+            {shareMsg && <p role="status" className="pointer-events-auto px-slab max-w-56 p-2 thai-font text-xs text-ink">{shareMsg}</p>}
           </>
         )}
       </div>

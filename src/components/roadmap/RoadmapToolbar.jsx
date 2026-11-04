@@ -36,10 +36,10 @@ export default function RoadmapToolbar({
       {paletteOpen && paletteItems.length > 0 && (
         <Panel position="top-center">
           <div
-            className="flex items-center gap-2 neo-slab px-3 py-2 mt-2 max-w-[calc(100vw-1rem)] overflow-x-auto"
+            className="flex items-center gap-2 px-slab px-3 py-2 mt-2 max-w-[calc(100vw-1rem)] overflow-x-auto"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
-            <span className="pixel-font text-[9px] text-ink-soft mr-1 flex-shrink-0">Add</span>
+            <span className="pixel-font text-xs text-ink-soft mr-1 flex-shrink-0">Add</span>
             {paletteItems.map((item) => (
               <button
                 key={item.type}
@@ -59,7 +59,7 @@ export default function RoadmapToolbar({
                 aria-label={item.ariaLabel ?? `Add ${item.label} block`}
               >
                 {item.preview}
-                <span className="pixel-font text-[8px] text-ink">{item.label}</span>
+                <span className="pixel-font text-xs text-ink">{item.label}</span>
               </button>
             ))}
             {onToggleSelectMode && (
@@ -79,7 +79,7 @@ export default function RoadmapToolbar({
                   className={mobileSelectMode ? 'text-brand' : 'text-ink-soft'}
                   strokeWidth={2}
                 />
-                <span className="pixel-font text-[8px] text-ink">Select</span>
+                <span className="pixel-font text-xs text-ink">Select</span>
               </button>
             )}
             {paletteExtra}
@@ -89,7 +89,7 @@ export default function RoadmapToolbar({
 
       {wireframe && (
         <Panel position="bottom-center">
-          <div className="flex items-center gap-2 neo-slab px-3 py-2 mb-2">
+          <div className="flex items-center gap-2 px-slab px-3 py-2 mb-2">
             <button
               type="button"
               onClick={wireframe.onText}
@@ -97,9 +97,9 @@ export default function RoadmapToolbar({
               aria-label="เพิ่มข้อความ"
             >
               <div className="w-8 h-5 rounded-full bg-brand/20 border-2 border-brand/50 flex items-center justify-center">
-                <span className="pixel-font text-[6px] text-brand">Aa</span>
+                <span className="pixel-font text-xs text-brand">Aa</span>
               </div>
-              <span className="pixel-font text-[8px] text-ink">Text</span>
+              <span className="pixel-font text-xs text-ink">Text</span>
             </button>
             <button
               type="button"
@@ -115,7 +115,7 @@ export default function RoadmapToolbar({
               <div className="w-8 h-8 rounded-xl border-2 border-dashed border-brand/50 flex items-center justify-center">
                 <span className="text-[14px]">〰️</span>
               </div>
-              <span className="pixel-font text-[8px] text-ink">Line</span>
+              <span className="pixel-font text-xs text-ink">Line</span>
             </button>
             <button
               type="button"
@@ -126,7 +126,7 @@ export default function RoadmapToolbar({
               <div className="w-8 h-8 rounded-xl bg-brand/10 border-2 border-brand/30 flex items-center justify-center">
                 <span className="text-[14px]">⭐</span>
               </div>
-              <span className="pixel-font text-[8px] text-ink">Sticker</span>
+              <span className="pixel-font text-xs text-ink">Sticker</span>
             </button>
             <button
               type="button"
@@ -142,7 +142,7 @@ export default function RoadmapToolbar({
               <div className="w-8 h-8 rounded-xl bg-brand/20 border-2 border-brand/50 flex items-center justify-center">
                 <span className="pixel-font text-[14px] text-brand font-bold">+</span>
               </div>
-              <span className="pixel-font text-[8px] text-ink">+</span>
+              <span className="pixel-font text-xs text-ink">+</span>
             </button>
           </div>
         </Panel>

@@ -45,7 +45,7 @@ export default function RoadmapPreview({ onOpen }) {
             zoomOnDoubleClick={false}
             proOptions={{ hideAttribution: true }}
           >
-            <Background gap={20} color="#e2e8f0" />
+            <Background gap={20} color="var(--color-hairline)" />
           </ReactFlow>
         </ReactFlowProvider>
       </div>

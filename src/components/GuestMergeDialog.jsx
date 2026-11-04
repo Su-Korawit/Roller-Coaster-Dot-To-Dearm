@@ -12,7 +12,7 @@ export default function GuestMergeDialog() {
     <div className="fixed inset-0 z-[100]">
       <Popup variant="center" size="sm" onClose={() => {}} backdrop>
         <div className="p-6 text-center">
-          <p className="pixel-font text-[10px] text-ink mb-3">พบงานที่ทำไว้ก่อน login</p>
+          <p className="pixel-font text-xs text-ink mb-3">พบงานที่ทำไว้ก่อน login</p>
           <p className="thai-font text-sm text-ink/70 mb-6">
             บัญชีของคุณมีข้อมูลอยู่แล้ว ต้องการเก็บงาน guest ไว้หรือทิ้ง?
           </p>
@@ -20,14 +20,14 @@ export default function GuestMergeDialog() {
             <button
               type="button"
               onClick={mergeGuestAppend}
-              className="neo-btn w-full rounded-xl bg-brand-strong py-3 thai-font text-sm text-white"
+              className="px-btn w-full rounded-xl bg-brand-strong py-3 thai-font text-sm text-white"
             >
               เก็บงานใหม่เพิ่มเข้าไป
             </button>
             <button
               type="button"
               onClick={discardGuest}
-              className="neo-btn w-full rounded-xl bg-surface py-3 thai-font text-sm text-ink"
+              className="px-btn w-full rounded-xl bg-paper py-3 thai-font text-sm text-ink"
             >
               ทิ้งงาน guest
             </button>

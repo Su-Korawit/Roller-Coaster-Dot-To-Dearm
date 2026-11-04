@@ -23,15 +23,15 @@ export function Hotbar({ slots = [], selectedIndex = 0, onSelectSlot = () => {} 
               onClick={() => onSelectSlot(i)}
               className={`relative flex items-center justify-center w-9 h-9 md:w-11 md:h-11 shrink-0 rounded-sm border-2 transition-colors ${
                 selected
-                  ? 'border-ink bg-wood-light shadow-[0_0_0_2px_var(--color-lime)]'
-                  : 'border-wood-edge bg-wood-dark/50 hover:bg-wood-light/60'
+                  ? 'border-ink bg-mist shadow-[0_0_0_2px_var(--color-lime)]'
+                  : 'border-line-soft bg-hairline/50 hover:bg-mist/60'
               }`}
             >
               {slot && (
                 <>
                   <ItemSprite itemId={slot.itemId} size={28} />
                   {slot.count > 1 && (
-                    <span className="absolute bottom-0 right-0.5 pixel-font text-[8px] leading-none text-ink [text-shadow:1px_1px_0_var(--color-wood-light)]">
+                    <span className="absolute bottom-0 right-0.5 pixel-font text-xs leading-none text-ink [text-shadow:1px_1px_0_var(--color-mist)]">
                       {slot.count}
                     </span>
                   )}

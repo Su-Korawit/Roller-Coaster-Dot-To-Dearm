@@ -15,12 +15,12 @@ export default function StageLabelNode({ id, data, selected }) {
     <div
       className={`group min-w-[100px] px-4 py-1.5 rounded-xl border-2 transition-all ${
         selected
-          ? 'border-edge bg-brand-soft shadow-hard-sm ring-2 ring-lime'
-          : 'border-edge/60 bg-surface hover:border-edge'
+          ? 'border-line bg-brand-soft shadow-hard-sm ring-2 ring-lime'
+          : 'border-line/60 bg-paper hover:border-line'
       }`}
     >
       <input
-        className="pixel-font text-[10px] font-bold text-brand bg-transparent outline-none text-center w-full placeholder:text-brand/30"
+        className="pixel-font text-xs font-bold text-brand bg-transparent outline-none text-center w-full placeholder:text-brand/30"
         placeholder="Stage name"
         value={data.label}
         onChange={onChange}

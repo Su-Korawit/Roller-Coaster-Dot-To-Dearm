@@ -80,7 +80,7 @@ export default function DailyLoginModal({ onClose, today }) {
           <>
             {/* Header */}
             <div className="text-center">
-              <p className="pixel-font text-[11px] text-ink mb-1">How are you today?</p>
+              <p className="pixel-font text-xs text-ink mb-1">How are you today?</p>
               <p className="text-xs text-ink-soft">Tap a mood to check in — unlocks your daily stack!</p>
             </div>
 
@@ -95,7 +95,7 @@ export default function DailyLoginModal({ onClose, today }) {
                     ${selected === level ? `ring-2 ring-offset-1 scale-105 ${SELECTED_RING[level]}` : ''}`}
                 >
                   <span className="text-2xl leading-none">{emoji}</span>
-                  <span className="pixel-font text-[10px] text-ink-soft">{label}</span>
+                  <span className="pixel-font text-xs text-ink-soft">{label}</span>
                 </button>
               ))}
             </div>
@@ -104,7 +104,7 @@ export default function DailyLoginModal({ onClose, today }) {
             <button
               onClick={handleConfirm}
               disabled={!selected}
-              className="w-full rounded-xl bg-ink text-white py-3 pixel-font text-[10px] active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-full rounded-xl bg-ink text-white py-3 pixel-font text-xs active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {selected ? `Check In as "${MOODS[selected - 1].label}"` : 'Select a mood first'}
             </button>
@@ -112,7 +112,7 @@ export default function DailyLoginModal({ onClose, today }) {
             {/* Skip */}
             <button
               onClick={onClose}
-              className="text-center pixel-font text-[10px] text-ink-soft active:opacity-60"
+              className="text-center pixel-font text-xs text-ink-soft active:opacity-60"
             >
               Skip for today
             </button>
@@ -132,8 +132,8 @@ export default function DailyLoginModal({ onClose, today }) {
                     key={i}
                     data-testid="streak-dot"
                     data-lit={i <= cyclePosition(streakResult?.streak ?? 0) ? 'true' : 'false'}
-                    className={`w-6 h-6 rounded-full border-2 border-ink flex items-center justify-center pixel-font text-[8px] ${
-                      i <= cyclePosition(streakResult?.streak ?? 0) ? 'bg-warn text-ink' : 'bg-surface text-ink-soft'
+                    className={`w-6 h-6 rounded-full border-2 border-ink flex items-center justify-center pixel-font text-xs ${
+                      i <= cyclePosition(streakResult?.streak ?? 0) ? 'bg-warn text-ink' : 'bg-paper text-ink-soft'
                     }`}
                   >
                     {i}
@@ -156,11 +156,11 @@ export default function DailyLoginModal({ onClose, today }) {
                     value={reflection}
                     onChange={(e) => setReflection(e.target.value)}
                     placeholder="วันนี้เป็นยังไงบ้าง..."
-                    className="neo-input thai-font flex-1 px-3 py-2 text-sm"
+                    className="px-input thai-font flex-1 px-3 py-2 text-sm"
                   />
                   <button
                     onClick={handleSaveReflection}
-                    className="neo-btn rounded-lg bg-brand-strong px-4 py-2 pixel-font text-[10px] text-white"
+                    className="px-btn rounded-lg bg-brand-strong px-4 py-2 pixel-font text-xs text-white"
                   >
                     Save
                   </button>
@@ -169,15 +169,15 @@ export default function DailyLoginModal({ onClose, today }) {
             </div>
 
             {/* Heatmap */}
-            <div className="bg-[#161b22] rounded-2xl p-4">
-              <p className="pixel-font text-[10px] text-[#636e7b] mb-3">Mood Log — Past Year</p>
+            <div className="bg-paper border border-hairline rounded-2xl p-4">
+              <p className="pixel-font text-xs text-ink-soft mb-3">Mood Log — Past Year</p>
               <MoodHeatmap feelingNotes={feelingNotes} />
             </div>
 
             {/* Close */}
             <button
               onClick={onClose}
-              className="w-full rounded-xl bg-ink text-white py-3 pixel-font text-[10px] active:scale-95 transition-transform"
+              className="w-full rounded-xl bg-ink text-white py-3 pixel-font text-xs active:scale-95 transition-transform"
             >
               Let&apos;s go!
             </button>

@@ -49,11 +49,11 @@ export default function PaymentCard({ purchaseId }) {
   }
 
   return (
-    <div className="neo-card w-full max-w-xs overflow-hidden">
+    <div className="px-card w-full max-w-xs overflow-hidden">
       {/* Header */}
       <div className="rpg-plank flex items-center justify-between px-4 py-3">
         <div>
-          <p className="pixel-font text-[9px] text-ink/50">สั่งซื้อ</p>
+          <p className="pixel-font text-xs text-ink/50">สั่งซื้อ</p>
           <p className="thai-font text-sm font-semibold text-ink">
             {product?.name ?? 'แพ็คเกจเหรียญ'}
           </p>
@@ -63,7 +63,7 @@ export default function PaymentCard({ purchaseId }) {
 
       <div className="flex flex-col gap-3 px-4 py-4">
         {/* Coin + price summary */}
-        <div className="flex items-center justify-between rounded-xl border-2 border-edge/40 bg-brand-soft px-3 py-2">
+        <div className="flex items-center justify-between rounded-xl border-2 border-line/40 bg-brand-soft px-3 py-2">
           <span className="thai-font text-sm text-ink/70">
             🪙 {coins} เหรียญ
           </span>
@@ -87,7 +87,7 @@ export default function PaymentCard({ purchaseId }) {
         {(status === 'VERIFYING' || uploading) && (
           <div className="flex flex-col items-center gap-2 py-4">
             <span className="animate-spin text-2xl">⏳</span>
-            <p className="pixel-font text-[9px] text-brand-strong">VERIFYING SLIP...</p>
+            <p className="pixel-font text-xs text-brand-strong">VERIFYING SLIP...</p>
           </div>
         )}
 
@@ -111,7 +111,7 @@ export default function PaymentCard({ purchaseId }) {
 
         {/* EXPIRED */}
         {status === 'EXPIRED' && (
-          <div className="rounded-xl border-2 border-edge/40 bg-brand-soft px-3 py-2">
+          <div className="rounded-xl border-2 border-line/40 bg-brand-soft px-3 py-2">
             <p className="thai-font text-xs text-ink-soft">⏰ คำสั่งซื้อหมดอายุแล้ว</p>
           </div>
         )}

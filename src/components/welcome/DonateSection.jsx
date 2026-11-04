@@ -24,15 +24,15 @@ export default function DonateSection() {
       </p>
       <button
         onClick={() => setOpen(true)}
-        className="neo-btn pixel-font text-[10px] text-white rounded-2xl bg-accent-pink px-6 py-4 min-h-11"
+        className="px-btn pixel-font text-xs text-white rounded-2xl bg-accent-pink px-6 py-4 min-h-11"
       >
         ♥ DONATE
       </button>
 
       {open && (
         <Popup variant="center" size="sm" onClose={() => setOpen(false)}>
-          <div className="neo-card p-6" role="dialog" aria-modal="true" aria-label="บริจาคผ่าน PromptPay">
-            <p className="pixel-font text-[10px] text-ink mb-4">PROMPTPAY</p>
+          <div className="px-card p-6" role="dialog" aria-modal="true" aria-label="บริจาคผ่าน PromptPay">
+            <p className="pixel-font text-xs text-ink mb-4">PROMPTPAY</p>
             <div className="flex justify-center">
               {qrUrl ? (
                 <img src={qrUrl} alt="PromptPay QR" className="h-52 w-52 rounded-lg border-2 border-brand p-2" />

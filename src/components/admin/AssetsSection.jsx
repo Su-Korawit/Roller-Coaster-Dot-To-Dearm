@@ -69,7 +69,7 @@ function UploadRow({ storagePath, accept, onSuccess, label, disabled }) {
         >
           {progress !== null ? `${progress}%` : label ?? '⬆ อัปโหลด'}
         </button>
-        {error && <span className="text-red-500 text-[10px] truncate">{error}</span>}
+        {error && <span className="text-red-500 text-xs truncate">{error}</span>}
       </div>
       {progress !== null && (
         <div className="h-1 w-full rounded-full bg-gray-200 overflow-hidden">
@@ -185,13 +185,13 @@ export function CharactersGrid({ onStatus }) {
             const inCloud = uploaded.has(`${code}.png`)
             const busy = busyCode === code
             return (
-              <div key={code} className="flex flex-col items-center gap-2 p-3 neo-card">
+              <div key={code} className="flex flex-col items-center gap-2 p-3 px-card">
                 <SpritePreview code={code} cloudUrl={cloudUrls[code]} />
                 <div className="flex items-center gap-1.5">
-                  <span className="pixel-font text-[9px] text-gray-700">{code}</span>
+                  <span className="pixel-font text-xs text-gray-700">{code}</span>
                   {inCloud
-                    ? <span className="text-[9px] text-emerald-600 font-semibold">✓ cloud</span>
-                    : <span className="text-[9px] text-amber-500 font-semibold">local</span>
+                    ? <span className="text-xs text-emerald-600 font-semibold">✓ cloud</span>
+                    : <span className="text-xs text-amber-500 font-semibold">local</span>
                   }
                 </div>
                 <UploadRow

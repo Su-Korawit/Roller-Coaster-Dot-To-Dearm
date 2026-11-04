@@ -98,7 +98,7 @@ export default function BagPage() {
 
   return (
     <div className="h-full w-full flex flex-col md:flex-row bg-brand-soft min-h-0">
-      <div className="flex md:flex-col md:w-20 flex-shrink-0 bg-surface border-b md:border-b-0 md:border-r border-ink/10">
+      <div className="flex md:flex-col md:w-20 flex-shrink-0 bg-paper border-b md:border-b-0 md:border-r border-ink/10">
         <BagIconRail
           visibleCategories={visibleCategories}
           activeCategory={category}
@@ -116,13 +116,13 @@ export default function BagPage() {
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col">
-        <header className="flex items-center gap-2 px-3 py-2 border-b border-ink/10 bg-surface flex-shrink-0">
+        <header className="flex items-center gap-2 px-3 py-2 border-b border-ink/10 bg-paper flex-shrink-0">
           {folderStack.length > 0 && (
             <button type="button" onClick={goBack} aria-label="Back" className="p-1.5 rounded-lg hover:bg-brand/10">
               <ChevronLeft size={18} />
             </button>
           )}
-          <h1 className="pixel-font text-[10px] text-ink">
+          <h1 className="pixel-font text-xs text-ink">
             {folderStack.length ? folderStack.map((f) => f.name).join(' / ') : 'File Bag'}
           </h1>
           <div className="md:hidden ml-auto">
@@ -170,8 +170,8 @@ export default function BagPage() {
 
       {showUpgrade && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setShowUpgrade(false)}>
-          <div className="neo-card p-5 w-full max-w-sm space-y-3" onClick={(e) => e.stopPropagation()}>
-            <h2 className="pixel-font text-[10px] text-ink">Upgrade storage</h2>
+          <div className="px-card p-5 w-full max-w-sm space-y-3" onClick={(e) => e.stopPropagation()}>
+            <h2 className="pixel-font text-xs text-ink">Upgrade storage</h2>
             <p className="text-xs text-ink-soft">ซื้อด้วยเหรียญ (Coins) ผ่าน entitlement ในแอป</p>
             {(catalog.filter((c) => c.kind === 'storage-quota').length
               ? catalog.filter((c) => c.kind === 'storage-quota')
@@ -181,7 +181,7 @@ export default function BagPage() {
                 key={item.id}
                 type="button"
                 onClick={() => handleUpgrade(item.id)}
-                className="w-full neo-btn rounded-xl px-4 py-3 text-left text-sm bg-surface"
+                className="w-full px-btn rounded-xl px-4 py-3 text-left text-sm bg-paper"
               >
                 <span className="font-semibold">{item.name}</span>
                 <span className="block text-xs text-ink-soft">{item.priceCoins} coins</span>

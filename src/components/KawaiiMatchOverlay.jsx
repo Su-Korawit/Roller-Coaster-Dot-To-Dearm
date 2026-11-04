@@ -4,9 +4,9 @@ import { Z_CELEBRATION } from '../constants/zIndex'
 import { shapes } from '../lib/db'
 
 function scoreColor(score) {
-  if (score >= 90) return '#d99b3b'
-  if (score >= 71) return '#8a4a70'
-  return '#7ea04a'
+  if (score >= 90) return 'var(--color-warn)'
+  if (score >= 71) return 'var(--color-brand)'
+  return 'var(--color-leaf)'
 }
 
 // 20 particles radiating from center — deterministic angles
@@ -17,7 +17,7 @@ const PARTICLES = Array.from({ length: 20 }, (_, i) => ({
   delay: 1.0 + i * 0.04,
   dur: 0.85 + (i % 5) * 0.08,
   size: 14 + (i % 4) * 3,
-  color: ['#e8b04a','#d98ba0','#8a4a70','#9db557','#f3e5c2','#e6a6b4','#d9b3cf','#c0d470'][i % 8],
+  color: ['var(--color-warn)','var(--color-zone-arts)','var(--color-brand)','var(--color-leaf)','var(--color-mist)','var(--color-zone-arts)','var(--color-zone-soc-soft)','var(--color-lime)'][i % 8],
 }))
 
 // 10 floating hearts at varied x positions
@@ -36,26 +36,26 @@ const HEARTS = [
 
 // 20 twinkling background stars
 const STARS = [
-  {char:'★',top:5, left:10,delay:0,   dur:1.5,size:12,color:'#e8b04a'},
-  {char:'✦',top:12,left:85,delay:0.3, dur:2.0,size:8, color:'#fff'   },
-  {char:'✧',top:20,left:30,delay:0.6, dur:1.8,size:10,color:'#e6a6b4'},
-  {char:'★',top:8, left:60,delay:0.9, dur:1.3,size:14,color:'#d9b3cf'},
-  {char:'✦',top:30,left:5, delay:0.15,dur:2.2,size:8, color:'#fff'   },
-  {char:'✧',top:35,left:92,delay:0.45,dur:1.6,size:12,color:'#f3e5c2'},
-  {char:'★',top:15,left:45,delay:0.75,dur:1.9,size:10,color:'#e8b04a'},
-  {char:'✦',top:45,left:20,delay:0.05,dur:2.4,size:8, color:'#fff'   },
-  {char:'✧',top:55,left:75,delay:0.35,dur:1.7,size:14,color:'#e6a6b4'},
-  {char:'★',top:25,left:88,delay:0.65,dur:2.1,size:10,color:'#d9b3cf'},
-  {char:'✦',top:65,left:35,delay:0.95,dur:1.4,size:8, color:'#f3e5c2'},
-  {char:'✧',top:70,left:55,delay:0.25,dur:2.3,size:12,color:'#fff'   },
-  {char:'★',top:80,left:10,delay:0.55,dur:1.8,size:10,color:'#e8b04a'},
-  {char:'✦',top:75,left:80,delay:0.85,dur:2.0,size:8, color:'#d9b3cf'},
-  {char:'✧',top:40,left:50,delay:0.10,dur:1.6,size:14,color:'#e6a6b4'},
-  {char:'★',top:88,left:40,delay:0.40,dur:2.5,size:10,color:'#f3e5c2'},
-  {char:'✦',top:92,left:65,delay:0.70,dur:1.3,size:8, color:'#fff'   },
-  {char:'✧',top:60,left:15,delay:1.00,dur:2.0,size:12,color:'#e8b04a'},
-  {char:'★',top:50,left:95,delay:0.20,dur:1.7,size:10,color:'#d9b3cf'},
-  {char:'✦',top:18,left:70,delay:0.50,dur:2.2,size:8, color:'#e6a6b4'},
+  {char:'★',top:5, left:10,delay:0,   dur:1.5,size:12,color:'var(--color-warn)'},
+  {char:'✦',top:12,left:85,delay:0.3, dur:2.0,size:8, color:'var(--color-paper)'   },
+  {char:'✧',top:20,left:30,delay:0.6, dur:1.8,size:10,color:'var(--color-zone-arts)'},
+  {char:'★',top:8, left:60,delay:0.9, dur:1.3,size:14,color:'var(--color-zone-soc-soft)'},
+  {char:'✦',top:30,left:5, delay:0.15,dur:2.2,size:8, color:'var(--color-paper)'   },
+  {char:'✧',top:35,left:92,delay:0.45,dur:1.6,size:12,color:'var(--color-mist)'},
+  {char:'★',top:15,left:45,delay:0.75,dur:1.9,size:10,color:'var(--color-warn)'},
+  {char:'✦',top:45,left:20,delay:0.05,dur:2.4,size:8, color:'var(--color-paper)'   },
+  {char:'✧',top:55,left:75,delay:0.35,dur:1.7,size:14,color:'var(--color-zone-arts)'},
+  {char:'★',top:25,left:88,delay:0.65,dur:2.1,size:10,color:'var(--color-zone-soc-soft)'},
+  {char:'✦',top:65,left:35,delay:0.95,dur:1.4,size:8, color:'var(--color-mist)'},
+  {char:'✧',top:70,left:55,delay:0.25,dur:2.3,size:12,color:'var(--color-paper)'   },
+  {char:'★',top:80,left:10,delay:0.55,dur:1.8,size:10,color:'var(--color-warn)'},
+  {char:'✦',top:75,left:80,delay:0.85,dur:2.0,size:8, color:'var(--color-zone-soc-soft)'},
+  {char:'✧',top:40,left:50,delay:0.10,dur:1.6,size:14,color:'var(--color-zone-arts)'},
+  {char:'★',top:88,left:40,delay:0.40,dur:2.5,size:10,color:'var(--color-mist)'},
+  {char:'✦',top:92,left:65,delay:0.70,dur:1.3,size:8, color:'var(--color-paper)'   },
+  {char:'✧',top:60,left:15,delay:1.00,dur:2.0,size:12,color:'var(--color-warn)'},
+  {char:'★',top:50,left:95,delay:0.20,dur:1.7,size:10,color:'var(--color-zone-soc-soft)'},
+  {char:'✦',top:18,left:70,delay:0.50,dur:2.2,size:8, color:'var(--color-zone-arts)'},
 ]
 
 // ─── CSS keyframes (injected once) ────────────────────────────────────────────
@@ -134,7 +134,7 @@ function MatchAvatar({ user, slideDir, delay, reduced }) {
           width: 80, height: 80,
           border: `4px solid ${color}`,
           boxShadow: `0 0 0 4px ${color}44, 0 0 24px ${color}66`,
-          background: '#fff',
+          background: 'var(--color-paper)',
           animation: reduced ? 'none' : `rc-ring-pulse 0.6s ease-in-out ${delay + 0.6}s 3`,
         }}
       >
@@ -142,7 +142,7 @@ function MatchAvatar({ user, slideDir, delay, reduced }) {
           ? <img src={src} alt="" className="w-full h-full object-cover" />
           : <span className="font-bold text-2xl" style={{ color }}>{initial}</span>}
       </div>
-      <p className="pixel-font text-[8px] text-white/90 text-center mt-1.5 max-w-[80px] truncate">
+      <p className="pixel-font text-xs text-white/90 text-center mt-1.5 max-w-[80px] truncate">
         {user?.displayName || '?'}
       </p>
     </div>
@@ -171,7 +171,7 @@ function NoMatchToast({ score, onClose }) {
         className="bg-ink/90 backdrop-blur-sm rounded-2xl px-5 py-3 flex flex-col items-center gap-1 shadow-xl relative overflow-hidden"
         style={{ animation: 'rc-toast-in 2s ease-in-out forwards' }}
       >
-        <p className="pixel-font text-[10px] text-white/70">Match Score: {score}%</p>
+        <p className="pixel-font text-xs text-white/70">Match Score: {score}%</p>
         <p className="thai-font text-xs text-white/50">ยังไม่ Match — ลองใหม่ในอีก 24 ชม.</p>
         {/* 3 sad gray stars drifting down */}
         {SAD_STARS.map((s, i) => (
@@ -227,7 +227,7 @@ function FullMatchOverlay({ score, targetUser, myUser, onClose, onOpenChat, onVi
         data-rc-anim
         className="absolute inset-0"
         style={{
-          background: 'rgba(10,5,30,0.88)',
+          background: 'rgba(43,37,80,0.9)',
           backdropFilter: 'blur(8px)',
           animation: reduced ? 'none' : 'rc-fade-in 0.5s ease-out both',
         }}
@@ -297,7 +297,7 @@ function FullMatchOverlay({ score, targetUser, myUser, onClose, onOpenChat, onVi
           <span
             className="pixel-font text-[22px] font-black tracking-widest"
             style={{
-              background: 'linear-gradient(135deg, #e8b04a 0%, #d98ba0 40%, #8a4a70 80%, #9db557 100%)',
+              background: 'linear-gradient(135deg, var(--color-warn) 0%, var(--color-zone-arts) 40%, var(--color-brand) 80%, var(--color-leaf) 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               filter: 'drop-shadow(0 0 12px rgba(251,191,36,0.6))',
@@ -337,8 +337,8 @@ function FullMatchOverlay({ score, targetUser, myUser, onClose, onOpenChat, onVi
             style={{ animation: reduced ? 'none' : 'rc-fade-in 0.4s ease-out both' }}
           >
             <div className="flex items-center justify-between">
-              <span className="pixel-font text-[7px] text-white/60">Match Score</span>
-              <span className="pixel-font text-[10px] font-bold" style={{ color: barColor }}>
+              <span className="pixel-font text-xs text-white/60">Match Score</span>
+              <span className="pixel-font text-xs font-bold" style={{ color: barColor }}>
                 {score}%
               </span>
             </div>
@@ -348,7 +348,7 @@ function FullMatchOverlay({ score, targetUser, myUser, onClose, onOpenChat, onVi
                 style={{
                   width: `${scoreWidth}%`,
                   background: isGold
-                    ? 'linear-gradient(90deg,#d99b3b 0%,#f3e5c2 50%,#d99b3b 100%)'
+                    ? 'linear-gradient(90deg,var(--color-warn) 0%,var(--color-mist) 50%,var(--color-warn) 100%)'
                     : barColor,
                   ...(isGold ? {
                     backgroundSize: '300px 100%',
@@ -380,20 +380,20 @@ function FullMatchOverlay({ score, targetUser, myUser, onClose, onOpenChat, onVi
                     </span>}
               </div>
               <div>
-                <p className="pixel-font text-[10px] text-white font-semibold">
+                <p className="pixel-font text-xs text-white font-semibold">
                   {targetUser?.displayName || 'ผู้ใช้'}
                 </p>
                 <div className="flex gap-1.5 mt-0.5">
                   {shapes.readProfile(targetUser).mbti && (
                     <span
-                      className="pixel-font text-[6px] px-1.5 py-0.5 rounded text-white"
+                      className="pixel-font text-xs px-1.5 py-0.5 rounded text-white"
                       style={{ background: mbtiColor(shapes.readProfile(targetUser).mbti) }}
                     >
                       {shapes.readProfile(targetUser).mbti}
                     </span>
                   )}
                   {shapes.readProfile(targetUser).program && (
-                    <span className="pixel-font text-[6px] px-1.5 py-0.5 rounded bg-white/20 text-white/80 max-w-[100px] truncate">
+                    <span className="pixel-font text-xs px-1.5 py-0.5 rounded bg-white/20 text-white/80 max-w-[100px] truncate">
                       {shapes.readProfile(targetUser).program}
                     </span>
                   )}
@@ -405,13 +405,13 @@ function FullMatchOverlay({ score, targetUser, myUser, onClose, onOpenChat, onVi
             <div className="flex gap-2">
               <button
                 onClick={() => { onOpenChat?.(targetUser?.uid); onClose() }}
-                className="flex-1 bg-brand text-white pixel-font text-[8px] py-2.5 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                className="flex-1 bg-brand text-white pixel-font text-xs py-2.5 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
               >
                 💬 ส่งข้อความ
               </button>
               <button
                 onClick={() => { onViewProfile?.(targetUser?.uid); onClose() }}
-                className="flex-1 border border-white/40 text-white/90 pixel-font text-[8px] py-2.5 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                className="flex-1 border border-white/40 text-white/90 pixel-font text-xs py-2.5 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
               >
                 👤 ดูโปรไฟล์
               </button>
@@ -422,7 +422,7 @@ function FullMatchOverlay({ score, targetUser, myUser, onClose, onOpenChat, onVi
         {/* Tap to close hint */}
         <p
           data-rc-anim
-          className="pixel-font text-[7px] text-white/30"
+          className="pixel-font text-xs text-white/30"
           style={{ animation: reduced ? 'none' : 'rc-fade-in 0.4s ease-out 3.5s both', opacity: reduced ? 0.3 : 0 }}
         >
           แตะด้านนอกเพื่อปิด

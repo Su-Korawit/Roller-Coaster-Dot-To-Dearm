@@ -6,7 +6,7 @@ export default function EmoteWheel({ onPick, onClose }) {
     <div
       role="dialog"
       aria-label="เลือกอีโมจิ"
-      className="absolute left-4 bottom-40 z-30 neo-slab p-2 grid grid-cols-4 gap-1.5 pointer-events-auto"
+      className="absolute left-4 bottom-40 z-30 px-slab p-2 grid grid-cols-4 gap-1.5 pointer-events-auto"
     >
       {EMOTES.map((e) => (
         <button
@@ -14,7 +14,7 @@ export default function EmoteWheel({ onPick, onClose }) {
           onClick={() => { onPick(e.id); onClose() }}
           aria-label={e.label}
           title={e.label}
-          className="neo-btn w-11 h-11 text-2xl flex items-center justify-center bg-surface rounded-lg"
+          className="px-btn w-11 h-11 text-2xl flex items-center justify-center bg-paper rounded-lg"
         >
           <span aria-hidden="true">{e.glyph}</span>
         </button>

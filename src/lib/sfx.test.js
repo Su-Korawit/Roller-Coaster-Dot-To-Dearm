@@ -140,10 +140,10 @@ describe('UI click sound', () => {
   const el = (html) => { const d = document.createElement('div'); d.innerHTML = html; document.body.appendChild(d); return d }
   afterEach(() => { document.body.innerHTML = '' })
 
-  it('fires for buttons, links, tabs, switches and .neo-btn — but not for plain text or disabled/aria-disabled controls', () => {
+  it('fires for buttons, links, tabs, switches and .px-btn — but not for plain text or disabled/aria-disabled controls', () => {
     const d = el(`
       <button id="b">x</button><a id="a" href="/x">x</a><div id="t" role="tab">x</div>
-      <div id="s" role="switch">x</div><div id="n" class="neo-btn">x</div><p id="p">x</p>
+      <div id="s" role="switch">x</div><div id="n" class="px-btn">x</div><p id="p">x</p>
       <button id="dis" disabled>x</button><div id="ad" role="button" aria-disabled="true">x</div>
       <div data-no-sfx><button id="q">x</button></div>
       <button id="inner"><span id="child">x</span></button>`)

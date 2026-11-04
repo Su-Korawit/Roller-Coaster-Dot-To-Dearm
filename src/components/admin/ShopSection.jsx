@@ -118,7 +118,7 @@ export default function ShopSection() {
 
       {/* Product form */}
       {editing && (
-        <div className="neo-card p-5 space-y-4 border-brand">
+        <div className="px-card p-5 space-y-4 border-brand">
           <p className="font-semibold text-gray-800">{editing === 'new' ? '➕ สินค้าใหม่' : '✏️ แก้ไขสินค้า'}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label className="flex flex-col gap-1 col-span-full">
@@ -211,7 +211,7 @@ export default function ShopSection() {
       {products.length === 0 ? (
         <div className="py-16 text-center text-gray-400 text-sm">ยังไม่มีสินค้า กด "+ เพิ่มสินค้า" เพื่อเริ่ม</div>
       ) : (
-        <div className="neo-card overflow-x-auto">
+        <div className="px-card overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>

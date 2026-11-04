@@ -76,7 +76,7 @@ function FolderSidebar({ folders, selectedPath, onSelect, onRenameFolder, onDele
           )}
 
           {f.isSystem && (
-            <span className="text-[9px] text-gray-400 shrink-0">sys</span>
+            <span className="text-xs text-gray-400 shrink-0">sys</span>
           )}
 
           {!f.isSystem && editingId !== f.id && (
@@ -111,7 +111,7 @@ function FolderSidebar({ folders, selectedPath, onSelect, onRenameFolder, onDele
           <span className="text-sm leading-none">🗑</span>
           <span className="flex-1 text-xs">Trash</span>
           {trashCount > 0 && (
-            <span className="text-[9px] bg-red-100 text-red-600 rounded-full px-1.5 py-0.5 font-semibold">
+            <span className="text-xs bg-red-100 text-red-600 rounded-full px-1.5 py-0.5 font-semibold">
               {trashCount}
             </span>
           )}
@@ -135,7 +135,7 @@ function FileCard({ path, onRename, onMove, onDelete }) {
   }, [path, isImage])
 
   return (
-    <div className="relative flex flex-col items-center gap-2 p-3 neo-card">
+    <div className="relative flex flex-col items-center gap-2 p-3 px-card">
       {isImage && thumbUrl ? (
         <img
           src={thumbUrl}
@@ -148,7 +148,7 @@ function FileCard({ path, onRename, onMove, onDelete }) {
           {/\.json$/i.test(path) ? 'JSON' : '—'}
         </div>
       )}
-      <span className="text-[10px] text-gray-600 break-all w-full text-center leading-tight">
+      <span className="text-xs text-gray-600 break-all w-full text-center leading-tight">
         {name}
       </span>
 
@@ -435,10 +435,10 @@ function TrashView({ onFilesChanged, onTrashCountChange }) {
             const original = fromTrashPath(trashPath)
             const name     = trashPath.split('/').pop()
             return (
-              <div key={trashPath} className="flex items-center gap-3 px-3 py-2 neo-slab">
+              <div key={trashPath} className="flex items-center gap-3 px-3 py-2 px-slab">
                 <span className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-gray-800 truncate">{name}</p>
-                  <p className="text-[10px] text-gray-400 font-mono truncate">→ {original}</p>
+                  <p className="text-xs text-gray-400 font-mono truncate">→ {original}</p>
                 </span>
                 <button onClick={() => handleRestore(trashPath)}
                   className="px-2.5 py-1 rounded-lg bg-brand text-white text-xs font-semibold hover:bg-brand-strong">

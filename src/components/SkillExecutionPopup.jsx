@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useTaskStore } from '../stores/useTaskStore'
 import { useUserStore } from '../stores/useUserStore'
 import Popup from './ui/Popup'
+import { colors } from '../theme/colors'
 import { Z_TOAST } from '../constants/zIndex'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -18,13 +19,13 @@ function IgnitePopup({ task, onDone, onCancel }) {
 
   return (
     <div className="flex flex-col items-center justify-center gap-6 py-8">
-      <p className="pixel-font text-[9px] text-orange-500 tracking-widest">🚀 IGNITE</p>
-      <p className="pixel-font text-[10px] text-ink-soft text-center px-4">{task.title}</p>
+      <p className="pixel-font text-xs text-orange-500 tracking-widest">🚀 IGNITE</p>
+      <p className="pixel-font text-xs text-ink-soft text-center px-4">{task.title}</p>
       <p className="pixel-font text-[96px] leading-none text-orange-400">{count}</p>
-      <p className="pixel-font text-[10px] text-ink-soft">Get ready to start your task!</p>
+      <p className="pixel-font text-xs text-ink-soft">Get ready to start your task!</p>
       <button
         onClick={onCancel}
-        className="neo-btn pixel-font text-[10px] text-ink-soft border-2 border-ink/20 rounded-lg px-4 py-2"
+        className="px-btn pixel-font text-xs text-ink-soft border-2 border-ink/20 rounded-lg px-4 py-2"
       >
         Cancel
       </button>
@@ -56,17 +57,17 @@ function CapsulePopup({ task, timerEnd, onComplete, onCancel }) {
 
   return (
     <div className="flex flex-col items-center justify-center gap-5 py-8 px-6">
-      <p className="pixel-font text-[9px] text-sky-500 tracking-widest">⏳ CAPSULE</p>
-      <p className="pixel-font text-[10px] text-ink-soft text-center">{task.title}</p>
+      <p className="pixel-font text-xs text-sky-500 tracking-widest">⏳ CAPSULE</p>
+      <p className="pixel-font text-xs text-ink-soft text-center">{task.title}</p>
 
       {/* Circular-style progress ring (SVG) */}
       <div className="relative w-32 h-32">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r="44" fill="none" stroke="#e5e7eb" strokeWidth="8" />
+          <circle cx="50" cy="50" r="44" fill="none" stroke="var(--color-hairline)" strokeWidth="8" />
           <circle
             cx="50" cy="50" r="44"
             fill="none"
-            stroke={expired ? '#4ade80' : '#38bdf8'}
+            stroke={expired ? colors.good : colors.zoneSci}
             strokeWidth="8"
             strokeDasharray={`${2 * Math.PI * 44}`}
             strokeDashoffset={`${2 * Math.PI * 44 * (1 - progress)}`}
@@ -84,23 +85,23 @@ function CapsulePopup({ task, timerEnd, onComplete, onCancel }) {
 
       {expired ? (
         <>
-          <p className="pixel-font text-[9px] text-green-500">Time's up! +50% bonus coins!</p>
+          <p className="pixel-font text-xs text-green-500">Time's up! +50% bonus coins!</p>
           <button
             onClick={onComplete}
-            className="w-full rounded-xl bg-green-500 text-white py-3 pixel-font text-[10px] active:scale-95 transition-transform"
+            className="w-full rounded-xl bg-green-500 text-white py-3 pixel-font text-xs active:scale-95 transition-transform"
           >
             Complete Task 🎉
           </button>
         </>
       ) : (
         <>
-          <p className="pixel-font text-[10px] text-ink-soft text-center">
+          <p className="pixel-font text-xs text-ink-soft text-center">
             Complete within time for +50% coins
           </p>
           <div className="flex gap-3 w-full">
             <button
               onClick={onComplete}
-              className="flex-1 rounded-xl bg-sky-500 text-white py-2.5 pixel-font text-[9px] active:scale-95 transition-transform"
+              className="flex-1 rounded-xl bg-sky-500 text-white py-2.5 pixel-font text-xs active:scale-95 transition-transform"
             >
               Done Early! 💰
             </button>

@@ -9,7 +9,7 @@ import { splitTcasEvents } from '../utils/tcasCalendar'
 
 function EventRow({ event, passed, expanded, onToggle, onAdd, added, isAdmin, onDelete }) {
   return (
-    <li className={`neo-card p-3 ${passed ? 'opacity-60' : ''}`}>
+    <li className={`px-card p-3 ${passed ? 'opacity-60' : ''}`}>
       <button onClick={onToggle} className="w-full flex items-center gap-3 text-left">
         <span
           className={`w-3 h-3 rounded-full border-2 border-ink shrink-0 ${passed ? 'bg-green-400' : 'bg-accent-pink'}`}
@@ -17,7 +17,7 @@ function EventRow({ event, passed, expanded, onToggle, onAdd, added, isAdmin, on
         />
         <span className="flex-1 min-w-0">
           <span className="thai-font text-sm text-ink block truncate">{event.title}</span>
-          <span className="pixel-font text-[9px] text-ink-soft">{event.date}</span>
+          <span className="pixel-font text-xs text-ink-soft">{event.date}</span>
         </span>
         {isAdmin && (
           <span
@@ -46,7 +46,7 @@ function EventRow({ event, passed, expanded, onToggle, onAdd, added, isAdmin, on
           <button
             onClick={onAdd}
             disabled={added}
-            className={`neo-btn rounded-lg px-3 py-1.5 pixel-font text-[9px] flex items-center gap-1.5 ${
+            className={`px-btn rounded-lg px-3 py-1.5 pixel-font text-xs flex items-center gap-1.5 ${
               added ? 'bg-brand-soft text-ink-soft' : 'bg-brand-strong text-white'
             }`}
           >
@@ -115,12 +115,12 @@ export default function TcasCalendarTab({ today, onGuestAction }) {
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="pixel-font text-[11px] text-ink">TCAS70 Calendar</h3>
+        <h3 className="pixel-font text-xs text-ink">TCAS70 Calendar</h3>
         {isAdmin && (
           <button
             onClick={() => setShowForm((v) => !v)}
             aria-label="เพิ่มกิจกรรม TCAS"
-            className="neo-btn w-8 h-8 rounded-lg bg-brand-soft flex items-center justify-center text-brand-strong"
+            className="px-btn w-8 h-8 rounded-lg bg-brand-soft flex items-center justify-center text-brand-strong"
           >
             <Plus size={16} />
           </button>
@@ -128,24 +128,24 @@ export default function TcasCalendarTab({ today, onGuestAction }) {
       </div>
 
       {showForm && (
-        <div className="neo-card p-3 space-y-2">
-          <label className="flex flex-col thai-font text-[10px] text-ink-soft">
+        <div className="px-card p-3 space-y-2">
+          <label className="flex flex-col thai-font text-xs text-ink-soft">
             ชื่อกิจกรรม
-            <input aria-label="ชื่อกิจกรรม" value={title} onChange={(e) => setTitle(e.target.value)} className="neo-input px-2 py-1 text-sm" />
+            <input aria-label="ชื่อกิจกรรม" value={title} onChange={(e) => setTitle(e.target.value)} className="px-input px-2 py-1 text-sm" />
           </label>
-          <label className="flex flex-col thai-font text-[10px] text-ink-soft">
+          <label className="flex flex-col thai-font text-xs text-ink-soft">
             วันที่
-            <input aria-label="วันที่" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="neo-input px-2 py-1 text-sm" />
+            <input aria-label="วันที่" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="px-input px-2 py-1 text-sm" />
           </label>
-          <label className="flex flex-col thai-font text-[10px] text-ink-soft">
+          <label className="flex flex-col thai-font text-xs text-ink-soft">
             รายละเอียด
-            <textarea aria-label="รายละเอียด" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} className="neo-input px-2 py-1 text-sm resize-none" />
+            <textarea aria-label="รายละเอียด" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} className="px-input px-2 py-1 text-sm resize-none" />
           </label>
-          <label className="flex flex-col thai-font text-[10px] text-ink-soft">
+          <label className="flex flex-col thai-font text-xs text-ink-soft">
             ลิงก์ (ไม่บังคับ)
-            <input aria-label="ลิงก์" value={link} onChange={(e) => setLink(e.target.value)} className="neo-input px-2 py-1 text-sm" />
+            <input aria-label="ลิงก์" value={link} onChange={(e) => setLink(e.target.value)} className="px-input px-2 py-1 text-sm" />
           </label>
-          <button onClick={handleSaveEvent} className="neo-btn w-full rounded-lg bg-brand-strong py-2 pixel-font text-[10px] text-white">
+          <button onClick={handleSaveEvent} className="px-btn w-full rounded-lg bg-brand-strong py-2 pixel-font text-xs text-white">
             บันทึกกิจกรรม
           </button>
         </div>
@@ -153,7 +153,7 @@ export default function TcasCalendarTab({ today, onGuestAction }) {
 
       {passed.length > 0 && (
         <>
-          <p className="pixel-font text-[9px] text-ink-soft">ผ่านไปแล้ว</p>
+          <p className="pixel-font text-xs text-ink-soft">ผ่านไปแล้ว</p>
           <ul data-testid="tcas-passed" className="space-y-2">
             {passed.map((e) => renderRow(e, true))}
           </ul>
@@ -162,7 +162,7 @@ export default function TcasCalendarTab({ today, onGuestAction }) {
 
       {upcoming.length > 0 && (
         <>
-          <p className="pixel-font text-[9px] text-ink-soft pt-2">กำลังจะมาถึง</p>
+          <p className="pixel-font text-xs text-ink-soft pt-2">กำลังจะมาถึง</p>
           <ul data-testid="tcas-upcoming" className="space-y-2">
             {upcoming.map((e) => renderRow(e, false))}
           </ul>

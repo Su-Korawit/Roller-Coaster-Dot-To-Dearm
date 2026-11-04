@@ -52,7 +52,7 @@ export default function StorageBrowser({ folders, title = 'เลือกไฟ
                 <button
                   key={path}
                   onClick={() => onPick(path)}
-                  className="flex flex-col items-center gap-2 p-3 neo-card hover:bg-brand/5 transition-colors text-left"
+                  className="flex flex-col items-center gap-2 p-3 px-card hover:bg-brand/5 transition-colors text-left"
                 >
                   {thumbs[path] ? (
                     <img
@@ -66,7 +66,7 @@ export default function StorageBrowser({ folders, title = 'เลือกไฟ
                       {/\.json$/i.test(path) ? 'JSON' : '—'}
                     </div>
                   )}
-                  <span className="text-[10px] text-gray-600 break-all w-full">{path}</span>
+                  <span className="text-xs text-gray-600 break-all w-full">{path}</span>
                 </button>
               ))}
             </div>

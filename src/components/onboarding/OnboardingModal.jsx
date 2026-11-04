@@ -67,12 +67,12 @@ function OnboardingModal() {
     <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-paper">
       {step > 0 && subStep === null && (
         <div className="flex items-center justify-between px-5 pt-4 shrink-0">
-          <span className="pixel-font text-[10px] text-ink">STEP {step}/{LAST_MAIN_STEP}</span>
+          <span className="pixel-font text-xs text-ink">STEP {step}/{LAST_MAIN_STEP}</span>
           <div className="flex gap-1" aria-hidden="true">
             {[1, 2].map((s) => (
               <span
                 key={s}
-                className={`w-6 h-2 border-2 border-edge ${s <= step ? 'bg-lime' : 'bg-surface'}`}
+                className={`w-6 h-2 border-2 border-line ${s <= step ? 'bg-lime' : 'bg-paper'}`}
               />
             ))}
           </div>

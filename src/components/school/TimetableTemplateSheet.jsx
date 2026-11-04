@@ -49,7 +49,7 @@ export default function TimetableTemplateSheet({ onClose }) {
   return (
     <Popup variant="sheet" size="md" maxHeight="max-h-[85vh]" onClose={onClose}>
       <div className="px-5 pb-6 overflow-y-auto">
-        <p className="pixel-font text-[10px] text-center text-ink mb-3">โหลดตารางเรียน</p>
+        <p className="pixel-font text-xs text-center text-ink mb-3">โหลดตารางเรียน</p>
 
         {mode === 'browse' ? (
           <>
@@ -60,12 +60,12 @@ export default function TimetableTemplateSheet({ onClose }) {
                 value={term}
                 onChange={(e) => setTerm(e.target.value)}
                 placeholder="ชื่อโรงเรียน..."
-                className="neo-input thai-font flex-1 px-3 py-2 text-sm"
+                className="px-input thai-font flex-1 px-3 py-2 text-sm"
               />
               <button
                 aria-label="ค้นหา"
                 onClick={() => useTimetableTemplatesStore.getState().searchBySchool(term)}
-                className="neo-btn w-10 rounded-lg bg-brand-soft flex items-center justify-center text-brand-strong"
+                className="px-btn w-10 rounded-lg bg-brand-soft flex items-center justify-center text-brand-strong"
               >
                 <Search size={16} />
               </button>
@@ -94,11 +94,11 @@ export default function TimetableTemplateSheet({ onClose }) {
             ) : (
               <ul className="space-y-2">
                 {visible.map((t) => (
-                  <li key={t.id} className="neo-card p-3">
+                  <li key={t.id} className="px-card p-3">
                     <div className="flex items-center gap-2">
                       <span className="flex-1 min-w-0">
                         <span className="thai-font text-sm text-ink block truncate">{t.name}</span>
-                        <span className="thai-font text-[11px] text-ink-soft">{t.schoolName} · {t.classLevel} · {t.subjects.length} วิชา</span>
+                        <span className="thai-font text-xs text-ink-soft">{t.schoolName} · {t.classLevel} · {t.subjects.length} วิชา</span>
                       </span>
                       {t.createdBy === user?.uid && (
                         <button
@@ -116,7 +116,7 @@ export default function TimetableTemplateSheet({ onClose }) {
                       ) : (
                         <button
                           onClick={() => handleImport(t)}
-                          className="neo-btn rounded-lg bg-brand-strong px-3 py-1.5 thai-font text-xs text-white shrink-0"
+                          className="px-btn rounded-lg bg-brand-strong px-3 py-1.5 thai-font text-xs text-white shrink-0"
                         >
                           ใช้ตารางนี้
                         </button>
@@ -129,7 +129,7 @@ export default function TimetableTemplateSheet({ onClose }) {
 
             <button
               onClick={() => setMode('publish')}
-              className="mt-4 w-full neo-btn rounded-xl border-2 border-dashed border-brand/40 py-2.5 thai-font text-sm text-brand-strong flex items-center justify-center gap-2"
+              className="mt-4 w-full px-btn rounded-xl border-2 border-dashed border-brand/40 py-2.5 thai-font text-sm text-brand-strong flex items-center justify-center gap-2"
             >
               <Share2 size={14} /> แชร์ตารางเรียนของฉัน
             </button>
@@ -144,22 +144,22 @@ export default function TimetableTemplateSheet({ onClose }) {
           </div>
         ) : (
           <div className="space-y-2">
-            <label className="flex flex-col thai-font text-[11px] text-ink-soft">
+            <label className="flex flex-col thai-font text-xs text-ink-soft">
               ชื่อตาราง
-              <input aria-label="ชื่อตาราง" value={pubName} onChange={(e) => setPubName(e.target.value)} placeholder="เช่น ม.5/1 สายวิทย์" className="neo-input px-3 py-2 text-sm" />
+              <input aria-label="ชื่อตาราง" value={pubName} onChange={(e) => setPubName(e.target.value)} placeholder="เช่น ม.5/1 สายวิทย์" className="px-input px-3 py-2 text-sm" />
             </label>
-            <label className="flex flex-col thai-font text-[11px] text-ink-soft">
+            <label className="flex flex-col thai-font text-xs text-ink-soft">
               ชื่อโรงเรียน
-              <input aria-label="ชื่อโรงเรียน" value={pubSchool} onChange={(e) => setPubSchool(e.target.value)} className="neo-input px-3 py-2 text-sm" />
+              <input aria-label="ชื่อโรงเรียน" value={pubSchool} onChange={(e) => setPubSchool(e.target.value)} className="px-input px-3 py-2 text-sm" />
             </label>
-            <label className="flex flex-col thai-font text-[11px] text-ink-soft">
+            <label className="flex flex-col thai-font text-xs text-ink-soft">
               ระดับชั้น
-              <select aria-label="ระดับชั้น" value={pubLevel} onChange={(e) => setPubLevel(e.target.value)} className="neo-input px-3 py-2 text-sm">
+              <select aria-label="ระดับชั้น" value={pubLevel} onChange={(e) => setPubLevel(e.target.value)} className="px-input px-3 py-2 text-sm">
                 {CLASS_LEVELS.map((lv) => <option key={lv} value={lv}>{lv}</option>)}
               </select>
             </label>
-            <p className="thai-font text-[11px] text-ink-soft">ตารางวิชา + คาบเรียนปัจจุบันของคุณจะถูกแชร์ (ไม่รวมการบ้านและโน้ต)</p>
-            <button onClick={handlePublish} className="neo-btn w-full rounded-xl bg-brand-strong py-2.5 pixel-font text-[10px] text-white">
+            <p className="thai-font text-xs text-ink-soft">ตารางวิชา + คาบเรียนปัจจุบันของคุณจะถูกแชร์ (ไม่รวมการบ้านและโน้ต)</p>
+            <button onClick={handlePublish} className="px-btn w-full rounded-xl bg-brand-strong py-2.5 pixel-font text-xs text-white">
               เผยแพร่
             </button>
             <button onClick={() => setMode('browse')} className="w-full thai-font text-xs text-ink-soft py-1">

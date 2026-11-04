@@ -16,7 +16,7 @@ export default function SceneBackdrop({ position = 'center 62%', shade = 0.55, c
         className="absolute inset-0"
         aria-hidden="true"
         style={{
-          backgroundColor: '#8ec9d8',
+          backgroundColor: 'var(--color-zone-sci-soft)',
           backgroundImage: 'url(/assets/ui/backdrops/school-hub.png)',
           backgroundSize: 'cover',
           backgroundPosition: position,

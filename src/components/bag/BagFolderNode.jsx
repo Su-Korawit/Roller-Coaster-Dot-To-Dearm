@@ -9,7 +9,7 @@ function BagFolderNode({ data, selected }) {
       }`}
     >
       <Folder size={32} className="text-brand" strokeWidth={2} fill="currentColor" fillOpacity={0.15} />
-      <span className="pixel-font text-[7px] text-ink text-center line-clamp-2 w-full px-0.5">
+      <span className="pixel-font text-xs text-ink text-center line-clamp-2 w-full px-0.5">
         {data.name || 'Folder'}
       </span>
     </div>

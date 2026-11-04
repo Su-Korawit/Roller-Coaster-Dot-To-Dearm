@@ -19,15 +19,15 @@ export default function SuccessNode({ id, data, selected }) {
     >
       <ConnectionDot type="target" position={Position.Left} />
       <ConnectionDot id="top" type="source" position={Position.Top} />
-      <p className="pixel-font text-[8px] text-good-strong">SUCCESS</p>
+      <p className="pixel-font text-xs text-good-strong">SUCCESS</p>
       <textarea
-        className="w-full flex-1 text-[11px] text-ink bg-transparent outline-none resize-none placeholder:text-ink-soft/50 focus:placeholder:text-ink-soft leading-tight"
+        className="w-full flex-1 text-xs text-ink bg-transparent outline-none resize-none placeholder:text-ink-soft/50 focus:placeholder:text-ink-soft leading-tight"
         placeholder="Summary"
         value={data.summary ?? ''}
         onChange={onSummaryChange}
       />
       {data.timestamp && (
-        <p className="text-[9px] text-ink-soft mt-auto">{data.timestamp}</p>
+        <p className="text-xs text-ink-soft mt-auto">{data.timestamp}</p>
       )}
       <ConnectionDot type="source" position={Position.Right} />
       <ConnectionDot id="bottom" type="source" position={Position.Bottom} />

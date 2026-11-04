@@ -55,7 +55,7 @@ export default function SpotifyControls() {
       {status !== 'connected' ? (
         <button
           onClick={() => startConnect()}
-          className="pixel-font text-[10px] text-white bg-brand rounded-2xl py-3"
+          className="pixel-font text-xs text-white bg-brand rounded-2xl py-3"
         >
           เชื่อม Spotify
         </button>
@@ -66,13 +66,13 @@ export default function SpotifyControls() {
           <div className="flex gap-2">
             <button
               onClick={() => setView('search')}
-              className={`pixel-font text-[9px] rounded-full px-3 py-1.5 ${view === 'search' ? 'bg-brand text-white' : 'text-brand bg-brand-soft'}`}
+              className={`pixel-font text-xs rounded-full px-3 py-1.5 ${view === 'search' ? 'bg-brand text-white' : 'text-brand bg-brand-soft'}`}
             >
               ค้นหา
             </button>
             <button
               onClick={() => setView('playlists')}
-              className={`pixel-font text-[9px] rounded-full px-3 py-1.5 ${view === 'playlists' ? 'bg-brand text-white' : 'text-brand bg-brand-soft'}`}
+              className={`pixel-font text-xs rounded-full px-3 py-1.5 ${view === 'playlists' ? 'bg-brand text-white' : 'text-brand bg-brand-soft'}`}
             >
               เพลย์ลิสต์
             </button>

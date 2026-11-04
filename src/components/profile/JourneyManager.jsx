@@ -131,7 +131,7 @@ export default function JourneyManager() {
     <>
       {/* Portfolio circles */}
       <div>
-        <p className="pixel-font text-[10px] text-ink-soft mb-3">Portfolio</p>
+        <p className="pixel-font text-xs text-ink-soft mb-3">Portfolio</p>
         <div className="flex justify-around">
           {PORTFOLIO_KEYS.map((key) => (
             <PortfolioCircle
@@ -153,7 +153,7 @@ export default function JourneyManager() {
       ) : (
       <div>
         <div className="flex items-center justify-between mb-2">
-          <p className="pixel-font text-[10px] text-ink-soft">
+          <p className="pixel-font text-xs text-ink-soft">
             Journey of {circleData[activeCategory].label}
           </p>
         </div>
@@ -179,7 +179,7 @@ export default function JourneyManager() {
                         >
                           <div
                             {...provided.dragHandleProps}
-                            className="absolute top-1 right-1 text-ink-soft/50 hover:text-ink-soft cursor-grab active:cursor-grabbing leading-none text-[10px] select-none"
+                            className="absolute top-1 right-1 text-ink-soft/50 hover:text-ink-soft cursor-grab active:cursor-grabbing leading-none text-xs select-none"
                           >
                             ⠿
                           </div>
@@ -229,12 +229,12 @@ export default function JourneyManager() {
                     style={{ width: `${Math.min(100, liveBlock.progress || 0)}%` }}
                   />
                 </div>
-                <span className="text-[10px] text-purple-600 font-semibold">{liveBlock.progress || 0}%</span>
+                <span className="text-xs text-purple-600 font-semibold">{liveBlock.progress || 0}%</span>
               </div>
             )}
             {notes.length > 0 && (
               <div className="space-y-1.5">
-                <p className="pixel-font text-[10px] text-ink-soft uppercase tracking-wide">Progress History</p>
+                <p className="pixel-font text-xs text-ink-soft uppercase tracking-wide">Progress History</p>
                 {notes.map((note, i) => (
                   <div key={i} className="bg-purple-50 rounded-xl px-3 py-2">
                     <p className="thai-font text-xs text-ink-soft leading-snug">{note}</p>
@@ -265,7 +265,7 @@ export default function JourneyManager() {
             value={portfolioEdit.title}
             onChange={(e) => setPortfolioEdit({ ...portfolioEdit, title: e.target.value })}
             placeholder="Title"
-            className="neo-input thai-font px-3 py-2 text-sm w-full"
+            className="px-input thai-font px-3 py-2 text-sm w-full"
           />
           <input
             ref={portfolioFileInputRef}
@@ -302,7 +302,7 @@ export default function JourneyManager() {
             onChange={(e) => setPortfolioEdit({ ...portfolioEdit, description: e.target.value })}
             placeholder="Description"
             rows={3}
-            className="neo-input thai-font px-3 py-2 text-sm w-full resize-none"
+            className="px-input thai-font px-3 py-2 text-sm w-full resize-none"
           />
           <button
             onClick={handleSavePortfolio}
@@ -323,7 +323,7 @@ export default function JourneyManager() {
             value={journeyEdit.title}
             onChange={(e) => setJourneyEdit({ ...journeyEdit, title: e.target.value })}
             placeholder="Title"
-            className="neo-input thai-font px-4 py-3 text-sm w-full"
+            className="px-input thai-font px-4 py-3 text-sm w-full"
           />
           <textarea
             value={journeyEdit.desc}

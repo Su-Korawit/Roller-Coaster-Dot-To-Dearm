@@ -92,7 +92,7 @@ export default function CalendarPopup({ onClose }) {
         <button
           onClick={onClose}
           aria-label="ปิด"
-          className="neo-btn w-9 h-9 flex items-center justify-center rounded-lg bg-surface text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ml-1"
+          className="px-btn w-9 h-9 flex items-center justify-center rounded-lg bg-paper text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ml-1"
         >
           <X size={16} strokeWidth={2.5} aria-hidden="true" />
         </button>
@@ -105,7 +105,7 @@ export default function CalendarPopup({ onClose }) {
           {DAYS.map((d, i) => (
             <div
               key={d}
-              className={`text-center pixel-font text-[8px] py-1
+              className={`text-center pixel-font text-xs py-1
                 ${i === 0 ? 'text-danger' : i === 6 ? 'text-brand' : 'text-ink-soft'}`}
             >
               {d}
@@ -135,7 +135,7 @@ export default function CalendarPopup({ onClose }) {
                   ${isToday && !isSelected ? 'bg-warn/10 ring-1 ring-warn' : ''}`}
               >
                 <span
-                  className={`pixel-font text-[10px] leading-none
+                  className={`pixel-font text-xs leading-none
                     ${isSelected ? 'text-brand-strong font-bold'
                       : isToday ? 'text-warn font-bold'
                       : dow === 0 ? 'text-danger'
@@ -156,7 +156,7 @@ export default function CalendarPopup({ onClose }) {
                       />
                     ))}
                     {totalCnt > 3 && (
-                      <span className="pixel-font text-[6px] text-ink-soft leading-none mt-px">
+                      <span className="pixel-font text-xs text-ink-soft leading-none mt-px">
                         +{totalCnt - 3}
                       </span>
                     )}
@@ -172,13 +172,13 @@ export default function CalendarPopup({ onClose }) {
           {/* Day header row */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-ink/10 bg-white">
             <div>
-              <p className="pixel-font text-[11px] font-bold text-ink">
+              <p className="pixel-font text-xs font-bold text-ink">
                 {MONTHS[selMonthNum - 1]} {selDay}, {selYear}
                 {selectedDate === todayStr && (
-                  <span className="ml-2 pixel-font text-[9px] text-warn">• Today</span>
+                  <span className="ml-2 pixel-font text-xs text-warn">• Today</span>
                 )}
               </p>
-              <p className="pixel-font text-[8px] text-ink-soft mt-0.5">
+              <p className="pixel-font text-xs text-ink-soft mt-0.5">
                 {selectedTasks.length === 0
                   ? 'No tasks scheduled'
                   : `${completedSelected} / ${selectedTasks.length} completed`}
@@ -208,8 +208,8 @@ export default function CalendarPopup({ onClose }) {
           {selectedTasks.length === 0 && !showForm ? (
             <div className="px-4 py-6 text-center">
               <p className="text-2xl mb-2">🗓️</p>
-              <p className="pixel-font text-[9px] text-ink-soft">No tasks for this day</p>
-              <p className="pixel-font text-[8px] text-ink-soft/50 mt-1">Tap + to schedule one</p>
+              <p className="pixel-font text-xs text-ink-soft">No tasks for this day</p>
+              <p className="pixel-font text-xs text-ink-soft/50 mt-1">Tap + to schedule one</p>
             </div>
           ) : (
             <div>
@@ -231,12 +231,12 @@ export default function CalendarPopup({ onClose }) {
 
                   <div className="flex-1 min-w-0">
                     <p
-                      className={`pixel-font text-[9px] truncate
+                      className={`pixel-font text-xs truncate
                         ${task.completed ? 'line-through text-ink-soft' : 'text-ink'}`}
                     >
                       {task.title}
                     </p>
-                    <p className="pixel-font text-[7px] text-ink-soft mt-0.5">
+                    <p className="pixel-font text-xs text-ink-soft mt-0.5">
                       {task.type} · {task.timeMinutes} min
                     </p>
                   </div>

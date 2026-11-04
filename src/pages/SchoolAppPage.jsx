@@ -11,8 +11,8 @@ export default function SchoolAppPage() {
   const [tab, setTab] = useState('school')
 
   return (
-    <div data-testid="school-app" className="relative h-full w-full bg-[#F4F7FC] overflow-hidden flex flex-col">
-      <div className="shrink-0 flex border-b-2 border-ink bg-surface">
+    <div data-testid="school-app" className="relative h-full w-full bg-mist overflow-hidden flex flex-col">
+      <div className="shrink-0 flex border-b-2 border-ink bg-paper">
         {[
           { key: 'school', label: 'โรงเรียน' },
           { key: 'tasks', label: 'To-do' },

@@ -74,7 +74,7 @@ export default function TaskForm({ initialValues = {}, defaultDate = null, onSav
       {defaultDate && (
         <div className="mb-4 flex items-center gap-2 bg-purple-50 border border-purple-100 rounded-xl px-4 py-2.5">
           <span className="text-base">📅</span>
-          <span className="pixel-font text-[9px] text-purple-700">
+          <span className="pixel-font text-xs text-purple-700">
             Scheduling for <span className="font-bold">{defaultDate}</span>
           </span>
         </div>
@@ -83,23 +83,23 @@ export default function TaskForm({ initialValues = {}, defaultDate = null, onSav
       <div className="space-y-4">
         {/* Title */}
         <label className="block">
-          <span className="pixel-font text-[10px] text-ink-soft">Task Name</span>
+          <span className="pixel-font text-xs text-ink-soft">Task Name</span>
           <input
             value={form.title}
             onChange={(e) => update('title', e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
             placeholder="#1 | Hackathon"
             autoFocus
-            className="neo-input thai-font mt-2 w-full px-4 py-3"
+            className="px-input thai-font mt-2 w-full px-4 py-3"
           />
         </label>
 
         {/* Type + MBTI suggestion chips */}
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="pixel-font text-[10px] text-ink-soft">Type</span>
+            <span className="pixel-font text-xs text-ink-soft">Type</span>
             {mbti && (
-              <span className="pixel-font text-[7px] text-purple-400 bg-purple-50 rounded-full px-2 py-0.5">
+              <span className="pixel-font text-xs text-purple-400 bg-purple-50 rounded-full px-2 py-0.5">
                 ✨ {mbti} picks
               </span>
             )}
@@ -111,10 +111,10 @@ export default function TaskForm({ initialValues = {}, defaultDate = null, onSav
                   key={s}
                   type="button"
                   onClick={() => update('type', s)}
-                  className={`px-3 py-1 rounded-full pixel-font text-[10px] border transition-colors active:scale-95
+                  className={`px-3 py-1 rounded-full pixel-font text-xs border transition-colors active:scale-95
                     ${form.type === s
                       ? 'bg-brand-strong border-brand-strong text-white'
-                      : 'bg-surface border-ink/10 text-ink-soft hover:border-brand'}`}
+                      : 'bg-paper border-ink/10 text-ink-soft hover:border-brand'}`}
                 >
                   {s}
                 </button>
@@ -125,14 +125,14 @@ export default function TaskForm({ initialValues = {}, defaultDate = null, onSav
             value={form.type}
             onChange={(e) => update('type', e.target.value)}
             placeholder="Competition / Study / Project"
-            className="neo-input thai-font w-full px-4 py-3"
+            className="px-input thai-font w-full px-4 py-3"
           />
         </div>
 
         {/* Time + Deadline */}
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
-            <span className="pixel-font text-[10px] text-ink-soft">Time (min)</span>
+            <span className="pixel-font text-xs text-ink-soft">Time (min)</span>
             <input
               type="number"
               min="5"
@@ -144,7 +144,7 @@ export default function TaskForm({ initialValues = {}, defaultDate = null, onSav
           </label>
 
           <label className="block">
-            <span className="pixel-font text-[10px] text-ink-soft">Deadline</span>
+            <span className="pixel-font text-xs text-ink-soft">Deadline</span>
             <input
               type="date"
               value={form.deadline}
@@ -156,13 +156,13 @@ export default function TaskForm({ initialValues = {}, defaultDate = null, onSav
 
         {/* Description */}
         <label className="block">
-          <span className="pixel-font text-[10px] text-ink-soft">Detail</span>
+          <span className="pixel-font text-xs text-ink-soft">Detail</span>
           <textarea
             rows={4}
             value={form.description}
             onChange={(e) => update('description', e.target.value)}
             placeholder="Additional detail..."
-            className="neo-input thai-font mt-2 w-full px-4 py-3 resize-none"
+            className="px-input thai-font mt-2 w-full px-4 py-3 resize-none"
           />
         </label>
       </div>
@@ -173,7 +173,7 @@ export default function TaskForm({ initialValues = {}, defaultDate = null, onSav
         <button
           onClick={handleSubmit}
           disabled={!form.title.trim()}
-          className="neo-btn w-full rounded-xl bg-surface py-3 pixel-font text-[10px] text-ink disabled:opacity-40"
+          className="px-btn w-full rounded-xl bg-paper py-3 pixel-font text-xs text-ink disabled:opacity-40"
         >
           Save Task
         </button>
@@ -181,7 +181,7 @@ export default function TaskForm({ initialValues = {}, defaultDate = null, onSav
         {onCancel && (
           <button
             onClick={onCancel}
-            className="mt-2 w-full py-2 pixel-font text-[10px] text-ink-soft"
+            className="mt-2 w-full py-2 pixel-font text-xs text-ink-soft"
           >
             Cancel
           </button>
