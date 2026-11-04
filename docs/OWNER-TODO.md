@@ -54,3 +54,7 @@ search.google.com/search-console → Add property แบบ **Domain** (`ilovetc
 - สั่งรันชุดตรวจรับซ้ำครบทุก host (มีสคริปต์อยู่แล้ว)
 - Phase 5 (programmatic SEO ต่อมหาลัย/คณะ) ปลดล็อกเมื่อ Search Console
   เริ่มเห็น impression ของหน้า hub/landing
+
+## Study room (2026-10-22)
+
+ขั้นตอน deploy / seed catalog / purge ข้อมูลฟาร์มเก่า อยู่ใน `docs/study-room-ops.md` (ลำดับ: rules → functions → seed → hosting; รัน `purgeLegacyWorld.mjs` หลังปล่อยจริงและนิ่งแล้วเท่านั้น)

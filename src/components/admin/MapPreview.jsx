@@ -31,8 +31,6 @@ export default function MapPreview({ mapKey, width = '100%', height = 240 }) {
         game.registry.set('assetUrls', data.assetUrls)
         game.registry.set('mapConfig', data.mapConfig)
         game.registry.set('tilesetUrls', data.tilesetUrls)
-        game.registry.set('mapObjects', [])
-        game.registry.set('editMode', false)
         game.registry.set('remotePlayers', {})
         game.scene.start('MapScene', { mapKey, preview: true })
       })

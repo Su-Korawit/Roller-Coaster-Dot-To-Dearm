@@ -44,7 +44,6 @@ vi.mock('./shop/ShopChatView', () => ({
 }))
 
 vi.mock('../lib/syncManager', () => ({
-  visitMap: vi.fn(),
 }))
 
 const { default: ChatPanel } = await import('./ChatPanel')

@@ -6,13 +6,14 @@ export const ADMIN_DISPLAY_NAME = 'ผู้พัฒนาระบบ'
 // The super-admin gets every section. Adding/removing an admin here must be
 // mirrored in firestore.rules + storage.rules (those gate writes by token email).
 // Keys must be lowercase — getAdminSections() lowercases the lookup email.
-export const ADMIN_SECTIONS = ['analytics', 'users', 'characters', 'maps', 'assets', 'music', 'shop', 'finance', 'welcome', 'farm', 'hub']
+export const ADMIN_SECTIONS = ['analytics', 'users', 'characters', 'maps', 'assets', 'music', 'shop', 'finance', 'welcome', 'hub', 'rooms']
 
 export const ADMIN_ROLES = {
-  // 'hub' (content-site settings + creator access) is super-admin only. Its writes are
+  // 'rooms' (study-room catalog prices) is super-admin only too: the rules gate roomCatalog
+  // writes by UID. 'hub' (content-site settings + creator access) is super-admin only. Its writes are
   // gated by UID in firestore.rules (siteConfig) and functions (grantCreatorRole), so
   // there is no email list to mirror there.
-  'o.korawitt@gmail.com': ['analytics', 'users', 'characters', 'maps', 'assets', 'music', 'shop', 'finance', 'welcome', 'farm', 'hub'],
+  'o.korawitt@gmail.com': ['analytics', 'users', 'characters', 'maps', 'assets', 'music', 'shop', 'finance', 'welcome', 'hub', 'rooms'],
   'takadaoni07@gmail.com': ['maps', 'assets'],
   'play198725@gmail.com': ['characters'],
   'itcity9476@gmail.com': ['music'],

@@ -85,6 +85,11 @@ describe('school_hub map', () => {
     expect(walkable(Math.floor(spawn.x / T), Math.floor(spawn.y / T))).toBe(true)
   })
 
+  it('leads the exit portal back to the study room', () => {
+    expect(meta.portals).toHaveLength(1)
+    expect(meta.portals[0].target).toBe('room')
+  })
+
   it('exposes the interactions the school world needs', () => {
     const byAction = (a) => meta.interactions.filter((i) => i.action === a)
     expect(byAction('focusSeat')).toHaveLength(8)

@@ -7,15 +7,6 @@ const m = vi.hoisted(() => ({
   setTaskSyncUser: vi.fn(),
   armRoadmapSheetSync: vi.fn(),
   disarmRoadmapSheetSync: vi.fn(),
-  hydrateMap: vi.fn(),
-  armMapSync: vi.fn(),
-  disarmMapSync: vi.fn(),
-  hydrateInventory: vi.fn(),
-  setInventorySyncUser: vi.fn(),
-  disarmInventorySync: vi.fn(),
-  hydrateFarm: vi.fn(),
-  armFarmSync: vi.fn(),
-  disarmFarmSync: vi.fn(),
   hydrateSchool: vi.fn(),
   setSchoolSyncUser: vi.fn(),
   disarmSchoolSync: vi.fn(),
@@ -27,21 +18,22 @@ const m = vi.hoisted(() => ({
   getDoc: vi.fn(),
   getDocs: vi.fn(),
   setDoc: vi.fn(),
-  hydrateFarmData: vi.fn(),
   hydrateSelect: vi.fn(),
   setRoadmapMyUid: vi.fn(),
   hydrateSheetsAction: vi.fn(),
   migrateLegacyRoadmap: vi.fn(),
   hydrateSpotify: vi.fn(),
+  bootstrapStudyRoom: vi.fn(),
+  resetLeaves: vi.fn(),
+  resetFocus: vi.fn(),
+  cancelRoomSync: vi.fn(),
+  resetRoom: vi.fn(),
 }))
 
 vi.mock('firebase/firestore', () => ({
   getDoc: (...a) => m.getDoc(...a),
   getDocs: (...a) => m.getDocs(...a),
   setDoc: (...a) => m.setDoc(...a),
-}))
-vi.mock('../lib/farmDataSync', () => ({
-  hydrateFarmDataFromFirestore: (...a) => m.hydrateFarmData(...a),
 }))
 vi.mock('../lib/db', () => ({
   refs: {
@@ -57,6 +49,12 @@ vi.mock('../lib/db', () => ({
   queries: {
     sheetsSharedWithMe: (uid) => ({ _query: `sheetsSharedWithMe(${uid})` }),
   },
+}))
+vi.mock('../stores/useLeavesStore', () => ({ useLeavesStore: { getState: () => ({ reset: m.resetLeaves }) } }))
+vi.mock('../stores/useFocusStore', () => ({ useFocusStore: { getState: () => ({ reset: m.resetFocus }) } }))
+vi.mock('../stores/useRoomStore', () => ({ useRoomStore: { getState: () => ({ reset: m.resetRoom }) }, roomSync: { cancel: () => m.cancelRoomSync() } }))
+vi.mock('./studyRoomBootstrap', () => ({
+  bootstrapStudyRoom: (...a) => m.bootstrapStudyRoom(...a),
 }))
 vi.mock('./spotifyConnect', () => ({
   hydrateSpotify: (...a) => m.hydrateSpotify(...a),
@@ -89,15 +87,6 @@ vi.mock('../lib/syncManager', () => ({
   setTaskSyncUser: (...a) => m.setTaskSyncUser(...a),
   armRoadmapSheetSync: (...a) => m.armRoadmapSheetSync(...a),
   disarmRoadmapSheetSync: (...a) => m.disarmRoadmapSheetSync(...a),
-  hydrateMapFromFirestore: (...a) => m.hydrateMap(...a),
-  armMapSync: (...a) => m.armMapSync(...a),
-  disarmMapSync: (...a) => m.disarmMapSync(...a),
-  hydrateInventoryFromFirestore: (...a) => m.hydrateInventory(...a),
-  setInventorySyncUser: (...a) => m.setInventorySyncUser(...a),
-  disarmInventorySync: (...a) => m.disarmInventorySync(...a),
-  hydrateFarmFromFirestore: (...a) => m.hydrateFarm(...a),
-  armFarmSync: (...a) => m.armFarmSync(...a),
-  disarmFarmSync: (...a) => m.disarmFarmSync(...a),
   hydrateSchoolFromFirestore: (...a) => m.hydrateSchool(...a),
   setSchoolSyncUser: (...a) => m.setSchoolSyncUser(...a),
   disarmSchoolSync: (...a) => m.disarmSchoolSync(...a),
@@ -117,15 +106,12 @@ describe('bootstrapSession', () => {
     )
     m.getDocs.mockResolvedValue({ docs: [] })
     m.setDoc.mockResolvedValue(undefined)
-    m.hydrateFarmData.mockResolvedValue(undefined)
     m.hydrateSelect.mockResolvedValue(undefined)
     m.hydratePortfolio.mockResolvedValue(undefined)
     m.hydrateTasks.mockResolvedValue(undefined)
-    m.hydrateMap.mockResolvedValue(undefined)
-    m.hydrateInventory.mockResolvedValue(undefined)
-    m.hydrateFarm.mockResolvedValue(undefined)
     m.hydrateSchool.mockResolvedValue(undefined)
     m.hydrateSpotify.mockResolvedValue(undefined)
+    m.bootstrapStudyRoom.mockResolvedValue(undefined)
     m.migrateLegacyRoadmap.mockReturnValue(null)
   })
 
@@ -139,33 +125,16 @@ describe('bootstrapSession', () => {
     expect(m.armRoadmapSheetSync).toHaveBeenCalledWith('sheet-1')
   })
 
-  it('hydrates the Personal Map on login', async () => {
+  it('sets up the study room (balance, welcome pack, layout) on login', async () => {
+    m.bootstrapStudyRoom.mockResolvedValue(undefined)
     await bootstrapSession({ uid: 'u1' })
-    expect(m.hydrateMap).toHaveBeenCalledWith('u1')
+    expect(m.bootstrapStudyRoom).toHaveBeenCalledWith('u1')
   })
 
-  it('keeps hydrating later stores when map hydration throws', async () => {
-    m.hydrateMap.mockRejectedValue(new Error('map boom'))
+  it('keeps hydrating the other stores when the study room setup throws', async () => {
+    m.bootstrapStudyRoom.mockRejectedValue(new Error('room boom'))
     await bootstrapSession({ uid: 'u1' })
-    expect(m.armRoadmapSheetSync).toHaveBeenCalledWith('sheet-1')
-  })
-
-  it('hydrates inventory and arms its sync writer on login', async () => {
-    await bootstrapSession({ uid: 'u1' })
-    expect(m.hydrateInventory).toHaveBeenCalledWith('u1')
-    expect(m.setInventorySyncUser).toHaveBeenCalledWith('u1')
-  })
-
-  it('hydrates farm and arms its sync writer on login', async () => {
-    await bootstrapSession({ uid: 'u1' })
-    expect(m.hydrateFarm).toHaveBeenCalledWith('u1')
-    expect(m.armFarmSync).toHaveBeenCalledWith('u1')
-  })
-
-  it('keeps hydrating farm even when inventory hydration throws', async () => {
-    m.hydrateInventory.mockRejectedValue(new Error('inventory boom'))
-    await bootstrapSession({ uid: 'u1' })
-    expect(m.hydrateFarm).toHaveBeenCalledWith('u1')
+    expect(m.hydrateTasks).toHaveBeenCalledWith('u1')
   })
 
   it('hydrates entitlements from the same user-doc read (empty default)', async () => {
@@ -189,24 +158,9 @@ describe('bootstrapSession', () => {
     expect(m.setSchoolSyncUser).toHaveBeenCalledWith('u1')
   })
 
-  it('keeps hydrating school even when farm hydration throws', async () => {
-    m.hydrateFarm.mockRejectedValueOnce(new Error('farm boom'))
-    await bootstrapSession({ uid: 'u1' })
-    expect(m.hydrateSchool).toHaveBeenCalledWith('u1')
-    expect(m.setSchoolSyncUser).toHaveBeenCalledWith('u1')
-  })
-
-  it('keeps arming inventory sync even when farm hydration throws', async () => {
-    m.hydrateFarm.mockRejectedValueOnce(new Error('farm err'))
-    await bootstrapSession({ uid: 'u1' })
-    expect(m.setInventorySyncUser).toHaveBeenCalledWith('u1')
-    expect(m.armFarmSync).not.toHaveBeenCalled()
-  })
-
-  it('sets the current map owner to own uid and arms the map sync writer', async () => {
+  it('sets the current map owner to the signed-in user', async () => {
     await bootstrapSession({ uid: 'u1' })
     expect(m.setMapOwner).toHaveBeenCalledWith('u1')
-    expect(m.armMapSync).toHaveBeenCalledWith('u1')
   })
 
   it('reads the user doc exactly once for ensureUserDoc (coins come from that read)', async () => {
@@ -341,16 +295,17 @@ describe('teardownSession', () => {
     expect(m.disarmRoadmapSheetSync).toHaveBeenCalled()
   })
 
-  it('disarms the map sync writer and clears the map owner on logout', () => {
+  it('clears the map owner on logout', () => {
     teardownSession()
-    expect(m.disarmMapSync).toHaveBeenCalled()
     expect(m.setMapOwner).toHaveBeenCalledWith(null)
   })
 
-  it('disarms inventory and farm sync writers on logout', () => {
+  it('forgets the Leaves, focus session and room of the previous account on logout', () => {
     teardownSession()
-    expect(m.disarmInventorySync).toHaveBeenCalled()
-    expect(m.disarmFarmSync).toHaveBeenCalled()
+    expect(m.resetLeaves).toHaveBeenCalled()
+    expect(m.resetFocus).toHaveBeenCalled()
+    expect(m.resetRoom).toHaveBeenCalled()
+    expect(m.cancelRoomSync).toHaveBeenCalled() // a pending save must not outlive the account
   })
 
   it('clears persisted plans on logout', () => {

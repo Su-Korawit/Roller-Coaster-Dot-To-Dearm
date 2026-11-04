@@ -1,55 +1,14 @@
 import { create } from 'zustand'
 
-const objectsFor = (objectsByMap, key) => (key && objectsByMap[key]) || []
-
+// Where the player is and who else is there: the map being shown, whose presence room it
+// belongs to, and the other players in it. (The Personal Map's decoration objects and edit
+// mode were removed with the farm — ADR-0023; the room layout lives in useRoomStore.)
 export const useWorldStore = create((set) => ({
   currentMapOwnerUid: null,
   currentMapKey:     null,
-  objectsByMap:      {},
-  mapObjects:        [],   // derived = objectsByMap[currentMapKey] ?? []
-  editMode:          false,
-  selectedItemKey:   null,
   remotePlayers:     {},
 
   setMapOwner: (uid) => set({ currentMapOwnerUid: uid }),
-
-  setCurrentMapKey: (key) =>
-    set((s) => ({ currentMapKey: key, mapObjects: objectsFor(s.objectsByMap, key) })),
-
-  setObjectsByMap: (obj) =>
-    set((s) => ({ objectsByMap: obj, mapObjects: objectsFor(obj, s.currentMapKey) })),
-
-  // Replace the current map's objects.
-  setMapObjects: (objects) =>
-    set((s) => {
-      if (!s.currentMapKey) return {}
-      const next = { ...s.objectsByMap, [s.currentMapKey]: objects }
-      return { objectsByMap: next, mapObjects: objects }
-    }),
-
+  setCurrentMapKey: (key) => set({ currentMapKey: key }),
   setRemotePlayers: (snapshot) => set({ remotePlayers: snapshot }),
-
-  toggleEditMode: () => set((s) => ({ editMode: !s.editMode })),
-  setSelectedItem: (key) => set({ selectedItemKey: key }),
-
-  addObject: (obj) =>
-    set((s) => {
-      if (!s.currentMapKey) return {}
-      const arr = [...objectsFor(s.objectsByMap, s.currentMapKey), obj]
-      return { objectsByMap: { ...s.objectsByMap, [s.currentMapKey]: arr }, mapObjects: arr }
-    }),
-
-  removeObject: (i) =>
-    set((s) => {
-      if (!s.currentMapKey) return {}
-      const arr = objectsFor(s.objectsByMap, s.currentMapKey).filter((_, idx) => idx !== i)
-      return { objectsByMap: { ...s.objectsByMap, [s.currentMapKey]: arr }, mapObjects: arr }
-    }),
-
-  moveObject: (i, x, y) =>
-    set((s) => {
-      if (!s.currentMapKey) return {}
-      const arr = objectsFor(s.objectsByMap, s.currentMapKey).map((o, idx) => idx === i ? { ...o, x, y } : o)
-      return { objectsByMap: { ...s.objectsByMap, [s.currentMapKey]: arr }, mapObjects: arr }
-    }),
 }))

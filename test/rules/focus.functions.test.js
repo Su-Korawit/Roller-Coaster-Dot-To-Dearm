@@ -183,3 +183,111 @@ describe('Temperament perks (real handlers, emulator)', () => {
     expect(await call(fns.checkInFocus)).toMatchObject({ multiplier: 1, xpGained: 25 })
   })
 })
+
+describe('Study Room focus: modes, wither and Leaves (real handlers, emulator)', () => {
+  const start = (data) => call(fns.startFocus, { auth, data })
+  const userLeaves = async () => (await db.doc(`users/${UID}`).get()).data().leaves ?? 0
+
+  it('stores the validated mode and planned minutes and returns them', async () => {
+    const r = await start({ mode: 'strict', plannedMin: 25 })
+    expect(r).toMatchObject({ ok: true, mode: 'strict', plannedMin: 25 })
+    expect((await db.doc(`focusActive/${UID}`).get()).data()).toMatchObject({ mode: 'strict', plannedMin: 25, withered: false })
+  })
+
+  it.each([
+    [{ plannedMin: 5 }, 'bad_planned'],
+    [{ plannedMin: 500 }, 'bad_planned'],
+    [{ plannedMin: 25.5 }, 'bad_planned'],
+    [{ mode: 'hard' }, 'bad_mode'],
+  ])('rejects %j', async (data, code) => {
+    await expect(start(data)).rejects.toMatchObject({ code: 'invalid-argument', details: { code } })
+    expect((await db.doc(`focusActive/${UID}`).get()).exists).toBe(false)
+  })
+
+  it('defaults to a flexible 25-minute session when nothing is sent', async () => {
+    expect(await start({})).toMatchObject({ mode: 'flexible', plannedMin: 25 })
+  })
+
+  it('a resumed session keeps its original mode and planned time', async () => {
+    await start({ mode: 'strict', plannedMin: 50 })
+    at(5)
+    expect(await start({ mode: 'flexible', plannedMin: 10 })).toMatchObject({ resumed: true, mode: 'strict', plannedMin: 50 })
+  })
+
+  it('resuming a strict session (tab closed and reopened) withers it: the full reward is not kept', async () => {
+    await start({ mode: 'strict', plannedMin: 25 })
+    at(5)
+    expect(await start({ mode: 'strict', plannedMin: 25 })).toMatchObject({ resumed: true, withered: true })
+    at(25)
+    expect(await call(fns.endFocus)).toMatchObject({ leaves: 0, withered: true, tree: 'withered' })
+  })
+
+  it('resuming a flexible session keeps it healthy', async () => {
+    await start({ mode: 'flexible', plannedMin: 25 })
+    at(5)
+    expect(await start({ mode: 'flexible', plannedMin: 25 })).toMatchObject({ resumed: true, withered: false })
+  })
+
+  it('a completed flexible 25-minute session credits 27 Leaves and a shrub', async () => {
+    await start({ mode: 'flexible', plannedMin: 25 })
+    at(25)
+    const r = await call(fns.endFocus)
+    expect(r).toMatchObject({ leaves: 27, tree: 'shrub', mode: 'flexible', plannedMin: 25, withered: false })
+    expect(await userLeaves()).toBe(27)
+    const [session] = (await db.collection('focusSessions').get()).docs.map((d) => d.data())
+    expect(session).toMatchObject({ mode: 'flexible', plannedMin: 25, tree: 'shrub', leaves: 27, withered: false })
+  })
+
+  it('a completed strict 25-minute session credits 41 Leaves', async () => {
+    await start({ mode: 'strict', plannedMin: 25 })
+    at(25)
+    expect(await call(fns.endFocus)).toMatchObject({ leaves: 41, withered: false })
+    expect(await userLeaves()).toBe(41)
+  })
+
+  it('a strict session with a lapsed check-in withers and earns nothing', async () => {
+    await start({ mode: 'strict', plannedMin: 25 })
+    at(40)
+    const r = await call(fns.endFocus)
+    expect(r).toMatchObject({ leaves: 0, withered: true, tree: 'withered' })
+    expect(await userLeaves()).toBe(0)
+  })
+
+  it('a strict wither is recorded on the active session at the lapsed check-in', async () => {
+    await start({ mode: 'strict', plannedMin: 25 })
+    at(40)
+    expect(await call(fns.checkInFocus)).toMatchObject({ withered: true })
+    expect((await db.doc(`focusActive/${UID}`).get()).data().withered).toBe(true)
+  })
+
+  it('abandonFocus: strict earns 0, flexible keeps its verified minutes without the bonus', async () => {
+    await start({ mode: 'strict', plannedMin: 25 })
+    at(12)
+    expect(await call(fns.abandonFocus)).toMatchObject({ leaves: 0, withered: true })
+
+    at(20)
+    await start({ mode: 'flexible', plannedMin: 25 })
+    at(32)
+    expect(await call(fns.abandonFocus)).toMatchObject({ leaves: 12, withered: true, tree: 'withered' })
+    expect(await userLeaves()).toBe(12)
+  })
+
+  it('ending twice credits once', async () => {
+    await start({ mode: 'flexible', plannedMin: 25 })
+    at(25)
+    await call(fns.endFocus)
+    await expect(call(fns.endFocus)).rejects.toMatchObject({ code: 'failed-precondition' })
+    expect(await userLeaves()).toBe(27)
+  })
+
+  it('the daily cap limits verified time and therefore Leaves', async () => {
+    await db.doc(`focusDaily/${UID}_2026-10-14`).set({ uid: UID, day: '2026-10-14', verifiedMs: 8 * 60 * MIN - 10 * MIN })
+    await start({ mode: 'flexible', plannedMin: 25 })
+    at(30)
+    expect((await call(fns.endFocus)).leaves).toBeLessThanOrEqual(11)
+  })
+
+  it('abandon without a session fails with NO_ACTIVE_SESSION', async () => {
+    await expect(call(fns.abandonFocus)).rejects.toMatchObject({ code: 'failed-precondition' })
+  })
+})

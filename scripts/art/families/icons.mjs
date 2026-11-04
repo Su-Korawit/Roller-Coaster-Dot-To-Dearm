@@ -61,6 +61,13 @@ const guide = (c) => { // speech bubble with "?"
   c.bitmap(8, 5, ['.XX.', 'X..X', '...X', '..X.', '..X.', '....', '..X.'], { X: O })
 }
 
+const leaf = (c) => { // Leaves currency: a single leaf with a vein
+  c.oval(10, 10, 6, 5, '#7BC48C', O)
+  c.ellipse(8, 8, 3, 2, '#B6DCA0')
+  c.hline(5, 12, 11, '#3F7A4A'); c.hline(8, 10, 3, '#3F7A4A'); c.hline(10, 14, 3, '#3F7A4A')
+  c.px(16, 13, O); c.px(17, 14, O); c.px(18, 15, O)
+}
+
 const one = (draw) => ({ frames: 1, draw })
 
 export default {
@@ -70,5 +77,6 @@ export default {
   sprites: {
     focus: one(focus), warp: one(warp), plan: one(plan), tasks: one(tasks),
     friends: one(friends), shop: one(shop), wardrobe: one(wardrobe), guide: one(guide),
+    leaf: one(leaf),
   },
 }

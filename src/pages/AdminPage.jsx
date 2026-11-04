@@ -8,9 +8,9 @@ import MusicSection from '../components/admin/MusicSection'
 import ShopSection from '../components/admin/ShopSection'
 import FinanceSection from '../components/admin/FinanceSection'
 import WelcomeSection from '../components/admin/WelcomeSection'
-import FarmDataSection from '../components/admin/FarmDataSection'
 import IdeaRequestSection from '../components/admin/IdeaRequestSection'
 import HubSection from '../components/admin/HubSection'
+import RoomCatalogSection from '../components/admin/RoomCatalogSection'
 import { ToastProvider } from '../components/admin/Toast'
 import { useAuthStore } from '../stores/useAuthStore'
 import { ADMIN_DISPLAY_NAME, ADMIN_ROLES, getAdminSections } from '../constants/admin'
@@ -30,8 +30,8 @@ const ALL_TABS = [
   { id: 'shop',       label: 'Shop' },
   { id: 'finance',    label: 'Finance' },
   { id: 'welcome',    label: 'Welcome' },
-  { id: 'farm',       label: '🌱 Farm Data' },
   { id: 'hub',        label: 'Hub' },
+  { id: 'rooms',      label: 'Rooms' },
 ]
 
 export default function AdminPage() {
@@ -100,8 +100,8 @@ export default function AdminPage() {
           {tab === 'shop'       && <ShopSection />}
           {tab === 'finance'    && <FinanceSection />}
           {tab === 'welcome'    && <WelcomeSection />}
-          {tab === 'farm'       && <FarmDataSection />}
           {tab === 'hub'        && <HubSection />}
+          {tab === 'rooms'      && <RoomCatalogSection />}
           {tab === 'idea-request' && <IdeaRequestSection />}
         </main>
       </div>

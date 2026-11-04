@@ -13,7 +13,7 @@ import WelcomeFooter from '../components/welcome/WelcomeFooter'
 
 const SHOWCASE = [
   { title: 'Roadmap', description: 'วางแผนเส้นทางสู่มหาลัยแบบเห็นภาพ ลากวาง ตกแต่งได้' },
-  { title: 'Gamification', description: 'ทำการบ้านได้เหรียญ สะสมสตรีค เลี้ยงฟาร์มของตัวเอง' },
+  { title: 'Gamification', description: 'ทำการบ้านได้เหรียญ สะสมสตรีค โฟกัสสะสมใบไม้ แต่งห้องอ่านหนังสือของตัวเอง' },
   { title: 'School System', description: 'ตารางเรียน การบ้าน และโน้ตประจำวัน ในหน้าเดียว' },
 ]
 

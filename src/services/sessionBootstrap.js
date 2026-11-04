@@ -25,8 +25,11 @@ import { useWorldStore } from '../stores/useWorldStore'
 import { useRoadmapStore } from '../stores/useRoadmapStore'
 import { usePlansStore } from '../stores/usePlansStore'
 import { hydrateSelectStoreFromFirestore } from '../utils/syncSelectToFirestore'
-import { hydrateFarmDataFromFirestore } from '../lib/farmDataSync.js'
 import { hydrateSpotify } from './spotifyConnect'
+import { bootstrapStudyRoom } from './studyRoomBootstrap'
+import { useLeavesStore } from '../stores/useLeavesStore'
+import { useFocusStore } from '../stores/useFocusStore'
+import { useRoomStore, roomSync } from '../stores/useRoomStore'
 import { resolveConsent } from './consent'
 import { useConsentStore } from '../stores/useConsentStore'
 import { migrateLegacyRoadmap } from '../utils/migrateLegacyRoadmap'
@@ -44,15 +47,6 @@ import {
   setTaskSyncUser,
   armRoadmapSheetSync,
   disarmRoadmapSheetSync,
-  hydrateMapFromFirestore,
-  armMapSync,
-  disarmMapSync,
-  hydrateInventoryFromFirestore,
-  setInventorySyncUser,
-  disarmInventorySync,
-  hydrateFarmFromFirestore,
-  armFarmSync,
-  disarmFarmSync,
   hydrateSchoolFromFirestore,
   setSchoolSyncUser,
   disarmSchoolSync,
@@ -147,12 +141,8 @@ export async function bootstrapSession(firebaseUser) {
   disableGuestTracking()
   const guestWork = captureGuestWork()
 
-  // Wave 1 — user doc creation gates the user-scoped reads below; the farm
-  // data catalog is global and rides along in parallel.
-  const [userData] = await Promise.all([
-    step('ensureUserDoc', () => ensureUserDoc(firebaseUser)),
-    step('hydrate farm data', () => hydrateFarmDataFromFirestore()),
-  ])
+  // Wave 1 — the user doc gates the user-scoped reads below.
+  const userData = await step('ensureUserDoc', () => ensureUserDoc(firebaseUser))
 
   // Privacy/Terms consent (PDPA): record it from the sign-in page's marker, or flag the
   // user so ConsentGate asks. Isolated like every step; a failure leaves it 'unknown',
@@ -192,24 +182,15 @@ export async function bootstrapSession(firebaseUser) {
       setTaskSyncUser(uid)
     }),
     step('bootstrap roadmap sheets', () => bootstrapRoadmapSheets(uid, userData)),
-    step('hydrate map', async () => {
-      await hydrateMapFromFirestore(uid)
+    step('set map owner', async () => {
       useWorldStore.getState().setMapOwner(uid)
-      armMapSync(uid)
-    }),
-    step('hydrate/arm inventory', async () => {
-      await hydrateInventoryFromFirestore(uid)
-      setInventorySyncUser(uid)
     }),
     step('hydrate/arm school', async () => {
       await hydrateSchoolFromFirestore(uid)
       setSchoolSyncUser(uid)
     }),
-    step('hydrate/arm farm', async () => {
-      await hydrateFarmFromFirestore(uid)
-      armFarmSync(uid)
-    }),
     step('hydrate spotify', () => hydrateSpotify(uid)),
+    step('study room', () => bootstrapStudyRoom(uid)),
   ])
 
   // Cloud state is hydrated and the sync writers are armed — now merge guest
@@ -233,10 +214,12 @@ export function teardownSession() {
   setPortfolioSyncUser(null)
   setTaskSyncUser(null)
   disarmRoadmapSheetSync()
-  disarmMapSync()
-  disarmInventorySync()
-  disarmFarmSync()
   disarmSchoolSync()
   useWorldStore.getState().setMapOwner(null)
   usePlansStore.getState().resetPlans()
+  // Study room: nothing of the previous account may show for the next one.
+  useLeavesStore.getState().reset()
+  useFocusStore.getState().reset()
+  roomSync.cancel() // a pending save must not run for the next account
+  useRoomStore.getState().reset()
 }

@@ -88,32 +88,38 @@ describe('section-scoped admin writes', () => {
   })
 })
 
-describe('Personal Map rules (maps/{ownerUid})', () => {
+describe('legacy Personal Map documents (maps/{ownerUid})', () => {
   beforeEach(async () => {
     await testEnv.withSecurityRulesDisabled(async (ctx) => {
-      const db = ctx.firestore()
-      await setDoc(doc(db, 'maps/alice'), { objects: [{ key: 'wood_bridge', x: 10, y: 20 }] })
+      await setDoc(doc(ctx.firestore(), 'maps/alice'), { objects: [{ key: 'wood_bridge', x: 10, y: 20 }] })
     })
   })
 
-  it('allows any signed-in user to read a Personal Map', async () => {
+  it('stays readable to signed-in users until the purge script removes it', async () => {
     const bob = testEnv.authenticatedContext('bob').firestore()
     await assertSucceeds(getDoc(doc(bob, 'maps/alice')))
   })
 
-  it('allows the owner to write their own Personal Map', async () => {
+  it('BLOCKS every client write, including the owner', async () => {
     const alice = testEnv.authenticatedContext('alice').firestore()
-    await assertSucceeds(setDoc(doc(alice, 'maps/alice'), { objects: [] }))
+    await assertFails(setDoc(doc(alice, 'maps/alice'), { objects: [] }))
+    await assertFails(updateDoc(doc(alice, 'maps/alice'), { objects: [] }))
+    await assertFails(deleteDoc(doc(alice, 'maps/alice')))
   })
 
-  it('BLOCKS a non-owner from writing another user Personal Map', async () => {
-    const bob = testEnv.authenticatedContext('bob').firestore()
-    await assertFails(setDoc(doc(bob, 'maps/alice'), { objects: [] }))
-  })
-
-  it('BLOCKS an unauthenticated user from reading a Personal Map', async () => {
+  it('BLOCKS an unauthenticated user from reading', async () => {
     const anon = testEnv.unauthenticatedContext().firestore()
     await assertFails(getDoc(doc(anon, 'maps/alice')))
+  })
+})
+
+describe('farm data collections are gone', () => {
+  it('denies everything on farmPlants / farmItems / farmShops, even to the super-admin', async () => {
+    const root = testEnv.authenticatedContext('IaltEhO0mPVfK3ng8npr4CdqnEE3').firestore()
+    for (const path of ['farmPlants/p1', 'farmItems/i1', 'farmShops/s1']) {
+      await assertFails(getDoc(doc(root, path)))
+      await assertFails(setDoc(doc(root, path), { name: 'x' }))
+    }
   })
 })
 
@@ -522,6 +528,21 @@ describe('focus collections + focusXp (ADR 0018)', () => {
     await assertFails(updateDoc(doc(alice, 'users/alice'), { focusXp: 999999 }))
   })
 
+  it('BLOCKS a client from writing its own Leaves, room inventory or welcome-pack flag', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(updateDoc(doc(alice, 'users/alice'), { leaves: 999999 }))
+    await assertFails(updateDoc(doc(alice, 'users/alice'), { roomInventory: { desk_basic: 99 } }))
+    await assertFails(updateDoc(doc(alice, 'users/alice'), { welcomePack: 'v2' }))
+  })
+
+  it('BLOCKS a new account from creating its user doc with Leaves, inventory or a welcome-pack flag', async () => {
+    const carol = testEnv.authenticatedContext('carol').firestore()
+    await assertFails(setDoc(doc(carol, 'users/carol'), { uid: 'carol', leaves: 1000000 }))
+    await assertFails(setDoc(doc(carol, 'users/carol'), { uid: 'carol', roomInventory: { laptop: 60 } }))
+    await assertFails(setDoc(doc(carol, 'users/carol'), { uid: 'carol', welcomePack: 'v2' }))
+    await assertSucceeds(setDoc(doc(carol, 'users/carol'), { uid: 'carol', mbti: 'INTJ' }))
+  })
+
   it('BLOCKS every client write to focusActive / focusDaily / focusSessions', async () => {
     const alice = testEnv.authenticatedContext('alice').firestore()
     await assertFails(setDoc(doc(alice, 'focusActive/alice'), { verifiedMs: 99999999 }))
@@ -559,5 +580,31 @@ describe('consent record and erasure log (PDPA)', () => {
     await assertFails(setDoc(doc(alice, 'accountDeletions/a2'), { uidHash: 'y' }))
     const admin = testEnv.authenticatedContext(SUPER_UID).firestore()
     await assertFails(getDoc(doc(admin, 'accountDeletions/a1')))
+  })
+})
+
+describe('study room: roomCatalog + rooms', () => {
+  it('lets any signed-in user read the catalog and rooms, and nobody write rooms', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore()
+      await setDoc(doc(db, 'roomCatalog/lamp_desk'), { name: 'lamp', price: 90 })
+      await setDoc(doc(db, 'rooms/alice'), { tier: 0 })
+    })
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(getDoc(doc(alice, 'roomCatalog/lamp_desk')))
+    await assertSucceeds(getDoc(doc(alice, 'rooms/alice')))
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    await assertSucceeds(getDoc(doc(bob, 'rooms/alice')))
+    await assertFails(setDoc(doc(alice, 'rooms/alice'), { tier: 3, placed: [] }))
+    await assertFails(updateDoc(doc(alice, 'rooms/alice'), { tier: 3 }))
+    const anon = testEnv.unauthenticatedContext().firestore()
+    await assertFails(getDoc(doc(anon, 'roomCatalog/lamp_desk')))
+  })
+
+  it('lets only the super-admin write catalog rows', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(setDoc(doc(alice, 'roomCatalog/lamp_desk'), { price: 1 }))
+    const root = testEnv.authenticatedContext('IaltEhO0mPVfK3ng8npr4CdqnEE3').firestore()
+    await assertSucceeds(setDoc(doc(root, 'roomCatalog/lamp_desk'), { name: 'lamp', price: 120 }))
   })
 })

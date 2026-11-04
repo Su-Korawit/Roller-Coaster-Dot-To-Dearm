@@ -10,7 +10,6 @@ vi.mock('../lib/schoolRoom', () => ({
   SCHOOL_HUB_MAP_KEY: 'school_hub',
   chooseRoom: (...a) => chooseRoom(...a),
 }))
-vi.mock('../stores/useFarmStore', () => ({ useFarmStore: { setState: vi.fn() } }))
 const returnHome = vi.fn()
 vi.mock('../lib/syncManager', () => ({ returnHome: (...a) => returnHome(...a) }))
 const playSound = vi.fn()
@@ -101,19 +100,19 @@ describe('enterSchoolHub', () => {
 
 describe('leaveSchoolHub', () => {
   it('clears hub state, returns the user home on the entry map and asks the game to load it', async () => {
-    useSchoolWorldStore.setState({ inHub: true, room: { ownerUid: 'x' }, entryMapKey: 'farm_entry' })
+    useSchoolWorldStore.setState({ inHub: true, room: { ownerUid: 'x' }, entryMapKey: 'room' })
     await leaveSchoolHub('me')
     const s = useSchoolWorldStore.getState()
     expect(s.inHub).toBe(false)
-    expect(s.mapChangeRequest.mapKey).toBe('farm_entry')
-    expect(returnHome).toHaveBeenCalledWith('me', 'farm_entry')
+    expect(s.mapChangeRequest.mapKey).toBe('room')
+    expect(returnHome).toHaveBeenCalledWith('me', 'room')
   })
 
-  it('falls back to test3 when the entry map is not known yet', async () => {
+  it('falls back to the room when the entry map is not known yet', async () => {
     useSchoolWorldStore.setState({ inHub: true, entryMapKey: null })
     await leaveSchoolHub('me')
-    expect(returnHome).toHaveBeenCalledWith('me', 'test3')
-    expect(useSchoolWorldStore.getState().mapChangeRequest.mapKey).toBe('test3')
+    expect(returnHome).toHaveBeenCalledWith('me', 'room')
+    expect(useSchoolWorldStore.getState().mapChangeRequest.mapKey).toBe('room')
   })
 })
 
@@ -130,6 +129,14 @@ describe('focus actions mirror the server answer', () => {
     focusApi.endFocus.mockResolvedValue({ verifiedMs: 30 * 60000, xpGained: 5 })
     await finishFocus()
     expect(useSchoolWorldStore.getState().focus).toMatchObject({ status: 'idle', xpThisSession: 30, verifiedMs: 30 * 60000 })
+  })
+
+  it('ending a session at the School Hub seat adds the Leaves it earned to the room counter', async () => {
+    const { useLeavesStore } = await import('../stores/useLeavesStore')
+    useLeavesStore.setState({ leaves: 10 })
+    focusApi.endFocus.mockResolvedValue({ verifiedMs: 25 * 60000, xpGained: 0, leaves: 27 })
+    await finishFocus()
+    expect(useLeavesStore.getState().leaves).toBe(37)
   })
 
   it('resuming keeps the session XP; a fresh start resets it', async () => {

@@ -8,14 +8,18 @@ import { getFunctions, httpsCallable } from 'firebase/functions'
 // student who is mid-problem when the prompt appears.
 export const CHECKIN_PROMPT_MS = 25 * 60 * 1000
 
-const call = async (name) => {
-  const { data } = await httpsCallable(getFunctions(), name)()
+const call = async (name, payload) => {
+  const { data } = await httpsCallable(getFunctions(), name)(payload)
   return data
 }
 
-export const startFocus = () => call('startFocus')
+// mode: 'strict' | 'flexible', plannedMin: 10-120 (the server validates and defaults).
+export const startFocus = ({ mode, plannedMin } = {}) =>
+  call('startFocus', { ...(mode ? { mode } : {}), ...(plannedMin ? { plannedMin } : {}) })
 export const checkInFocus = () => call('checkInFocus')
 export const endFocus = () => call('endFocus')
+// The player left the page too long: the tree withers (Strict earns nothing).
+export const abandonFocus = () => call('abandonFocus')
 
 // Milliseconds until the next check-in prompt, given when the last one happened.
 export function msUntilCheckIn(lastCheckInAt, now = Date.now()) {

@@ -16,10 +16,10 @@ describe('buildFamily', () => {
   it('lays icons out one per row with the atlas to match', () => {
     const { sheet, atlas } = buildFamily(icons)
     expect(sheet.w).toBe(20)
-    expect(sheet.h).toBe(160)
+    expect(sheet.h).toBe(180)
     expect(atlas.sprites.warp).toEqual({ row: 1, frames: 1 })
     expect(Object.keys(atlas.sprites)).toEqual([
-      'focus', 'warp', 'plan', 'tasks', 'friends', 'shop', 'wardrobe', 'guide',
+      'focus', 'warp', 'plan', 'tasks', 'friends', 'shop', 'wardrobe', 'guide', 'leaf',
     ])
     expect(atlas.frameW).toBe(20)
     expect(atlas.name).toBe('icons')

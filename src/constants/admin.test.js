@@ -45,3 +45,13 @@ describe('hub section access', () => {
     }
   })
 })
+
+describe('rooms section access', () => {
+  it('includes rooms in ADMIN_SECTIONS and grants it only to the super-admin', () => {
+    expect(ADMIN_SECTIONS).toContain('rooms')
+    expect(getAdminSections('o.korawitt@gmail.com')).toContain('rooms')
+    for (const email of ['takadaoni07@gmail.com', 'play198725@gmail.com', 'itcity9476@gmail.com']) {
+      expect(getAdminSections(email)).not.toContain('rooms')
+    }
+  })
+})

@@ -1,0 +1,228 @@
+[
+ {
+  "fn": "leavesFor",
+  "input": {
+   "mode": "strict",
+   "verifiedMs": 1500000,
+   "plannedMin": 25,
+   "withered": false
+  },
+  "output": 41
+ },
+ {
+  "fn": "leavesFor",
+  "input": {
+   "mode": "flexible",
+   "verifiedMs": 1500000,
+   "plannedMin": 25,
+   "withered": false
+  },
+  "output": 27
+ },
+ {
+  "fn": "leavesFor",
+  "input": {
+   "mode": "flexible",
+   "verifiedMs": 600000,
+   "plannedMin": 25,
+   "withered": false
+  },
+  "output": 10
+ },
+ {
+  "fn": "leavesFor",
+  "input": {
+   "mode": "flexible",
+   "verifiedMs": 1800000,
+   "plannedMin": 25,
+   "withered": false
+  },
+  "output": 33
+ },
+ {
+  "fn": "leavesFor",
+  "input": {
+   "mode": "strict",
+   "verifiedMs": 720000,
+   "plannedMin": 25,
+   "withered": true
+  },
+  "output": 0
+ },
+ {
+  "fn": "leavesFor",
+  "input": {
+   "mode": "flexible",
+   "verifiedMs": 720000,
+   "plannedMin": 25,
+   "withered": true
+  },
+  "output": 12
+ },
+ {
+  "fn": "leavesFor",
+  "input": {
+   "mode": "flexible",
+   "verifiedMs": 0,
+   "plannedMin": 25,
+   "withered": false
+  },
+  "output": 0
+ },
+ {
+  "fn": "treeFor",
+  "input": {
+   "plannedMin": 24,
+   "withered": false
+  },
+  "output": "sprout"
+ },
+ {
+  "fn": "treeFor",
+  "input": {
+   "plannedMin": 25,
+   "withered": false
+  },
+  "output": "shrub"
+ },
+ {
+  "fn": "treeFor",
+  "input": {
+   "plannedMin": 49,
+   "withered": false
+  },
+  "output": "shrub"
+ },
+ {
+  "fn": "treeFor",
+  "input": {
+   "plannedMin": 50,
+   "withered": false
+  },
+  "output": "tree"
+ },
+ {
+  "fn": "treeFor",
+  "input": {
+   "plannedMin": 89,
+   "withered": false
+  },
+  "output": "tree"
+ },
+ {
+  "fn": "treeFor",
+  "input": {
+   "plannedMin": 90,
+   "withered": false
+  },
+  "output": "blossom"
+ },
+ {
+  "fn": "treeFor",
+  "input": {
+   "plannedMin": 90,
+   "withered": true
+  },
+  "output": "withered"
+ },
+ {
+  "fn": "validateFocusParams",
+  "input": {
+   "mode": "strict",
+   "plannedMin": 50
+  },
+  "output": {
+   "ok": true,
+   "mode": "strict",
+   "plannedMin": 50
+  }
+ },
+ {
+  "fn": "validateFocusParams",
+  "input": {},
+  "output": {
+   "ok": true,
+   "mode": "flexible",
+   "plannedMin": 25
+  }
+ },
+ {
+  "fn": "validateFocusParams",
+  "input": {
+   "mode": "strict",
+   "plannedMin": 10
+  },
+  "output": {
+   "ok": true,
+   "mode": "strict",
+   "plannedMin": 10
+  }
+ },
+ {
+  "fn": "validateFocusParams",
+  "input": {
+   "mode": "strict",
+   "plannedMin": 120
+  },
+  "output": {
+   "ok": true,
+   "mode": "strict",
+   "plannedMin": 120
+  }
+ },
+ {
+  "fn": "validateFocusParams",
+  "input": {
+   "mode": "strict",
+   "plannedMin": 9
+  },
+  "output": {
+   "ok": false,
+   "code": "bad_planned"
+  }
+ },
+ {
+  "fn": "validateFocusParams",
+  "input": {
+   "mode": "strict",
+   "plannedMin": 121
+  },
+  "output": {
+   "ok": false,
+   "code": "bad_planned"
+  }
+ },
+ {
+  "fn": "validateFocusParams",
+  "input": {
+   "mode": "strict",
+   "plannedMin": 25.5
+  },
+  "output": {
+   "ok": false,
+   "code": "bad_planned"
+  }
+ },
+ {
+  "fn": "validateFocusParams",
+  "input": {
+   "mode": "strict",
+   "plannedMin": "30"
+  },
+  "output": {
+   "ok": false,
+   "code": "bad_planned"
+  }
+ },
+ {
+  "fn": "validateFocusParams",
+  "input": {
+   "mode": "hard",
+   "plannedMin": 30
+  },
+  "output": {
+   "ok": false,
+   "code": "bad_mode"
+  }
+ }
+]

@@ -1,0 +1,63 @@
+{
+  "name": "room_tiles",
+  "frameW": 16,
+  "frameH": 16,
+  "columns": 16,
+  "sprites": {
+    "floor_minimal": {
+      "col": 0,
+      "row": 0,
+      "frames": 1
+    },
+    "floor_rug_edge": {
+      "col": 1,
+      "row": 0,
+      "frames": 1
+    },
+    "wall_minimal_t": {
+      "col": 2,
+      "row": 0,
+      "frames": 1
+    },
+    "wall_minimal_tl": {
+      "col": 3,
+      "row": 0,
+      "frames": 1
+    },
+    "wall_minimal_tr": {
+      "col": 4,
+      "row": 0,
+      "frames": 1
+    },
+    "wall_minimal_l": {
+      "col": 5,
+      "row": 0,
+      "frames": 1
+    },
+    "wall_minimal_r": {
+      "col": 6,
+      "row": 0,
+      "frames": 1
+    },
+    "wall_minimal_b": {
+      "col": 7,
+      "row": 0,
+      "frames": 1
+    },
+    "window_day": {
+      "col": 8,
+      "row": 0,
+      "frames": 1
+    },
+    "door": {
+      "col": 9,
+      "row": 0,
+      "frames": 1
+    },
+    "shadow_wall": {
+      "col": 10,
+      "row": 0,
+      "frames": 1
+    }
+  }
+}

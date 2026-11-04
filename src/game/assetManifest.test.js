@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { GAME_ASSETS, localMapPath } from './assetManifest'
+import { GAME_ASSETS, localMapPath, mapStoragePath } from './assetManifest'
 
 describe('GAME_ASSETS storage paths', () => {
   it('has no entry still pointing at the legacy sprites/tilesets, sprites/objects, or sprites/characters prefixes', () => {
@@ -16,15 +16,15 @@ describe('GAME_ASSETS storage paths', () => {
     expect(enfj.storagePath).toBe('rc/characters/ENFJ.png')
   })
 
-  it('the crops spritesheet uses the rc/objects/ prefix', () => {
-    const crops = GAME_ASSETS.find((a) => a.key === 'crops')
-    expect(crops.storagePath).toBe('rc/objects/Basic_Plants.png')
+  it('no longer ships the farm crops sheet or the Personal Map', () => {
+    expect(GAME_ASSETS.find((a) => a.key === 'crops')).toBeUndefined()
+    expect(GAME_ASSETS.find((a) => a.key === 'test3')).toBeUndefined()
   })
 })
 
 describe('localMapPath', () => {
   it('returns the public/ path for maps shipped with the repo', () => {
-    expect(localMapPath('test3')).toBe('/maps/test3.json')
+    expect(localMapPath('room')).toBe('/maps/room.json')
     expect(localMapPath('indoor')).toBe('/maps/indoor.json')
   })
 
@@ -53,5 +53,30 @@ describe('School Hub map path', () => {
     const entry = GAME_ASSETS.find((a) => a.key === 'school_hub')
     expect(entry.storagePath).toBe('maps/school_hub_v2.json')
     expect(entry.localPath).toBe('/maps/school_hub.json')
+  })
+})
+
+describe('study room assets', () => {
+  it('declares the room map, tileset, furniture and focus art', () => {
+    const by = (k) => GAME_ASSETS.find((a) => a.key === k)
+    expect(by('room')).toMatchObject({ type: 'tilemapJSON', storagePath: 'maps/room_v1.json', localPath: '/maps/room.json' })
+    expect(by('Room Tiles')).toMatchObject({ type: 'image', storagePath: 'rc/tilesets/room_tiles.png', localPath: '/assets/rc/room_tiles.png' })
+    expect(by('room_items')).toMatchObject({ type: 'spritesheet', frameConfig: { frameWidth: 32, frameHeight: 32 }, localPath: '/assets/rc/room_items.png' })
+    expect(by('focus_art')).toMatchObject({ type: 'spritesheet', frameConfig: { frameWidth: 48, frameHeight: 48 }, localPath: '/assets/rc/focus.png' })
+  })
+})
+
+describe('mapStoragePath', () => {
+  it('uses the manifest path for shipped maps, so versioned paths really are loaded', () => {
+    expect(mapStoragePath('room')).toBe('maps/room_v1.json')
+    expect(mapStoragePath('school_hub')).toBe('maps/school_hub_v2.json')
+  })
+
+  it('falls back to maps/<key>.json for uploaded maps', () => {
+    expect(mapStoragePath('custom_map')).toBe('maps/custom_map.json')
+  })
+
+  it('does not treat a non-map asset key as a map', () => {
+    expect(mapStoragePath('Grass')).toBe('maps/Grass.json')
   })
 })

@@ -21,9 +21,9 @@ import { auth } from '../firebase'
 import { useChatStore } from '../stores/useChatStore'
 import { buildChatId, refs } from '../lib/db'
 import { ADMIN_UID, ADMIN_DISPLAY_NAME } from '../constants/admin'
-import { GoldIcon } from '../components/ui/GoldIcon'
+import LeavesCounter from '../components/room/LeavesCounter'
+import RoomLayer from '../components/room/RoomLayer'
 import { CoinIcon } from '../components/ui/CoinIcon'
-import { useInventoryStore } from '../stores/useInventoryStore'
 import { useCloudAsset } from '../hooks/useCloudAsset'
 import { getMusicConfig, DEFAULT_TRACKS } from '../utils/musicConfig'
 import MusicPanel from '../components/music/MusicPanel'
@@ -56,7 +56,6 @@ function HomePage() {
   const focusXp = useUserStore((s) => s.focusXp)
   const coins = useUserStore((state) => state.coins)
   const totalStacks = useUserStore((s) => s.totalStacks)
-  const gold = useInventoryStore((s) => s.gold)
   const uiVisibility = useUserStore((s) => s.uiVisibility)
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -212,6 +211,9 @@ function HomePage() {
         </Suspense>
       </div>
 
+      {/* Study room: focus / shop entry, HUD, decorate bar, completion screen */}
+      <RoomLayer />
+
       {/* Gradient scrim — top: keeps header pills readable over pixel art */}
       <div className="absolute top-0 inset-x-0 h-24 bg-linear-to-b from-black/30 to-transparent z-10 pointer-events-none" />
       {/* Gradient scrim — bottom: keeps bottom nav readable */}
@@ -240,7 +242,7 @@ function HomePage() {
 
         </div>
 
-        {/* Streak + Coins + Gold */}
+        {/* Streak + Coins + Leaves */}
         <div className="pointer-events-auto px-slab flex items-center gap-3 px-4 py-1.5">
           <span className="pixel-font text-xs text-ink flex items-center gap-1">
             <Flame size={14} strokeWidth={2.5} className="text-danger" aria-hidden="true" />
@@ -250,10 +252,7 @@ function HomePage() {
             <CoinIcon size={14} />
             {coins}
           </span>
-          <span className="pixel-font text-xs text-ink flex items-center gap-1">
-            <GoldIcon size={14} />
-            {gold}g
-          </span>
+          <LeavesCounter />
         </div>
       </div>
 

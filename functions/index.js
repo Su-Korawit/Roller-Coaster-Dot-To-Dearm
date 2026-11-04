@@ -330,11 +330,13 @@ exports.syncUserSchool = onDocumentWritten('users/{uid}', async (event) => {
 //   focusDaily/{uid}_{day}     verified ms per Bangkok day (leaderboard source, Task 4)
 //   focusSessions/{autoId}     finished-session history
 //   users/{uid}.focusXp        running XP total
+//   users/{uid}.leaves         Study Room currency, credited once at session end
 const {
   CHECKIN_WINDOW_MS, DAILY_CAP_MS, bangkokDay, settleSegment, xpDelta,
 } = require('./focusMath')
 const { normalizeSchoolId: normalizeFocusSchoolId } = require('./schoolMembers')
 const { temperamentOf, xpMultiplier, YESTERDAY_MIN_MS } = require('./temperaments')
+const { validateFocusParams, treeFor, leavesFor } = require('./leavesMath')
 
 function requireUid(req) {
   const uid = req.auth?.uid
@@ -343,7 +345,7 @@ function requireUid(req) {
 }
 
 // Shared body of checkIn/end. Reads first, writes last (Firestore transaction rule).
-async function settleActive(uid, { end }) {
+async function settleActive(uid, { end, forceWither = false }) {
   const nowMs = Date.now()
   const activeRef = db.collection('focusActive').doc(uid)
   const userRef = db.collection('users').doc(uid)
@@ -351,12 +353,18 @@ async function settleActive(uid, { end }) {
   const dailyRef = db.collection('focusDaily').doc(`${uid}_${day}`)
 
   return db.runTransaction(async (tx) => {
+    let endExtras = {}
     const [activeSnap, dailySnap] = await Promise.all([tx.get(activeRef), tx.get(dailyRef)])
     if (!activeSnap.exists) throw new HttpsError('failed-precondition', 'NO_ACTIVE_SESSION')
     const active = activeSnap.data()
     const dailyUsed = Number(dailySnap.data()?.verifiedMs ?? 0)
 
     const seg = settleSegment({ lastCheckInAt: active.lastCheckInAt, nowMs, dailyUsedMs: dailyUsed })
+    // Study Room: a Strict session whose check-in lapsed has withered (server-decided);
+    // sessions started before modes existed behave as Flexible 25 min.
+    const mode = active.mode ?? 'flexible'
+    const plannedMin = active.plannedMin ?? 25
+    const withered = active.withered === true || forceWither || (mode === 'strict' && seg.lapsed)
     const before = Number(active.verifiedMs ?? 0)
     const after = before + seg.creditedMs
     // Temperament perk (ADR 0018) scales XP only, never the verified time behind the
@@ -384,14 +392,24 @@ async function settleActive(uid, { end }) {
     }
 
     if (end) {
+      const leaves = leavesFor({ mode, verifiedMs: after, plannedMin, withered })
+      const tree = treeFor({ plannedMin, withered })
+      if (leaves > 0) {
+        tx.set(userRef, { leaves: admin.firestore.FieldValue.increment(leaves) }, { merge: true })
+      }
       tx.delete(activeRef)
       tx.set(db.collection('focusSessions').doc(), {
         uid, schoolId: active.schoolId ?? null,
         startedAt: active.startedAt, endedAt: nowMs, verifiedMs: after,
-        day, reason: 'ended',
+        day, reason: forceWither ? 'abandoned' : 'ended',
+        mode, plannedMin, subjectKey: null, tree, leaves, withered,
       })
+      endExtras = { leaves, tree, mode, plannedMin, withered }
     } else if (!seg.tooSoon) {
-      tx.update(activeRef, { lastCheckInAt: nowMs, verifiedMs: after, weightedMs: weightedAfter })
+      tx.update(activeRef, {
+        lastCheckInAt: nowMs, verifiedMs: after, weightedMs: weightedAfter,
+        ...(withered ? { withered: true } : {}),
+      })
     }
 
     return {
@@ -406,12 +424,16 @@ async function settleActive(uid, { end }) {
       tooSoon: seg.tooSoon,
       dailyMs: dailyUsed + seg.creditedMs,
       dailyCapMs: DAILY_CAP_MS,
+      withered,
+      ...endExtras,
     }
   })
 }
 
 exports.startFocus = onCall(async (req) => {
   const uid = requireUid(req)
+  const params = validateFocusParams({ mode: req.data?.mode, plannedMin: req.data?.plannedMin })
+  if (!params.ok) throw new HttpsError('invalid-argument', 'Invalid focus parameters.', { code: params.code })
   const nowMs = Date.now()
   const activeRef = db.collection('focusActive').doc(uid)
   const userRef = db.collection('users').doc(uid)
@@ -424,8 +446,11 @@ exports.startFocus = onCall(async (req) => {
     if (activeSnap.exists) {
       const a = activeSnap.data()
       if (nowMs - a.lastCheckInAt <= CHECKIN_WINDOW_MS) {
-        // Idempotent: a second tab / a reload resumes the running session.
-        return { ok: true, resumed: true, startedAt: a.startedAt, lastCheckInAt: a.lastCheckInAt, verifiedMs: a.verifiedMs ?? 0, temperament: a.temperament ?? null }
+        // Idempotent: a second tab / a reload resumes the running session. A Strict session
+        // cannot survive that (the page was left, and closing the tab never reports it), so
+        // it withers here — otherwise closing the tab and coming back would keep the reward.
+        if (a.mode === 'strict' && !a.withered) tx.update(activeRef, { withered: true })
+        return { ok: true, resumed: true, withered: a.mode === 'strict' ? true : (a.withered ?? false), startedAt: a.startedAt, lastCheckInAt: a.lastCheckInAt, verifiedMs: a.verifiedMs ?? 0, temperament: a.temperament ?? null, mode: a.mode ?? 'flexible', plannedMin: a.plannedMin ?? 25 }
       }
       // Stale: close it with nothing extra credited, then start fresh.
       tx.set(db.collection('focusSessions').doc(), {
@@ -441,13 +466,140 @@ exports.startFocus = onCall(async (req) => {
     tx.set(activeRef, {
       uid, schoolId, startedAt: nowMs, lastCheckInAt: nowMs, verifiedMs: 0,
       weightedMs: 0, temperament, studiedYesterday,
+      mode: params.mode, plannedMin: params.plannedMin, withered: false,
     })
-    return { ok: true, resumed: false, startedAt: nowMs, lastCheckInAt: nowMs, verifiedMs: 0, temperament }
+    return { ok: true, resumed: false, startedAt: nowMs, lastCheckInAt: nowMs, verifiedMs: 0, temperament, mode: params.mode, plannedMin: params.plannedMin }
   })
 })
 
 exports.checkInFocus = onCall(async (req) => settleActive(requireUid(req), { end: false }))
 exports.endFocus = onCall(async (req) => settleActive(requireUid(req), { end: true }))
+// Strict: client reports it left the page (>10 s) — the tree withers and earns nothing.
+// Flexible: client reports it was away > 2 min — verified minutes still count, no bonus.
+exports.abandonFocus = onCall(async (req) => settleActive(requireUid(req), { end: true, forceWither: true }))
+
+// ── Study Room economy ───────────────────────────────────────────────────────
+// Leaves, room inventory and the welcome pack are Functions-owned (rules deny client
+// writes). Every callable reads first and writes last inside one transaction, so parallel
+// calls cannot double-spend or double-grant.
+const roomLogic = require('./roomLogic')
+
+function toRoomError(err) {
+  if (err instanceof HttpsError) return err
+  if (err && err.code && err.extra !== undefined) return new HttpsError(err.code, err.message, err.extra)
+  if (err && err.code) return new HttpsError(err.code, err.message)
+  console.error('[room] unexpected error:', err)
+  return new HttpsError('internal', 'Something went wrong.')
+}
+
+exports.buyRoomItem = onCall(async (req) => {
+  const uid = requireUid(req)
+  const itemId = req.data?.itemId
+  if (typeof itemId !== 'string' || !itemId || itemId.length > 64 || itemId.includes('/')) throw new HttpsError('invalid-argument', 'itemId is required.')
+  const userRef = db.collection('users').doc(uid)
+  const itemRef = db.collection('roomCatalog').doc(itemId)
+  const roomRef = db.collection('rooms').doc(uid)
+  try {
+    return await db.runTransaction(async (tx) => {
+      const [userSnap, itemSnap, roomSnap] = await Promise.all([tx.get(userRef), tx.get(itemRef), tx.get(roomRef)])
+      if (!userSnap.exists) throw new HttpsError('not-found', 'User not found.')
+      if (itemSnap.exists && itemSnap.data().hidden === true) throw new HttpsError('failed-precondition', 'ITEM_HIDDEN')
+      const u = userSnap.data()
+      const inventory = u.roomInventory ?? {}
+      const plan = roomLogic.planPurchase({
+        item: itemSnap.exists ? itemSnap.data() : null,
+        itemId,
+        leaves: u.leaves ?? 0,
+        inventory,
+        currentTier: roomSnap.exists ? roomSnap.data().tier ?? 0 : 0,
+      })
+      const leaves = Number(u.leaves ?? 0) - plan.price
+      const owned = Number(inventory[itemId] ?? 0) + 1
+      tx.set(userRef, { leaves, roomInventory: { [itemId]: owned } }, { merge: true })
+      return { ok: true, leaves, owned }
+    })
+  } catch (err) {
+    throw toRoomError(err)
+  }
+})
+
+exports.claimWelcomePack = onCall(async (req) => {
+  const uid = requireUid(req)
+  const userRef = db.collection('users').doc(uid)
+  const roomRef = db.collection('rooms').doc(uid)
+  const starterIds = Object.keys(roomLogic.STARTER_ITEMS)
+  try {
+    return await db.runTransaction(async (tx) => {
+      const [userSnap, roomSnap, ...itemSnaps] = await Promise.all([
+        tx.get(userRef),
+        tx.get(roomRef),
+        ...starterIds.map((id) => tx.get(db.collection('roomCatalog').doc(id))),
+      ])
+      if (!userSnap.exists) throw new HttpsError('not-found', 'User not found.')
+      const u = userSnap.data()
+      if (!roomLogic.planWelcomePack({ welcomePack: u.welcomePack }).grant) return { ok: true, already: true }
+
+      const granted = {}
+      starterIds.forEach((id, i) => {
+        if (itemSnaps[i].exists) granted[id] = roomLogic.STARTER_ITEMS[id]
+      })
+      const inventory = { ...(u.roomInventory ?? {}) }
+      for (const [id, n] of Object.entries(granted)) inventory[id] = Number(inventory[id] ?? 0) + n
+      tx.set(userRef, {
+        leaves: Number(u.leaves ?? 0) + roomLogic.WELCOME_LEAVES,
+        roomInventory: inventory,
+        welcomePack: 'v2',
+      }, { merge: true })
+      if (!roomSnap.exists) {
+        const layout = roomLogic.STARTER_LAYOUT
+        tx.set(roomRef, {
+          tier: layout.tier, theme: layout.theme, petId: layout.petId,
+          placed: layout.placed.filter((p) => granted[p.itemId] > 0),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        })
+      }
+      return { ok: true, already: false }
+    })
+  } catch (err) {
+    throw toRoomError(err)
+  }
+})
+
+// Saves the caller's room layout. Firestore rules cannot count copies per item, so the
+// layout is validated here against the caller's inventory and the catalog (placement.js,
+// shared with the editor), and rooms/{uid} is client-read-only.
+const placement = require('./placement')
+
+exports.saveRoomLayout = onCall(async (req) => {
+  const uid = requireUid(req)
+  const input = req.data?.layout
+  if (!input || typeof input !== 'object' || !Array.isArray(input.placed)) {
+    throw new HttpsError('invalid-argument', 'layout is required.')
+  }
+  if (input.placed.length > 60) throw new HttpsError('invalid-argument', 'Too many items.')
+  const layout = {
+    tier: input.tier,
+    theme: input.theme,
+    petId: input.petId ?? null,
+    placed: input.placed.map((p) => (p && typeof p === 'object'
+      ? { itemId: p.itemId, x: p.x, y: p.y, ...(p.slot !== undefined ? { slot: p.slot } : {}) }
+      : p)),
+  }
+  const userRef = db.collection('users').doc(uid)
+  try {
+    return await db.runTransaction(async (tx) => {
+      const [userSnap, catalogSnap] = await Promise.all([tx.get(userRef), tx.get(db.collection('roomCatalog'))])
+      if (!userSnap.exists) throw new HttpsError('not-found', 'User not found.')
+      const catalog = Object.fromEntries(catalogSnap.docs.map((d) => [d.id, d.data()]))
+      const result = placement.validateLayout({ layout, catalog, inventory: userSnap.data().roomInventory ?? {} })
+      if (!result.ok) throw new HttpsError('invalid-argument', 'Invalid layout.', { errors: result.errors })
+      tx.set(db.collection('rooms').doc(uid), { ...layout, updatedAt: admin.firestore.FieldValue.serverTimestamp() })
+      return { ok: true }
+    })
+  } catch (err) {
+    throw toRoomError(err)
+  }
+})
 
 // ── Weekly school leaderboard (ADR 0018) ─────────────────────────────────────
 // Recomputes the current ISO week (Asia/Bangkok) from focusDaily and writes
