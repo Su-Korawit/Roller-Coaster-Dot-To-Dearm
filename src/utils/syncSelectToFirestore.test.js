@@ -22,6 +22,7 @@ const mockSelectState = {
 const mockPlansState = {
   plans: [{ id: 'plan-1', university: 'uni-1', program: 'prog-1', addedAt: 1 }],
   activePlanId: 'plan-1',
+  hydrate: vi.fn(),
 }
 
 const mockUsePlansStore = {
@@ -116,9 +117,11 @@ describe('hydrateSelectStoreFromFirestore', () => {
 
     await hydrateSelectStoreFromFirestore('uid-2')
 
-    expect(mockUsePlansStore.setState).toHaveBeenCalledWith({
+    // the store upgrades old entries itself (usePlansStore.hydrate)
+    expect(mockPlansState.hydrate).toHaveBeenCalledWith({
       plans: [{ id: 'plan-2', university: 'uni-2', program: 'prog-2', addedAt: 2 }],
       activePlanId: 'plan-2',
+      goalHours: undefined,
     })
     expect(mockSelectState.setMbti).toHaveBeenCalledWith('ISTP')
     expect(mockSelectState.setCareer).toHaveBeenCalledWith('designer')

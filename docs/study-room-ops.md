@@ -81,3 +81,18 @@ leaderboard is unchanged; reloading the app puts the player back where they stoo
 old clients simply never send `practice`, so rolling hosting back is safe; the new user-doc
 fields `hotbar`, `resume`, `guide` are client-owned and harmless to leave behind, and
 `practiceRewarded` is Functions-owned and keeps the gift from being paid twice.
+
+## 7. TCAS Plan (ADR-0025)
+
+Rules and functions only; nothing to seed.
+
+```bash
+firebase deploy --only firestore:rules
+firebase deploy --only functions:startFocus,functions:checkInFocus,functions:endFocus,functions:abandonFocus
+```
+
+Check: a focus session started with a subject (Plan → อ่าน) adds its verified minutes to
+`users/{uid}.focusBySubject.<key>` once when it ends (also when a Strict tree withered); a session
+without a subject and a practice session write nothing; a bad `subjectKey` is refused with
+`invalid-argument`. Rollback: old clients never send `subjectKey`; the new profile fields
+(`plans[].v2`, `goalHours`) are ignored by older readers, and `focusBySubject` is Functions-owned.

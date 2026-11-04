@@ -10,7 +10,7 @@ const item = (id, labelTh, icon, target, extra = {}) => ({ id, labelTh, icon, re
 export const HOTBAR_ITEMS = {
   focus: item('focus', 'โฟกัส', 'focus', { sheet: 'focus' }),
   warp: item('warp', 'วาร์ป', 'warp', { sheet: 'warp' }),
-  plan: item('plan', 'แผน TCAS', 'plan', { sheet: 'plan' }, { ready: false }),
+  plan: item('plan', 'แผน TCAS', 'plan', { sheet: 'plan' }),
   tasks: item('tasks', 'งาน', 'tasks', { view: APP_VIEWS.TASK }),
   letter: item('letter', 'แชท', 'friends', { view: APP_VIEWS.CHAT }),
   shop: item('shop', 'ร้านค้า', 'shop', { sheet: 'shop' }),

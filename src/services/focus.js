@@ -15,8 +15,9 @@ const call = async (name, payload) => {
 
 // mode: 'strict' | 'flexible', plannedMin: 10-120 (the server validates and defaults).
 // practice: the Guide's one-time 1-minute session (the server ignores mode/plannedMin for it).
-export const startFocus = ({ mode, plannedMin, practice } = {}) =>
-  call('startFocus', { ...(mode ? { mode } : {}), ...(plannedMin ? { plannedMin } : {}), ...(practice ? { practice: true } : {}) })
+// subjectKey: an exam subject (TCAS Plan goals) the session counts toward.
+export const startFocus = ({ mode, plannedMin, practice, subjectKey } = {}) =>
+  call('startFocus', { ...(mode ? { mode } : {}), ...(plannedMin ? { plannedMin } : {}), ...(practice ? { practice: true } : {}), ...(subjectKey ? { subjectKey } : {}) })
 export const checkInFocus = () => call('checkInFocus')
 export const endFocus = () => call('endFocus')
 // The player left the page too long: the tree withers (Strict earns nothing).

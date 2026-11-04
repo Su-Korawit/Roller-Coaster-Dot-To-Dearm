@@ -74,6 +74,9 @@ export default function TcasCalendarTab({ today, onGuestAction }) {
   const [date, setDate] = useState('')
   const [description, setDescription] = useState('')
   const [link, setLink] = useState('')
+  const [round, setRound] = useState('')
+  const [kind, setKind] = useState('')
+  const [examKeys, setExamKeys] = useState('')
 
   useEffect(() => {
     const unsub = useTcasEventsStore.getState().subscribeEvents()
@@ -94,8 +97,8 @@ export default function TcasCalendarTab({ today, onGuestAction }) {
 
   async function handleSaveEvent() {
     if (!title.trim() || !date) return
-    await addEvent({ title, description, date, link })
-    setTitle(''); setDate(''); setDescription(''); setLink(''); setShowForm(false)
+    await addEvent({ title, description, date, link, round, kind, examKeys })
+    setTitle(''); setDate(''); setDescription(''); setLink(''); setRound(''); setKind(''); setExamKeys(''); setShowForm(false)
   }
 
   const renderRow = (event, isPassed) => (
@@ -144,6 +147,29 @@ export default function TcasCalendarTab({ today, onGuestAction }) {
           <label className="flex flex-col thai-font text-xs text-ink-soft">
             ลิงก์ (ไม่บังคับ)
             <input aria-label="ลิงก์" value={link} onChange={(e) => setLink(e.target.value)} className="px-input px-2 py-1 text-sm" />
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="flex flex-col thai-font text-xs text-ink-soft">
+              รอบ (ไม่บังคับ)
+              <select aria-label="รอบ" value={round} onChange={(e) => setRound(e.target.value)} className="px-input px-2 py-1 text-sm">
+                <option value="">ไม่ระบุ</option>
+                {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{`รอบ ${n}`}</option>)}
+              </select>
+            </label>
+            <label className="flex flex-col thai-font text-xs text-ink-soft">
+              ประเภท (ไม่บังคับ)
+              <select aria-label="ประเภท" value={kind} onChange={(e) => setKind(e.target.value)} className="px-input px-2 py-1 text-sm">
+                <option value="">ไม่ระบุ</option>
+                <option value="apply">เปิดรับสมัคร</option>
+                <option value="exam">สอบ</option>
+                <option value="announce">ประกาศผล</option>
+                <option value="other">อื่น ๆ</option>
+              </select>
+            </label>
+          </div>
+          <label className="flex flex-col thai-font text-xs text-ink-soft">
+            รหัสวิชาที่สอบ (คั่นด้วย , เช่น a_lv_64, tgat)
+            <input aria-label="รหัสวิชาที่สอบ" value={examKeys} onChange={(e) => setExamKeys(e.target.value)} className="px-input px-2 py-1 text-sm" />
           </label>
           <button onClick={handleSaveEvent} className="px-btn w-full rounded-lg bg-brand-strong py-2 pixel-font text-xs text-white">
             บันทึกกิจกรรม

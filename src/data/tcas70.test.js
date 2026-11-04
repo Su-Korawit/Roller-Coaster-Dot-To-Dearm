@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { TCAS70_EVENTS, daysUntil, eventsWithFallback, nextMilestone } from './tcas70'
+import { TCAS70_EVENTS, daysUntil, eventsWithFallback, nextMilestone, eventsForPlan } from './tcas70'
 
 describe('TCAS70 calendar data', () => {
   it('every entry has a valid ISO date, title, description and the mytcas link', () => {
@@ -40,5 +40,48 @@ describe('TCAS70 calendar data', () => {
     expect(eventsWithFallback(mine)).toBe(mine)
     expect(eventsWithFallback([])).toBe(TCAS70_EVENTS)
     expect(eventsWithFallback(undefined)).toBe(TCAS70_EVENTS)
+  })
+})
+
+describe('eventsForPlan', () => {
+  const untagged = [{ id: 'a', date: '2027-03-01', title: 'ข่าว' }]
+  const tagged = [{ id: 'b', date: '2027-03-01', title: 'สอบ', kind: 'exam', examKeys: ['a_lv_64'] }]
+
+  it('adds the tagged built-in rows when the admin calendar carries no plan tags, so the Plan keeps working', () => {
+    const out = eventsForPlan(untagged)
+    expect(out).toContain(untagged[0])
+    expect(out.some((e) => e.builtIn && e.round === 3)).toBe(true)
+  })
+
+  it('uses the admin calendar alone once it carries plan tags', () => {
+    expect(eventsForPlan(tagged)).toEqual(tagged)
+  })
+
+  it('an empty or missing calendar gives the built-in rows', () => {
+    expect(eventsForPlan([])).toEqual(TCAS70_EVENTS)
+    expect(eventsForPlan(undefined)).toEqual(TCAS70_EVENTS)
+  })
+})
+
+describe('plan metadata on the built-in calendar', () => {
+  const byId = (id) => TCAS70_EVENTS.find((e) => e.id === `tcas70-${id}`)
+
+  it('tags each round’s open and result rows with the round and kind', () => {
+    for (const r of [1, 2, 3, 4]) {
+      expect(byId(`r${r}-open`)).toMatchObject({ round: r, kind: 'apply' })
+      expect(byId(`r${r}-result`)).toMatchObject({ round: r, kind: 'announce' })
+    }
+  })
+
+  it('tags exam rows with the score keys they cover, all of them valid subject keys', async () => {
+    const { isSubjectKey } = await import('../utils/planDerive')
+    expect(byId('tpat1-exam').examKeys).toContain('tpat1')
+    expect(byId('alevel-exam').examKeys).toContain('a_lv_64')
+    for (const e of TCAS70_EVENTS) for (const k of e.examKeys ?? []) expect(isSubjectKey(k), k).toBe(true)
+  })
+
+  it('leaves general rows untagged', () => {
+    expect(byId('mytcas-open').round).toBeUndefined()
+    expect(byId('mytcas-open').examKeys).toBeUndefined()
   })
 })

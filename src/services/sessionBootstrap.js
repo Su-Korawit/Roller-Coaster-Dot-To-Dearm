@@ -41,6 +41,7 @@ import {
   resolveGuestMerge,
   disableGuestTracking,
   enableGuestTracking,
+  hasGuestPlans,
 } from './guestMerge'
 import { useGuestMergeStore } from '../stores/useGuestMergeStore'
 import {
@@ -59,6 +60,7 @@ import {
   setResumeSyncUser,
   hydrateGuideFromFirestore,
   setGuideSyncUser,
+  setPlansSyncUser,
 } from '../lib/syncManager'
 
 function readSelectStore() {
@@ -181,7 +183,12 @@ export async function bootstrapSession(firebaseUser) {
   // Wave 2 — independent per-store hydrations; each arms its debounced
   // writer only after its own hydrate succeeded.
   await Promise.all([
-    step('hydrate select', () => hydrateSelectStoreFromFirestore(uid)),
+    // The select hydrate also loads the plans; arm their writer after it so Plan edits (and a merged
+    // guest plan) are saved, and the load itself is not written straight back.
+    step('hydrate select', async () => {
+      await hydrateSelectStoreFromFirestore(uid)
+      setPlansSyncUser(uid)
+    }),
     step('hydrate/arm portfolio', async () => {
       await hydratePortfolioFromFirestore(uid)
       setPortfolioSyncUser(uid)
@@ -230,6 +237,10 @@ export async function bootstrapSession(firebaseUser) {
  */
 export function teardownSession() {
   useConsentStore.getState().reset()
+  // Plans a guest built survive a reload (the dirty marker is set only by logged-out edits) so they
+  // can be merged at login; anything else in the store belongs to a previous account. Decided
+  // before tracking starts, so this reset is not itself counted as guest work.
+  if (!hasGuestPlans()) usePlansStore.getState().resetPlans()
   // Auth is settled logged-out: store mutations from here on are guest work.
   enableGuestTracking()
   setPortfolioSyncUser(null)
@@ -239,11 +250,11 @@ export function teardownSession() {
   setHotbarSyncUser(null)
   setResumeSyncUser(null)
   setGuideSyncUser(null)
+  setPlansSyncUser(null)
   useGuideStore.getState().reset()
   useResumeStore.getState().reset()
   useHotbarStore.getState().reset()
   useWorldStore.getState().setMapOwner(null)
-  usePlansStore.getState().resetPlans()
   // Study room: nothing of the previous account may show for the next one.
   useLeavesStore.getState().reset()
   useFocusStore.getState().reset()

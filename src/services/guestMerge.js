@@ -21,6 +21,8 @@
 // ============================================================================
 import { useRoadmapStore } from '../stores/useRoadmapStore'
 import { useSchoolStore } from '../stores/useSchoolStore'
+import { usePlansStore } from '../stores/usePlansStore'
+import { mergeChecklist } from '../utils/planDerive'
 import { toSchema } from '../utils/roadmapExport'
 
 const DIRTY_KEY = 'rc-guest-dirty'
@@ -85,11 +87,20 @@ export function armGuestDirtyTracking() {
       markDirty('school')
     }
   })
+  usePlansStore.subscribe((state, prev) => {
+    if (!tracking) return
+    if (state.plans !== prev.plans) markDirty('plans')
+  })
+}
+
+// Did a guest build plan entries in this browser? (the marker is set only by logged-out edits)
+export function hasGuestPlans() {
+  return Boolean(readDirty().plans)
 }
 
 export function hasGuestWork() {
   const dirty = readDirty()
-  return Boolean(dirty.roadmap || dirty.school)
+  return Boolean(dirty.roadmap || dirty.school || dirty.plans)
 }
 
 /**
@@ -109,6 +120,11 @@ export function captureGuestWork() {
     if (subjects.length || scheduleSlots.length || appointments.length || notes.length) {
       work.school = { subjects, scheduleSlots, appointments, notes }
     }
+  }
+  if (dirty.plans) {
+    // Only entries that came from a program are worth carrying over (empty onboarding slots are not).
+    const plans = usePlansStore.getState().plans.filter((p) => p.programId)
+    if (plans.length) work.plans = JSON.parse(JSON.stringify(plans))
   }
   return Object.keys(work).length > 0 ? work : null
 }
@@ -163,11 +179,32 @@ function applyGuestSchool({ subjects = [], scheduleSlots = [], appointments = []
   })
 }
 
-/** Apply a captured payload (both tools). Used for silent merges and by the
+// Additive apply for the Plan: every guest entry is re-added through addFromProgram, so the slot
+// cap, the one-entry-per-program-and-round rule and rank assignment all hold; entries already in
+// the account are skipped, which makes re-merging safe. Ticks and the student's own checklist
+// items come along.
+function applyGuestPlans(entries = []) {
+  const store = () => usePlansStore.getState()
+  // Round 3 first, in the guest's rank order, so their ranking carries over; the rest keep their order.
+  const inRound3 = entries.filter((g) => g.round === 3).sort((a, b) => (a.rank ?? Infinity) - (b.rank ?? Infinity))
+  const ordered = [...inRound3, ...entries.filter((g) => g.round !== 3)]
+  for (const g of ordered) {
+    const r = store().addFromProgram({
+      universityId: g.universityId, universityName: g.universityName, programId: g.programId, programName: g.programName,
+      buildingId: g.buildingId, round: g.round, projectName: g.projectName, minGpax: g.minGpax, scores: g.scores,
+    })
+    if (!r.ok) continue
+    const fresh = store().plans.find((p) => p.id === r.id)
+    store().updatePlan(r.id, { checklist: mergeChecklist(g.checklist, fresh.checklist) })
+  }
+}
+
+/** Apply a captured payload (all tools). Used for silent merges and by the
  * conflict dialog's "เก็บงานใหม่เพิ่มเข้าไป" action. */
 export function applyGuestWork(work) {
   if (work?.roadmap) applyGuestRoadmap(work.roadmap)
   if (work?.school) applyGuestSchool(work.school)
+  if (work?.plans) applyGuestPlans(work.plans)
 }
 
 /**
@@ -198,6 +235,12 @@ export function resolveGuestMerge(work) {
       s.subjects.length > 0 || s.scheduleSlots.length > 0 || s.appointments.length > 0 || s.notes.length > 0
     if (cloudHasSchool) conflict.school = work.school
     else applyGuestSchool(work.school)
+  }
+
+  if (work.plans) {
+    const cloudHasPlans = usePlansStore.getState().plans.some((p) => p.programId)
+    if (cloudHasPlans) conflict.plans = work.plans
+    else applyGuestPlans(work.plans)
   }
 
   if (Object.keys(conflict).length === 0) {

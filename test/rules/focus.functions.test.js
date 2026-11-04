@@ -365,3 +365,77 @@ describe('practice focus (the Guide’s one-time gift)', () => {
     expect(await call(fns.endFocus)).toMatchObject({ leaves: 10 })
   })
 })
+
+describe('focusBySubject (TCAS Plan)', () => {
+  const startWith = (data) => call(fns.startFocus, { auth, data })
+  const userDoc = async () => (await db.doc(`users/${UID}`).get()).data()
+
+  it('stores a valid subject key on the active session and returns it, also when resumed', async () => {
+    expect(await startWith({ mode: 'flexible', plannedMin: 25, subjectKey: 'a_lv_64' })).toMatchObject({ subjectKey: 'a_lv_64' })
+    expect((await db.doc(`focusActive/${UID}`).get()).data().subjectKey).toBe('a_lv_64')
+    at(2)
+    expect(await startWith({ subjectKey: 'tgat' })).toMatchObject({ resumed: true, subjectKey: 'a_lv_64' })
+  })
+
+  it.each([['__proto__'], ['a/b'], ['x'.repeat(65)], [5], ['gpax'], ['portfolio'], ['']])('refuses the junk key %j', async (key) => {
+    await expect(startWith({ subjectKey: key })).rejects.toMatchObject({ code: 'invalid-argument' })
+    expect((await db.doc(`focusActive/${UID}`).get()).exists).toBe(false)
+  })
+
+  it('a session without a key has none', async () => {
+    expect(await startWith({ plannedMin: 25 })).toMatchObject({ subjectKey: null })
+  })
+
+  it('ending a 25-minute session adds its verified time to that subject, once, and reports the total', async () => {
+    await startWith({ mode: 'flexible', plannedMin: 25, subjectKey: 'a_lv_65' })
+    at(25)
+    const r = await call(fns.endFocus)
+    expect(r).toMatchObject({ subjectKey: 'a_lv_65', subjectMs: 25 * MIN })
+    expect((await userDoc()).focusBySubject).toEqual({ a_lv_65: 25 * MIN })
+    await expect(call(fns.endFocus)).rejects.toMatchObject({ code: 'failed-precondition' })
+    expect((await userDoc()).focusBySubject.a_lv_65).toBe(25 * MIN)
+    const [session] = (await db.collection('focusSessions').get()).docs.map((d) => d.data())
+    expect(session.subjectKey).toBe('a_lv_65')
+  })
+
+  it('a second session for the same subject accumulates, another subject stays separate', async () => {
+    await startWith({ mode: 'flexible', plannedMin: 25, subjectKey: 'a_lv_65' })
+    at(25)
+    await call(fns.endFocus)
+    at(30)
+    await startWith({ mode: 'flexible', plannedMin: 25, subjectKey: 'a_lv_65' })
+    at(40)
+    expect(await call(fns.endFocus)).toMatchObject({ subjectMs: 35 * MIN })
+    at(45)
+    await startWith({ mode: 'flexible', plannedMin: 25, subjectKey: 'tgat' })
+    at(55)
+    await call(fns.endFocus)
+    expect((await userDoc()).focusBySubject).toEqual({ a_lv_65: 35 * MIN, tgat: 10 * MIN })
+  })
+
+  it('two ends at once count the session once', async () => {
+    await startWith({ mode: 'flexible', plannedMin: 25, subjectKey: 'a_lv_66' })
+    at(25)
+    await Promise.allSettled([call(fns.endFocus), call(fns.endFocus)])
+    expect((await userDoc()).focusBySubject.a_lv_66).toBe(25 * MIN)
+  })
+
+  it('time studied counts even when a strict tree withered (the minutes were real)', async () => {
+    await startWith({ mode: 'strict', plannedMin: 25, subjectKey: 'a_lv_61' })
+    at(10)
+    expect(await call(fns.abandonFocus)).toMatchObject({ withered: true, leaves: 0, subjectKey: 'a_lv_61' })
+    expect((await userDoc()).focusBySubject.a_lv_61).toBe(10 * MIN)
+  })
+
+  it('a session without a key, and a practice session, write nothing', async () => {
+    await startWith({ plannedMin: 25 })
+    at(25)
+    await call(fns.endFocus)
+    expect((await userDoc()).focusBySubject).toBeUndefined()
+    at(30)
+    await startWith({ practice: true, subjectKey: 'tgat' })
+    at(32)
+    await call(fns.endFocus)
+    expect((await userDoc()).focusBySubject).toBeUndefined()
+  })
+})

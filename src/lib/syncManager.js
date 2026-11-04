@@ -23,6 +23,7 @@ import { useSchoolStore } from '../stores/useSchoolStore'
 import { useHotbarStore } from '../stores/useHotbarStore'
 import { useResumeStore } from '../stores/useResumeStore'
 import { useGuideStore } from '../stores/useGuideStore'
+import { usePlansStore, planStateFromProfile } from '../stores/usePlansStore'
 import { mergeResume } from './resumeRules'
 
 /**
@@ -271,6 +272,26 @@ const hotbarSync = createFirestoreSync({
 
 export const hydrateHotbarFromFirestore = hotbarSync.hydrate
 export const setHotbarSyncUser = hotbarSync.setSyncUser
+
+// ── TCAS Plan (entries, ranks, checklists, goals) → users/{uid}.profile ─────────
+// Every Plan edit is saved here (debounced); onboarding still saves through syncSelectToFirestore.
+// An empty list is written as [] so a removed last program does not come back after a reload.
+const plansSync = createFirestoreSync({
+  store: usePlansStore,
+  logName: 'syncPlans',
+  toDoc: ({ plans, activePlanId, goalHours }) => {
+    const fields = shapes.profileFields({ plans, activePlanId, goalHours })
+    return {
+      profile: { ...fields, plans: fields.plans ?? [], activePlanId: activePlanId ?? null, goalHours: goalHours ?? {}, updatedAt: serverTimestamp() },
+    }
+  },
+  fromDoc: (data) => planStateFromProfile(shapes.readProfile(data)),
+  changed: (s, p) => s.plans !== p.plans || s.activePlanId !== p.activePlanId || s.goalHours !== p.goalHours,
+  needsSeed: () => false,
+})
+
+export const hydratePlansFromFirestore = plansSync.hydrate
+export const setPlansSyncUser = plansSync.setSyncUser
 
 // ── Guide progress → users/{uid}.guide (accounts; guests use localStorage only) ──
 const guideSync = createFirestoreSync({

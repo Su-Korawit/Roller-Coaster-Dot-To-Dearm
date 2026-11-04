@@ -5,6 +5,9 @@ import TreeSprite from './TreeSprite'
 import { useFocusStore } from '../../stores/useFocusStore'
 import { validateFocusParams, treeFor, PLANNED_MIN } from '../../room/focusRules'
 import { TREE_LABELS } from '../../room/messages'
+import { useRoomUiStore } from '../../stores/useRoomUiStore'
+import { isSubjectKey } from '../../utils/planDerive'
+import { SCORE_LABELS } from '../../constants/scoreLabels'
 
 const PRESETS = [25, 50, 90]
 const MODES = [
@@ -15,6 +18,10 @@ const MODES = [
 // Pick a duration and a mode, then plant the tree. The server re-validates everything.
 export default function FocusSetupSheet({ onClose }) {
   const start = useFocusStore((s) => s.start)
+  // The Plan's "อ่าน" opens this sheet for one exam subject; the student can drop it.
+  const payloadKey = useRoomUiStore((s) => s.payload?.subjectKey)
+  const [dropped, setDropped] = useState(false)
+  const subjectKey = !dropped && isSubjectKey(payloadKey) ? payloadKey : null
   const [plannedText, setPlannedText] = useState('25')
   const [mode, setMode] = useState('flexible')
   const [error, setError] = useState('')
@@ -33,7 +40,7 @@ export default function FocusSetupSheet({ onClose }) {
     setError('')
     setBusy(true)
     try {
-      await start({ mode: check.mode, plannedMin: check.plannedMin })
+      await start({ mode: check.mode, plannedMin: check.plannedMin, ...(subjectKey ? { subjectKey } : {}) })
       onClose()
     } catch (e) {
       console.error('[FocusSetupSheet] start failed:', e)
@@ -47,6 +54,13 @@ export default function FocusSetupSheet({ onClose }) {
     <Popup variant="sheet" size="sm" onClose={onClose}>
       <div className="p-5 flex flex-col gap-4">
         <h2 className="pixel-font text-lg text-ink">เริ่มโฟกัส</h2>
+
+        {subjectKey && (
+          <div className="flex items-center gap-2">
+            <span className="px-chip bg-mist text-ink text-sm font-bold px-3 h-9 inline-flex items-center rounded-slot">{`วิชา: ${SCORE_LABELS[subjectKey]}`}</span>
+            <button type="button" aria-label="ไม่ระบุวิชา" onClick={() => setDropped(true)} className="px-btn h-9 w-9 text-sm font-bold bg-paper text-ink">✕</button>
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-2" role="group" aria-label="เวลา">
           {PRESETS.map((n) => (
