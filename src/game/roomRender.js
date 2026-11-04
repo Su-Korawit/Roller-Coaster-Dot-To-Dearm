@@ -3,6 +3,8 @@
 // config has `room: true`. Sprites are frames of the generated `room_items` sheet (32 px,
 // 2 columns) and `focus_art` (48 px, 4 columns).
 import { ROOM_CATALOG } from '../data/roomCatalogSeed'
+import { shelfTrophies } from '../room/focusHistory'
+import { useFocusHistoryStore } from '../stores/useFocusHistoryStore'
 
 const TILE = 16
 export const ITEM_SHEET_COLS = 2
@@ -11,9 +13,10 @@ export const FOCUS_SHEET_COLS = 4
 // tree_withered, pot_growth). A test checks this against public/assets/rc/focus.json.
 export const POT_ROW = 5
 
-// Row of each drawn item in the room_items atlas = its order in the catalog seed, themes skipped.
+// Row of each drawn item in the room_items atlas = its order in the catalog seed, drawable kinds only.
+const DRAWABLE = ['furniture', 'decor', 'desk', 'wall']
 export const ROOM_ITEM_ROWS = Object.fromEntries(
-  Object.entries(ROOM_CATALOG).filter(([, item]) => item.kind !== 'theme').map(([id], row) => [id, row]),
+  Object.entries(ROOM_CATALOG).filter(([, item]) => DRAWABLE.includes(item.kind)).map(([id], row) => [id, row]),
 )
 
 // Where a desk item sits on the desk: frame bottom-left offset from the desk's top-left (px).
@@ -72,10 +75,21 @@ export function renderRoom(scene, getState) {
   const pot = scene.add.sprite(0, 0, 'focus_art', potFrame(0)).setOrigin(0, 1).setScale(scale).setVisible(false)
 
   const refresh = () => {
-    const { layout, catalog, progress = 0, lit = true } = getState()
+    const { layout, catalog, progress = 0, lit = true, readOnly = false } = getState()
     group.clear(true, true)
     for (const s of furnitureSprites({ layout, catalog, lit })) {
       group.add(scene.add.sprite(s.x * scale, s.y * scale, s.key, s.frame).setOrigin(0, 1).setScale(scale).setDepth(s.depth))
+    }
+    // Trophy shelf: the last three trees as little coloured markers on its three shelves.
+    // (a visitor's shelf is not theirs to read: it stays bare)
+    const trophies = readOnly ? [] : shelfTrophies(useFocusHistoryStore.getState().sessions)
+    for (const p of layout.placed) {
+      if (p.itemId !== 'trophy_shelf') continue
+      const bottom = p.y + catalog[p.itemId].footprint[1] * TILE
+      for (const t of trophies) {
+        const marker = scene.add.rectangle((p.x + 6) * scale, (bottom - 24 + t.shelf * 8) * scale, 5 * scale, 4 * scale, Number.parseInt(t.color.slice(1), 16)).setOrigin(0, 0).setDepth(FLOOR_DEPTH + bottom / 1000 + 0.0004)
+        group.add(marker)
+      }
     }
     const desk = layout.placed.find((p) => catalog[p.itemId]?.kind === 'desk')
     if (desk) {
@@ -88,9 +102,11 @@ export function renderRoom(scene, getState) {
 
   refresh()
   scene.game.events.on('roomChanged', refresh)
+  const offHistory = useFocusHistoryStore.subscribe((s, prev) => { if (s.sessions !== prev.sessions) refresh() })
   const timer = scene.time.addEvent({ delay: 1000, loop: true, callback: refresh })
   scene.events.once('shutdown', () => {
     scene.game.events.off('roomChanged', refresh)
+    offHistory()
     timer.remove(false)
   })
 }

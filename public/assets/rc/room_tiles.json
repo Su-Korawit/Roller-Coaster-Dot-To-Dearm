@@ -58,6 +58,156 @@
       "col": 10,
       "row": 0,
       "frames": 1
+    },
+    "floor_library_wood": {
+      "col": 11,
+      "row": 0,
+      "frames": 1
+    },
+    "wall_library_wood_t": {
+      "col": 12,
+      "row": 0,
+      "frames": 1
+    },
+    "wall_library_wood_tl": {
+      "col": 13,
+      "row": 0,
+      "frames": 1
+    },
+    "wall_library_wood_tr": {
+      "col": 14,
+      "row": 0,
+      "frames": 1
+    },
+    "wall_library_wood_l": {
+      "col": 15,
+      "row": 0,
+      "frames": 1
+    },
+    "wall_library_wood_r": {
+      "col": 0,
+      "row": 1,
+      "frames": 1
+    },
+    "wall_library_wood_b": {
+      "col": 1,
+      "row": 1,
+      "frames": 1
+    },
+    "window_library_wood": {
+      "col": 2,
+      "row": 1,
+      "frames": 1
+    },
+    "floor_cafe": {
+      "col": 3,
+      "row": 1,
+      "frames": 1
+    },
+    "wall_cafe_t": {
+      "col": 4,
+      "row": 1,
+      "frames": 1
+    },
+    "wall_cafe_tl": {
+      "col": 5,
+      "row": 1,
+      "frames": 1
+    },
+    "wall_cafe_tr": {
+      "col": 6,
+      "row": 1,
+      "frames": 1
+    },
+    "wall_cafe_l": {
+      "col": 7,
+      "row": 1,
+      "frames": 1
+    },
+    "wall_cafe_r": {
+      "col": 8,
+      "row": 1,
+      "frames": 1
+    },
+    "wall_cafe_b": {
+      "col": 9,
+      "row": 1,
+      "frames": 1
+    },
+    "window_cafe": {
+      "col": 10,
+      "row": 1,
+      "frames": 1
+    },
+    "floor_night_sky": {
+      "col": 11,
+      "row": 1,
+      "frames": 1
+    },
+    "wall_night_sky_t": {
+      "col": 12,
+      "row": 1,
+      "frames": 1
+    },
+    "wall_night_sky_tl": {
+      "col": 13,
+      "row": 1,
+      "frames": 1
+    },
+    "wall_night_sky_tr": {
+      "col": 14,
+      "row": 1,
+      "frames": 1
+    },
+    "wall_night_sky_l": {
+      "col": 15,
+      "row": 1,
+      "frames": 1
+    },
+    "wall_night_sky_r": {
+      "col": 0,
+      "row": 2,
+      "frames": 1
+    },
+    "wall_night_sky_b": {
+      "col": 1,
+      "row": 2,
+      "frames": 1
+    },
+    "window_night_sky": {
+      "col": 2,
+      "row": 2,
+      "frames": 1
+    },
+    "balcony_floor": {
+      "col": 3,
+      "row": 2,
+      "frames": 1
+    },
+    "rail_t": {
+      "col": 4,
+      "row": 2,
+      "frames": 1
+    },
+    "rail_b": {
+      "col": 5,
+      "row": 2,
+      "frames": 1
+    },
+    "rail_r": {
+      "col": 6,
+      "row": 2,
+      "frames": 1
+    },
+    "rail_tr": {
+      "col": 7,
+      "row": 2,
+      "frames": 1
+    },
+    "rail_br": {
+      "col": 8,
+      "row": 2,
+      "frames": 1
     }
   }
 }

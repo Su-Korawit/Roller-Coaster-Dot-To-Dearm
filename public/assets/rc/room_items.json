@@ -46,6 +46,14 @@
     "laptop": {
       "row": 10,
       "frames": 1
+    },
+    "pet_bed": {
+      "row": 11,
+      "frames": 1
+    },
+    "trophy_shelf": {
+      "row": 12,
+      "frames": 1
     }
   }
 }

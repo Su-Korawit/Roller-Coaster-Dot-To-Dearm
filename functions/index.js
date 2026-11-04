@@ -625,6 +625,34 @@ exports.saveRoomLayout = onCall(async (req) => {
   }
 })
 
+// Saves the caller's avatar (accessories per slot + outfit hue). `users/{uid}.avatar` is on the
+// rules' deny-list for clients, like `leaves`, so ownership is checked here against the inventory.
+const avatarLogic = require('./avatarLogic')
+
+exports.saveAvatar = onCall(async (req) => {
+  const uid = requireUid(req)
+  const input = req.data?.avatar
+  if (!input || typeof input !== 'object' || Array.isArray(input) || !input.accessories || typeof input.accessories !== 'object' || Array.isArray(input.accessories)) {
+    throw new HttpsError('invalid-argument', 'avatar is required.')
+  }
+  const avatar = { accessories: { ...input.accessories }, outfitHue: input.outfitHue ?? null }
+  const userRef = db.collection('users').doc(uid)
+  try {
+    return await db.runTransaction(async (tx) => {
+      const [userSnap, catalogSnap] = await Promise.all([tx.get(userRef), tx.get(db.collection('roomCatalog'))])
+      if (!userSnap.exists) throw new HttpsError('not-found', 'User not found.')
+      const catalog = Object.fromEntries(catalogSnap.docs.map((d) => [d.id, d.data()]))
+      const result = avatarLogic.validateAvatar({ avatar, catalog, inventory: userSnap.data().roomInventory ?? {} })
+      if (!result.ok) throw new HttpsError('invalid-argument', 'Invalid avatar.', { errors: result.errors })
+      const accessories = Object.fromEntries(Object.entries(avatar.accessories).filter(([, id]) => typeof id === 'string'))
+      tx.update(userRef, { avatar: { accessories, outfitHue: avatar.outfitHue } })
+      return { ok: true }
+    })
+  } catch (err) {
+    throw toRoomError(err)
+  }
+})
+
 // ── Weekly school leaderboard (ADR 0018) ─────────────────────────────────────
 // Recomputes the current ISO week (Asia/Bangkok) from focusDaily and writes
 //   schoolWeeks/{schoolId}_{week}   per-school totals + `ranked` flag

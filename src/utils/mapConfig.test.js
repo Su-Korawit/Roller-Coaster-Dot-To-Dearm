@@ -93,6 +93,22 @@ describe('DEFAULT_MAP_CONFIGS tileset paths', () => {
   })
 })
 
+describe('stored collision cannot switch off the generated room walls (review I4)', () => {
+  it('keeps the built-in Wall layers colliding even when an old stored document lists only Wall', async () => {
+    const { getDoc } = await import('firebase/firestore')
+    getDoc.mockResolvedValueOnce({ exists: () => true, data: () => ({ collision: { Wall: true } }) })
+    const cfg = await getMapConfig('room')
+    expect(cfg.collision).toMatchObject({ Wall: true, Wall_t1: true, Wall_t2: true, Wall_t3: true })
+  })
+  it('a stored document cannot turn a built-in collision layer off either', async () => {
+    const { getDoc } = await import('firebase/firestore')
+    getDoc.mockResolvedValueOnce({ exists: () => true, data: () => ({ collision: { Wall: false, Wall_t1: false } }) })
+    const cfg = await getMapConfig('room')
+    expect(cfg.collision.Wall).toBe(true)
+    expect(cfg.collision.Wall_t1).toBe(true)
+  })
+})
+
 describe('getMapConfig for the generated School Hub', () => {
   it('keeps the redrawn tileset even when a stored config still lists the old Sprout tilesets', async () => {
     const { getDoc } = await import('firebase/firestore')

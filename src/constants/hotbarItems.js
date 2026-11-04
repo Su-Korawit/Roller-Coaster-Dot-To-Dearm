@@ -26,6 +26,8 @@ export const BAG_ONLY_ITEMS = {
   music: item('music', 'เพลง', 'friends', { view: APP_VIEWS.MUSIC }),
   friends: item('friends', 'เพื่อน', 'friends', { view: APP_VIEWS.SOCIAL }),
   settings: item('settings', 'ตั้งค่า', 'bag', { popup: 'settings' }),
+  history: item('history', 'ประวัติต้นไม้', 'focus', { sheet: 'history' }),
+  closet: item('closet', 'ตู้เสื้อผ้า', 'wardrobe', { sheet: 'wardrobe' }),
   guide: item('guide', 'คู่มือ', 'guide', { sheet: 'guide' }),
   adminChat: item('adminChat', 'ติดต่อผู้พัฒนา', 'friends', { sheet: 'adminChat' }),
 }

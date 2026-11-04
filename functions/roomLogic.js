@@ -4,7 +4,7 @@
 // transaction. STARTER_ITEMS mirrors src/data/roomCatalogSeed.js (roomLogic.test.js checks).
 
 const WELCOME_LEAVES = 100
-const UNIQUE_KINDS = ['theme', 'tier', 'pet']
+const UNIQUE_KINDS = ['theme', 'tier', 'pet', 'accessory']
 
 const STARTER_ITEMS = {
   desk_basic: 1, chair_basic: 1, bed_basic: 1, bookshelf_basic: 1,
@@ -41,6 +41,9 @@ function planPurchase({ item, itemId, leaves, inventory, currentTier }) {
   if (!Number.isInteger(item.price) || item.price < 0) throw fail('failed-precondition', 'Item has no valid price.')
   if (UNIQUE_KINDS.includes(item.kind) && Number(inventory?.[itemId] ?? 0) >= 1) {
     throw fail('failed-precondition', 'Already owned.', { reason: 'ALREADY_OWNED' })
+  }
+  if (item.requires && Number(inventory?.[item.requires] ?? 0) < 1) {
+    throw fail('failed-precondition', 'Requires another item first.', { reason: 'REQUIRES_MISSING', requires: item.requires })
   }
   if (Number(item.tierMin ?? 0) > Number(currentTier ?? 0)) {
     throw fail('failed-precondition', 'Room tier too low.', { reason: 'TIER_REQUIRED', tierMin: item.tierMin })

@@ -47,7 +47,7 @@ service cloud.firestore {
       allow get, list: if isSignedIn();
       // A new doc may not seed the Functions-owned study-room fields.
       allow create: if isSignedIn() && (request.auth.uid == uid || isSuperAdmin()) &&
-        !request.resource.data.keys().hasAny(['leaves', 'roomInventory', 'welcomePack', 'practiceRewarded', 'focusBySubject']);
+        !request.resource.data.keys().hasAny(['leaves', 'roomInventory', 'welcomePack', 'practiceRewarded', 'focusBySubject', 'avatar']);
       // Owners may update their own doc freely EXCEPT the `coins`,
       // `entitlements`, `fileBagUsageBytes`, `focusXp`, `teacherSchoolId`, `leaves`,
       // `roomInventory` and `welcomePack` fields — those are
@@ -57,7 +57,7 @@ service cloud.firestore {
         (request.auth.uid == uid &&
           !request.resource.data.diff(resource.data).affectedKeys()
             .hasAny(['coins', 'entitlements', 'fileBagUsageBytes', 'focusXp', 'teacherSchoolId',
-                      'leaves', 'roomInventory', 'welcomePack', 'practiceRewarded', 'focusBySubject'])) ||
+                      'leaves', 'roomInventory', 'welcomePack', 'practiceRewarded', 'focusBySubject', 'avatar'])) ||
         request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['followRequests', 'followers', 'following', 'sentRequests'])
       );

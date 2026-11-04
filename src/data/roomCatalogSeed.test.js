@@ -34,12 +34,37 @@ describe('ROOM_CATALOG seed', () => {
     for (const id of SLOTS_ITEMS) expect(ROOM_CATALOG[id].footprint).toEqual([1, 1])
   })
 
-  it('does not seed tiers or pets yet (second plan)', () => {
-    expect(rows.filter(([, i]) => i.kind === 'tier' || i.kind === 'pet')).toEqual([])
+  it('seeds the three tiers in order with the spec prices and a requires chain', () => {
+    expect(ROOM_CATALOG.tier_1).toMatchObject({ kind: 'tier', price: 1200 })
+    expect(ROOM_CATALOG.tier_2).toMatchObject({ kind: 'tier', price: 3000, requires: 'tier_1' })
+    expect(ROOM_CATALOG.tier_3).toMatchObject({ kind: 'tier', price: 6000, requires: 'tier_2' })
+    expect(ROOM_CATALOG.tier_1.requires).toBeUndefined()
+  })
+
+  it('seeds the three paid themes at 1,500 (ids use underscores: layout.theme is the part after theme_)', () => {
+    for (const id of ['theme_library_wood', 'theme_cafe', 'theme_night_sky']) expect(ROOM_CATALOG[id], id).toMatchObject({ kind: 'theme', price: 1500 })
+  })
+
+  it('seeds four pets at 600 Leaves', () => {
+    const pets = rows.filter(([, i]) => i.kind === 'pet')
+    expect(pets.map(([id]) => id).sort()).toEqual(['pet_bunny', 'pet_cat_black', 'pet_cat_orange', 'pet_shiba'])
+    for (const [, i] of pets) expect(i.price).toBe(600)
+  })
+
+  it('seeds eight accessories, two per slot', () => {
+    const acc = rows.filter(([, i]) => i.kind === 'accessory')
+    expect(acc).toHaveLength(8)
+    for (const slot of ['head', 'face', 'neck', 'back']) expect(acc.filter(([, i]) => i.slot === slot), slot).toHaveLength(2)
+    for (const [id, i] of acc) expect(i.price >= 250 && i.price <= 500, id).toBe(true)
+  })
+
+  it('seeds the pet bed and trophy shelf as drawable room items', () => {
+    expect(ROOM_CATALOG.pet_bed).toMatchObject({ kind: 'decor' })
+    expect(ROOM_CATALOG.trophy_shelf).toMatchObject({ kind: 'furniture', price: 300 })
   })
 
   it('prices furniture between 80 and 400 Leaves', () => {
-    for (const [id, i] of rows.filter(([, i]) => i.price > 0)) {
+    for (const [id, i] of rows.filter(([, i]) => i.price > 0 && ['furniture', 'decor', 'desk', 'wall'].includes(i.kind))) {
       expect(i.price, id).toBeGreaterThanOrEqual(80)
       expect(i.price, id).toBeLessThanOrEqual(400)
     }

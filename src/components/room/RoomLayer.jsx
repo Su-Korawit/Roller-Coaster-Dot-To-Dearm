@@ -3,6 +3,10 @@ import { roomSync } from '../../stores/useRoomStore'
 import { flushOnLeave } from '../../lib/roomSync'
 import FocusSetupSheet from './FocusSetupSheet'
 import ShopSheet from './ShopSheet'
+import WardrobeSheet from './WardrobeSheet'
+import TreeHistorySheet from './TreeHistorySheet'
+import VisitBanner from './VisitBanner'
+import { useVisitStore } from '../../stores/useVisitStore'
 import FocusHud from './FocusHud'
 import FocusCompleteScreen from './FocusCompleteScreen'
 import DecorateBar from './DecorateBar'
@@ -20,6 +24,7 @@ export default function RoomLayer() {
   const sheet = useRoomUiStore((s) => s.sheet)
   const close = useRoomUiStore((s) => s.close)
   const adding = usePlanUiStore((s) => s.adding)
+  const visiting = useVisitStore((s) => s.visiting !== null)
 
   // The last decorate edit must not be lost when the tab is hidden or closed.
   useEffect(() => flushOnLeave(roomSync), [])
@@ -27,9 +32,11 @@ export default function RoomLayer() {
   return (
     <>
       <FocusHud />
-      <DecorateBar />
+      {visiting ? <VisitBanner /> : <DecorateBar />}
       {sheet === 'focus' && focusStatus === 'idle' && <FocusSetupSheet onClose={close} />}
       {sheet === 'shop' && <ShopSheet onClose={close} />}
+      {sheet === 'wardrobe' && <WardrobeSheet onClose={close} />}
+      {sheet === 'history' && <TreeHistorySheet onClose={close} />}
       {sheet === 'warp' && <WarpSheet onClose={close} />}
       {sheet === 'plan' && <PlanSheet onClose={close} />}
       {adding && <RoundPickerSheet program={adding} onClose={() => usePlanUiStore.getState().closeAdd()} />}

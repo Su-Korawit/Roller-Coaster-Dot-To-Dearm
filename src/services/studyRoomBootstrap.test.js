@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const m = vi.hoisted(() => ({
   hydrateLeaves: vi.fn(),
   hydrateRoom: vi.fn(),
+  loadHistory: vi.fn(),
   claim: vi.fn(),
   welcomePack: null,
 }))
@@ -13,6 +14,9 @@ vi.mock('../stores/useLeavesStore', () => ({
 vi.mock('../stores/useRoomStore', () => ({
   useRoomStore: { getState: () => ({ hydrate: (...a) => m.hydrateRoom(...a) }) },
 }))
+vi.mock('../stores/useFocusHistoryStore', () => ({
+  useFocusHistoryStore: { getState: () => ({ load: (...a) => m.loadHistory(...a) }) },
+}))
 vi.mock('./roomApi', () => ({ claimWelcomePack: (...a) => m.claim(...a) }))
 
 const { bootstrapStudyRoom } = await import('./studyRoomBootstrap')
@@ -22,6 +26,7 @@ beforeEach(() => {
   vi.spyOn(console, 'error').mockImplementation(() => {})
   m.hydrateLeaves.mockResolvedValue(undefined)
   m.hydrateRoom.mockResolvedValue(undefined)
+  m.loadHistory.mockResolvedValue(undefined)
   m.claim.mockResolvedValue({ ok: true, already: false })
   m.welcomePack = null
 })
@@ -52,6 +57,13 @@ describe('bootstrapStudyRoom', () => {
   it('still loads the room when the balance cannot be read', async () => {
     m.hydrateLeaves.mockRejectedValue(new Error('denied'))
     await bootstrapStudyRoom('u1')
+    expect(m.hydrateRoom).toHaveBeenCalledWith('u1')
+  })
+
+  it('loads the finished sessions for the trophy shelf, and a failure there changes nothing else', async () => {
+    m.loadHistory.mockRejectedValue(new Error('offline'))
+    await bootstrapStudyRoom('u1')
+    expect(m.loadHistory).toHaveBeenCalledWith('u1')
     expect(m.hydrateRoom).toHaveBeenCalledWith('u1')
   })
 })

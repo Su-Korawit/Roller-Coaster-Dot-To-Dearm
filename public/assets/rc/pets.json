@@ -1,0 +1,27 @@
+{
+  "name": "pets",
+  "frameW": 16,
+  "frameH": 16,
+  "sprites": {
+    "pet_cat_orange": {
+      "row": 0,
+      "frames": 7
+    },
+    "pet_cat_black": {
+      "row": 1,
+      "frames": 7
+    },
+    "pet_shiba": {
+      "row": 2,
+      "frames": 7
+    },
+    "pet_bunny": {
+      "row": 3,
+      "frames": 7
+    },
+    "heart": {
+      "row": 4,
+      "frames": 1
+    }
+  }
+}

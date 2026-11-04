@@ -70,6 +70,17 @@ describe('useLeavesStore', () => {
     expect(useLeavesStore.getState()).toMatchObject({ leaves: 120, inventory: { lamp_desk: 1 }, welcomePack: 'v2', loaded: true })
   })
 
+  it('reads the avatar (sanitised) and starts with an empty one', async () => {
+    expect(useLeavesStore.getState().avatar).toEqual({ accessories: {}, outfitHue: null })
+    m.getDoc.mockResolvedValue({ exists: () => true, data: () => ({ avatar: { accessories: { head: 'acc_cap', hand: 'x' }, outfitHue: 90 } }) })
+    await useLeavesStore.getState().hydrate('u1')
+    expect(useLeavesStore.getState().avatar).toEqual({ accessories: { head: 'acc_cap' }, outfitHue: 90 })
+    useLeavesStore.getState().applyServer({ avatar: { accessories: {}, outfitHue: null } })
+    expect(useLeavesStore.getState().avatar).toEqual({ accessories: {}, outfitHue: null })
+    useLeavesStore.getState().reset()
+    expect(useLeavesStore.getState().avatar).toEqual({ accessories: {}, outfitHue: null })
+  })
+
   it('treats a user without room fields as empty', async () => {
     m.getDoc.mockResolvedValue({ exists: () => true, data: () => ({}) })
     await useLeavesStore.getState().hydrate('u1')

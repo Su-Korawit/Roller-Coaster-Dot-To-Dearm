@@ -86,3 +86,7 @@ Deploy: `firebase deploy --only firestore:rules` แล้ว
 ## Open House campus (2026-10-23)
 
 ขั้นตอนสร้าง index ข้อมูลหลักสูตรต่อคณะ (`npm run refresh-openhouse-index -- --apply`) และอัปโหลด asset ของแคมปัส อยู่ใน `docs/open-house-ops.md` — จนกว่าจะรัน popup จะขึ้น "ข้อมูลตึกนี้กำลังอัปเดต"
+
+## Study Room part 2 (2026-10-24)
+
+ขั้นตอน deploy (rules + index → functions `saveAvatar` → seed catalog → upload assets → hosting) อยู่ใน `docs/study-room-ops.md` §8

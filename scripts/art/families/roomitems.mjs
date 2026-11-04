@@ -1,7 +1,7 @@
 // Study Room furniture — one 32×32 sprite per catalog item (frames from the catalog seed).
 // Every item is drawn anchored to the bottom-left of its frame, so the scene places the frame
 // with its bottom-left corner on the footprint's bottom-left corner and the part above the
-// footprint is the item's height. Themes have no sprite.
+// footprint is the item's height. Themes, tiers, pets and accessories have no sprite here.
 import { ROOM_CATALOG } from '../../../src/data/roomCatalogSeed.js'
 
 const O = '#5C4E92'
@@ -69,6 +69,16 @@ const DRAW = {
     c.rbox(4, 22, 8, 8, 2, '#F8C3BF', O2)
     c.oval(6, 16, 3, 4, G3, G5); c.oval(10, 16, 3, 4, G3, G5); c.oval(8, 11, 2, 4, '#B6DCA0', G5)
   },
+  pet_bed: (c) => {
+    c.oval(8, 24, 7, 4, '#F8C3BF', O2)
+    c.oval(8, 23, 5, 3, '#FBEEF6', '#E58BC0')
+    c.hline(5, 25, 6, '#FFFFFF')
+  },
+  trophy_shelf: (c) => {
+    c.rbox(2, 4, 12, 26, 2, WOOD, O2)
+    c.hline(3, 12, 10, O2); c.hline(3, 20, 10, O2)
+    c.rect(4, 6, 8, 5, '#E8D2B2'); c.rect(4, 14, 8, 5, '#E8D2B2'); c.rect(4, 22, 8, 5, '#E8D2B2')
+  },
   laptop: (c) => {
     c.rbox(2, 8, 12, 12, 1, '#463C74', O2)
     c.rect(4, 10, 8, 8, '#A4D3EC'); c.hline(5, 12, 5, '#E1F3FB'); c.hline(5, 15, 4, '#E1F3FB')
@@ -78,7 +88,7 @@ const DRAW = {
 
 const sprites = {}
 for (const [id, item] of Object.entries(ROOM_CATALOG)) {
-  if (item.kind === 'theme') continue
+  if (!['furniture', 'decor', 'desk', 'wall'].includes(item.kind)) continue
   if (!DRAW[id]) throw new Error(`roomitems: no drawing for catalog item "${id}"`)
   sprites[id] = { frames: item.frames, draw: DRAW[id] }
 }

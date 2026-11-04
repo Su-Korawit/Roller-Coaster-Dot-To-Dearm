@@ -7,6 +7,7 @@ import { saveRoomLayout } from '../services/roomApi'
 import { createRoomSync } from '../lib/roomSync'
 import { emitGuide } from '../lib/guideEvents'
 import { useLeavesStore } from './useLeavesStore'
+import { isVisiting } from './useVisitStore'
 import { STARTER_LAYOUT } from '../room/defaultLayout'
 import { ROOM_CATALOG } from '../data/roomCatalogSeed'
 
@@ -35,11 +36,16 @@ export const useRoomStore = create((set, get) => ({
 
   reset: () => set({ layout: STARTER_LAYOUT, catalog: ROOM_CATALOG, decorating: false, selected: null, lastError: null }),
   setLayout: (layout) => set({ layout }),
-  setDecorating: (decorating) => set({ decorating, ...(decorating ? {} : { selected: null, lastError: null }) }),
+  // Visiting a friend's room (useVisitStore) makes every editing action a no-op: the layout on screen is theirs.
+  setDecorating: (decorating) => {
+    if (decorating && isVisiting()) return
+    set({ decorating, ...(decorating ? {} : { selected: null, lastError: null }) })
+  },
   selectItem: (selected) => set({ selected, lastError: null }),
 
   // `slot` is only for desk items (left | centre | right | back); their x/y are the desk's.
   place: (itemId, x, y, slot) => {
+    if (isVisiting()) { set({ lastError: 'visiting' }); return false }
     const { layout, catalog } = get()
     const inventory = useLeavesStore.getState().inventory
     const candidate = { itemId, x, y, ...(slot !== undefined ? { slot } : {}) }
@@ -56,8 +62,29 @@ export const useRoomStore = create((set, get) => ({
     return true
   },
 
+  // Style changes (tier, theme, pet) go through the same layout rules as placement: owned, and every
+  // placed item still inside the owned floor areas. A refusal keeps the layout and says why.
+  applyStyle: (patch) => {
+    if (isVisiting()) { set({ lastError: 'visiting' }); return false }
+    const { layout, catalog } = get()
+    const candidate = { ...layout, ...patch }
+    const inventory = useLeavesStore.getState().inventory
+    const { ok, errors } = validateLayout({ layout: candidate, catalog, inventory })
+    if (!ok) {
+      set({ lastError: errors[0]?.code ?? 'invalid' })
+      return false
+    }
+    set({ layout: candidate, lastError: null })
+    roomSync.schedule()
+    return true
+  },
+  setTier: (tier) => get().applyStyle({ tier }),
+  setTheme: (theme) => get().applyStyle({ theme }),
+  setPet: (petId) => get().applyStyle({ petId: petId ?? null }),
+
   // A tap on the room while decorating: place the armed item there, or pick up what is under it.
   tapRoom: (x, y) => {
+    if (isVisiting()) return false
     const { layout, catalog, selected } = get()
     const action = resolveTap({ layout, catalog, selected, x, y })
     if (action.kind === 'place') return get().place(action.itemId, action.x, action.y, action.slot)
@@ -70,6 +97,7 @@ export const useRoomStore = create((set, get) => ({
   },
 
   pickUp: (index) => {
+    if (isVisiting()) return
     const { layout, catalog } = get()
     if (index < 0 || index >= layout.placed.length) return
     const target = layout.placed[index]

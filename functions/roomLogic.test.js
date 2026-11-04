@@ -52,6 +52,14 @@ describe('planPurchase', () => {
     expect(planPurchase({ item: upper, itemId: 'sofa', leaves: 999, inventory: {}, currentTier: 1 }).price).toBe(100)
   })
 
+  it('a tier needs the previous tier first (requires), whatever the current layout tier is', () => {
+    const tier2 = { kind: 'tier', price: 3000, tierMin: 0, requires: 'tier_1' }
+    const e = caught(() => planPurchase({ item: tier2, itemId: 'tier_2', leaves: 9999, inventory: {}, currentTier: 0 }))
+    expect(e.code).toBe('failed-precondition')
+    expect(e.extra).toEqual({ reason: 'REQUIRES_MISSING', requires: 'tier_1' })
+    expect(planPurchase({ item: tier2, itemId: 'tier_2', leaves: 9999, inventory: { tier_1: 1 }, currentTier: 0 }).price).toBe(3000)
+  })
+
   it('treats an invalid price as unbuyable', () => {
     const bad = { kind: 'decor', price: -5, tierMin: 0 }
     expect(caught(() => planPurchase({ item: bad, itemId: 'x', leaves: 999, inventory: {}, currentTier: 0 }))?.code).toBe('failed-precondition')

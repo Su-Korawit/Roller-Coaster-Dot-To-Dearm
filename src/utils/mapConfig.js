@@ -17,7 +17,7 @@ export const DEFAULT_MAP_CONFIGS = {
   // The student's study room (ADR-0023): generated map + furniture sprites from their layout.
   room: {
     tilesets: { 'Room Tiles': 'rc/tilesets/room_tiles.png' },
-    collision: { Wall: true },
+    collision: { Wall: true, Wall_t1: true, Wall_t2: true, Wall_t3: true },
     hidden: {},
     displayName: 'My room',
     multiplayer: false,
@@ -74,7 +74,10 @@ function withRegistryDefaults(key, data) {
     tilesets:     base.editable === false
       ? { ...(data.tilesets ?? {}), ...base.tilesets }
       : data.tilesets ?? base.tilesets ?? {},
-    collision:    data.collision    ?? base.collision ?? {},
+    // A generated room/campus owns its collision layers: a stored (older) list cannot switch walls off.
+    collision:    base.room || base.campus
+      ? { ...(data.collision ?? {}), ...base.collision }
+      : data.collision ?? base.collision ?? {},
     hidden:       data.hidden       ?? base.hidden    ?? {},
     displayName:  data.displayName  ?? base.displayName ?? key,
     order:        data.order        ?? 0,

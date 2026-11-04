@@ -50,11 +50,47 @@ describe('room tiles', () => {
   })
 })
 
+describe('room tiles, part 2 (themes and balcony)', () => {
+  const built = buildFamily(room)
+  const THEMES = ['library_wood', 'cafe', 'night_sky']
+  const WALL = ['t', 'tl', 'tr', 'l', 'r', 'b']
+
+  it('keeps the part 1 gids where they were (new tiles are appended)', () => {
+    expect(TILE_NAMES.slice(0, 11)).toEqual([
+      'floor_minimal', 'floor_rug_edge', 'wall_minimal_t', 'wall_minimal_tl', 'wall_minimal_tr',
+      'wall_minimal_l', 'wall_minimal_r', 'wall_minimal_b', 'window_day', 'door', 'shadow_wall',
+    ])
+  })
+
+  it('gives every theme a twin of every minimal floor, wall piece and window', () => {
+    for (const t of THEMES) {
+      for (const n of [`floor_${t}`, `window_${t}`, ...WALL.map((w) => `wall_${t}_${w}`)]) expect(TILE_NAMES, n).toContain(n)
+    }
+  })
+
+  it('draws the themes differently from minimal and from each other, all opaque', () => {
+    for (const t of THEMES) {
+      expect(differing(frameOf(built, `floor_${t}`), frameOf(built, 'floor_minimal')), t).toBeGreaterThan(0.1)
+      expect(differing(frameOf(built, `wall_${t}_t`), frameOf(built, 'wall_minimal_t')), t).toBeGreaterThan(0.1)
+      for (const n of TILE_NAMES.filter((x) => x.includes(t))) expect(opaque(frameOf(built, n)), n).toBe(256)
+    }
+    expect(differing(frameOf(built, 'floor_cafe'), frameOf(built, 'floor_night_sky'))).toBeGreaterThan(0.1)
+  })
+
+  it('has the balcony deck and a railing on the top, bottom and right', () => {
+    for (const n of ['balcony_floor', 'rail_t', 'rail_b', 'rail_r', 'rail_tr', 'rail_br']) {
+      expect(TILE_NAMES, n).toContain(n)
+      expect(opaque(frameOf(built, n)), n).toBe(256)
+    }
+    expect(differing(frameOf(built, 'rail_t'), frameOf(built, 'balcony_floor'))).toBeGreaterThan(0.1)
+  })
+})
+
 describe('room items', () => {
   const built = buildFamily(roomitems)
-  const ids = Object.entries(ROOM_CATALOG).filter(([, i]) => i.kind !== 'theme').map(([id]) => id)
+  const ids = Object.entries(ROOM_CATALOG).filter(([, i]) => ['furniture', 'decor', 'desk', 'wall'].includes(i.kind)).map(([id]) => id)
 
-  it('has a sprite row for every catalog item that is drawn (themes are not)', () => {
+  it('has a sprite row for every catalog item that is drawn (themes, tiers, pets and accessories are not)', () => {
     expect(Object.keys(built.atlas.sprites).sort()).toEqual([...ids].sort())
     for (const id of ids) expect(built.atlas.sprites[id].frames, id).toBe(ROOM_CATALOG[id].frames)
   })

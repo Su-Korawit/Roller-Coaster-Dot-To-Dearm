@@ -191,3 +191,66 @@ describe('saveRoomLayout', () => {
     expect(doc.leaves).toBeUndefined()
   })
 })
+
+describe('part 2: tiers in order and the avatar', () => {
+  const tier = (price, requires) => ({ ...cat('tier', 'tier', price), ...(requires ? { requires } : {}) })
+  const acc = (slot, price = 250) => ({ ...cat('acc', 'accessory', price), slot })
+
+  beforeEach(async () => {
+    await db.doc('roomCatalog/tier_1').set(tier(100))
+    await db.doc('roomCatalog/tier_2').set(tier(100, 'tier_1'))
+    await db.doc('roomCatalog/acc_cap').set(acc('head'))
+    await db.doc('roomCatalog/acc_scarf').set(acc('neck'))
+    await db.doc(`users/${UID}`).set({ uid: UID, leaves: 1000, roomInventory: { acc_cap: 1 } })
+  })
+
+  it('refuses tier_2 before tier_1 and takes no Leaves; then allows it in order', async () => {
+    const err = await run(fns.buyRoomItem, { itemId: 'tier_2' }).catch((e) => e)
+    expect(err.code).toBe('failed-precondition')
+    expect(err.details).toMatchObject({ reason: 'REQUIRES_MISSING', requires: 'tier_1' })
+    expect((await user()).leaves).toBe(1000)
+    await run(fns.buyRoomItem, { itemId: 'tier_1' })
+    await run(fns.buyRoomItem, { itemId: 'tier_2' })
+    expect((await user()).roomInventory).toMatchObject({ tier_1: 1, tier_2: 1 })
+  })
+
+  it('two parallel purchases of the same tier grant it once and charge once', async () => {
+    const results = await Promise.allSettled([run(fns.buyRoomItem, { itemId: 'tier_1' }), run(fns.buyRoomItem, { itemId: 'tier_1' })])
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1)
+    const u = await user()
+    expect(u.roomInventory.tier_1).toBe(1)
+    expect(u.leaves).toBe(900)
+  })
+
+  it('saveAvatar stores an owned accessory in its slot and a valid hue', async () => {
+    await run(fns.saveAvatar, { avatar: { accessories: { head: 'acc_cap' }, outfitHue: 200 } })
+    expect((await user()).avatar).toEqual({ accessories: { head: 'acc_cap' }, outfitHue: 200 })
+  })
+
+  it('saveAvatar replaces the whole avatar (an empty one clears it)', async () => {
+    await run(fns.saveAvatar, { avatar: { accessories: { head: 'acc_cap' }, outfitHue: 10 } })
+    await run(fns.saveAvatar, { avatar: { accessories: {}, outfitHue: null } })
+    expect((await user()).avatar).toEqual({ accessories: {}, outfitHue: null })
+  })
+
+  it.each([
+    ['not owned', { accessories: { neck: 'acc_scarf' }, outfitHue: null }, 'not_owned'],
+    ['wrong slot', { accessories: { neck: 'acc_cap' }, outfitHue: null }, 'wrong_slot'],
+    ['unknown id', { accessories: { head: 'acc_ghost' }, outfitHue: null }, 'unknown_item'],
+    ['hue out of range', { accessories: {}, outfitHue: 360 }, 'bad_hue'],
+    ['hue not an integer', { accessories: {}, outfitHue: 1.5 }, 'bad_hue'],
+  ])('saveAvatar refuses %s and stores nothing', async (_n, avatar, code) => {
+    const err = await run(fns.saveAvatar, { avatar }).catch((e) => e)
+    expect(err.code).toBe('invalid-argument')
+    expect(err.details.errors.map((e) => e.code)).toContain(code)
+    expect((await user()).avatar).toBeUndefined()
+  })
+
+  it('saveAvatar requires sign-in and an avatar object, and only writes the caller', async () => {
+    await expect(run(fns.saveAvatar, { avatar: { accessories: {}, outfitHue: null } }, null)).rejects.toMatchObject({ code: 'unauthenticated' })
+    await expect(run(fns.saveAvatar, {})).rejects.toMatchObject({ code: 'invalid-argument' })
+    await db.doc('users/other').set({ uid: 'other' })
+    await run(fns.saveAvatar, { avatar: { accessories: {}, outfitHue: 5 } })
+    expect((await user('other')).avatar).toBeUndefined()
+  })
+})

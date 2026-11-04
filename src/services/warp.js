@@ -7,6 +7,7 @@ import { returnHome } from '../lib/syncManager'
 import { emitGuide } from '../lib/guideEvents'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useResumeStore } from '../stores/useResumeStore'
+import { useVisitStore } from '../stores/useVisitStore'
 import { useSchoolWorldStore } from '../stores/useSchoolWorldStore'
 
 export async function warpTo(placeId, { resume = true } = {}) {
@@ -21,12 +22,14 @@ export async function warpTo(placeId, { resume = true } = {}) {
     if (!uid) return { ok: false, error: 'FAILED' }
     const r = await enterSchoolHub(uid)
     if (r.ok) {
+      useVisitStore.getState().end() // only once the warp is certain: a failed one leaves the scene on the friend's room
       useSchoolWorldStore.getState().markMapSwitching()
       emitGuide('warped')
     }
     return r.ok ? { ok: true } : { ok: false, error: r.error }
   }
 
+  useVisitStore.getState().end() // the room and the campus cannot fail: the scene is about to change
   const world = useSchoolWorldStore.getState()
   if (world.inHub) world.setLeft()
   const point = resume ? useResumeStore.getState().points?.[place.mapKey] : null

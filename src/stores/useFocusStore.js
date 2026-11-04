@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { startFocus, checkInFocus, endFocus, abandonFocus } from '../services/focus'
 import { useLeavesStore } from './useLeavesStore'
 import { emitGuide } from '../lib/guideEvents'
+import { isVisiting } from './useVisitStore'
 
 const IDLE = { status: 'idle', practice: false, subjectKey: null, mode: null, plannedMin: null, startedAt: null, lastCheckInAt: null, verifiedMs: 0, result: null, witherReason: null }
 
@@ -48,6 +49,7 @@ export const useFocusStore = create((set, get) => {
     ...IDLE,
 
     start: async ({ mode, plannedMin, practice, subjectKey } = {}) => {
+      if (isVisiting()) throw new Error('VISITING') // a focus session belongs to the student's own room
       const r = await startFocus({ mode, plannedMin, practice, subjectKey })
       set({ ...IDLE, status: 'running', practice: r.practice === true, subjectKey: r.subjectKey ?? null, mode: r.mode, plannedMin: r.plannedMin, startedAt: r.startedAt, lastCheckInAt: r.lastCheckInAt, verifiedMs: r.verifiedMs ?? 0 })
       // A resumed Strict session has already withered on the server: show the outcome.

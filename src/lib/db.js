@@ -58,6 +58,7 @@ export const cols = {
   purchases:    collection(db, 'purchases'),
   maps:         collection(db, 'maps'),
   roomCatalog:  collection(db, 'roomCatalog'),
+  focusSessions: collection(db, 'focusSessions'),
   roadmapSheets: collection(db, 'roadmapSheets'),
   mapConfigs:   collection(db, 'mapConfigs'),
   assetFolders: collection(db, 'assetFolders'),
