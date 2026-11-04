@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const callable = vi.fn()
 vi.mock('firebase/functions', () => ({
   getFunctions: vi.fn(() => ({})),
-  httpsCallable: vi.fn((_f, name) => () => callable(name)),
+  httpsCallable: vi.fn((_f, name) => (payload) => callable(name, payload)),
 }))
 
 const { startFocus, checkInFocus, endFocus, msUntilCheckIn, CHECKIN_PROMPT_MS } = await import('./focus')
@@ -17,6 +17,14 @@ describe('focus service', () => {
     await checkInFocus()
     await endFocus()
     expect(callable.mock.calls.map((c) => c[0])).toEqual(['startFocus', 'checkInFocus', 'endFocus'])
+  })
+
+  it('sends only what was asked: practice flag, mode and planned time', async () => {
+    callable.mockResolvedValue({ data: { ok: true } })
+    await startFocus({ practice: true })
+    await startFocus({ mode: 'strict', plannedMin: 50 })
+    await startFocus()
+    expect(callable.mock.calls.map((c) => c[1])).toEqual([{ practice: true }, { mode: 'strict', plannedMin: 50 }, {}])
   })
 
   it('msUntilCheckIn counts down and clamps at zero', () => {

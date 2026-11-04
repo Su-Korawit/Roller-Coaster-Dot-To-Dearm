@@ -5,6 +5,7 @@ import { canPlace, validateLayout } from '../room/placement'
 import { resolveTap } from '../room/tapPlacement'
 import { saveRoomLayout } from '../services/roomApi'
 import { createRoomSync } from '../lib/roomSync'
+import { emitGuide } from '../lib/guideEvents'
 import { useLeavesStore } from './useLeavesStore'
 import { STARTER_LAYOUT } from '../room/defaultLayout'
 import { ROOM_CATALOG } from '../data/roomCatalogSeed'
@@ -51,6 +52,7 @@ export const useRoomStore = create((set, get) => ({
     }
     set({ layout: { ...layout, placed: [...layout.placed, candidate] }, lastError: null })
     roomSync.schedule()
+    emitGuide('placed')
     return true
   },
 

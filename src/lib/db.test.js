@@ -336,3 +336,33 @@ describe('study room refs/cols/shapes', () => {
     expect(shapes.roomLayout(doc)).toEqual({ tier: 1, theme: 'cafe', petId: 'cat', placed: [{ itemId: 'desk_basic', x: 8, y: 16 }] })
   })
 })
+
+describe('shapes.hotbar', () => {
+  it('repairs a missing or corrupt hotbar into 7 unique ids including warp', () => {
+    for (const d of [undefined, {}, { hotbar: ['x'] }, { hotbar: 'nope' }]) {
+      const out = shapes.hotbar(d)
+      expect(out).toHaveLength(7)
+      expect(new Set(out).size).toBe(7)
+      expect(out).toContain('warp')
+    }
+  })
+})
+
+describe('shapes.resume', () => {
+  it('returns the empty resume for a missing or malformed field and keeps good points', () => {
+    expect(shapes.resume(undefined)).toEqual({ last: null, points: {} })
+    expect(shapes.resume({ resume: 'x' })).toEqual({ last: null, points: {} })
+    const out = shapes.resume({ resume: { last: 'room', points: { room: { x: 1, y: 2, facing: 'up', label: 'a', at: 5 }, bad: { x: 'q' } } } })
+    expect(Object.keys(out.points)).toEqual(['room'])
+    expect(out.last).toBe('room')
+  })
+})
+
+describe('shapes.guide', () => {
+  it('returns a fresh guide for a missing or malformed field', () => {
+    for (const d of [undefined, {}, { guide: 'x' }, { guide: { started: 'yes', step: -1 } }]) {
+      expect(shapes.guide(d)).toEqual({ started: false, step: 0, done: false, skipped: false })
+    }
+    expect(shapes.guide({ guide: { started: true, step: 2 } })).toEqual({ started: true, step: 2, done: false, skipped: false })
+  })
+})

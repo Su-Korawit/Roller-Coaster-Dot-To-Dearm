@@ -5,6 +5,7 @@ import { useNowPlayingPoll } from '../../hooks/useNowPlayingPoll'
 import { withFreshToken } from '../../hooks/useSpotifyToken'
 import { play, pause } from '../../services/spotifyApi'
 import { Z_NAV } from '../../constants/zIndex'
+import { HOTBAR_DOCK } from '../../constants/hotbarLayout'
 import PlayerSheet from './PlayerSheet'
 
 export default function MiniPlayer() {
@@ -25,10 +26,10 @@ export default function MiniPlayer() {
 
   return (
     <>
-      {/* Docked just above the floating BottomNavBar (bottom-4 h~64). */}
+      {/* Docked just above the floating hotbar. */}
       <div
         className="absolute left-1/2 -translate-x-1/2 w-[92%] max-w-md"
-        style={{ bottom: 'calc(env(safe-area-inset-bottom) + 88px)', zIndex: Z_NAV }}
+        style={{ bottom: HOTBAR_DOCK, zIndex: Z_NAV }}
       >
         {status !== 'connected' ? (
           <button

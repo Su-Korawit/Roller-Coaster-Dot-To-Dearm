@@ -15,7 +15,7 @@ const IDLE_FOCUS = {
   busy: false,
 }
 
-export const useSchoolWorldStore = create((set) => ({
+export const useSchoolWorldStore = create((set, get) => ({
   inHub: false,
   room: null,              // { kind: 'school' | 'commons', shard, ownerUid }
   enterStatus: 'idle',     // 'idle' | 'entering' | 'error'
@@ -23,7 +23,7 @@ export const useSchoolWorldStore = create((set) => ({
 
   panel: null,             // { type: 'focus', seatId } | { type: 'board', id } | { type: 'leaderboard' } | null
   toolRequest: null,       // { route, n } — consumed by SchoolWorldLayer (needs the router)
-  mapChangeRequest: null,  // { mapKey|null, n } — consumed by GameCanvas (owns the Phaser game)
+  mapChangeRequest: null,  // { mapKey|null, spawnAt|null, n } — consumed by GameCanvas (owns the Phaser game)
   ambient: false,          // night-library ambience overlay
   entryMapKey: null,       // the game's entry map, set by GameCanvas; where leaving the hub returns to
 
@@ -38,9 +38,18 @@ export const useSchoolWorldStore = create((set) => ({
   closePanel: () => set({ panel: null }),
   requestTool: (route) => set((s) => ({ toolRequest: { route, n: (s.toolRequest?.n ?? 0) + 1 } })),
   clearToolRequest: () => set({ toolRequest: null }),
-  requestMapChange: (mapKey) => set((s) => ({ mapChangeRequest: { mapKey, n: (s.mapChangeRequest?.n ?? 0) + 1 } })),
+  requestMapChange: (mapKey, opts = {}) => set((s) => ({ mapChangeRequest: { mapKey, spawnAt: opts.spawnAt ?? null, n: (s.mapChangeRequest?.n ?? 0) + 1 } })),
   clearMapChangeRequest: () => set({ mapChangeRequest: null }),
   setEntryMapKey: (key) => set({ entryMapKey: key }),
+  // A map switch was asked for and has not finished (cleared by GameCanvas). Expires on its own
+  // so a request nobody consumed can never block warping for good.
+  mapSwitchingSince: null,
+  markMapSwitching: () => set({ mapSwitchingSince: Date.now() }),
+  clearMapSwitching: () => set({ mapSwitchingSince: null }),
+  isMapSwitching: () => {
+    const since = get().mapSwitchingSince
+    return since != null && Date.now() - since < 15000
+  },
   toggleAmbient: () => set((s) => ({ ambient: !s.ambient })),
 
   setFocus: (patch) => set((s) => ({ focus: { ...s.focus, ...patch } })),

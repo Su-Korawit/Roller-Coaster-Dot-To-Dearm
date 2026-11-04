@@ -8,6 +8,8 @@ const PLANNED_MIN = { min: 10, max: 120 }
 const RATE = { strict: 1.5, flexible: 1 }
 const COMPLETION_BONUS = 1.1
 const DEFAULTS = { mode: 'flexible', plannedMin: 25 }
+// The Guide's one-time practice focus: flexible, 1 minute, a one-off gift, never XP or leaderboard.
+const PRACTICE = { plannedMin: 1, leaves: 10, minVerifiedMs: 45000 }
 
 // Missing values fall back to the defaults; anything present must be valid.
 function validateFocusParams({ mode, plannedMin } = {}) {
@@ -34,4 +36,11 @@ function leavesFor({ mode, verifiedMs, plannedMin, withered }) {
   return Math.floor((verifiedMs / 60000) * (RATE[mode] ?? 1) * (completed ? COMPLETION_BONUS : 1))
 }
 
-module.exports = { MODES, PLANNED_MIN, validateFocusParams, treeFor, leavesFor }
+// A practice session pays PRACTICE.leaves once: it must not have withered, must have run
+// at least PRACTICE.minVerifiedMs of verified time, and the gift must not have been paid before.
+function practiceLeaves({ verifiedMs, withered, rewarded }) {
+  if (rewarded || withered || !(verifiedMs >= PRACTICE.minVerifiedMs)) return 0
+  return PRACTICE.leaves
+}
+
+module.exports = { MODES, PLANNED_MIN, PRACTICE, validateFocusParams, treeFor, leavesFor, practiceLeaves }

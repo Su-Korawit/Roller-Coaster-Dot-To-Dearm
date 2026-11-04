@@ -1,8 +1,9 @@
 import { create } from 'zustand'
 import { startFocus, checkInFocus, endFocus, abandonFocus } from '../services/focus'
 import { useLeavesStore } from './useLeavesStore'
+import { emitGuide } from '../lib/guideEvents'
 
-const IDLE = { status: 'idle', mode: null, plannedMin: null, startedAt: null, lastCheckInAt: null, verifiedMs: 0, result: null, witherReason: null }
+const IDLE = { status: 'idle', practice: false, mode: null, plannedMin: null, startedAt: null, lastCheckInAt: null, verifiedMs: 0, result: null, witherReason: null }
 
 const isNoActive = (e) => /NO_ACTIVE_SESSION/.test(String(e?.message ?? '')) || e?.code === 'functions/failed-precondition'
 
@@ -12,6 +13,11 @@ export const useFocusStore = create((set, get) => {
   const finish = (r, witherReason = null) => {
     useLeavesStore.getState().applyServer({ leaves: useLeavesStore.getState().leaves + Number(r.leaves ?? 0) })
     set({ status: r.withered ? 'withered' : 'done', result: r, witherReason: r.withered ? witherReason : null })
+    // The Guide's practice gift was paid: remember it and let the Guide move on.
+    if (r.practice && Number(r.leaves) > 0) {
+      useLeavesStore.getState().applyServer({ practiceDone: true })
+      emitGuide('practiced')
+    }
     return r
   }
 
@@ -36,9 +42,9 @@ export const useFocusStore = create((set, get) => {
   return {
     ...IDLE,
 
-    start: async ({ mode, plannedMin } = {}) => {
-      const r = await startFocus({ mode, plannedMin })
-      set({ ...IDLE, status: 'running', mode: r.mode, plannedMin: r.plannedMin, startedAt: r.startedAt, lastCheckInAt: r.lastCheckInAt, verifiedMs: r.verifiedMs ?? 0 })
+    start: async ({ mode, plannedMin, practice } = {}) => {
+      const r = await startFocus({ mode, plannedMin, practice })
+      set({ ...IDLE, status: 'running', practice: r.practice === true, mode: r.mode, plannedMin: r.plannedMin, startedAt: r.startedAt, lastCheckInAt: r.lastCheckInAt, verifiedMs: r.verifiedMs ?? 0 })
       // A resumed Strict session has already withered on the server: show the outcome.
       if (r.withered) await get().abandon('hidden')
       return r

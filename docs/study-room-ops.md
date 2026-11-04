@@ -65,3 +65,19 @@ Old clients cannot read `rooms`, so they will not show Leaves or the room; rolli
 back is safe. The functions are additive (`startFocus` accepts the old no-argument call and
 runs a Flexible 25-minute session). Do not run the purge script until you are sure you will
 not roll back.
+
+## 6. Hotbar, warp, resume and guide (ADR-0024)
+
+Only rules and functions change; there is nothing to seed or upload.
+
+```bash
+firebase deploy --only firestore:rules
+firebase deploy --only functions:startFocus,functions:checkInFocus,functions:endFocus,functions:abandonFocus
+```
+
+After deploying, check with a fresh account: the Guide starts after the welcome pack; the practice
+focus pays 10 Leaves once (a second account-level attempt answers `PRACTICE_DONE`) and the
+leaderboard is unchanged; reloading the app puts the player back where they stood. Rollback:
+old clients simply never send `practice`, so rolling hosting back is safe; the new user-doc
+fields `hotbar`, `resume`, `guide` are client-owned and harmless to leave behind, and
+`practiceRewarded` is Functions-owned and keeps the gift from being paid twice.

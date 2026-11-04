@@ -19,7 +19,7 @@ const { default: SettingsSheet } = await import('./SettingsSheet')
 
 beforeEach(() => {
   authState = { user: { uid: 'u1', displayName: 'T', photoURL: null }, signOut: vi.fn() }
-  useUserStore.setState({ sfxEnabled: true, sfxVolume: 0.5, uiVisibility: { hotbar: true, shortcuts: true, newsButton: true, musicPill: true, contactFab: true } })
+  useUserStore.setState({ sfxEnabled: true, sfxVolume: 0.5, uiVisibility: { hotbar: true, newsButton: true, musicPill: true, contactFab: true } })
   playSound.mockReset()
 })
 afterEach(cleanup)

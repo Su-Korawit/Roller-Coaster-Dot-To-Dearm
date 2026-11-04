@@ -14,12 +14,16 @@
 //   ดังนั้นจริง ๆ รวม 3 โมดูล (ไม่ใช่ 4) — Select ยังอยู่ไฟล์เดิม
 // ============================================================================
 import { setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
-import { refs } from './db'
+import { refs, shapes } from './db'
 import { useTaskStore } from '../stores/useTaskStore'
 import { useRoadmapStore } from '../stores/useRoadmapStore'
 import { useUserStore } from '../stores/useUserStore'
 import { useWorldStore } from '../stores/useWorldStore'
 import { useSchoolStore } from '../stores/useSchoolStore'
+import { useHotbarStore } from '../stores/useHotbarStore'
+import { useResumeStore } from '../stores/useResumeStore'
+import { useGuideStore } from '../stores/useGuideStore'
+import { mergeResume } from './resumeRules'
 
 /**
  * Build a debounced Firestore sync for a single Zustand store.
@@ -33,10 +37,11 @@ import { useSchoolStore } from '../stores/useSchoolStore'
  * @param {(data) => boolean} opts.needsSeed  whether to push local up on first migration
  * @param {(uid) => DocumentRef} [opts.ref]   doc ref factory — defaults to refs.user
  * @param {(state, uid) => boolean} [opts.guard]  extra condition checked before debouncing
+ * @param {number}   [opts.delayMs]  debounce window in ms (default 1000)
  * @param {(status: 'saving'|'saved'|'error') => void} [opts.onStatus]  save-status callback, defaults to a no-op — only the roadmap instance passes one today
  * @returns {{ push(uid): Promise<void>, hydrate(uid): Promise<void>, setSyncUser(uid): void }}
  */
-export function createFirestoreSync({ store, logName, toDoc, fromDoc, changed, needsSeed, ref, guard, onStatus }) {
+export function createFirestoreSync({ store, logName, toDoc, fromDoc, changed, needsSeed, ref, guard, onStatus, delayMs = 1000 }) {
   const getRef = ref ?? refs.user
   const emitStatus = onStatus ?? (() => {})
 
@@ -118,7 +123,7 @@ export function createFirestoreSync({ store, logName, toDoc, fromDoc, changed, n
         const target = pendingTarget
         pendingTarget = null
         void push(target)
-      }, 1000)
+      }, delayMs)
     })
   }
 
@@ -131,7 +136,7 @@ export function createFirestoreSync({ store, logName, toDoc, fromDoc, changed, n
     return timer != null
   }
 
-  return { push, hydrate, setSyncUser, isPending }
+  return { push, hydrate, setSyncUser, isPending, flush: flushPending }
 }
 
 // ── Tasks ────────────────────────────────────────────────────────────────────
@@ -253,6 +258,51 @@ const schoolSync = createFirestoreSync({
 export const hydrateSchoolFromFirestore = schoolSync.hydrate
 export const setSchoolSyncUser = schoolSync.setSyncUser
 export const disarmSchoolSync = () => schoolSync.setSyncUser(null)
+
+// ── Hotbar slot order → users/{uid}.hotbar (accounts; guests use localStorage only) ──
+const hotbarSync = createFirestoreSync({
+  store: useHotbarStore,
+  logName: 'syncHotbar',
+  toDoc: ({ slots }) => ({ hotbar: slots }),
+  fromDoc: (data) => (Array.isArray(data.hotbar) ? { slots: shapes.hotbar(data) } : {}),
+  changed: (s, p) => s.slots !== p.slots,
+  needsSeed: (data) => !Array.isArray(data.hotbar),
+})
+
+export const hydrateHotbarFromFirestore = hotbarSync.hydrate
+export const setHotbarSyncUser = hotbarSync.setSyncUser
+
+// ── Guide progress → users/{uid}.guide (accounts; guests use localStorage only) ──
+const guideSync = createFirestoreSync({
+  store: useGuideStore,
+  logName: 'syncGuide',
+  toDoc: ({ started, step, done, skipped }) => ({ guide: { started, step, done, skipped } }),
+  fromDoc: (data) => (data.guide ? shapes.guide(data) : {}),
+  changed: (s, p) => s.started !== p.started || s.step !== p.step || s.done !== p.done || s.skipped !== p.skipped,
+  needsSeed: (data) => !data.guide && useGuideStore.getState().started,
+})
+
+export const hydrateGuideFromFirestore = guideSync.hydrate
+export const setGuideSyncUser = guideSync.setSyncUser
+
+// ── Resume points → users/{uid}.resume (debounced 10 s; flushed when the page is hidden) ──
+const resumeSync = createFirestoreSync({
+  store: useResumeStore,
+  logName: 'syncResume',
+  delayMs: 10000,
+  toDoc: ({ last, points }) => ({ resume: { last, points } }),
+  fromDoc: (data) => {
+    if (!data.resume) return {}
+    const s = useResumeStore.getState()
+    return mergeResume({ last: s.last, points: s.points }, data.resume)
+  },
+  changed: (s, p) => s.points !== p.points || s.last !== p.last,
+  needsSeed: (data) => !data.resume && useResumeStore.getState().last != null,
+})
+
+export const hydrateResumeFromFirestore = resumeSync.hydrate
+export const setResumeSyncUser = resumeSync.setSyncUser
+export const flushResumeSync = resumeSync.flush
 
 // Back to the signed-in user's own world. `mapKey` (optional) switches the map key in the same
 // state update, so presence never briefly joins the user's own world under the previous map's key.

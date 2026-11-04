@@ -58,3 +58,15 @@ search.google.com/search-console → Add property แบบ **Domain** (`ilovetc
 ## Study room (2026-10-22)
 
 ขั้นตอน deploy / seed catalog / purge ข้อมูลฟาร์มเก่า อยู่ใน `docs/study-room-ops.md` (ลำดับ: rules → functions → seed → hosting; รัน `purgeLegacyWorld.mjs` หลังปล่อยจริงและนิ่งแล้วเท่านั้น)
+
+## Hotbar / Warp / Resume / Guide (2026-10-22)
+
+Deploy: `firebase deploy --only firestore:rules` แล้ว
+`firebase deploy --only functions:startFocus,functions:checkInFocus,functions:endFocus,functions:abandonFocus`
+แล้วค่อย merge (Vercel) — ไม่ต้อง seed อะไรเพิ่ม รายละเอียดอยู่ใน `docs/study-room-ops.md` ข้อ 6
+
+ตรวจด้วยตาที่ 375 และ 1280 px (ยังไม่ได้เปิดดูในเบราว์เซอร์): แถบ hotbar 8 ปุ่มไม่ล้นจอและไม่ทับ MiniPlayer/ปุ่มติดต่อผู้พัฒนา,
+กด `1`–`7` / `B` / `Esc`, กระเป๋าใส่ของลงช่อง, วาร์ปห้อง→โรงเรียน (ทั้งบัญชีที่มีและไม่มีโรงเรียน), รีโหลดแล้วกลับมายืนที่เดิม,
+คู่มือครบ 4 ขั้นและกดข้ามได้, ลองโฟกัส 1 นาทีได้ของขวัญ 10 ใบไม้ครั้งเดียว
+
+ต้องตัดสินใจ: ปุ่มจดหมาย (ช่อง 5) เปิดแชท และเพื่อนอยู่ในกระเป๋า — ถ้าอยากได้ชีตเดียวแบบแท็บ ต้องออกแบบหัวพาเนลใหม่

@@ -191,6 +191,13 @@ describe('useFocusStore', () => {
     expect(useFocusStore.getState()).toMatchObject({ status: 'running', mode: 'strict', plannedMin: 50, startedAt: 1000 })
   })
 
+  it('starts a practice session and remembers that it is one', async () => {
+    m.startFocus.mockResolvedValue({ ok: true, practice: true, mode: 'flexible', plannedMin: 1, startedAt: 5, lastCheckInAt: 5, verifiedMs: 0 })
+    await useFocusStore.getState().start({ practice: true })
+    expect(m.startFocus).toHaveBeenCalledWith({ mode: undefined, plannedMin: undefined, practice: true })
+    expect(useFocusStore.getState()).toMatchObject({ status: 'running', practice: true, plannedMin: 1 })
+  })
+
   it('ending a session stores the result and adds the Leaves to the balance', async () => {
     useFocusStore.setState({ status: 'running', mode: 'flexible', plannedMin: 25, startedAt: 0 })
     m.endFocus.mockResolvedValue({ ok: true, leaves: 27, tree: 'shrub', withered: false })
@@ -317,5 +324,46 @@ describe('useRoomStore decorating by tapping', () => {
     useRoomStore.setState({ selected: 'chair_basic', lastError: 'overlap' })
     useRoomStore.getState().setDecorating(false)
     expect(useRoomStore.getState()).toMatchObject({ decorating: false, selected: null, lastError: null })
+  })
+})
+
+describe('Guide events from the stores', () => {
+  beforeEach(() => {
+    useFocusStore.getState().reset()
+    useLeavesStore.setState({ practiceDone: false })
+  })
+
+  it('a successful placement emits "placed" and a refused one does not', async () => {
+    const { onGuideEvent } = await import('../lib/guideEvents')
+    const seen = []
+    const off = onGuideEvent((e) => seen.push(e))
+    useRoomStore.getState().place('chair_basic', 32, 32)
+    useRoomStore.getState().place('chair_basic', 32, 32) // overlap: refused
+    off()
+    expect(seen).toEqual(['placed'])
+  })
+
+  it('a rewarded practice session emits "practiced" and remembers the gift was paid', async () => {
+    const { onGuideEvent } = await import('../lib/guideEvents')
+    const seen = []
+    const off = onGuideEvent((e) => seen.push(e))
+    useFocusStore.setState({ status: 'running', practice: true, mode: 'flexible', plannedMin: 1, startedAt: 0 })
+    m.endFocus.mockResolvedValue({ ok: true, leaves: 10, tree: 'sprout', withered: false, practice: true })
+    await useFocusStore.getState().end()
+    off()
+    expect(seen).toEqual(['practiced'])
+    expect(useLeavesStore.getState().practiceDone).toBe(true)
+  })
+
+  it('a practice session that paid nothing does not advance the Guide', async () => {
+    const { onGuideEvent } = await import('../lib/guideEvents')
+    const seen = []
+    const off = onGuideEvent((e) => seen.push(e))
+    useFocusStore.setState({ status: 'running', practice: true, mode: 'flexible', plannedMin: 1, startedAt: 0 })
+    m.endFocus.mockResolvedValue({ ok: true, leaves: 0, tree: 'sprout', withered: false, practice: true })
+    await useFocusStore.getState().end()
+    off()
+    expect(seen).toEqual([])
+    expect(useLeavesStore.getState().practiceDone).toBe(false)
   })
 })

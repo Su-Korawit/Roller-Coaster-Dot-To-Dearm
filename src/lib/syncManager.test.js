@@ -15,6 +15,7 @@ vi.mock('./db', () => ({
     user: (uid) => ({ _path: `users/${uid}` }),
     roadmapSheet: (sheetId) => ({ _path: `roadmapSheets/${sheetId}` }),
   },
+  shapes: { hotbar: (d) => d.hotbar },
 }))
 
 // Stub localStorage so Zustand persist doesn't blow up
@@ -36,7 +37,13 @@ const {
   hydrateRoadmapSheetFromFirestore,
   armRoadmapSheetSync,
   disarmRoadmapSheetSync,
+  hydrateHotbarFromFirestore,
+  setHotbarSyncUser,
+  setResumeSyncUser,
+  flushResumeSync,
 } = await import('./syncManager')
+const { useResumeStore } = await import('../stores/useResumeStore')
+const { useHotbarStore } = await import('../stores/useHotbarStore')
 
 describe('SyncManager (roadmap sheet instance)', () => {
   beforeEach(() => {
@@ -263,5 +270,74 @@ describe('returnHome', () => {
   it('does nothing without a user', async () => {
     await returnHome(null, 'room')
     expect(useWorldStore.getState()).toMatchObject({ currentMapOwnerUid: 'uid-friend', currentMapKey: 'school_hub' })
+  })
+})
+
+describe('hotbar sync', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    setDoc.mockReset(); getDoc.mockReset()
+    setDoc.mockResolvedValue(undefined)
+    useHotbarStore.getState().reset()
+  })
+
+  it('hydrate lets the cloud bar win', async () => {
+    const cloud = ['tasks', 'warp', 'focus', 'letter', 'shop', 'wardrobe', 'calendar']
+    getDoc.mockResolvedValue({ exists: () => true, data: () => ({ hotbar: cloud }) })
+    await hydrateHotbarFromFirestore('u1')
+    expect(useHotbarStore.getState().slots).toEqual(cloud)
+    expect(setDoc).not.toHaveBeenCalled()
+  })
+
+  it('hydrate seeds the cloud from the local bar when the account has none', async () => {
+    getDoc.mockResolvedValue({ exists: () => true, data: () => ({}) })
+    await hydrateHotbarFromFirestore('u1')
+    expect(setDoc).toHaveBeenCalledWith({ _path: 'users/u1' }, { hotbar: useHotbarStore.getState().slots }, { merge: true })
+  })
+
+  it('three quick swaps become one debounced write', async () => {
+    getDoc.mockResolvedValue({ exists: () => true, data: () => ({ hotbar: useHotbarStore.getState().slots }) })
+    await hydrateHotbarFromFirestore('u1')
+    setHotbarSyncUser('u1')
+    useHotbarStore.getState().swap(0, 1)
+    useHotbarStore.getState().swap(1, 2)
+    useHotbarStore.getState().swap(2, 3)
+    await vi.advanceTimersByTimeAsync(1200)
+    expect(setDoc).toHaveBeenCalledTimes(1)
+    setHotbarSyncUser(null)
+    vi.useRealTimers()
+  })
+})
+
+describe('resume sync', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    setDoc.mockReset(); getDoc.mockReset()
+    setDoc.mockResolvedValue(undefined)
+    useResumeStore.getState().reset()
+  })
+
+  it('writes at most once per 10 s window for many position records', async () => {
+    getDoc.mockResolvedValue({ exists: () => true, data: () => ({ resume: { last: null, points: {} } }) })
+    setResumeSyncUser('u1')
+    for (let i = 0; i < 4; i++) {
+      useResumeStore.getState().record('room', { x: i, y: 1, facing: 'down', label: 'l' })
+      await vi.advanceTimersByTimeAsync(2000)
+    }
+    expect(setDoc).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(10500)
+    expect(setDoc).toHaveBeenCalledTimes(1)
+    expect(setDoc.mock.calls[0][1].resume.points.room.x).toBe(3)
+    setResumeSyncUser(null)
+  })
+
+  it('flush sends a pending point right away (page hidden)', async () => {
+    setResumeSyncUser('u1')
+    useResumeStore.getState().record('room', { x: 7, y: 1, facing: 'down', label: 'l' })
+    flushResumeSync()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(setDoc).toHaveBeenCalledTimes(1)
+    setResumeSyncUser(null)
+    vi.useRealTimers()
   })
 })

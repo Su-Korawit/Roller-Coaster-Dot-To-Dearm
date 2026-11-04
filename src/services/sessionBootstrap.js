@@ -31,6 +31,9 @@ import { useLeavesStore } from '../stores/useLeavesStore'
 import { useFocusStore } from '../stores/useFocusStore'
 import { useRoomStore, roomSync } from '../stores/useRoomStore'
 import { resolveConsent } from './consent'
+import { useHotbarStore } from '../stores/useHotbarStore'
+import { useResumeStore } from '../stores/useResumeStore'
+import { useGuideStore } from '../stores/useGuideStore'
 import { useConsentStore } from '../stores/useConsentStore'
 import { migrateLegacyRoadmap } from '../utils/migrateLegacyRoadmap'
 import {
@@ -50,6 +53,12 @@ import {
   hydrateSchoolFromFirestore,
   setSchoolSyncUser,
   disarmSchoolSync,
+  hydrateHotbarFromFirestore,
+  setHotbarSyncUser,
+  hydrateResumeFromFirestore,
+  setResumeSyncUser,
+  hydrateGuideFromFirestore,
+  setGuideSyncUser,
 } from '../lib/syncManager'
 
 function readSelectStore() {
@@ -189,6 +198,18 @@ export async function bootstrapSession(firebaseUser) {
       await hydrateSchoolFromFirestore(uid)
       setSchoolSyncUser(uid)
     }),
+    step('hydrate/arm guide', async () => {
+      await hydrateGuideFromFirestore(uid)
+      setGuideSyncUser(uid)
+    }),
+    step('hydrate/arm resume', async () => {
+      await hydrateResumeFromFirestore(uid)
+      setResumeSyncUser(uid)
+    }),
+    step('hydrate/arm hotbar', async () => {
+      await hydrateHotbarFromFirestore(uid)
+      setHotbarSyncUser(uid)
+    }),
     step('hydrate spotify', () => hydrateSpotify(uid)),
     step('study room', () => bootstrapStudyRoom(uid)),
   ])
@@ -215,6 +236,12 @@ export function teardownSession() {
   setTaskSyncUser(null)
   disarmRoadmapSheetSync()
   disarmSchoolSync()
+  setHotbarSyncUser(null)
+  setResumeSyncUser(null)
+  setGuideSyncUser(null)
+  useGuideStore.getState().reset()
+  useResumeStore.getState().reset()
+  useHotbarStore.getState().reset()
   useWorldStore.getState().setMapOwner(null)
   usePlansStore.getState().resetPlans()
   // Study room: nothing of the previous account may show for the next one.

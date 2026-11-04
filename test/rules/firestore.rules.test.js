@@ -608,3 +608,12 @@ describe('study room: roomCatalog + rooms', () => {
     await assertSucceeds(setDoc(doc(root, 'roomCatalog/lamp_desk'), { name: 'lamp', price: 120 }))
   })
 })
+
+describe('practice reward flag (Functions-owned)', () => {
+  it('BLOCKS a client from writing or seeding practiceRewarded', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(updateDoc(doc(alice, 'users/alice'), { practiceRewarded: true }))
+    const dave = testEnv.authenticatedContext('dave').firestore()
+    await assertFails(setDoc(doc(dave, 'users/dave'), { uid: 'dave', practiceRewarded: true }))
+  })
+})
