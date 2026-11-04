@@ -31,7 +31,7 @@ describe('Popup', () => {
 
   it('sheet variant adds nav-safe bottom padding by default', () => {
     render(<Popup variant="sheet" onClose={() => {}}><p>x</p></Popup>)
-    expect(document.querySelector('.neo-sheet')).toBeTruthy()
+    expect(document.querySelector('.px-sheet')).toBeTruthy()
     expect(document.body.innerHTML).toContain('safe-area-inset-bottom')
   })
 

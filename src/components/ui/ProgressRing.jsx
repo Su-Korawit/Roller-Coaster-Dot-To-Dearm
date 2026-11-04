@@ -7,13 +7,13 @@ export default function ProgressRing({ value, total, size = 56, stroke = 6, labe
   return (
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#ece9fb" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-hairline)" strokeWidth={stroke} />
         <circle
           cx={size / 2}
           cy={size / 2}
           r={r}
           fill="none"
-          stroke="#7c3aed"
+          stroke="var(--color-leaf)"
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={c}

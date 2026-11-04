@@ -1,6 +1,6 @@
 /**
  * SelectCard — selectable card used by Career and Mastery pages.
- * Ink border + pressed brand fill when selected (design.md §4).
+ * Line border + soft brand fill when selected (design.md §4).
  */
 export default function SelectCard({ name, detail, selected, onClick }) {
   return (
@@ -9,11 +9,11 @@ export default function SelectCard({ name, detail, selected, onClick }) {
       aria-selected={selected}
       onClick={onClick}
       className={`
-        flex w-full items-start overflow-hidden rounded-xl text-left border-2 transition-all
+        flex w-full items-start overflow-hidden rounded-slot text-left border-2 transition-all
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1
         ${selected
-          ? 'border-ink bg-brand-soft shadow-hard-sm'
-          : 'border-ink/25 bg-surface hover:border-ink/60'}
+          ? 'border-line bg-brand-soft shadow-px-sm'
+          : 'border-hairline bg-paper hover:border-line-soft'}
       `}
     >
       <div className="px-4 py-3">

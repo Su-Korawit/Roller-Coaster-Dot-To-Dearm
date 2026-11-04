@@ -30,7 +30,7 @@ export default function SiteNav({ currentKey = 'hub' }) {
             height={32}
             className="h-8 w-8 rounded border-2 border-ink"
           />
-          <span className="pixel-font pixel-title text-[11px] md:text-[13px]">I LOVE TCAS</span>
+          <span className="wordmark-font pixel-title text-[11px] md:text-[13px]">I LOVE TCAS</span>
         </a>
 
         <div className="hidden md:flex items-center gap-1">

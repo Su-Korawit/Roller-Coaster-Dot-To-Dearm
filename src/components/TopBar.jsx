@@ -9,7 +9,7 @@ function TopBar({ icon = '●' }) {
           >
             {icon}
           </div>
-          <p className="pixel-font text-[15px] tracking-wide text-black">I LOVE TCAS</p>
+          <p className="wordmark-font text-[15px] tracking-wide text-black">I LOVE TCAS</p>
         </div>
         {/* Decorative only — no menu action yet */}
         <div className="flex flex-col gap-1.5" aria-hidden="true">

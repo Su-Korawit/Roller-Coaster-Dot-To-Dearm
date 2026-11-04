@@ -1,0 +1,39 @@
+{
+  "name": "icons",
+  "frameW": 20,
+  "frameH": 20,
+  "sprites": {
+    "focus": {
+      "row": 0,
+      "frames": 1
+    },
+    "warp": {
+      "row": 1,
+      "frames": 1
+    },
+    "plan": {
+      "row": 2,
+      "frames": 1
+    },
+    "tasks": {
+      "row": 3,
+      "frames": 1
+    },
+    "friends": {
+      "row": 4,
+      "frames": 1
+    },
+    "shop": {
+      "row": 5,
+      "frames": 1
+    },
+    "wardrobe": {
+      "row": 6,
+      "frames": 1
+    },
+    "guide": {
+      "row": 7,
+      "frames": 1
+    }
+  }
+}

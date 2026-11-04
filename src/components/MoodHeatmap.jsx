@@ -97,7 +97,7 @@ export default function MoodHeatmap({ feelingNotes = [] }) {
             y={10}
             fill="#636e7b"
             fontSize={8}
-            fontFamily="'Press Start 2P', monospace"
+            fontFamily="'Chakra Petch', 'Noto Sans Thai', sans-serif"
           >
             {label}
           </text>

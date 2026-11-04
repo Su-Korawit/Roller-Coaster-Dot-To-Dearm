@@ -61,7 +61,7 @@ export default function WelcomeNav() {
               height={32}
               className="h-8 w-8 rounded border-2 border-white/80"
             />
-            <span className="pixel-font hidden text-[10px] text-white sm:inline">I LOVE TCAS</span>
+            <span className="wordmark-font hidden text-[10px] text-white sm:inline">I LOVE TCAS</span>
           </a>
         </div>
 

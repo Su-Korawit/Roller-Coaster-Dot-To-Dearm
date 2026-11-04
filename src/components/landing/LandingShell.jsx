@@ -27,7 +27,7 @@ export default function LandingShell({
       <header className="border-b-2 border-ink bg-surface">
         <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-12 md:grid-cols-2 md:px-6 md:py-16">
           <div className="text-center md:text-left">
-            <p className="pixel-font mb-4 text-[10px] uppercase text-brand-strong md:text-xs">
+            <p className="wordmark-font mb-4 text-[10px] uppercase text-brand-strong md:text-xs">
               {site.pixelName}
             </p>
             <h1 className="thai-font text-3xl font-extrabold leading-tight text-ink md:text-4xl">

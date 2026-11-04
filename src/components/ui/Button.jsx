@@ -19,7 +19,7 @@ export default function Button({
   ...rest
 }) {
   const base =
-    'inline-flex items-center justify-center gap-2 w-full rounded-xl font-bold ' +
+    'inline-flex items-center justify-center gap-2 w-full rounded-slot font-bold ' +
     'disabled:opacity-50 disabled:pointer-events-none ' +
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand '
 
@@ -29,8 +29,8 @@ export default function Button({
   }
 
   const variants = {
-    primary: 'neo-btn rpg-btn-primary',
-    secondary: 'neo-btn bg-surface text-ink',
+    primary: 'px-btn bg-ink text-white border-ink',
+    secondary: 'px-btn bg-paper text-ink',
     ghost: 'text-brand-strong',
   }
 

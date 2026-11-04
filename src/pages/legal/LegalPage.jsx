@@ -23,7 +23,7 @@ export default function LegalPage({ doc, other }) {
   return (
     <div className="min-h-dvh bg-paper text-ink overflow-y-auto" style={{ height: '100dvh' }}>
       <header className="sticky top-0 z-10 bg-surface border-b-2 border-ink px-4 py-3 flex items-center justify-between">
-        <Link to="/" className="pixel-font text-[11px] text-brand-strong">I LOVE TCAS</Link>
+        <Link to="/" className="wordmark-font text-[11px] text-brand-strong">I LOVE TCAS</Link>
         <nav aria-label="เอกสารทางกฎหมาย" className="thai-font text-xs flex gap-3">
           <Link to={other.to} className="underline text-ink-soft">{other.label}</Link>
         </nav>

@@ -58,7 +58,7 @@ function ToolCard({ siteKey }) {
         <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg border-2 border-ink bg-brand-soft">
           <Icon size={24} strokeWidth={2.5} className="text-brand-strong" aria-hidden="true" />
         </span>
-        <span className="pixel-font mb-2 text-[10px] uppercase text-brand-strong">{site.pixelName}</span>
+        <span className="wordmark-font mb-2 text-[10px] uppercase text-brand-strong">{site.pixelName}</span>
         <h3 className="thai-font mb-1.5 text-lg font-bold leading-snug text-ink">{site.h1}</h3>
         <p className="thai-font mb-4 flex-1 text-sm leading-relaxed text-ink-soft">{site.description}</p>
         <span className="thai-font inline-flex items-center gap-1.5 text-sm font-semibold text-brand-strong">
@@ -82,7 +82,7 @@ export default function HubPage() {
         <SceneBackdrop position="center 40%" shade={0.35} />
         <div className="relative z-10 mx-auto max-w-6xl px-4 pt-12 pb-28 text-center md:px-6 md:pt-16 md:pb-32">
           <div className="neo-card mx-auto max-w-3xl px-3 py-7 animate-pop sm:px-6 md:px-10 md:py-10">
-            <p className="pixel-font pixel-title mb-5 text-[10px] md:text-xs">I LOVE TCAS</p>
+            <p className="wordmark-font pixel-title mb-5 text-[10px] md:text-xs">I LOVE TCAS</p>
             <h1 className="thai-font mx-auto max-w-3xl text-[1.65rem] font-extrabold leading-tight text-ink sm:text-3xl md:text-5xl">
               {SITES.hub.h1}
             </h1>

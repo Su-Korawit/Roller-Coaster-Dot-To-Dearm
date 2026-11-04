@@ -11,7 +11,7 @@ function OnboardingIntro({ onNext }) {
 
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-16 text-center">
         <div className="neo-card px-8 pt-6 pb-6 animate-pop">
-          <h1 className="pixel-title pixel-font text-2xl leading-tight md:text-3xl">
+          <h1 className="pixel-title wordmark-font text-2xl leading-tight md:text-3xl">
             I LOVE TCAS
           </h1>
           <p className="thai-font mt-3 max-w-sm text-sm leading-relaxed text-ink-soft">

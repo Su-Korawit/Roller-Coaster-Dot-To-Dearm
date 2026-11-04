@@ -36,6 +36,7 @@ serviceAccountKey.json
 .vercel
 
 .superpowers/
+docs/art-review/
 .claude/worktrees/
 
 coverage/

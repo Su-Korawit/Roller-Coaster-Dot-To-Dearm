@@ -7,7 +7,7 @@ import { Search } from 'lucide-react'
  */
 export default function SearchBar({ value, onChange, placeholder = 'Search...', label = 'ค้นหา' }) {
   return (
-    <div className="flex items-center rounded-xl neo-input px-4 py-3 focus-within:ring-2 focus-within:ring-brand">
+    <div className="flex items-center px-input px-4 py-3 focus-within:ring-2 focus-within:ring-lime">
       <label className="sr-only">{label}</label>
       <input
         type="search"
