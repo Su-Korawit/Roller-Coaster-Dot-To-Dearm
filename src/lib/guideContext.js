@@ -26,5 +26,7 @@ export function buildGuideContext() {
   const hasCustomRoom = layout.placed.some((p) => !STARTER_LAYOUT.placed.some((s) => s.itemId === p.itemId))
   const places = availablePlaces({ hasMap: (k) => k in DEFAULT_MAP_CONFIGS, signedIn }).length
 
-  return { signedIn, practiceDone, hasPurchased, canAffordSomething, hasUnplacedItem, hasCustomRoom, places }
+  const hasCampus = 'campus' in DEFAULT_MAP_CONFIGS
+
+  return { signedIn, practiceDone, hasPurchased, canAffordSomething, hasUnplacedItem, hasCustomRoom, places, hasCampus }
 }

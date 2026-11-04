@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 
 const m = vi.hoisted(() => ({ warpTo: vi.fn(), auth: { user: { uid: 'u1' } } }))
 vi.mock('../../services/warp', () => ({ warpTo: (...a) => m.warpTo(...a) }))
@@ -22,17 +22,20 @@ beforeEach(() => {
 })
 
 describe('WarpSheet', () => {
-  it('lists the room and the school (no campus map exists yet)', () => {
+  const card = (name) => screen.getByText(name).closest('li')
+
+  it('lists the room, the campus and the school', () => {
     render(<WarpSheet onClose={() => {}} />)
     expect(screen.getByText('ห้องของฉัน')).toBeTruthy()
+    expect(screen.getByText('งานเปิดบ้าน (Open House)')).toBeTruthy()
     expect(screen.getByText('โรงเรียน (School Hub)')).toBeTruthy()
-    expect(screen.queryByText(/Open House/)).toBeNull()
   })
 
   it('marks where the player is and disables resuming there', () => {
     render(<WarpSheet onClose={() => {}} />)
     expect(screen.getByText('ที่นี่')).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'ไปต่อ' }).disabled).toBe(true)
+    expect(within(card('ห้องของฉัน')).getByRole('button', { name: 'ไปต่อ' }).disabled).toBe(true)
+    expect(within(card('งานเปิดบ้าน (Open House)')).getByRole('button', { name: 'ไปต่อ' }).disabled).toBe(false)
   })
 
   it('shows the last place label for somewhere else', () => {
@@ -46,10 +49,10 @@ describe('WarpSheet', () => {
     useWorldStore.setState({ currentMapKey: 'school_hub' })
     const onClose = vi.fn()
     render(<WarpSheet onClose={onClose} />)
-    fireEvent.click(screen.getByRole('button', { name: 'ไปต่อ' }))
+    fireEvent.click(within(card('ห้องของฉัน')).getByRole('button', { name: 'ไปต่อ' }))
     await waitFor(() => expect(onClose).toHaveBeenCalled())
     expect(m.warpTo).toHaveBeenCalledWith('room', { resume: true })
-    fireEvent.click(screen.getByRole('button', { name: 'ไปจุดเริ่มต้น' }))
+    fireEvent.click(within(card('ห้องของฉัน')).getByRole('button', { name: 'ไปจุดเริ่มต้น' }))
     expect(m.warpTo).toHaveBeenLastCalledWith('room', { resume: false })
   })
 
@@ -60,6 +63,28 @@ describe('WarpSheet', () => {
     fireEvent.click(screen.getByRole('button', { name: 'เข้าโรงเรียน' }))
     expect((await screen.findByRole('alert')).textContent).toContain('เลือกโรงเรียน')
     expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('on the campus it also lists the faculty buildings and walks to the door of the one tapped', async () => {
+    const { useOpenHouseUiStore } = await import('../../stores/useOpenHouseUiStore')
+    const { placementOf, doorTile } = await import('../../game/campusLayout')
+    const walker = vi.fn()
+    useOpenHouseUiStore.getState().setWalker(walker)
+    useWorldStore.setState({ currentMapKey: 'campus' })
+    const onClose = vi.fn()
+    render(<WarpSheet onClose={onClose} />)
+    const list = screen.getByRole('region', { name: 'ตึกคณะ' })
+    expect(within(list).getAllByRole('button')).toHaveLength(18)
+    fireEvent.click(within(list).getByRole('button', { name: 'วิศวกรรมศาสตร์' }))
+    const d = doorTile(placementOf('eng'))
+    expect(walker).toHaveBeenCalledWith(d.x, d.y)
+    expect(onClose).toHaveBeenCalled()
+    useOpenHouseUiStore.getState().setWalker(null)
+  })
+
+  it('elsewhere there is no building list', () => {
+    render(<WarpSheet onClose={() => {}} />)
+    expect(screen.queryByRole('region', { name: 'ตึกคณะ' })).toBeNull()
   })
 
   it('a guest only sees the room', () => {

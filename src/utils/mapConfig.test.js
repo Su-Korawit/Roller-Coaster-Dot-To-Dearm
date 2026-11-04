@@ -138,10 +138,42 @@ describe('resume boot target', () => {
 
   it('treats a built-in map as resumable even without a stored document', () => {
     expect(isResumableMapKey('room', [])).toBe(true)
-    expect(isResumableMapKey('campus', [])).toBe(false)
+    expect(isResumableMapKey('campus', [])).toBe(true) // the campus is built in now
+    expect(isResumableMapKey('nowhere', [])).toBe(false)
   })
 
   it('falls back to the entry map with no resume at all', () => {
     expect(resolveBootTarget(maps, null)).toEqual({ mapKey: 'room', point: null })
+  })
+})
+
+describe('registry flags the scene reads', async () => {
+  const { getDoc } = await import('firebase/firestore')
+  it('the study room config reaches the scene with room: true (without it no furniture is drawn)', async () => {
+    getDoc.mockResolvedValue({ exists: () => false })
+    expect((await getMapConfig('room')).room).toBe(true)
+  })
+
+  it('the campus config reaches the scene with campus: true and the campus tileset', async () => {
+    getDoc.mockResolvedValue({ exists: () => false })
+    const cfg = await getMapConfig('campus')
+    expect(cfg.campus).toBe(true)
+    expect(cfg.tilesets).toEqual({ 'Campus Tiles': 'rc/tilesets/campus_tiles.png' })
+    expect(cfg.collision).toEqual({ Water: true, Object: true })
+    expect(cfg.multiplayer).toBe(false)
+    expect(cfg.defaultSpawn).toBe('entry')
+  })
+
+  it('a stored document cannot switch these flags on for another map or off for the room', async () => {
+    getDoc.mockResolvedValue({ exists: () => true, data: () => ({ room: false, campus: true, tilesets: {} }) })
+    expect((await getMapConfig('room')).room).toBe(true)
+    expect((await getMapConfig('school_hub')).campus).toBe(false)
+  })
+
+  it('a map without flags has none', async () => {
+    getDoc.mockResolvedValue({ exists: () => false })
+    const cfg = await getMapConfig('indoor')
+    expect(cfg.room).toBe(false)
+    expect(cfg.campus).toBe(false)
   })
 })

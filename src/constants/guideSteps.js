@@ -2,7 +2,7 @@
 // is the event they cause). `available(ctx)` says whether the step can happen at all for this
 // student right now; unavailable steps are skipped, so nobody is ever stuck on one they cannot do.
 //   ctx = { signedIn, practiceDone, hasPurchased, canAffordSomething, hasUnplacedItem,
-//           hasCustomRoom, places }
+//           hasCustomRoom, places, hasCampus }
 export const GUIDE_STEPS = [
   {
     id: 'practice',
@@ -35,12 +35,12 @@ export const GUIDE_STEPS = [
     available: (c) => c.places > 1,
   },
   {
-    // Owned by the TCAS Plan sub-project; never available until that ships.
+    // Plans are filled from the Open House campus, so the step exists only where the campus does.
     id: 'plan',
     target: '[data-guide="slot-plan"]',
     doneOn: 'planned',
     textTh: 'เพิ่มคณะที่สนใจลงในแผนของคุณ',
-    available: () => false,
+    available: (c) => !!c.hasCampus,
   },
 ]
 

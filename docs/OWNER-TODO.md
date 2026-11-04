@@ -82,3 +82,7 @@ Deploy: `firebase deploy --only firestore:rules` แล้ว
 
 หมายเหตุ: ยังไม่มีปุ่ม "+ เพิ่มเข้าแผน" ในแอป จนกว่า Open House popup จะเสร็จ (มันเรียก `usePlanUiStore.openAdd(program)`)
 แอดมินเพิ่มเหตุการณ์ในปฏิทินได้พร้อมรอบ/ประเภท/รหัสวิชา เพื่อให้การ์ด "ต้องทำต่อไป" ตรงขึ้น
+
+## Open House campus (2026-10-23)
+
+ขั้นตอนสร้าง index ข้อมูลหลักสูตรต่อคณะ (`npm run refresh-openhouse-index -- --apply`) และอัปโหลด asset ของแคมปัส อยู่ใน `docs/open-house-ops.md` — จนกว่าจะรัน popup จะขึ้น "ข้อมูลตึกนี้กำลังอัปเดต"

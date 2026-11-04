@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { useEntitlementsStore } from './useEntitlementsStore'
 import { FREE_PLAN_SLOTS } from '../constants/entitlements'
+import { emitGuide } from '../lib/guideEvents'
 import {
   RANK_MAX, PLAN_VERSION, autoChecklist, mergeChecklist, isSubjectKey,
   nextFreeRank, normalizeRanks, migrateEntry,
@@ -94,6 +95,7 @@ export const usePlansStore = create(
           checklist: autoChecklist({ round, minGpax, scores }),
         })
         set((s) => ({ plans: [...s.plans, entry], activePlanId: entry.id }))
+        emitGuide('planned')
         return { ok: true, id: entry.id, rank }
       },
 

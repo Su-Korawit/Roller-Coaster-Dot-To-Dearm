@@ -80,3 +80,16 @@ describe('mapStoragePath', () => {
     expect(mapStoragePath('Grass')).toBe('maps/Grass.json')
   })
 })
+
+describe('Open House campus assets', () => {
+  it('declares the map, the tileset and the building sheet with local fallbacks', () => {
+    expect(GAME_ASSETS.find((a) => a.key === 'campus')).toMatchObject({ type: 'tilemapJSON', storagePath: 'maps/campus_v1.json', localPath: '/maps/campus.json' })
+    expect(GAME_ASSETS.find((a) => a.key === 'Campus Tiles')).toMatchObject({ type: 'image', storagePath: 'rc/tilesets/campus_tiles.png', localPath: '/assets/rc/campus_tiles.png' })
+    expect(GAME_ASSETS.find((a) => a.key === 'campus_buildings')).toMatchObject({ type: 'spritesheet', frameConfig: { frameWidth: 96, frameHeight: 80 }, localPath: '/assets/rc/campus_buildings.png' })
+  })
+
+  it('maps resolve to the shipped file and the versioned storage path', () => {
+    expect(localMapPath('campus')).toBe('/maps/campus.json')
+    expect(mapStoragePath('campus')).toBe('maps/campus_v1.json')
+  })
+})

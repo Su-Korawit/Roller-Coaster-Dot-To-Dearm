@@ -13,6 +13,17 @@ describe('usePlansStore', () => {
     usePlansStore.getState().resetPlans()
   })
 
+  it('adding a program tells the Guide (planned) once, and a refused add does not', async () => {
+    const { onGuideEvent } = await import('../lib/guideEvents')
+    const seen = []
+    const off = onGuideEvent((e) => seen.push(e))
+    const program = { universityId: 'u1', universityName: 'U', programId: 'p1', programName: 'P', buildingId: 'med', round: 1, projectName: null, minGpax: null, scores: [] }
+    expect(usePlansStore.getState().addFromProgram(program).ok).toBe(true)
+    expect(usePlansStore.getState().addFromProgram(program).ok).toBe(false) // duplicate
+    off()
+    expect(seen).toEqual(['planned'])
+  })
+
   it('adds a plan and makes it active', () => {
     const id = usePlansStore.getState().addPlan()
     const s = usePlansStore.getState()

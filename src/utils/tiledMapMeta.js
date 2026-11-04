@@ -23,6 +23,9 @@ function interactionsFrom(map) {
     seatId: propValue(o, 'seatId'),
     boardId: propValue(o, 'boardId'),
     route: propValue(o, 'route'),
+    // Open House campus (ADR-0026): building -> buildingId (a faculty door), directory -> the hall board
+    buildingId: propValue(o, 'buildingId'),
+    name: o.name || null,
   }))
 }
 

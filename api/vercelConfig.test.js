@@ -18,6 +18,7 @@ describe('vercel.json hub rewrites', () => {
     expect(byDest['/blog/:slug']).toBe('/api/content?route=article&slug=:slug')
     expect(byDest['/category/:cat']).toBe('/api/content?route=category&cat=:cat')
     expect(byDest['/search']).toBe('/api/content?route=search')
+    expect(byDest['/openhouse']).toBe('/api/content?route=openhouse')
   })
 
   it.each(HUB_HOSTS)('%s keeps robots.txt static', (host) => {

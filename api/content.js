@@ -20,6 +20,9 @@ import {
   articleBody,
   categoryBody,
   searchBody,
+  openHouseBody,
+  OPEN_HOUSE_TITLE,
+  OPEN_HOUSE_DESCRIPTION,
   notFoundBody,
   headFor,
   sitemapXml,
@@ -173,6 +176,16 @@ export default async function handler(req, res, deps = {}) {
             noindex: true,
           }),
           body: searchBody(),
+        })
+
+      case 'openhouse':
+        return html(200, {
+          head: headFor({
+            title: OPEN_HOUSE_TITLE,
+            description: OPEN_HOUSE_DESCRIPTION,
+            canonical: `${SITE_ORIGIN}/openhouse`,
+          }),
+          body: openHouseBody(),
         })
 
       case 'sitemap': {

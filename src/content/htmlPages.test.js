@@ -7,6 +7,7 @@ import {
   articleBody,
   categoryBody,
   searchBody,
+  openHouseBody,
   notFoundBody,
   headFor,
   sitemapXml,
@@ -128,6 +129,13 @@ describe('homeBody, categoryBody, searchBody, notFoundBody', () => {
     const html = categoryBody({ category: 'guide', items: [summary('g1', { category: 'guide' })] })
     expect(html).toContain('แนะแนวเลือกคณะ')
     expect(html).toContain('href="/blog/g1"')
+  })
+
+  it('the Open House page is a real page: a heading, what it is, and a link per faculty', () => {
+    const html = openHouseBody()
+    expect(html).toContain('<h1>')
+    expect(html).toContain('/openhouse?b=med')
+    expect((html.match(/\/openhouse\?b=/g) ?? []).length).toBe(18)
   })
 
   it('search and not-found pages are real pages with a way back', () => {
