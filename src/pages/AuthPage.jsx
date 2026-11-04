@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../stores/useAuthStore'
 import { currentSite } from '../lib/site'
 import Button from '../components/ui/Button'
@@ -33,6 +33,7 @@ function friendlyError(code) {
 export default function AuthPage() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const user = useAuthStore((s) => s.user)
   const [mode, setMode] = useState(params.get('mode') === 'register' ? 'register' : 'login')
   const [email, setEmail] = useState('')
@@ -47,8 +48,12 @@ export default function AuthPage() {
   // email login is for existing accounts, which ConsentGate covers if they have none on file.
 
   useEffect(() => {
-    if (user) navigate(currentSite === 'bag' ? '/' : '/home', { replace: true })
-  }, [user, navigate])
+    if (!user) return
+    // Go back to where the visitor came from (e.g. /studio) when it is an on-site path.
+    const back = location.state?.from
+    const onSite = typeof back === 'string' && back.startsWith('/') && !back.startsWith('//') && !back.includes('\\')
+    navigate(onSite ? back : currentSite === 'bag' ? '/' : '/home', { replace: true })
+  }, [user, navigate, location.state])
 
   function switchMode(m) {
     setMode(m)

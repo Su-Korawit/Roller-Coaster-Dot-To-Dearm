@@ -15,7 +15,6 @@ export default function WelcomeSection() {
   const toast = useToast()
   const [gamePreview, setGamePreview] = useState({ mediaUrl: '', mediaType: 'gif' })
   const [stats, setStats] = useState([])
-  const [news, setNews] = useState([])
   const [faq, setFaq] = useState([])
   const [testimonials, setTestimonials] = useState([])
   const [loading, setLoading] = useState(true)
@@ -24,16 +23,14 @@ export default function WelcomeSection() {
   async function reload() {
     setLoading(true)
     try {
-      const [gp, st, nw, fq, ts] = await Promise.all([
+      const [gp, st, fq, ts] = await Promise.all([
         getDoc(refs.welcomeGamePreview()),
         getDoc(refs.welcomeStats()),
-        getDocs(query(cols.welcomeNews, orderBy('createdAt', 'desc'))),
         getDocs(query(cols.welcomeFaq, orderBy('order', 'asc'))),
         getDocs(query(cols.welcomeTestimonials, orderBy('order', 'asc'))),
       ])
       if (gp.exists()) setGamePreview({ mediaType: 'gif', mediaUrl: '', ...gp.data() })
       setStats(st.exists() ? (st.data().items ?? []) : [])
-      setNews(nw.docs.map((d) => ({ id: d.id, ...d.data() })))
       setFaq(fq.docs.map((d) => ({ id: d.id, ...d.data() })))
       setTestimonials(ts.docs.map((d) => ({ id: d.id, ...d.data() })))
       setHasLoaded(true)
@@ -161,23 +158,14 @@ export default function WelcomeSection() {
         )}
       </section>
 
-      {/* NEWS */}
-      <ListEditor
-        title="News / Blog"
-        loading={showSkeleton}
-        items={news}
-        fields={[
-          { key: 'titleTh', label: 'หัวข้อ' },
-          { key: 'bodyTh', label: 'เนื้อหา', textarea: true },
-          { key: 'coverUrl', label: 'รูปปก URL (optional)' },
-        ]}
-        onAdd={(payload) => addItem(cols.welcomeNews, payload, true)}
-        onPatch={(id, payload) => patchItem(cols.welcomeNews, id, payload)}
-        onRemove={(id) => removeItem(cols.welcomeNews, id)}
-        upload={(file) => uploadWelcomeMedia(file, 'news')}
-        uploadTarget="coverUrl"
-        onError={(msg) => toast.error?.(msg)}
-      />
+      {/* NEWS moved to the content site: articles are written in the Studio. */}
+      <section>
+        <h2 className="text-lg font-bold text-ink mb-1">ข่าวและบทความ</h2>
+        <p className="text-sm text-ink-soft">
+          ข่าวบนหน้า Welcome มาจากบทความหมวด "ข่าว TCAS" ที่เผยแพร่แล้ว เขียนและเผยแพร่ได้ที่{' '}
+          <a href="/studio" className="text-brand underline">สตูดิโอบทความ</a>
+        </p>
+      </section>
 
       {/* FAQ */}
       <ListEditor

@@ -231,30 +231,30 @@ One-sentence test for any public-site section:
 
 ## 13. Page anatomy
 
-### Hub (`ilovetcas.com`) — top to bottom
+### Hub (`ilovetcas.com`) — content site, top to bottom
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│ SiteNav: [I LOVE TCAS]      Roadmap · คณะ · ข่าว · ตาราง │ [เข้าแอป] ← 1 CTA
+│ HubNav: [I LOVE TCAS]   ค้นหา…   หมวด · ห้องคุย │ [เข้าแอป] │ ← 1 CTA
 ├──────────────────────────────────────────────────────────┤
-│  I LOVE TCAS (pixel eyebrow, 10px)                        │
-│  พาดหัว OUTCOME ภาษาไทย (thai-font 800, 30–44px)          │  ← hero: text only,
-│  ประโยครองหนึ่งบรรทัด (ink-soft)                           │    tools are the hero
+│  ██ Banner เต็มจอ: ภาพแคมปัส (campus-hero.svg)             │  ← one idea:
+│  ██ พาดหัว + ปุ่ม "เข้าแอป" (utm medium=banner)            │    read, then play
+│  ██ บทความเด่น (siteConfig.featuredSlug หรือ ล่าสุด)        │
 ├──────────────────────────────────────────────────────────┤
-│  [ROADMAP]  [TCAS]  [NEWS]  [SCHOOL]   ← 4 tool cards     │  ← the product
-│  (การ์ด: icon tile → pixel eyebrow EN → ชื่อไทย 700 →     │
-│   คำอธิบาย 2 บรรทัด → เปิดเครื่องมือ →)                    │
+│  แถวหมวด × 5: ข่าว TCAS · ค่าย · แนะแนว · เทียบโครงการ ·     │  ← CategoryRow:
+│  ให้กำลังใจ  (ArticleCard ล่าสุด 3 ใบ + ดูทั้งหมด)          │    3 cards each
 ├──────────────────────────────────────────────────────────┤
-│  strip 3 ขั้น: ใช้ฟรีไม่ล็อกอิน → งานเก็บในเครื่อง →        │  ← "work your way"
-│  ล็อกอินเมื่อพร้อม sync                                     │
+│  OpenChatBand: ห้องคุย DEK70 บน LINE (ซ่อนถ้าไม่ตั้งลิงก์)   │
 ├──────────────────────────────────────────────────────────┤
-│  ██ แถบ ink เข้ม: PLAY YOUR PATH (pixel-title-dark)       │  ← app/game band
-│  ██ ชวนเข้าแอปเต็ม+เกม + CTA เดียว                         │    (premium slot)
-├──────────────────────────────────────────────────────────┤
-│  trust strip: ฟรี 100% · ข้อมูล MyTCAS · ไม่ต้องสมัคร      │
-│  WelcomeFooter                                            │
+│  ToolsStrip: Roadmap · TCAS · ตาราง · เกม (ไปแอป)          │  ← tools are a strip,
+│  SiteFooter                                               │    no longer the hero
 └──────────────────────────────────────────────────────────┘
 ```
+
+Article page: cover → title → category / author / date / reading time → body
+(`.article-body`, 17–18 px, line-height 1.75, ≤ 68 ch) → CtaBlock (open the app /
+join OpenChat) → related articles. Pages are server-rendered by `api/content.js`
+(ADR-0022); every link to the app carries `utm_source=hub`.
 
 ### Feature landing (LandingShell) — split hero
 

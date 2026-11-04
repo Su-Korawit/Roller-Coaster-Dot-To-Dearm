@@ -19,6 +19,7 @@ import { readFileSync, writeFileSync, mkdirSync, renameSync, existsSync } from '
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { SITES } from '../src/constants/sites.js'
+import { prerenderOutputs, robotsTxt } from './prerenderPlan.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const dist = resolve(root, 'dist')
@@ -141,19 +142,14 @@ function sitemap(site) {
 `
 }
 
-function robots(site, { indexable }) {
-  return indexable
-    ? `User-agent: *\nAllow: /\n\nSitemap: ${site.path}/sitemap.xml\n`
-    : `User-agent: *\nDisallow: /\n`
-}
-
 for (const key of PRERENDERED_KEYS) {
   const site = SITES[key]
   const out = resolve(dist, 'sites', key)
   mkdirSync(out, { recursive: true })
-  writeFileSync(resolve(out, 'index.html'), renderSite(site))
-  writeFileSync(resolve(out, 'sitemap.xml'), sitemap(site))
-  writeFileSync(resolve(out, 'robots.txt'), robots(site, { indexable: true }))
+  const plan = prerenderOutputs(key)
+  if (plan.index) writeFileSync(resolve(out, 'index.html'), renderSite(site))
+  if (plan.sitemap) writeFileSync(resolve(out, 'sitemap.xml'), sitemap(site))
+  if (plan.robots) writeFileSync(resolve(out, 'robots.txt'), robotsTxt(site, { indexable: true }))
   console.log(`prerendered sites/${key}`)
 }
 
@@ -162,7 +158,7 @@ for (const key of PRERENDERED_KEYS) {
 {
   const out = resolve(dist, 'sites', 'app')
   mkdirSync(out, { recursive: true })
-  writeFileSync(resolve(out, 'robots.txt'), robots(SITES.app, { indexable: false }))
+  writeFileSync(resolve(out, 'robots.txt'), robotsTxt(SITES.app, { indexable: false }))
   console.log('wrote sites/app robots.txt (noindex)')
 }
 

@@ -10,6 +10,7 @@ import FinanceSection from '../components/admin/FinanceSection'
 import WelcomeSection from '../components/admin/WelcomeSection'
 import FarmDataSection from '../components/admin/FarmDataSection'
 import IdeaRequestSection from '../components/admin/IdeaRequestSection'
+import HubSection from '../components/admin/HubSection'
 import { ToastProvider } from '../components/admin/Toast'
 import { useAuthStore } from '../stores/useAuthStore'
 import { ADMIN_DISPLAY_NAME, ADMIN_ROLES, getAdminSections } from '../constants/admin'
@@ -30,6 +31,7 @@ const ALL_TABS = [
   { id: 'finance',    label: 'Finance' },
   { id: 'welcome',    label: 'Welcome' },
   { id: 'farm',       label: '🌱 Farm Data' },
+  { id: 'hub',        label: 'Hub' },
 ]
 
 export default function AdminPage() {
@@ -99,6 +101,7 @@ export default function AdminPage() {
           {tab === 'finance'    && <FinanceSection />}
           {tab === 'welcome'    && <WelcomeSection />}
           {tab === 'farm'       && <FarmDataSection />}
+          {tab === 'hub'        && <HubSection />}
           {tab === 'idea-request' && <IdeaRequestSection />}
         </main>
       </div>

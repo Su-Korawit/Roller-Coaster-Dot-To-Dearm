@@ -1,23 +1,23 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
-
-const navigate = vi.fn()
-vi.mock('react-router-dom', () => ({ useNavigate: () => navigate }))
+import { describe, it, expect } from 'vitest'
+import { render, screen } from '@testing-library/react'
 
 const { default: NewsSection } = await import('./NewsSection')
 
 describe('NewsSection', () => {
-  beforeEach(() => navigate.mockClear())
-
   it('renders nothing when there is no news', () => {
     const { container } = render(<NewsSection news={[]} />)
     expect(container.firstChild).toBeNull()
   })
 
-  it('clicking a card navigates to the full-screen post page instead of opening a popup', () => {
-    render(<NewsSection news={[{ id: 'n1', titleTh: 'อัปเดต', bodyTh: 'รายละเอียดข่าว' }]} />)
-    fireEvent.click(screen.getByText('อัปเดต'))
-    expect(navigate).toHaveBeenCalledWith('/news/n1')
+  it('links each card to the article on the content site', () => {
+    render(<NewsSection news={[{ slug: 'exam-results', title: 'อัปเดต', excerpt: 'รายละเอียดข่าว', coverUrl: '' }]} />)
+    const link = screen.getByRole('link', { name: /อัปเดต/ })
+    expect(link.getAttribute('href')).toMatch(/\/blog\/exam-results/)
+  })
+
+  it('shows the excerpt and a cover when there is one', () => {
+    render(<NewsSection news={[{ slug: 'a-1', title: 'หัวข้อ', excerpt: 'คำโปรย', coverUrl: 'https://x.org/c.png' }]} />)
+    expect(screen.getByText('คำโปรย')).toBeTruthy()
   })
 })

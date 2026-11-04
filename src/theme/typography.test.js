@@ -22,7 +22,7 @@ const WORDMARK_FILES = [
   'components/TopBar.jsx',
   'components/welcome/WelcomeNav.jsx',
   'pages/AuthPage.jsx',
-  'pages/HubPage.jsx',
+  'components/hub/HubNav.jsx',
   'pages/legal/LegalPage.jsx',
   'pages/RegisterPage.jsx',
   'components/FeatureLayout.jsx',

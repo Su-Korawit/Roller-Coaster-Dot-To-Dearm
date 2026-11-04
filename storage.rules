@@ -88,6 +88,26 @@ service firebase.storage {
       allow write: if isSuperAdmin();
     }
 
+    // Article images for the content site (Studio). World-readable; written by
+    // creators (custom claim) or the super-admin; images only, under 5 MB.
+    function isCreator() {
+      return request.auth != null && request.auth.token.get('creator', false) == true;
+    }
+    // A creator may only touch images under THEIR OWN draft: otherwise any creator
+    // could swap the cover of someone else's published article at the same URL.
+    function ownsDraft(draftId) {
+      return isCreator()
+        && firestore.exists(/databases/(default)/documents/articleDrafts/$(draftId))
+        && firestore.get(/databases/(default)/documents/articleDrafts/$(draftId)).data.authorUid == request.auth.uid;
+    }
+    match /articles/{draftId}/{file} {
+      allow read: if true;
+      allow create, update: if (isSuperAdmin() || ownsDraft(draftId))
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if isSuperAdmin() || ownsDraft(draftId);
+    }
+
     // Server-consumed public datasets (e.g. the MyTCAS snapshot that
     // /api/mytcas falls back to during TCAS cycle transitions). World-readable
     // by design — the Vercel function fetches these anonymously via alt=media.

@@ -6,6 +6,7 @@ import { getAdminSections } from './constants/admin'
 import OnboardingModal from './components/onboarding/OnboardingModal'
 import ConsentGate from './components/ConsentGate'
 import LoadingScene from './components/ui/LoadingScene'
+import RequireCreator from './components/studio/RequireCreator'
 import FxLayer from './components/hud/FxLayer'
 import { installUiSounds } from './lib/sfx'
 import { useConsentStore } from './stores/useConsentStore'
@@ -22,6 +23,10 @@ const RoadmapPage = lazy(() => import('./pages/RoadmapPage'))
 const RoadmapPublicView = lazy(() => import('./pages/RoadmapPublicView'))
 const WelcomePage = lazy(() => import('./pages/WelcomePage'))
 const NewsPostPage = lazy(() => import('./pages/NewsPostPage'))
+const StudioListPage = lazy(() => import('./pages/studio/StudioListPage'))
+// TipTap lives only in the editor chunk.
+const StudioEditorPage = lazy(() => import('./pages/studio/StudioEditorPage'))
+const StudioPreviewPage = lazy(() => import('./pages/studio/StudioPreviewPage'))
 const MusicCallback = lazy(() => import('./pages/MusicCallback'))
 const PrivacyPage = lazy(() => import('./pages/legal/PrivacyPage'))
 const TermsPage = lazy(() => import('./pages/legal/TermsPage'))
@@ -30,7 +35,10 @@ const DevUiKit = import.meta.env.DEV ? lazy(() => import('./pages/DevUiKit')) : 
 
 // Feature-site pages — separate lazy chunks so hub/roadmap/tcas/news/school
 // never pull the Phaser bundle.
-const HubPage = lazy(() => import('./pages/HubPage'))
+const HubHome = lazy(() => import('./pages/hub/HubHome'))
+const ArticlePage = lazy(() => import('./pages/hub/ArticlePage'))
+const CategoryPage = lazy(() => import('./pages/hub/CategoryPage'))
+const SearchPage = lazy(() => import('./pages/hub/SearchPage'))
 const RoadmapLanding = lazy(() => import('./pages/landing/RoadmapLanding'))
 const SchoolLanding = lazy(() => import('./pages/landing/SchoolLanding'))
 const NewsHomePage = lazy(() => import('./pages/landing/NewsHomePage'))
@@ -86,9 +94,10 @@ function ExternalRedirect({ to }) {
   return null
 }
 
+// Legacy hub news URLs now live under /blog (the migration keeps each old id as the slug).
 function HubNewsRedirect() {
   const { id } = useParams()
-  return <ExternalRedirect to={`https://news.ilovetcas.com/${id}`} />
+  return <Navigate to={`/blog/${id}`} replace />
 }
 
 function AppSiteRoutes() {
@@ -97,6 +106,13 @@ function AppSiteRoutes() {
       {/* Admin — full-width desktop, outside mobile frame */}
       <Route element={<RequireAdmin />}>
         <Route path="/admin" element={<AdminPage />} />
+      </Route>
+
+      {/* Studio — creators write articles for the content site (hub) */}
+      <Route element={<RequireCreator />}>
+        <Route path="/studio" element={<StudioListPage />} />
+        <Route path="/studio/preview/:draftId" element={<StudioPreviewPage />} />
+        <Route path="/studio/:draftId" element={<StudioEditorPage />} />
       </Route>
 
       {/* Public — landing + auth, outside the mobile frame so the page can scroll */}
@@ -122,7 +138,10 @@ function AppSiteRoutes() {
 function HubSiteRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<HubPage />} />
+      <Route path="/" element={<HubHome />} />
+      <Route path="/blog/:slug" element={<ArticlePage />} />
+      <Route path="/category/:cat" element={<CategoryPage />} />
+      <Route path="/search" element={<SearchPage />} />
       <Route path="/home" element={<ExternalRedirect to="https://app.ilovetcas.com/home" />} />
       <Route path="/roadmap" element={<ExternalRedirect to="https://app.ilovetcas.com/roadmap" />} />
       <Route path="/auth" element={<ExternalRedirect to="https://app.ilovetcas.com/auth" />} />
@@ -252,7 +271,9 @@ function App() {
   // the static landing HTML, keep the head tags matching the current site.
   useEffect(() => {
     const site = SITES[currentSite]
-    if (!site) return
+    // The hub's head is rendered per page by the server (and pages set their own title);
+    // overwriting the description here would give every article the home description.
+    if (!site || currentSite === 'hub') return
     document.title = site.title
     document.querySelector('meta[name="description"]')?.setAttribute('content', site.description)
   }, [])

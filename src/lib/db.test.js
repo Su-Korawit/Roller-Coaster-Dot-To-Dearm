@@ -292,3 +292,35 @@ describe('file bag refs/cols/shapes (ADR-0016)', () => {
     expect(result.createdAt).toEqual({ _type: 'serverTimestamp' })
   })
 })
+
+describe('content site refs, cols and queries', () => {
+  it('points refs at the article collections and the hub config', () => {
+    expect(refs.article('my-slug')).toEqual({ _path: 'articles/my-slug' })
+    expect(refs.articleDraft('d1')).toEqual({ _path: 'articleDrafts/d1' })
+    expect(refs.siteConfigHub()).toEqual({ _path: 'siteConfig/hub' })
+    expect(cols.articles).toEqual({ _col: 'articles' })
+    expect(cols.articleDrafts).toEqual({ _col: 'articleDrafts' })
+  })
+
+  it('orders published articles newest first with a limit', async () => {
+    const { orderBy, limit } = await import('firebase/firestore')
+    orderBy.mockClear()
+    limit.mockClear()
+    queries.publishedArticles(12)
+    expect(orderBy).toHaveBeenCalledWith('publishedAt', 'desc')
+    expect(limit).toHaveBeenCalledWith(12)
+    queries.publishedArticles()
+    expect(limit).toHaveBeenLastCalledWith(60)
+  })
+
+  it('filters drafts by author without a composite-index orderBy, and lists all by updatedAt', async () => {
+    const { where, orderBy } = await import('firebase/firestore')
+    where.mockClear()
+    orderBy.mockClear()
+    queries.draftsByAuthor('alice')
+    expect(where).toHaveBeenCalledWith('authorUid', '==', 'alice')
+    expect(orderBy).not.toHaveBeenCalled()
+    queries.allDrafts()
+    expect(orderBy).toHaveBeenCalledWith('updatedAt', 'desc')
+  })
+})

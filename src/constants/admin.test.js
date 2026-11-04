@@ -32,3 +32,16 @@ describe('welcome section access', () => {
     expect(getAdminSections('o.korawitt@gmail.com')).toContain('welcome')
   })
 })
+
+describe('hub section access', () => {
+  it('includes hub in ADMIN_SECTIONS and grants it to the super-admin', () => {
+    expect(ADMIN_SECTIONS).toContain('hub')
+    expect(getAdminSections('o.korawitt@gmail.com')).toContain('hub')
+  })
+
+  it('keeps hub away from every other admin (creator grants are super-admin only)', () => {
+    for (const email of ['takadaoni07@gmail.com', 'play198725@gmail.com', 'itcity9476@gmail.com']) {
+      expect(getAdminSections(email)).not.toContain('hub')
+    }
+  })
+})
