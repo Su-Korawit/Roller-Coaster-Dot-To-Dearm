@@ -216,6 +216,29 @@ describe('dial-due (outbound)', () => {
     expect((await amb.store.read('u1')).lastPhoneStatus).toBe('unknown')
   })
 
+  it('aborts if consent is revoked between reservation and the external call', async () => {
+    const s = setup({ ...live, DIALING_ENABLED: 'true' })
+    await ready(s)
+    const orig = s.store.read.bind(s.store)
+    s.store.read = async (uid) => { await s.call('revoke', { body: {} }); return orig(uid) }
+    expect((await cron(s)).body.dialed).toBe(0)
+    expect(s.retell.createPhoneCall).not.toHaveBeenCalled()
+  })
+
+  it('call_analyzed changes the schedule once, only for a call we issued', async () => {
+    const s = setup({ ...live, DIALING_ENABLED: 'true' })
+    await ready(s)
+    await cron(s)
+    const key = Object.keys((await s.store.read('u1')).reservations)[0]
+    const hook = (cb) => s.call('webhook', { auth: false, headers: { 'x-retell-signature': 'sig' }, body: { event: 'call_analyzed', call: { metadata: { uid: 'u1', callKey: key, kind: 'phone' }, call_analysis: { custom_analysis_data: { callback_time: cb } } } } })
+    await hook('17:00')
+    expect((await s.store.read('u1')).schedule.time).toBe('17:00')
+    await hook('10:00') // replay/other value must not rewind
+    expect((await s.store.read('u1')).schedule.time).toBe('17:00')
+    await s.call('webhook', { auth: false, headers: { 'x-retell-signature': 'sig' }, body: { event: 'call_analyzed', call: { metadata: { uid: 'u1', callKey: 'unknown' }, call_analysis: { custom_analysis_data: { callback_time: '09:30' } } } } })
+    expect((await s.store.read('u1')).schedule.time).toBe('17:00')
+  })
+
   it('stop (หยุดรับสาย) takes effect immediately', async () => {
     const s = setup({ ...live, DIALING_ENABLED: 'true' })
     await ready(s)

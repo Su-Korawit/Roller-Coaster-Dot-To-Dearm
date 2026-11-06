@@ -6,7 +6,7 @@ import crypto from 'node:crypto'
 import { Buffer } from 'node:buffer'
 import {
   limitsFromEnv, buildConsent, consentValid, normalizeThaiPhone, validSchedule, reserveWebCall,
-  settleCall, canDialOut, reservePhoneCall, scheduleDue, dialogVars, publicStatus,
+  settleCall, canDialOut, reservePhoneCall, scheduleDue, dialogVars, publicStatus, bkk,
 } from './logic.js'
 
 const HTTP = {
@@ -86,6 +86,15 @@ export function createVoiceHandler(deps) {
       })
       return { ok: false, reason: 'not_live' }
     }
+    // narrow the revoke/stop race: re-read right before the external call
+    const fresh = await store.read(uid)
+    if (fresh.doNotCall || !consentValid(fresh.consent, t) || fresh.phone !== decision.phone) {
+      await store.tx(uid, t, (state, global) => {
+        const s = settleCall(state, global, { callKey, actualSeconds: 0, now: t })
+        return { state: s.state, global: s.global, result: null }
+      })
+      return { ok: false, reason: 'revoked_before_dial' }
+    }
     const v = dialogVars(decision.profile || {})
     try {
       await retell.createPhoneCall({
@@ -137,8 +146,12 @@ export function createVoiceHandler(deps) {
         const cb = call.call_analysis?.custom_analysis_data?.callback_time
         if (typeof cb === 'string' && /^\d{2}:\d{2}$/.test(cb)) {
           await store.tx(md.uid, t, (state) => {
-            if (!state.schedule || state.doNotCall || !validSchedule({ days: state.schedule.days, time: cb })) return { result: null }
-            return { state: { ...state, schedule: { ...state.schedule, time: cb } }, result: null }
+            const r = state.reservations[md.callKey]
+            // only for a call we issued, only once (replayed webhooks must not rewind the schedule)
+            if (!r || r.analyzed) return { result: null }
+            const marked = { ...state, reservations: { ...state.reservations, [md.callKey]: { ...r, analyzed: true } } }
+            if (!state.schedule || state.doNotCall || !validSchedule({ days: state.schedule.days, time: cb })) return { state: marked, result: null }
+            return { state: { ...marked, schedule: { ...state.schedule, time: cb } }, result: null }
           })
         }
       }
@@ -149,7 +162,7 @@ export function createVoiceHandler(deps) {
     if (action === 'dial-due') {
       if (!e.CRON_SECRET || !safeEqual(bearer(req), e.CRON_SECRET)) return send(res, 401, { ok: false, error: 'unauthorized' })
       if (e.DIALING_ENABLED !== 'true') return send(res, 200, { ok: true, dialed: 0, disabled: true })
-      const only = req.body?.uid ? [String(req.body.uid)] : await store.listDialReady()
+      const only = req.body?.uid ? [String(req.body.uid)] : await store.listDialReady(bkk(t).weekday)
       const results = []
       for (const uid of only) results.push(await dialUser(uid, { ignoreSchedule: !!req.body?.uid }))
       return send(res, 200, { ok: true, dialed: results.filter((r) => r.ok).length, checked: results.length })
