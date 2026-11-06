@@ -65,21 +65,25 @@ export default function PasscodeScreen({ user, mode, onDone }) {
     await signOut()
   }
 
-  const linkBase = 'thai-font text-sm px-4 py-1.5 rounded-full underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand'
-  const linkTone = dark ? 'bg-ink/45 text-white' : 'bg-paper/75 text-ink'
+  const linkBase = 'thai-font text-base font-bold px-3 py-1 rounded-ui underline underline-offset-4 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand'
+  const linkTone = dark ? 'text-white' : 'text-ink'
+  // Plain text, made to stand out on busy art with a soft halo instead of a box
+  const linkGlow = { textShadow: dark ? '0 1px 3px rgba(0,0,0,.85), 0 0 10px rgba(0,0,0,.6)' : '0 0 3px #fff, 0 0 8px #fff, 0 0 14px rgba(255,255,255,.9)' }
   const panelTone = dark ? 'bg-ink/25' : 'bg-paper/40'
 
   return (
     <Wallpaper scroll className="flex flex-col items-center px-6">
-      {/* Big clock at the top */}
-      <div className="relative z-10 mt-[6vh] text-center os-no-select shrink-0">
-        <p className="font-display text-7xl sm:text-8xl lg:text-9xl font-bold tracking-tight leading-none">{formatTime(now)}</p>
-        <p className="thai-font mt-2 text-lg sm:text-xl opacity-85">{formatDate(now)}</p>
-      </div>
+      {/* Big clock — phones/iPads only; the desktop lock screen is just the passcode, dead centre */}
+      {compact && (
+        <div className="relative z-10 mt-[6vh] text-center os-no-select shrink-0">
+          <p className="font-display text-7xl sm:text-8xl lg:text-9xl font-bold tracking-tight leading-none">{formatTime(now)}</p>
+          <p className="thai-font mt-2 text-lg sm:text-xl opacity-85">{formatDate(now)}</p>
+        </div>
+      )}
 
-      {/* Profile + passcode in the middle of the screen, forgot-link right under them */}
+      {/* Profile + passcode in the middle of the screen */}
       <div className="relative z-10 flex-1 w-full flex flex-col items-center justify-center py-6">
-        <div className={`flex flex-col items-center gap-1 rounded-sheet backdrop-blur-sm px-8 py-6 ${panelTone}`}>
+        <div className={`relative flex flex-col items-center gap-1 rounded-sheet backdrop-blur-sm px-8 py-6 ${panelTone}`}>
           <div className="flex flex-col items-center gap-1 text-center">
             {!compact && (
               <>
@@ -108,18 +112,19 @@ export default function PasscodeScreen({ user, mode, onDone }) {
           <div className="mt-3">
             <PinPad onComplete={handlePin} shakeKey={shake} disabled={busy} dark={dark} showKeypad={compact} />
           </div>
-        </div>
 
-        <div className="mt-6">
-          {mode === 'unlock' ? (
-            <button type="button" onClick={forgot} className={`${linkBase} ${linkTone}`}>
-              ลืมรหัสผ่าน? ออกจากระบบแล้วเข้าใหม่ด้วย Google
-            </button>
-          ) : (
-            <button type="button" onClick={() => signOut()} className={`${linkBase} ${linkTone}`}>
-              ไม่ใช่คุณ? ออกจากระบบ
-            </button>
-          )}
+          {/* Sits under the panel without pushing it, so the panel itself stays dead centre */}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4">
+            {mode === 'unlock' ? (
+              <button type="button" onClick={forgot} className={`${linkBase} ${linkTone}`} style={linkGlow}>
+                ลืมรหัสผ่าน? ออกจากระบบแล้วเข้าใหม่ด้วย Google
+              </button>
+            ) : (
+              <button type="button" onClick={() => signOut()} className={`${linkBase} ${linkTone}`} style={linkGlow}>
+                ไม่ใช่คุณ? ออกจากระบบ
+              </button>
+            )}
+          </div>
         </div>
       </div>
       {pickAvatar && <AvatarSheet user={user} onClose={() => setPickAvatar(false)} />}
