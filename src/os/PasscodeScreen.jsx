@@ -3,7 +3,7 @@ import { useAuthStore } from '../stores/useAuthStore'
 import Wallpaper from './Wallpaper'
 import { useWallpaperDark } from './useWallpaperDark'
 import PinPad from './PinPad'
-import { useClock, formatTime, formatDate } from './hooks'
+import { useClock, useDevice, useTouchPrimary, formatTime, formatDate } from './hooks'
 import { PIN_LENGTH, savePasscode, verifyPasscode, clearPasscode } from './passcode'
 
 // mode 'set'    → first time on this device: choose a PIN, then confirm it
@@ -12,6 +12,10 @@ export default function PasscodeScreen({ user, mode, onDone }) {
   const signOut = useAuthStore((s) => s.signOut)
   const now = useClock()
   const dark = useWallpaperDark()
+  const { device } = useDevice()
+  const touch = useTouchPrimary()
+  // Phones and iPads (also iPad landscape): number pad, no avatar/name. Desktop/Mac: type on the keyboard.
+  const compact = device !== 'desktop' || touch
   const [first, setFirst] = useState(null)   // 'set' mode: the PIN typed in step 1
   const [message, setMessage] = useState('')
   const [shake, setShake] = useState(0)
@@ -65,23 +69,28 @@ export default function PasscodeScreen({ user, mode, onDone }) {
       </div>
 
       <div className="relative z-10 mt-8 flex flex-col items-center gap-1 text-center">
-        {user.photoURL ? (
-          <img src={user.photoURL} alt="" referrerPolicy="no-referrer" className="w-14 h-14 rounded-full border-2 border-line" />
-        ) : (
-          <span className="w-14 h-14 rounded-full border-2 border-line bg-paper text-ink font-display text-xl font-bold flex items-center justify-center">
-            {name.trim().charAt(0).toUpperCase()}
-          </span>
+        {!compact && (
+          <>
+            {user.photoURL ? (
+              <img src={user.photoURL} alt="" referrerPolicy="no-referrer" className="w-14 h-14 rounded-full border-2 border-line" />
+            ) : (
+              <span className="w-14 h-14 rounded-full border-2 border-line bg-paper text-ink font-display text-xl font-bold flex items-center justify-center">
+                {name.trim().charAt(0).toUpperCase()}
+              </span>
+            )}
+            <p className="thai-font text-sm font-semibold mt-1">{name}</p>
+          </>
         )}
-        <p className="thai-font text-sm font-semibold mt-1">{name}</p>
         <p className="thai-font text-sm opacity-80" aria-live="polite">{title}</p>
         {mode === 'set' && !first && (
           <p className="thai-font text-xs opacity-70">ตัวเลข {PIN_LENGTH} หลัก เก็บไว้ในเครื่องนี้เท่านั้น</p>
         )}
+        {!compact && <p className="thai-font text-xs opacity-70">พิมพ์ตัวเลขบนคีย์บอร์ดได้เลย</p>}
         <p className="thai-font text-xs text-danger font-semibold h-4" role="alert">{message}</p>
       </div>
 
       <div className="relative z-10 mt-4">
-        <PinPad onComplete={handlePin} shakeKey={shake} disabled={busy} dark={dark} />
+        <PinPad onComplete={handlePin} shakeKey={shake} disabled={busy} dark={dark} showKeypad={compact} />
       </div>
 
       <div className="relative z-10 mt-auto mb-6 thai-font text-xs">

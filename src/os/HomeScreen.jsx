@@ -5,7 +5,7 @@ import { useWallpaperDark } from './useWallpaperDark'
 import AppIcon from './AppIcon'
 import AppDetailsSheet from './AppDetailsSheet'
 import WallpaperSheet from './WallpaperSheet'
-import { HELP_APP, findApp, homeAppIds, paginate } from './apps'
+import { HELP_APP, HELP_BUTTON_ENABLED, findApp, homeAppIds, paginate } from './apps'
 import { useDevice, useClock, formatTime, formatDate } from './hooks'
 import { useOsStore } from '../stores/useOsStore'
 
@@ -116,7 +116,8 @@ export default function HomeScreen({ onOpenApp, onLock }) {
         </div>
       </div>
 
-      {/* "พี่ช่วยเหลือ" — floating dark button, bottom-right (sketch) */}
+      {/* "พี่ช่วยเหลือ" — floating dark button, bottom-right (sketch). Hidden until HELP_BUTTON_ENABLED. */}
+      {HELP_BUTTON_ENABLED && (
       <button
         type="button"
         onClick={() => onOpenApp(HELP_APP)}
@@ -128,6 +129,7 @@ export default function HomeScreen({ onOpenApp, onLock }) {
       >
         <img src="/assets/voice/pijaidee-smile.png" alt="" width={36} height={36} draggable={false} style={{ imageRendering: 'pixelated' }} />
       </button>
+      )}
 
       {details && (
         <AppDetailsSheet

@@ -31,6 +31,9 @@ const withComponent = (app) => ({ ...app, Component: lazy(app.load) })
 
 export const OS_APPS = RAW_APPS.map(withComponent)
 
+// The floating help button is hidden for now; flip this to bring it back on the Home screen.
+export const HELP_BUTTON_ENABLED = false
+
 // The floating help button ("พี่ช่วยเหลือ"). Not a grid app.
 export const HELP_APP = withComponent({
   id: 'help',

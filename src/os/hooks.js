@@ -21,6 +21,28 @@ export function useDevice() {
   return info
 }
 
+// True when the main pointer is a finger (phones, iPads — even an iPad in landscape, which is
+// as wide as a desktop). Drives on-screen keypad vs. physical keyboard on the passcode screen.
+export function isTouchPrimary() {
+  try {
+    return window.matchMedia('(pointer: coarse)').matches
+  } catch {
+    return false
+  }
+}
+
+export function useTouchPrimary() {
+  const [touch, setTouch] = useState(isTouchPrimary)
+  useEffect(() => {
+    let mq
+    try { mq = window.matchMedia('(pointer: coarse)') } catch { return undefined }
+    const onChange = () => setTouch(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  return touch
+}
+
 export function useClock() {
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
