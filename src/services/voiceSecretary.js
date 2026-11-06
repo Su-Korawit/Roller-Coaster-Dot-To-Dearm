@@ -27,7 +27,9 @@ export async function voiceApi(action, { method = 'POST', body } = {}) {
   }
   let json = null
   try { json = await res.json() } catch { /* empty body */ }
-  if (!res.ok || !json?.ok) throw new VoiceError(json?.error || 'server_error')
+  // No JSON back (404 HTML from `vite dev`, or API not deployed) = feature not available here.
+  if (!json) throw new VoiceError('voice_unavailable')
+  if (!res.ok || !json.ok) throw new VoiceError(json.error || 'server_error')
   return json
 }
 
