@@ -24,20 +24,23 @@ async function post(path, apiKey, body, fetchImpl = fetch) {
 }
 
 export function createWebCall({ apiKey, agentId, vars, metadata, fetchImpl }) {
-  return post('/v2/create-web-call', apiKey, {
+  // v3 (v2 was retired by Retell); same body. Response adds transport/ice_servers/expires_at.
+  return post('/v3/create-web-call', apiKey, {
     agent_id: agentId,
     retell_llm_dynamic_variables: vars,
     metadata,
   }, fetchImpl)
 }
 
-export function createPhoneCall({ apiKey, agentId, fromNumber, toNumber, vars, metadata, fetchImpl }) {
+export function createPhoneCall({ apiKey, agentId, fromNumber, toNumber, vars, metadata, idempotencyKey, fetchImpl }) {
   return post('/v2/create-phone-call', apiKey, {
     from_number: fromNumber,
     to_number: toNumber,
     override_agent_id: agentId,
     retell_llm_dynamic_variables: vars,
     metadata,
+    // a retried request with the same key cannot dial twice
+    ...(idempotencyKey ? { idempotency_key: String(idempotencyKey).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 255).padEnd(5, '0') } : {}),
   }, fetchImpl)
 }
 

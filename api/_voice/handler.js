@@ -99,7 +99,7 @@ export function createVoiceHandler(deps) {
     try {
       await retell.createPhoneCall({
         apiKey: e.RETELL_API_KEY, agentId: e.RETELL_AGENT_ID, fromNumber: e.RETELL_FROM_NUMBER,
-        toNumber: decision.phone, vars: v, metadata: { uid, callKey, kind: 'phone' },
+        toNumber: decision.phone, vars: v, metadata: { uid, callKey, kind: 'phone' }, idempotencyKey: callKey,
       })
       return { ok: true }
     } catch (err) {
@@ -256,7 +256,10 @@ export function createVoiceHandler(deps) {
         const out = await retell.createWebCall({
           apiKey: e.RETELL_API_KEY, agentId: e.RETELL_AGENT_ID, vars, metadata: { uid, callKey, kind: 'web' },
         })
-        return send(res, 200, { ok: true, mock: false, access_token: out.access_token, call_id: out.call_id, reservedSeconds: r.seconds })
+        return send(res, 200, {
+          ok: true, mock: false, access_token: out.access_token, call_id: out.call_id,
+          transport: out.transport, ice_servers: out.ice_servers, reservedSeconds: r.seconds,
+        })
       } catch {
         await refund()
         return fail(res, 'upstream_failed')
