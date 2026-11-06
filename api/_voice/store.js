@@ -14,6 +14,7 @@ export function derive(state) {
   const c = state.consent
   return {
     ...state,
+    dialDays: state.schedule?.days || [],
     dialReady: !!(state.paid && state.schedule && state.phone && !state.doNotCall && c && c.granted && !c.revokedAt),
   }
 }
@@ -60,8 +61,9 @@ export function createFirestoreStore(admin) {
       const s = await db.collection(GLOBAL_COL).doc(bkk(now).dayKey).get()
       return s.exists ? { ...emptyGlobal(), ...s.data() } : emptyGlobal()
     },
-    async listDialReady(limit = 200) {
-      const q = await db.collection(USER_COL).where('dialReady', '==', true).limit(limit).get()
+    // only users whose schedule includes today's weekday (keeps the scan small as users grow)
+    async listDialReady(weekday, limit = 500) {
+      const q = await db.collection(USER_COL).where('dialReady', '==', true).where('dialDays', 'array-contains', weekday).limit(limit).get()
       return q.docs.map((d) => d.id)
     },
     async verifyToken(idToken) {
@@ -93,8 +95,8 @@ export function createMemoryStore() {
     async readGlobal(now) {
       return globals.get(bkk(now).dayKey) || emptyGlobal()
     },
-    async listDialReady() {
-      return [...users.entries()].filter(([, s]) => s.dialReady).map(([id]) => id)
+    async listDialReady(weekday) {
+      return [...users.entries()].filter(([, s]) => s.dialReady && s.dialDays.includes(weekday)).map(([id]) => id)
     },
     async verifyToken(t) {
       if (!t.startsWith('uid:')) throw new Error('bad token')

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Phone, PhoneOff, Loader2, ShieldCheck } from 'lucide-react'
+import { PhoneOff, Loader2, ShieldCheck } from 'lucide-react'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { usePlansStore } from '../../stores/usePlansStore'
 import { fetchStatus, voiceApi, buildStudyPlan, VoiceError } from '../../services/voiceSecretary'
@@ -7,6 +7,10 @@ import { startVoiceCall } from '../../services/voiceCall'
 import {
   SECRETARY_NAME, CONSENT_TEXT, GUARDIAN_TEXT, UI_TEXT, DAY_LABELS,
 } from '../../constants/voiceCopy'
+
+const IMG = '/assets/voice/'
+const PIJAIDEE = { idle: 'pijaidee-smile.png', connecting: 'pijaidee-listen.png', talking: 'pijaidee-listen.png', ended: 'pijaidee-cheer.png', error: 'pijaidee-listen.png' }
+const PHONE_STATUS_ICON = { dialing: 'call-status-calling.png', no_answer: 'call-status-busy.png', busy: 'call-status-busy.png', declined: 'call-status-busy.png', answered: 'call-status-ended.png' }
 
 const btn = 'px-btn px-4 py-2.5 text-[14px] font-bold thai-font border-2 border-line bg-paper text-ink disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand'
 const btnPrimary = `${btn} bg-brand-strong text-white`
@@ -100,6 +104,7 @@ function CallButton({ status, name }) {
   const busy = phase === 'connecting' || phase === 'talking'
   return (
     <div className="space-y-2">
+      <img src={`${IMG}${PIJAIDEE[phase]}`} alt="พี่ใจดี" width="96" height="96" className="w-24 h-24 mx-auto [image-rendering:pixelated]" />
       {(status.mock || mock) && <p className="thai-font text-[12px] text-warn-strong">{UI_TEXT.mockBadge}</p>}
       {status.trial?.phase === 'trial' && <p className="thai-font text-[12px] text-ink-soft">{UI_TEXT.trialLeft(status.trial.daysLeft)}</p>}
       {status.trial?.phase === 'expired' ? (
@@ -109,7 +114,9 @@ function CallButton({ status, name }) {
         </div>
       ) : (
         <button className={btnPrimary} disabled={phase === 'connecting'} onClick={busy ? stop : start} aria-live="polite">
-          {busy ? <PhoneOff size={16} className="inline mr-2" aria-hidden="true" /> : <Phone size={16} className="inline mr-2" aria-hidden="true" />}
+          {busy
+            ? <PhoneOff size={16} className="inline mr-2" aria-hidden="true" />
+            : <img src={`${IMG}voice-talk-button.png`} alt="" width="20" height="20" className="inline mr-2 w-5 h-5 [image-rendering:pixelated]" />}
           {phase === 'connecting' ? UI_TEXT.connecting : phase === 'talking' ? UI_TEXT.endButton : UI_TEXT.talkButton}
         </button>
       )}
@@ -192,6 +199,9 @@ export default function VoiceSecretaryPanel() {
         </button>
         <button className={btn} onClick={async () => { await voiceApi('revoke'); load() }}>{UI_TEXT.revoke}</button>
       </section>
+      {st.lastPhoneStatus && PHONE_STATUS_ICON[st.lastPhoneStatus] && (
+        <img src={`${IMG}${PHONE_STATUS_ICON[st.lastPhoneStatus]}`} alt="" width="32" height="32" className="w-8 h-8 [image-rendering:pixelated]" />
+      )}
       {st.doNotCall && <p role="status" className="thai-font text-[13px] text-ink-soft">{UI_TEXT.stopped}</p>}
     </div>
   )
