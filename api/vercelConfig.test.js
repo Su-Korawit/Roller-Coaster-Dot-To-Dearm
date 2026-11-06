@@ -13,12 +13,17 @@ const rewritesFor = (host) => config.rewrites.filter((r) => hostOf(r) === host)
 describe('vercel.json hub rewrites', () => {
   it.each(HUB_HOSTS)('%s sends content routes to the content function', (host) => {
     const byDest = Object.fromEntries(rewritesFor(host).map((r) => [r.source, r.destination]))
-    expect(byDest['/']).toBe('/api/content?route=home')
+    expect(byDest['/']).toBeUndefined()   // ADR-0029: the apex homepage is the OS shell, not the content home
     expect(byDest['/sitemap.xml']).toBe('/api/content?route=sitemap')
     expect(byDest['/blog/:slug']).toBe('/api/content?route=article&slug=:slug')
     expect(byDest['/category/:cat']).toBe('/api/content?route=category&cat=:cat')
     expect(byDest['/search']).toBe('/api/content?route=search')
     expect(byDest['/openhouse']).toBe('/api/content?route=openhouse')
+  })
+
+  it.each(HUB_HOSTS)('%s serves the OS shell (SPA) at / instead of the content home', (host) => {
+    expect(rewritesFor(host).some((r) => r.source === '/')).toBe(false)
+    expect(config.rewrites.at(-1)).toEqual({ source: '/(.*)', destination: '/app.html' })
   })
 
   it.each(HUB_HOSTS)('%s keeps robots.txt static', (host) => {

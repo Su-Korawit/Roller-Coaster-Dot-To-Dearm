@@ -151,7 +151,9 @@ function AppSiteRoutes() {
 function HubSiteRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<HubHome />} />
+      {/* ilovetcas.com opens the OS (ADR-0029); the article list moved to /articles */}
+      <Route path="/" element={<OsShell />} />
+      <Route path="/articles" element={<HubHome />} />
       <Route path="/blog/:slug" element={<ArticlePage />} />
       <Route path="/category/:cat" element={<CategoryPage />} />
       <Route path="/search" element={<SearchPage />} />
