@@ -65,10 +65,10 @@ export default function PasscodeScreen({ user, mode, onDone }) {
     await signOut()
   }
 
-  const linkBase = 'thai-font text-base font-bold px-3 py-1 rounded-ui underline underline-offset-4 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand'
+  const linkBase = 'thai-font text-sm font-medium px-3 py-1 rounded-ui whitespace-nowrap opacity-90 hover:opacity-100 hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand'
   const linkTone = dark ? 'text-white' : 'text-ink'
-  // Plain text, made to stand out on busy art with a soft halo instead of a box
-  const linkGlow = { textShadow: dark ? '0 1px 3px rgba(0,0,0,.85), 0 0 10px rgba(0,0,0,.6)' : '0 0 3px #fff, 0 0 8px #fff, 0 0 14px rgba(255,255,255,.9)' }
+  // Quiet secondary text: a faint halo keeps it legible on busy art without shouting
+  const linkGlow = { textShadow: dark ? '0 1px 2px rgba(0,0,0,.6)' : '0 0 4px #fff, 0 0 10px rgba(255,255,255,.9)' }
   const panelTone = dark ? 'bg-ink/25' : 'bg-paper/40'
 
   return (
@@ -114,7 +114,7 @@ export default function PasscodeScreen({ user, mode, onDone }) {
           </div>
 
           {/* Sits under the panel without pushing it, so the panel itself stays dead centre */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4">
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-12">
             {mode === 'unlock' ? (
               <button type="button" onClick={forgot} className={`${linkBase} ${linkTone}`} style={linkGlow}>
                 ลืมรหัสผ่าน? ออกจากระบบแล้วเข้าใหม่ด้วย Google
