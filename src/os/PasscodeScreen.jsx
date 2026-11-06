@@ -61,48 +61,57 @@ export default function PasscodeScreen({ user, mode, onDone }) {
     await signOut()
   }
 
+  const linkBase = 'thai-font text-sm px-4 py-1.5 rounded-full underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand'
+  const linkTone = dark ? 'bg-ink/45 text-white' : 'bg-paper/75 text-ink'
+  const panelTone = dark ? 'bg-ink/25' : 'bg-paper/40'
+
   return (
     <Wallpaper scroll className="flex flex-col items-center px-6">
-      <div className="relative z-10 mt-[5vh] text-center os-no-select">
-        <p className="font-display text-5xl sm:text-6xl font-bold tracking-tight">{formatTime(now)}</p>
-        <p className="thai-font mt-1 text-sm sm:text-base opacity-80">{formatDate(now)}</p>
+      {/* Big clock at the top */}
+      <div className="relative z-10 mt-[6vh] text-center os-no-select shrink-0">
+        <p className="font-display text-7xl sm:text-8xl lg:text-9xl font-bold tracking-tight leading-none">{formatTime(now)}</p>
+        <p className="thai-font mt-2 text-lg sm:text-xl opacity-85">{formatDate(now)}</p>
       </div>
 
-      <div className="relative z-10 mt-8 flex flex-col items-center gap-1 text-center">
-        {!compact && (
-          <>
-            {user.photoURL ? (
-              <img src={user.photoURL} alt="" referrerPolicy="no-referrer" className="w-14 h-14 rounded-full border-2 border-line" />
-            ) : (
-              <span className="w-14 h-14 rounded-full border-2 border-line bg-paper text-ink font-display text-xl font-bold flex items-center justify-center">
-                {name.trim().charAt(0).toUpperCase()}
-              </span>
+      {/* Profile + passcode in the middle of the screen, forgot-link right under them */}
+      <div className="relative z-10 flex-1 w-full flex flex-col items-center justify-center py-6">
+        <div className={`flex flex-col items-center gap-1 rounded-sheet backdrop-blur-sm px-8 py-6 ${panelTone}`}>
+          <div className="flex flex-col items-center gap-1 text-center">
+            {!compact && (
+              <>
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt="" referrerPolicy="no-referrer" className="w-20 h-20 rounded-full border-2 border-line" />
+                ) : (
+                  <span className="w-20 h-20 rounded-full border-2 border-line bg-paper text-ink font-display text-3xl font-bold flex items-center justify-center">
+                    {name.trim().charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <p className="thai-font text-base font-semibold mt-1">{name}</p>
+              </>
             )}
-            <p className="thai-font text-sm font-semibold mt-1">{name}</p>
-          </>
-        )}
-        <p className="thai-font text-sm opacity-80" aria-live="polite">{title}</p>
-        {mode === 'set' && !first && (
-          <p className="thai-font text-xs opacity-70">ตัวเลข {PIN_LENGTH} หลัก เก็บไว้ในเครื่องนี้เท่านั้น</p>
-        )}
-        {!compact && <p className="thai-font text-xs opacity-70">พิมพ์ตัวเลขบนคีย์บอร์ดได้เลย</p>}
-        <p className="thai-font text-xs text-danger font-semibold h-4" role="alert">{message}</p>
-      </div>
+            <p className="thai-font text-sm opacity-85" aria-live="polite">{title}</p>
+            {mode === 'set' && !first && (
+              <p className="thai-font text-xs opacity-75">ตัวเลข {PIN_LENGTH} หลัก เก็บไว้ในเครื่องนี้เท่านั้น</p>
+            )}
+            {!compact && <p className="thai-font text-xs opacity-75">พิมพ์ตัวเลขบนคีย์บอร์ดได้เลย</p>}
+            <p className="thai-font text-xs text-danger font-semibold h-4" role="alert">{message}</p>
+          </div>
+          <div className="mt-3">
+            <PinPad onComplete={handlePin} shakeKey={shake} disabled={busy} dark={dark} showKeypad={compact} />
+          </div>
+        </div>
 
-      <div className="relative z-10 mt-4">
-        <PinPad onComplete={handlePin} shakeKey={shake} disabled={busy} dark={dark} showKeypad={compact} />
-      </div>
-
-      <div className="relative z-10 mt-auto mb-6 thai-font text-xs">
-        {mode === 'unlock' ? (
-          <button type="button" onClick={forgot} className="underline opacity-80 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded">
-            ลืมรหัสผ่าน? ออกจากระบบแล้วเข้าใหม่ด้วย Google
-          </button>
-        ) : (
-          <button type="button" onClick={() => signOut()} className="underline opacity-80 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded">
-            ไม่ใช่คุณ? ออกจากระบบ
-          </button>
-        )}
+        <div className="mt-6">
+          {mode === 'unlock' ? (
+            <button type="button" onClick={forgot} className={`${linkBase} ${linkTone}`}>
+              ลืมรหัสผ่าน? ออกจากระบบแล้วเข้าใหม่ด้วย Google
+            </button>
+          ) : (
+            <button type="button" onClick={() => signOut()} className={`${linkBase} ${linkTone}`}>
+              ไม่ใช่คุณ? ออกจากระบบ
+            </button>
+          )}
+        </div>
       </div>
     </Wallpaper>
   )

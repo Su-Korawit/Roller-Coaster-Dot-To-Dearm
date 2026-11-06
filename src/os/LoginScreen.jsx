@@ -45,8 +45,8 @@ export default function LoginScreen() {
   return (
     <Wallpaper scroll className="flex flex-col items-center px-6">
       <div className="relative z-10 mt-[10vh] text-center os-no-select">
-        <p className="font-display text-6xl sm:text-7xl font-bold tracking-tight">{formatTime(now)}</p>
-        <p className="thai-font mt-1 text-base sm:text-lg opacity-80">{formatDate(now)}</p>
+        <p className="font-display text-7xl sm:text-8xl lg:text-9xl font-bold tracking-tight leading-none">{formatTime(now)}</p>
+        <p className="thai-font mt-2 text-lg sm:text-xl opacity-85">{formatDate(now)}</p>
       </div>
 
       <div className="relative z-10 mt-auto mb-[8vh] w-full max-w-sm">

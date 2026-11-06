@@ -7,6 +7,7 @@
 | 003 | ไอคอนสถานะสาย 3 อัน | เสร็จ (ตัดจากแผ่นเดียว 3 อัน) | to-chatgpt/003-ไอคอนสถานะสาย-3อัน.md | from-chatgpt/003-call-status-sheet.png | public/assets/voice/call-status-*.png |
 | 004 | ร่างข้อความไทย PDPA/ปุ่ม/ข้อผิดพลาด | เสร็จ (ตรวจ+ปรับแล้ว) | to-chatgpt/004-ร่างข้อความไทย-PDPA-และหน้าโทร.md | from-chatgpt/004-copy-th.md | src/constants/voiceCopy.js (หลังตรวจ) |
 | 005 | วอลเปเปอร์ OS 5 ธีม (แนวนอน+แนวตั้ง รวม 10 ภาพ) | เสร็จ (10 ภาพ ตรวจขนาด/สัดส่วนแล้ว แปลงเป็น webp รวม ~900KB) | to-chatgpt/005-วอลเปเปอร์-OS-5ธีม.md | from-chatgpt/005-{id}-{landscape,portrait}.png (1672x941 / 854x1842) | public/assets/os/wallpapers/{id}-{landscape,portrait}.webp |
+| 006 | อวตารโปรไฟล์ OS 9 แบบ (หญิง/ชาย/LGBTQ+) แผ่นเดียว 3x3 | รอผู้ใช้ยืนยันก่อนส่ง ChatGPT | to-chatgpt/006-อวตารโปรไฟล์-9แบบ.md | from-chatgpt/006-avatars-sheet.png | public/assets/os/avatars/{f1..f3,m1..m3,q1..q3}.webp |
 
 ## บันทึกความคืบหน้างาน voice-secretary
 
