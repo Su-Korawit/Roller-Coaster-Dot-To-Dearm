@@ -68,7 +68,7 @@ export default function PasscodeScreen({ user, mode, onDone }) {
   const linkBase = 'thai-font text-sm font-medium px-3 py-1 rounded-ui whitespace-nowrap opacity-90 hover:opacity-100 hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand'
   const linkTone = dark ? 'text-white' : 'text-ink'
   // Quiet secondary text: a faint halo keeps it legible on busy art without shouting
-  const linkGlow = { textShadow: dark ? '0 1px 2px rgba(0,0,0,.6)' : '0 0 4px #fff, 0 0 10px rgba(255,255,255,.9)' }
+  const linkGlow = { textShadow: dark ? '0 1px 2px rgba(0,0,0,.6)' : '0 0 4px var(--color-paper), 0 0 10px rgba(255,255,255,.9)' }
   const panelTone = dark ? 'bg-ink/25' : 'bg-paper/40'
 
   return (

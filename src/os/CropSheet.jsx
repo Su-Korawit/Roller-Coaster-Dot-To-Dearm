@@ -56,7 +56,7 @@ export default function CropSheet({ onClose }) {
           {url && <img src={url} alt="" draggable={false} className="w-full h-full select-none" style={cropImgStyle(crop)} />}
           {/* rule-of-thirds guide */}
           <span className="absolute inset-0 pointer-events-none opacity-40"
-            style={{ backgroundImage: 'linear-gradient(to right, transparent 33%, #fff 33%, #fff calc(33% + 1px), transparent calc(33% + 1px), transparent 66%, #fff 66%, #fff calc(66% + 1px), transparent calc(66% + 1px)), linear-gradient(to bottom, transparent 33%, #fff 33%, #fff calc(33% + 1px), transparent calc(33% + 1px), transparent 66%, #fff 66%, #fff calc(66% + 1px), transparent calc(66% + 1px))' }}
+            style={{ backgroundImage: 'linear-gradient(to right, transparent 33%, var(--color-paper) 33%, var(--color-paper) calc(33% + 1px), transparent calc(33% + 1px), transparent 66%, var(--color-paper) 66%, var(--color-paper) calc(66% + 1px), transparent calc(66% + 1px)), linear-gradient(to bottom, transparent 33%, var(--color-paper) 33%, var(--color-paper) calc(33% + 1px), transparent calc(33% + 1px), transparent 66%, var(--color-paper) 66%, var(--color-paper) calc(66% + 1px), transparent calc(66% + 1px))' }}
             aria-hidden="true" />
         </div>
         <p className="thai-font text-xs text-ink-soft">ลากรูปเพื่อเลื่อน และใช้แถบด้านล่างเพื่อซูม</p>
