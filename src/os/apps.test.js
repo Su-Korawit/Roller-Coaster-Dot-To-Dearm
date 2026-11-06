@@ -20,6 +20,17 @@ describe('homeAppIds', () => {
   })
 })
 
+describe('registry content', () => {
+  it('has the five apps and the seven store websites', () => {
+    const ids = OS_APPS.map((a) => a.id)
+    for (const id of ['goal', 'habit', 'reading', 'community', 'secretary']) expect(ids).toContain(id)
+    const links = OS_APPS.filter((a) => a.url)
+    expect(links).toHaveLength(7)
+    expect(links.every((a) => a.url.startsWith('https://') && a.installable)).toBe(true)
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+})
+
 describe('paginate', () => {
   it('splits into pages', () => {
     expect(paginate([1, 2, 3, 4, 5], 2)).toEqual([[1, 2], [3, 4], [5]])

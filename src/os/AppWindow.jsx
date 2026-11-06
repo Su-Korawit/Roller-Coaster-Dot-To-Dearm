@@ -42,7 +42,7 @@ export default function AppWindow({ app, onClose, onOpenApp }) {
         </header>
         <div className="flex-1 overflow-y-auto">
           <Suspense fallback={<p className="thai-font text-sm text-ink-soft p-6">กำลังเปิด...</p>}>
-            <Component onOpenApp={onOpenApp} />
+            <Component app={app} onOpenApp={onOpenApp} />
           </Suspense>
         </div>
       </div>

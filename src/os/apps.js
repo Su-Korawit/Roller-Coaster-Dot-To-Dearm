@@ -1,5 +1,6 @@
 import { lazy } from 'react'
-import { ShoppingBag } from 'lucide-react'
+import { ShoppingBag, Target, CalendarCheck, BookOpen, Users, Bot } from 'lucide-react'
+import { STORE_LINKS } from './storeLinks'
 
 // The OS app registry — the one place to add an app to the OS.
 //   id           unique, kebab-case
@@ -24,6 +25,67 @@ const RAW_APPS = [
     installable: false,
     load: () => import('./apps/StoreApp'),
   },
+  {
+    id: 'goal',
+    name: 'Goal',
+    tagline: 'ตั้งเป้าหมายมหาลัย คณะ สาขา',
+    description: 'เลือกเป้าหมาย แล้วจดคะแนนที่ต้องใช้เทียบกับคะแนนของคุณ',
+    Icon: Target,
+    tone: 'var(--color-zone-health)',
+    installable: true,
+    load: () => import('./apps/GoalApp'),
+  },
+  {
+    id: 'habit',
+    name: 'Habit',
+    tagline: 'แผนวันนี้และนิสัยประจำวัน',
+    description: 'เช็กลิสต์แผนวันนี้ (TGAT / A-Level) พร้อมสถิติต่อเนื่องของนิสัย',
+    Icon: CalendarCheck,
+    tone: 'var(--color-zone-earth)',
+    installable: true,
+    load: () => import('./apps/HabitApp'),
+  },
+  {
+    id: 'reading',
+    name: 'Reading',
+    tagline: 'ติดตามการอ่านหนังสือ',
+    description: 'จดหนังสือที่กำลังอ่านและดูความคืบหน้าเป็นเปอร์เซ็นต์',
+    Icon: BookOpen,
+    tone: 'var(--color-zone-sci)',
+    installable: true,
+    load: () => import('./apps/ReadingApp'),
+  },
+  {
+    id: 'community',
+    name: 'Community',
+    tagline: 'หาเพื่อนที่สนใจเหมือนกัน',
+    description: 'ค้นหาเพื่อนจากชื่อหรือโรงเรียน แล้วส่งคำขอติดตาม',
+    Icon: Users,
+    tone: 'var(--color-zone-arts)',
+    installable: true,
+    load: () => import('./apps/CommunityApp'),
+  },
+  {
+    id: 'secretary',
+    name: 'Secretary',
+    tagline: 'คุยกับ AI พี่ใจดี',
+    description: 'โทรคุยกับเลขา AI พี่ใจดี ให้ช่วยวางแผนและให้กำลังใจ',
+    Icon: Bot,
+    tone: 'var(--color-brand)',
+    installable: true,
+    load: () => import('./apps/HelpApp'),
+  },
+  ...STORE_LINKS.map((l) => ({
+    id: l.id,
+    name: l.name,
+    tagline: l.tagline,
+    description: `เว็บไซต์ ${l.url} (เปิดในแท็บใหม่)`,
+    Icon: l.Icon,
+    tone: l.tone,
+    url: l.url,
+    installable: true,
+    load: () => import('./apps/LinkApp'),
+  })),
 ]
 
 // Lazy component per app, created once at module load so React keeps one type per app.

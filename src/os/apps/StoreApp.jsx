@@ -35,7 +35,7 @@ export default function StoreApp({ onOpenApp }) {
         <Sparkles size={36} aria-hidden="true" />
         <div>
           <h3 className="font-display font-bold text-lg">ยินดีต้อนรับสู่ Store</h3>
-          <p className="thai-font text-sm opacity-90">แอปใหม่ๆ สำหรับเส้นทาง TCAS ของคุณ กำลังจะมาเร็วๆ นี้</p>
+          <p className="thai-font text-sm opacity-90">แอปและเว็บไซต์ช่วยเตรียมตัวสอบ TCAS ติดตั้งแล้วจะอยู่บนหน้าหลัก</p>
         </div>
       </section>
 
