@@ -385,6 +385,47 @@ describe('appUpdates rules', () => {
   })
 })
 
+describe('osAppReviews rules', () => {
+  const review = (over = {}) => ({ appId: 'goal', uid: 'alice', name: 'Alice', rating: 5, text: 'ดีมาก', ...over })
+
+  it('allows a signed-in user to write their own review (id = appId_uid)', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(setDoc(doc(alice, 'osAppReviews/goal_alice'), review()))
+    await assertSucceeds(setDoc(doc(alice, 'osAppReviews/goal_alice'), review({ rating: 3 })))
+  })
+
+  it('BLOCKS signed-out access', async () => {
+    const anon = testEnv.unauthenticatedContext().firestore()
+    await assertFails(getDoc(doc(anon, 'osAppReviews/goal_alice')))
+    await assertFails(setDoc(doc(anon, 'osAppReviews/goal_alice'), review()))
+  })
+
+  it('BLOCKS writing as someone else or with a mismatched doc id', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(setDoc(doc(alice, 'osAppReviews/goal_bob'), review({ uid: 'bob' })))
+    await assertFails(setDoc(doc(alice, 'osAppReviews/habit_alice'), review()))
+  })
+
+  it('BLOCKS an out-of-range rating or an over-long comment', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(setDoc(doc(alice, 'osAppReviews/goal_alice'), review({ rating: 6 })))
+    await assertFails(setDoc(doc(alice, 'osAppReviews/goal_alice'), review({ rating: 0 })))
+    await assertFails(setDoc(doc(alice, 'osAppReviews/goal_alice'), review({ text: 'x'.repeat(501) })))
+  })
+
+  it('allows deleting your own review, not someone else\'s; super-admin may delete any', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'osAppReviews/goal_alice'), review())
+      await setDoc(doc(ctx.firestore(), 'osAppReviews/goal_bob'), review({ uid: 'bob' }))
+    })
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(deleteDoc(doc(alice, 'osAppReviews/goal_bob')))
+    await assertSucceeds(deleteDoc(doc(alice, 'osAppReviews/goal_alice')))
+    const admin = testEnv.authenticatedContext(SUPER_UID).firestore()
+    await assertSucceeds(deleteDoc(doc(admin, 'osAppReviews/goal_bob')))
+  })
+})
+
 describe('timetableTemplates rules', () => {
   it('allows a signed-in user to create a template as themselves', async () => {
     const alice = testEnv.authenticatedContext('alice').firestore()

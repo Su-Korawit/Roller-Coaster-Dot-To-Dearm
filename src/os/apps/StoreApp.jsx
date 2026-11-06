@@ -3,15 +3,30 @@ import { Search, Sparkles, Rocket } from 'lucide-react'
 import { AppTile } from '../AppIcon'
 import { OS_APPS, homeAppIds, searchStoreApps } from '../apps'
 import { useOsStore } from '../../stores/useOsStore'
+import StoreAppDetail from './StoreAppDetail'
 
 // Store: search, banner, installable apps. Creating/selling apps is the next step (teaser only).
 export default function StoreApp({ onOpenApp }) {
   const [query, setQuery] = useState('')
+  const [detailId, setDetailId] = useState(null)
   const installed = useOsStore((s) => s.installed)
   const installApp = useOsStore((s) => s.installApp)
   const results = searchStoreApps(query)
   const onHome = homeAppIds(installed)
   const catalogEmpty = !OS_APPS.some((a) => a.installable)
+
+  const detailApp = detailId ? OS_APPS.find((a) => a.id === detailId) : null
+  if (detailApp) {
+    return (
+      <StoreAppDetail
+        app={detailApp}
+        installed={onHome.includes(detailApp.id)}
+        onInstall={installApp}
+        onOpen={onOpenApp}
+        onBack={() => setDetailId(null)}
+      />
+    )
+  }
 
   return (
     <div className="p-4 sm:p-6 max-w-3xl mx-auto flex flex-col gap-5">
@@ -46,8 +61,15 @@ export default function StoreApp({ onOpenApp }) {
               const has = onHome.includes(app.id)
               return (
                 <li key={app.id} className="flex flex-col items-center gap-1.5 text-center">
-                  <AppTile app={app} />
-                  <span className="thai-font text-xs font-semibold truncate max-w-full">{app.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => setDetailId(app.id)}
+                    aria-label={`ดูรายละเอียด ${app.name}`}
+                    className="flex flex-col items-center gap-1.5 max-w-full rounded-ui active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  >
+                    <AppTile app={app} />
+                    <span className="thai-font text-xs font-semibold truncate max-w-full">{app.name}</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => (has ? onOpenApp(app) : installApp(app.id))}

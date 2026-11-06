@@ -37,6 +37,7 @@ export const refs = {
   appUpdate:   (id)             => doc(db, 'appUpdates', id),
   tcasEvent:   (id)             => doc(db, 'tcasEvents', id),
   timetableTemplate: (id)       => doc(db, 'timetableTemplates', id),
+  osAppReview:       (id)       => doc(db, 'osAppReviews', id),
   entitlementItem: (id)         => doc(db, 'entitlementCatalog', id),
   welcomeGamePreview: ()        => doc(db, 'welcomeConfig', 'gamePreview'),
   welcomeStats:       ()        => doc(db, 'welcomeConfig', 'stats'),
@@ -65,6 +66,7 @@ export const cols = {
   appUpdates:   collection(db, 'appUpdates'),
   tcasEvents:   collection(db, 'tcasEvents'),
   timetableTemplates: collection(db, 'timetableTemplates'),
+  osAppReviews:       collection(db, 'osAppReviews'),
   entitlementCatalog: collection(db, 'entitlementCatalog'),
   fileBagItems:   collection(db, 'fileBagItems'),
   fileBagFolders: collection(db, 'fileBagFolders'),
@@ -120,6 +122,7 @@ export const queries = {
   schoolPostsRecent: (schoolId, n = 20) => query(
     collection(db, 'schoolBoards', schoolId, 'posts'), orderBy('createdAt', 'desc'), limit(n),
   ),
+  osAppReviewsByApp: (appId, n = 50) => query(cols.osAppReviews, where('appId', '==', appId), limit(n)),
   latestTemplates: () => query(cols.timetableTemplates, orderBy('createdAt', 'desc'), limit(20)),
   templatesBySchool: (term) => query(
     cols.timetableTemplates,

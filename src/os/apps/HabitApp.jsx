@@ -31,7 +31,7 @@ export default function HabitApp() {
             <li key={t.id} className="flex items-center gap-2 thai-font text-sm">
               <input type="checkbox" checked={t.done} onChange={() => toggleTask(t.id)} aria-label={t.text} className="w-5 h-5" />
               <span className={`flex-1 min-w-0 truncate ${t.done ? 'line-through text-ink-soft' : ''}`}>{t.text}</span>
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-brand-soft text-brand-strong font-bold">{t.tag}</span>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-brand-soft text-brand-strong font-bold">{t.tag}</span>
               <button type="button" onClick={() => removeTask(t.id)} aria-label={`ลบ ${t.text}`} className="p-1"><X size={16} /></button>
             </li>
           ))}
@@ -58,7 +58,7 @@ export default function HabitApp() {
                   type="button"
                   onClick={() => toggleHabitToday(h.id)}
                   aria-pressed={done}
-                  className={`px-btn px-3 py-1 text-xs font-bold ${done ? 'bg-leaf text-white' : 'bg-paper'}`}
+                  className={`px-btn px-3 py-1 text-xs font-bold ${done ? 'bg-zone-earth-soft text-zone-earth-deep' : 'bg-paper'}`}
                 >
                   {done ? 'ทำแล้ว' : 'ทำวันนี้'}
                 </button>

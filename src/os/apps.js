@@ -11,6 +11,9 @@ import { STORE_LINKS } from './storeLinks'
 //   tone         CSS colour for the tile (use design tokens)
 //   builtIn      always on the Home screen, cannot be removed
 //   installable  listed in the Store; the user adds/removes it
+//   logo         optional picture for the tile (falls back to Icon)
+//   features     bullet list for the Store detail page
+//   defaultInstalled  put on every device's Home once, the user may remove it
 //   load         () => import('./apps/XxxApp') — default export is the app's React component,
 //                rendered inside the app window with `{ onOpenApp }` props
 const RAW_APPS = [
@@ -33,6 +36,9 @@ const RAW_APPS = [
     Icon: Target,
     tone: 'var(--color-zone-health)',
     installable: true,
+    logo: '/assets/os/apps/goal.webp',   // from ChatGPT (ai-handoff 007); falls back to Icon until added
+    defaultInstalled: true,
+    features: ["เลือกมหาวิทยาลัย คณะ และสาขาเป้าหมาย", "ยังไม่มีคณะ? จดสิ่งที่สนใจไว้ก่อน", "ลิสต์คะแนนที่ต้องใช้ในแต่ละวิชา", "เทียบกับคะแนนของคุณ ดูว่าขาดอีกเท่าไร"],
     load: () => import('./apps/GoalApp'),
   },
   {
@@ -43,6 +49,9 @@ const RAW_APPS = [
     Icon: CalendarCheck,
     tone: 'var(--color-zone-earth)',
     installable: true,
+    logo: '/assets/os/apps/habit.webp',   // from ChatGPT (ai-handoff 007); falls back to Icon until added
+    defaultInstalled: true,
+    features: ["แผนวันนี้แบบเช็กลิสต์ แยกแท็ก TGAT / A-Level", "แถบความคืบหน้าเป็นเปอร์เซ็นต์", "สร้างนิสัยประจำวัน", "นับวันที่ทำต่อเนื่องติดกัน"],
     load: () => import('./apps/HabitApp'),
   },
   {
@@ -53,6 +62,9 @@ const RAW_APPS = [
     Icon: BookOpen,
     tone: 'var(--color-zone-sci)',
     installable: true,
+    logo: '/assets/os/apps/reading.webp',   // from ChatGPT (ai-handoff 007); falls back to Icon until added
+    defaultInstalled: true,
+    features: ["จดหนังสือและชีทที่กำลังอ่าน", "บันทึกหน้าที่อ่านถึง", "ดูความคืบหน้าเป็นเปอร์เซ็นต์"],
     load: () => import('./apps/ReadingApp'),
   },
   {
@@ -63,6 +75,9 @@ const RAW_APPS = [
     Icon: Users,
     tone: 'var(--color-zone-arts)',
     installable: true,
+    logo: '/assets/os/apps/community.webp',   // from ChatGPT (ai-handoff 007); falls back to Icon until added
+    defaultInstalled: true,
+    features: ["ค้นหาเพื่อนจากชื่อหรือโรงเรียน", "ส่งคำขอติดตาม", "แสดงเป้าหมายคณะ/สาขาของคุณเพื่อหาคนที่สนใจเหมือนกัน"],
     load: () => import('./apps/CommunityApp'),
   },
   {
@@ -73,6 +88,9 @@ const RAW_APPS = [
     Icon: Bot,
     tone: 'var(--color-brand)',
     installable: true,
+    logo: '/assets/os/apps/secretary.webp',   // from ChatGPT (ai-handoff 007); falls back to Icon until added
+    defaultInstalled: true,
+    features: ["โทรคุยกับเลขา AI พี่ใจดี", "ช่วยวางแผนการอ่านหนังสือ", "ให้กำลังใจเวลาท้อ", "ต้องยินยอมก่อนโทร มีโควตาต่อวัน"],
     load: () => import('./apps/HelpApp'),
   },
   ...STORE_LINKS.map((l) => ({
@@ -82,7 +100,9 @@ const RAW_APPS = [
     description: `เว็บไซต์ ${l.url} (เปิดในแท็บใหม่)`,
     Icon: l.Icon,
     tone: l.tone,
+    logo: l.logo,
     url: l.url,
+    features: ['เปิดเว็บไซต์จริงในแท็บใหม่', l.tagline],
     installable: true,
     load: () => import('./apps/LinkApp'),
   })),
@@ -104,6 +124,8 @@ export const HELP_APP = withComponent({
   description: 'ให้พี่ใจดีช่วยวางแผนและเตือนการอ่านหนังสือ',
   load: () => import('./apps/HelpApp'),
 })
+
+export const DEFAULT_INSTALLED = OS_APPS.filter((a) => a.defaultInstalled).map((a) => a.id)
 
 export function findApp(id, apps = OS_APPS) {
   return apps.find((a) => a.id === id) ?? null

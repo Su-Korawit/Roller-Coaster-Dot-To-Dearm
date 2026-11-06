@@ -1,18 +1,32 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 
 const LONG_PRESS_MS = 450
 const MOVE_TOLERANCE = 8
 
 // Square app tile. Tap → onOpen, long-press (or right-click) → onLongPress (details).
+// With `app.logo` the tile shows that picture on white; if it fails to load (or is missing),
+// it falls back to the lucide icon on the tone colour.
 export function AppTile({ app, size = 60 }) {
   const { Icon } = app
+  const [broken, setBroken] = useState(false)
+  const showLogo = !!app.logo && !broken
   return (
     <span
-      className="px-card flex items-center justify-center text-white"
-      style={{ width: size, height: size, background: app.tone, borderRadius: 'var(--radius-slot)' }}
+      className="px-card flex items-center justify-center text-white overflow-hidden"
+      style={{ width: size, height: size, background: showLogo ? 'var(--color-paper)' : app.tone, borderRadius: 'var(--radius-slot)' }}
       aria-hidden="true"
     >
-      <Icon size={Math.round(size * 0.5)} strokeWidth={2.2} />
+      {showLogo ? (
+        <img
+          src={app.logo}
+          alt=""
+          draggable={false}
+          onError={() => setBroken(true)}
+          className="w-full h-full object-contain p-[12%]"
+        />
+      ) : (
+        <Icon size={Math.round(size * 0.5)} strokeWidth={2.2} />
+      )}
     </span>
   )
 }

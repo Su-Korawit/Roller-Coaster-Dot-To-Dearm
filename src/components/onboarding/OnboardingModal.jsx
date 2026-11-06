@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { PROMO } from '../../lib/promo'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { usePlansStore } from '../../stores/usePlansStore'
 import { useOnboardingUiStore } from '../../stores/useOnboardingUiStore'
@@ -25,7 +26,7 @@ function OnboardingModal() {
   const [step, setStep] = useState(0)
   const [subStep, setSubStep] = useState(null)
 
-  const visible = forceOpen || (!!user && !hasCommittedPlan)
+  const visible = !PROMO && (forceOpen || (!!user && !hasCommittedPlan))
 
   useEffect(() => {
     if (!visible) return
