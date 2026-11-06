@@ -363,5 +363,14 @@ service cloud.firestore {
     match /bagSettings/{uid} {
       allow read, write: if isSignedIn() && request.auth.uid == uid;
     }
+    // Voice secretary (Retell). Written ONLY by the Admin SDK in /api/voice/* — consent,
+    // quota, phone and paid flags must never be client-writable. Users may read their own doc.
+    match /voiceSecretary/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+    match /voiceGlobal/{day} {
+      allow read, write: if false;
+    }
   }
 }
