@@ -96,3 +96,31 @@ describe('misc helpers', () => {
     expect(roomIdFor('a/b', 'c.d')).not.toMatch(/[/.]/)
   })
 })
+
+import { weekStartKey, sumMinutes, thisWeekMinutes, readingStreak, rankEntries } from './studyPlan'
+
+describe('reading leaderboard helpers', () => {
+  it('weekStartKey returns the Monday', () => {
+    expect(weekStartKey('2026-11-07')).toBe('2026-11-02')   // Saturday
+    expect(weekStartKey('2026-11-02')).toBe('2026-11-02')   // Monday
+    expect(weekStartKey('2026-11-08')).toBe('2026-11-02')   // Sunday
+  })
+  it('sums totals and this-week minutes', () => {
+    const log = { '2026-11-01': 30, '2026-11-02': 20, '2026-11-07': 40 }
+    expect(sumMinutes(log)).toBe(90)
+    expect(thisWeekMinutes(log, '2026-11-07')).toBe(60)
+  })
+  it('readingStreak counts back from today or yesterday', () => {
+    expect(readingStreak({ '2026-11-07': 5, '2026-11-06': 5, '2026-11-05': 5 }, '2026-11-07')).toBe(3)
+    expect(readingStreak({ '2026-11-06': 5 }, '2026-11-07')).toBe(1)
+    expect(readingStreak({ '2026-11-04': 5 }, '2026-11-07')).toBe(0)
+  })
+  it('rankEntries zeroes old weeks and sorts', () => {
+    const rows = rankEntries([
+      { uid: 'a', weekKey: '2026-10-26', weekMinutes: 999, totalMinutes: 999 },
+      { uid: 'b', weekKey: '2026-11-02', weekMinutes: 50, totalMinutes: 50 },
+      { uid: 'c', weekKey: '2026-11-02', weekMinutes: 80, totalMinutes: 80 },
+    ], '2026-11-07')
+    expect(rows.map((r) => [r.uid, r.minutes, r.rank])).toEqual([['c', 80, 1], ['b', 50, 2], ['a', 0, 3]])
+  })
+})

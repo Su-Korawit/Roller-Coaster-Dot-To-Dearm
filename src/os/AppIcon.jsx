@@ -22,7 +22,7 @@ export function AppTile({ app, size = 60 }) {
           alt=""
           draggable={false}
           onError={() => setBroken(true)}
-          className="w-full h-full object-contain p-[12%]"
+          className={`w-full h-full ${app.logoFull ? 'object-cover' : 'object-contain p-[12%]'}`}
         />
       ) : (
         <Icon size={Math.round(size * 0.5)} strokeWidth={2.2} />

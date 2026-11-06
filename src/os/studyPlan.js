@@ -115,3 +115,38 @@ export function roomIdFor(faculty = '', major = '') {
   const m = clean(major)
   return m ? `${f}__${m}` : f
 }
+
+// ── Reading leaderboard helpers ─────────────────────────────────────────────────
+
+// Monday of the week containing `today` (weeks run Mon–Sun).
+export function weekStartKey(today = todayKey()) {
+  const dow = parseKey(today).getDay()   // 0 = Sunday
+  return shiftKey(today, -((dow + 6) % 7))
+}
+
+export function sumMinutes(log = {}) {
+  return Object.values(log).reduce((a, n) => a + (Number.isFinite(n) ? n : 0), 0)
+}
+
+// Minutes read since Monday of this week.
+export function thisWeekMinutes(log = {}, today = todayKey()) {
+  const start = weekStartKey(today)
+  return Object.entries(log).reduce((a, [day, n]) => (day >= start && day <= today ? a + (n || 0) : a), 0)
+}
+
+// Longest run of consecutive days with any reading, ending today or yesterday (the "current streak").
+export function readingStreak(log = {}, today = todayKey()) {
+  let cursor = (log[today] || 0) > 0 ? today : shiftKey(today, -1)
+  let n = 0
+  while ((log[cursor] || 0) > 0) { n += 1; cursor = shiftKey(cursor, -1) }
+  return n
+}
+
+// Leaderboard rows for the current week: entries from older weeks count as 0. Highest first.
+export function rankEntries(entries = [], today = todayKey()) {
+  const wk = weekStartKey(today)
+  return entries
+    .map((e) => ({ ...e, minutes: e.weekKey === wk ? e.weekMinutes || 0 : 0 }))
+    .sort((a, b) => b.minutes - a.minutes || (b.totalMinutes || 0) - (a.totalMinutes || 0))
+    .map((e, i) => ({ ...e, rank: i + 1 }))
+}

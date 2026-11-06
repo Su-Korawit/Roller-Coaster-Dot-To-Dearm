@@ -8,7 +8,7 @@
 | 004 | ร่างข้อความไทย PDPA/ปุ่ม/ข้อผิดพลาด | เสร็จ (ตรวจ+ปรับแล้ว) | to-chatgpt/004-ร่างข้อความไทย-PDPA-และหน้าโทร.md | from-chatgpt/004-copy-th.md | src/constants/voiceCopy.js (หลังตรวจ) |
 | 005 | วอลเปเปอร์ OS 5 ธีม (แนวนอน+แนวตั้ง รวม 10 ภาพ) | เสร็จ (10 ภาพ ตรวจขนาด/สัดส่วนแล้ว แปลงเป็น webp รวม ~900KB) | to-chatgpt/005-วอลเปเปอร์-OS-5ธีม.md | from-chatgpt/005-{id}-{landscape,portrait}.png (1672x941 / 854x1842) | public/assets/os/wallpapers/{id}-{landscape,portrait}.webp |
 | 006 | อวตารโปรไฟล์ OS 9 แบบ (หญิง/ชาย/LGBTQ+) แผ่นเดียว 3x3 | เสร็จ (แผ่นเดียว 3x3 ตัดเป็น 9 วงกลม webp 256px รวม ~126KB) | to-chatgpt/006-อวตารโปรไฟล์-9แบบ.md | from-chatgpt/006-avatars-sheet.png (1254x1254) | public/assets/os/avatars/{f1..f3,m1..m3,q1..q3}.webp |
-| 007 | โลโก้แอป OS 5 ตัว (Goal/Habit/Reading/Community/Secretary) แผ่นเดียว 3x2 | รอส่งให้ ChatGPT (โค้ดใช้ไอคอน lucide แทนไปก่อน) | to-chatgpt/007-โลโก้แอป-OS-5ตัว.md | from-chatgpt/007-app-logos-sheet.png (ยังไม่มี) | public/assets/os/apps/{goal,habit,reading,community,secretary}.webp |
+| 007 | โลโก้แอป OS 5 ตัว (Goal/Habit/Reading/Community/Secretary) แผ่นเดียว 3x2 | รอส่งให้ ChatGPT (โค้ดใช้ไอคอน lucide แทนไปก่อน) | to-chatgpt/007-โลโก้แอป-OS-5ตัว.md | from-chatgpt/(ไม่ได้ใช้ ChatGPT: สร้างด้วยโค้ด) | public/assets/os/apps/{goal,habit,reading,community,secretary}.webp |
 
 ## บันทึกความคืบหน้างาน voice-secretary
 

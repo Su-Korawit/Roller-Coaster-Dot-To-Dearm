@@ -11,7 +11,7 @@ import { STORE_LINKS } from './storeLinks'
 //   tone         CSS colour for the tile (use design tokens)
 //   builtIn      always on the Home screen, cannot be removed
 //   installable  listed in the Store; the user adds/removes it
-//   logo         optional picture for the tile (falls back to Icon)
+//   logo         optional picture for the tile (falls back to Icon); logoFull = no padding
 //   features     bullet list for the Store detail page
 //   defaultInstalled  put on every device's Home once, the user may remove it
 //   load         () => import('./apps/XxxApp') — default export is the app's React component,
@@ -31,67 +31,72 @@ const RAW_APPS = [
   {
     id: 'goal',
     name: 'Goal',
-    tagline: 'ตั้งเป้าหมายมหาลัย คณะ สาขา',
-    description: 'เลือกเป้าหมาย แล้วจดคะแนนที่ต้องใช้เทียบกับคะแนนของคุณ',
+    tagline: "ตั้งเป้าหมายมหาลัย คณะ สาขา และวันสอบ",
+    description: "เลือกเป้าหมาย ใส่วันสอบ รอบ 3 และคะแนนที่ต้องใช้ แล้วให้ AI วางแผนอ่านหนังสือให้ทุกวัน ข้อมูลบันทึกในบัญชีของคุณ",
     Icon: Target,
     tone: 'var(--color-zone-health)',
     installable: true,
-    logo: '/assets/os/apps/goal.webp',   // from ChatGPT (ai-handoff 007); falls back to Icon until added
+    logo: '/assets/os/apps/goal.webp',   // pixel-art icon (full tile)
+    logoFull: true,
     defaultInstalled: true,
-    features: ["เลือกมหาวิทยาลัย คณะ และสาขาเป้าหมาย", "ยังไม่มีคณะ? จดสิ่งที่สนใจไว้ก่อน", "ลิสต์คะแนนที่ต้องใช้ในแต่ละวิชา", "เทียบกับคะแนนของคุณ ดูว่าขาดอีกเท่าไร"],
+    features: ["เลือกมหาวิทยาลัย คณะ และสาขาเป้าหมาย","ตั้งวันสอบและนับถอยหลัง","ลิสต์คะแนนที่ต้องใช้ เทียบกับคะแนนของคุณ","กด \"วางแผนด้วย AI\" ได้แผนอ่านหนังสือรายวันถึงวันสอบ","บันทึกในบัญชีอัตโนมัติ เชื่อมกับ Habit"],
     load: () => import('./apps/GoalApp'),
   },
   {
     id: 'habit',
     name: 'Habit',
-    tagline: 'แผนวันนี้และนิสัยประจำวัน',
-    description: 'เช็กลิสต์แผนวันนี้ (TGAT / A-Level) พร้อมสถิติต่อเนื่องของนิสัย',
+    tagline: "ปฏิทิน แผนรายวัน และ to do list",
+    description: "ศูนย์กลางแผนอ่านหนังสือ ดูแผนแต่ละวันบนปฏิทิน เลื่อนการ์ดดูวันที่เหลือ เวลาอ่านหนังสือ และเปอร์เซ็นต์ที่ทำตามแผนได้",
     Icon: CalendarCheck,
     tone: 'var(--color-zone-earth)',
     installable: true,
-    logo: '/assets/os/apps/habit.webp',   // from ChatGPT (ai-handoff 007); falls back to Icon until added
+    logo: '/assets/os/apps/habit.webp',   // pixel-art icon (full tile)
+    logoFull: true,
     defaultInstalled: true,
-    features: ["แผนวันนี้แบบเช็กลิสต์ แยกแท็ก TGAT / A-Level", "แถบความคืบหน้าเป็นเปอร์เซ็นต์", "สร้างนิสัยประจำวัน", "นับวันที่ทำต่อเนื่องติดกัน"],
+    features: ["ปฏิทินรายเดือน กดดูแผนแต่ละวัน","การ์ดเลื่อนได้: นับถอยหลัง เวลาอ่าน % ทำตามแผน กลยุทธ์จากพี่","แผนวันนี้/พรุ่งนี้ พร้อมแท็ก TGAT / A-Level","to do list ของตัวเอง","นิสัยประจำวันพร้อมสถิติต่อเนื่อง"],
     load: () => import('./apps/HabitApp'),
   },
   {
     id: 'reading',
     name: 'Reading',
-    tagline: 'ติดตามการอ่านหนังสือ',
-    description: 'จดหนังสือที่กำลังอ่านและดูความคืบหน้าเป็นเปอร์เซ็นต์',
+    tagline: "ห้องอ่านหนังสือ จับเวลา และอันดับ",
+    description: "จับเวลาอ่านหนังสือกับอวตารของคุณ สะสมเวลาเข้า Habit และแข่งอันดับกับเพื่อนคณะ/สาขาเดียวกัน หรือดูสถิติเดี่ยวของตัวเอง",
     Icon: BookOpen,
     tone: 'var(--color-zone-sci)',
     installable: true,
-    logo: '/assets/os/apps/reading.webp',   // from ChatGPT (ai-handoff 007); falls back to Icon until added
+    logo: '/assets/os/apps/reading.webp',   // pixel-art icon (full tile)
+    logoFull: true,
     defaultInstalled: true,
-    features: ["จดหนังสือและชีทที่กำลังอ่าน", "บันทึกหน้าที่อ่านถึง", "ดูความคืบหน้าเป็นเปอร์เซ็นต์"],
+    features: ["จับเวลาอ่าน 25 / 45 / 60 นาที","เวลาที่อ่านไปเชื่อมกับการ์ดใน Habit","อันดับเดี่ยว (สถิติของคุณ) และกลุ่ม (คณะ/สาขาเดียวกัน)","แชร์ผลวันนี้ไปที่ห้องแชตใน Community","ติดตามหน้าที่อ่านถึงของแต่ละเล่ม"],
     load: () => import('./apps/ReadingApp'),
   },
   {
     id: 'community',
     name: 'Community',
-    tagline: 'หาเพื่อนที่สนใจเหมือนกัน',
-    description: 'ค้นหาเพื่อนจากชื่อหรือโรงเรียน แล้วส่งคำขอติดตาม',
+    tagline: "คุยกับเพื่อนคณะ/สาขาเดียวกัน",
+    description: "ห้องแชตของคนที่เลือกคณะและสาขาเดียวกัน แม้อยู่คนละมหาวิทยาลัย มีห้องรวมสำหรับทุกคน และค้นหาเพื่อนเพื่อติดตาม",
     Icon: Users,
     tone: 'var(--color-zone-arts)',
     installable: true,
-    logo: '/assets/os/apps/community.webp',   // from ChatGPT (ai-handoff 007); falls back to Icon until added
+    logo: '/assets/os/apps/community.webp',   // pixel-art icon (full tile)
+    logoFull: true,
     defaultInstalled: true,
-    features: ["ค้นหาเพื่อนจากชื่อหรือโรงเรียน", "ส่งคำขอติดตาม", "แสดงเป้าหมายคณะ/สาขาของคุณเพื่อหาคนที่สนใจเหมือนกัน"],
+    features: ["ห้องแชตตามคณะ/สาขาที่ตั้งไว้ใน Goal","ห้องรวมสำหรับทุกคน","ค้นหาเพื่อนจากชื่อหรือโรงเรียน ส่งคำขอติดตาม","ลบข้อความของตัวเองได้"],
     load: () => import('./apps/CommunityApp'),
   },
   {
     id: 'secretary',
     name: 'Secretary',
-    tagline: 'คุยกับ AI พี่ใจดี',
-    description: 'โทรคุยกับเลขา AI พี่ใจดี ให้ช่วยวางแผนและให้กำลังใจ',
+    tagline: "เลขา AI พี่ใจดี ตามงานให้",
+    description: "เลขา AI ที่รู้แผนของคุณ ช่วยตามงานที่ยังไม่ทำ ให้กำลังใจ ตอบคำถามแบบพิมพ์ และโทรคุยได้",
     Icon: Bot,
     tone: 'var(--color-brand)',
     installable: true,
-    logo: '/assets/os/apps/secretary.webp',   // from ChatGPT (ai-handoff 007); falls back to Icon until added
+    logo: '/assets/os/apps/secretary.webp',   // pixel-art icon (full tile)
+    logoFull: true,
     defaultInstalled: true,
-    features: ["โทรคุยกับเลขา AI พี่ใจดี", "ช่วยวางแผนการอ่านหนังสือ", "ให้กำลังใจเวลาท้อ", "ต้องยินยอมก่อนโทร มีโควตาต่อวัน"],
-    load: () => import('./apps/HelpApp'),
+    features: ["สรุปงานวันนี้ที่ยังไม่ทำ ติ๊กเสร็จได้ทันที","พิมพ์คุยกับพี่ใจดี พี่รู้เป้าหมายและแผนของคุณ","โทรคุยด้วยเสียง (ต้องยินยอม มีโควตาต่อวัน)"],
+    load: () => import('./apps/SecretaryApp'),
   },
   ...STORE_LINKS.map((l) => ({
     id: l.id,

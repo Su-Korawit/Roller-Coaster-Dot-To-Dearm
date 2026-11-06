@@ -14,3 +14,9 @@
 @media (prefers-reduced-motion: reduce) {
   .os-shake { animation: none; }
 }
+@keyframes osBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+.os-bob { animation: osBob 1.2s steps(2) infinite; }
+@media (prefers-reduced-motion: reduce) { .os-bob { animation: none; } }
