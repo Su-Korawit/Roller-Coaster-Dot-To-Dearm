@@ -12,8 +12,9 @@ const IMG = '/assets/voice/'
 const PIJAIDEE = { idle: 'pijaidee-smile.png', connecting: 'pijaidee-listen.png', talking: 'pijaidee-listen.png', ended: 'pijaidee-cheer.png', error: 'pijaidee-listen.png' }
 const PHONE_STATUS_ICON = { dialing: 'call-status-calling.png', no_answer: 'call-status-busy.png', busy: 'call-status-busy.png', declined: 'call-status-busy.png', answered: 'call-status-ended.png' }
 
-const btn = 'px-btn px-4 py-2.5 text-[14px] font-bold thai-font border-2 border-line bg-paper text-ink disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand'
-const btnPrimary = `${btn} bg-brand-strong text-white`
+const btnBase = 'px-btn px-4 py-2.5 text-[14px] font-bold thai-font border-2 border-line disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand'
+const btn = `${btnBase} bg-paper text-ink`
+const btnPrimary = `${btnBase} bg-brand-strong text-white` // not btn + override: bg-paper would win and hide white text
 const input = 'w-full px-3 py-2 rounded-ui border-2 border-line-soft bg-paper text-ink text-[14px] thai-font focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand'
 
 function ConsentForm({ onDone }) {
