@@ -1,7 +1,7 @@
 # เลขา AI "พี่ใจดี" (Retell) — วิธีรันและเปิดใช้งาน
 
 ## โครงสร้าง
-- `api/voice/[action].js` — Vercel entry เดียว: `status consent revoke stop resume phone schedule web-call webhook dial-due`
+- `api/voice.js` — Vercel entry เดียว: `status consent revoke stop resume phone schedule web-call webhook dial-due`
 - `api/_voice/` — logic (`logic.js` กฎความยินยอม/ทดลอง/โควตา/เพดาน), `store.js` (Firestore transaction), `retell.js`, `handler.js`, `payments.js` (ช่องว่างรอผู้ให้บริการจ่ายเงิน)
 - Client: `src/services/voiceSecretary.js`, `voiceCall.js`, `src/components/voice/VoiceSecretaryPanel.jsx` (แท็บ "พี่ใจดี" ใน Settings)
 - Firestore: `voiceSecretary/{uid}` (server เขียนเท่านั้น, client อ่านของตัวเอง), `voiceGlobal/{วัน}` (ปิดทั้งหมด)

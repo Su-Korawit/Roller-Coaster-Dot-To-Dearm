@@ -1,4 +1,7 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+// the service imports ../firebase (needs VITE_* env); the pure helper under test doesn't
+vi.mock('../firebase', () => ({ auth: { currentUser: null } }))
 import { buildStudyPlan } from './voiceSecretary'
 
 describe('buildStudyPlan', () => {

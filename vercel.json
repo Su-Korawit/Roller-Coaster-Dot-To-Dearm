@@ -95,6 +95,8 @@
 
     { "source": "/robots.txt", "has": [{ "type": "host", "value": "app.ilovetcas.com" }], "destination": "/sites/app/robots.txt" },
 
+    { "source": "/api/voice/:action", "destination": "/api/voice?action=:action" },
+
     { "source": "/(.*)", "destination": "/app.html" }
   ]
 }
