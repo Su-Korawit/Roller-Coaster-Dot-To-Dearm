@@ -21,6 +21,7 @@ existing Welcome-page `neo-*` language in `src/index.css` — it does not replac
 |---|---|---|
 | **Part A — In-app UI** (`app.ilovetcas.com`) | §1–11 | The UI is the game's HUD |
 | **Part B — Public sites** (hub + feature landings, ADR-0012) | §12–17 | The showroom around the cartridge |
+| **Part C — OS shell** (`ilovetcas.com` + `app.`, ADR-0029) | §18–23 | The product is a device: login → passcode → Home → apps |
 
 Part B inherits every Part A ban (no gradients on controls, no soft shadows, no emoji
 chrome, pixel font Latin-only ≥10px, tokens only) — it changes *layout discipline*, not
@@ -319,3 +320,72 @@ suffix reads as duplication; pixel font draws `|` as `I`).
 4. Thai never in pixel font; pixel font never under 10px?
 5. Does the page still read as the same cartridge as the game (ink borders, hard
    shadows, checker — not a generic white SaaS template)?
+
+---
+
+# Part C — OS shell (`ilovetcas.com`, `app.ilovetcas.com`)
+
+> **TL;DR (ไทย):** หน้าแรกของเว็บคือ "เครื่อง" เครื่องหนึ่ง (ADR-0029): Login Google → ตั้ง/ใส่รหัสผ่านเครื่อง →
+> Home ที่เป็นกริดไอคอนแอป → แอปเปิดเป็นหน้าต่าง วัสดุยังเป็น Soft Pixel (ขอบหมึก เงาแข็ง ไอคอน lucide)
+> แต่ "ฉากหลัง" คือวอลเปเปอร์พิกเซลอาร์ตเต็มจอ และแผง Login/ล็อกหน้าจอเป็นกระจกโปร่งวางบนวอลเปเปอร์
+> **ห้ามมีลายตาราง/หมากรุกหลังหน้าจอ OS** (เจ้าของโปรเจกต์ไม่เอา)
+
+Part C inherits every Part A ban except **one scoped exception: the glass panel (§19)**.
+
+## 18. Wallpaper
+
+- Five pixel-art themes (`lavender`, `sky`, `mint`, `sunset`, `night`), each a **portrait + landscape pair**
+  (`public/assets/os/wallpapers/{id}-{portrait,landscape}.webp`, 854×1842 / 1672×941), chosen by
+  `(orientation: portrait)`; the CSS gradient in `src/os/wallpapers.js` is the fallback only.
+- Composition rule (also in every ChatGPT brief): detail along the **bottom edge and right corner**; the upper
+  two-thirds and the upper-left stay calm and low-contrast — app icons and panels sit there.
+- The user's own photo is a sixth choice (`custom`): stored on-device (IndexedDB, never uploaded), framed by a
+  focal point + zoom so one picture fits every screen shape. Brightness is measured at upload;
+  `dark` wallpapers flip all OS text to white.
+- No checker, grid or pattern layer on any OS screen. Backdrops are the wallpaper and nothing else.
+
+## 19. Glass panel (the one exception to "no glass")
+
+Used only for the **Login panel** and the **lock-screen passcode panel**, directly over the wallpaper:
+
+- `rounded-sheet`, `bg-paper/40` (`bg-ink/25` on dark wallpapers), `backdrop-blur-sm`; **no border, no shadow**.
+- Controls inside stay solid: `px-btn` white buttons, ink text. Only the *container* is translucent.
+- Never on app windows, sheets, Store or anything with content to read at length — those stay `px-card` white.
+- Secondary text under a glass panel (e.g. "forgot passcode") is plain text, `text-sm font-medium`, ~90 % opacity
+  with a faint halo for legibility — never a pill or a filled box.
+
+## 20. Login & lock screen by device
+
+| Device | Clock | Profile | Passcode entry |
+|---|---|---|---|
+| **Desktop / Mac** (≥1024px, fine pointer) | none | avatar + name, tap avatar to change | dots only, **type on the keyboard** |
+| **Phone / tablet / iPad** (<1024px or `pointer: coarse`) | big, top (`text-7xl`→`text-9xl`) | **no avatar, no name** | number pad |
+
+- Passcode is exactly 6 digits, per device (hashed, never synced). Panel is centred on the screen; the forgot / "not you?"
+  link hangs *under* the panel without moving it.
+- The Login panel keeps the clock on every device and centres the glass panel below it.
+
+## 21. Home
+
+- Grid by device: phone 4×5, tablet 6×4, desktop 8×3; pages scroll-snap horizontally, dots in a translucent pill.
+- Chrome: phone/tablet = status bar on top, clock at the right; desktop = taskbar at the bottom, clock at the right.
+- Icon = lucide glyph on a tone-token tile with the `px-card` ink border (no emoji, no image icons); label under it.
+- Long-press (or right-click) an icon → details sheet; long-press empty space → wallpaper picker.
+- Apps open as a full-screen window (phone/tablet) or a centred `px-card` window (desktop ≥1024px). One entry in
+  `src/os/apps.js` adds an app.
+
+## 22. Avatars & generated imagery
+
+- Nine profile avatars (3 women, 3 men, 3 LGBTQ+): pixel-art heads-and-shoulders in pastel circles, ink-purple
+  outline, no text. Fallback order: chosen avatar → Google photo → first letter of the name.
+- All wallpapers and avatars are generated through ChatGPT from a work order in `ai-handoff/to-chatgpt/`
+  that cites `ai-handoff/STYLE.md`; inspect before use (size, ratio, no text/grid, original work).
+
+## 23. OS litmus (run before merging any `src/os/` change)
+
+1. Any pattern, checker or grid behind an OS screen? Remove it.
+2. Is the glass panel used anywhere other than login/lock? Make it a `px-card`.
+3. Desktop lock screen: no clock, no on-screen keypad, panel dead centre? Touch devices: keypad, no avatar/name?
+4. Does text stay readable on all five wallpapers **and** a dark custom photo (`dark` flag honoured)?
+5. Works at 375×812, 768×1024 and 1280×800 with no horizontal scroll?
+6. Tokens only — no `#fff`/off-token hex (the `legacyPurge` test enforces this).
