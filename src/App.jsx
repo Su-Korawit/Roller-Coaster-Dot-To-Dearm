@@ -22,6 +22,7 @@ const AuthPage = lazy(() => import('./pages/AuthPage'))
 const RoadmapPage = lazy(() => import('./pages/RoadmapPage'))
 const RoadmapPublicView = lazy(() => import('./pages/RoadmapPublicView'))
 const WelcomePage = lazy(() => import('./pages/WelcomePage'))
+const OsShell = lazy(() => import('./os/OsShell'))
 const NewsPostPage = lazy(() => import('./pages/NewsPostPage'))
 const StudioListPage = lazy(() => import('./pages/studio/StudioListPage'))
 // TipTap lives only in the editor chunk.
@@ -117,7 +118,9 @@ function AppSiteRoutes() {
       </Route>
 
       {/* Public — landing + auth, outside the mobile frame so the page can scroll */}
-      <Route path="/" element={<WelcomePage />} />
+      {/* "/" is the OS shell (login → passcode → Home). The old landing lives at /welcome. */}
+      <Route path="/" element={<OsShell />} />
+      <Route path="/welcome" element={<WelcomePage />} />
       <Route path="/news/:id" element={<NewsPostPage />} />
       <Route path="/auth" element={<AuthPage />} />
       {/* Open House campus: guest-usable, deliberately outside RequireAuth (ADR-0026). */}
@@ -148,7 +151,9 @@ function AppSiteRoutes() {
 function HubSiteRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<HubHome />} />
+      {/* ilovetcas.com opens the OS (ADR-0029); the article list moved to /articles */}
+      <Route path="/" element={<OsShell />} />
+      <Route path="/articles" element={<HubHome />} />
       <Route path="/blog/:slug" element={<ArticlePage />} />
       <Route path="/category/:cat" element={<CategoryPage />} />
       <Route path="/search" element={<SearchPage />} />

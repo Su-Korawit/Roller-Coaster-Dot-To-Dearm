@@ -1,0 +1,16 @@
+/* OS shell only — keyframes and scroller helpers that Tailwind utilities do not cover. */
+@keyframes osShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+.os-shake { animation: osShake 320ms steps(8); }
+
+.os-pages { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.os-pages::-webkit-scrollbar { display: none; }
+
+.os-no-select { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .os-shake { animation: none; }
+}

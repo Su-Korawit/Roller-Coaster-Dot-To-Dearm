@@ -63,7 +63,6 @@
     }
   ],
   "rewrites": [
-    { "source": "/", "has": [{ "type": "host", "value": "ilovetcas.com" }], "destination": "/api/content?route=home" },
     { "source": "/sitemap.xml", "has": [{ "type": "host", "value": "ilovetcas.com" }], "destination": "/api/content?route=sitemap" },
     { "source": "/blog/:slug", "has": [{ "type": "host", "value": "ilovetcas.com" }], "destination": "/api/content?route=article&slug=:slug" },
     { "source": "/category/:cat", "has": [{ "type": "host", "value": "ilovetcas.com" }], "destination": "/api/content?route=category&cat=:cat" },
@@ -71,7 +70,6 @@
     { "source": "/openhouse", "has": [{ "type": "host", "value": "ilovetcas.com" }], "destination": "/api/content?route=openhouse" },
     { "source": "/robots.txt", "has": [{ "type": "host", "value": "ilovetcas.com" }], "destination": "/sites/hub/robots.txt" },
 
-    { "source": "/", "has": [{ "type": "host", "value": "www.ilovetcas.com" }], "destination": "/api/content?route=home" },
     { "source": "/sitemap.xml", "has": [{ "type": "host", "value": "www.ilovetcas.com" }], "destination": "/api/content?route=sitemap" },
     { "source": "/blog/:slug", "has": [{ "type": "host", "value": "www.ilovetcas.com" }], "destination": "/api/content?route=article&slug=:slug" },
     { "source": "/category/:cat", "has": [{ "type": "host", "value": "www.ilovetcas.com" }], "destination": "/api/content?route=category&cat=:cat" },
