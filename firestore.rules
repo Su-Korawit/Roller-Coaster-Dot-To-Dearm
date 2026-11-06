@@ -352,6 +352,39 @@ service cloud.firestore {
         (resource.data.uid == request.auth.uid || isSuperAdmin());
     }
 
+    // OS community chat: one room per faculty+major (id = users/{uid}.osRoomId, any university) plus
+    // the open room 'general'. Members = signed-in users whose own osRoomId equals the room.
+    match /osRooms/{roomId}/messages/{msgId} {
+      function inRoom() {
+        return roomId == 'general'
+          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('osRoomId', '') == roomId;
+      }
+      allow read: if isSignedIn() && inRoom();
+      allow create: if isSignedIn() && inRoom()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 1 && request.resource.data.text.size() <= 500
+        && request.resource.data.name is string && request.resource.data.name.size() <= 60
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if isSignedIn() &&
+        (resource.data.uid == request.auth.uid || isSuperAdmin());
+    }
+
+    // OS Reading leaderboard entry: one doc per user (id = uid), written only by its owner.
+    match /osReading/{uid} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.name is string && request.resource.data.name.size() <= 60
+        && request.resource.data.roomId is string && request.resource.data.roomId.size() <= 130
+        && request.resource.data.weekKey is string && request.resource.data.weekKey.size() <= 10
+        && request.resource.data.weekMinutes is int
+        && request.resource.data.weekMinutes >= 0 && request.resource.data.weekMinutes <= 10080
+        && request.resource.data.totalMinutes is int && request.resource.data.totalMinutes >= 0;
+      allow delete: if isSignedIn() && (request.auth.uid == uid || isSuperAdmin());
+    }
+
     // Entitlement catalog — priced unlockables. Signed-in read; super-admin
     // writes (pricing experiments without a deploy). Purchases themselves are
     // executed only by the purchaseEntitlement Cloud Function (Admin SDK).

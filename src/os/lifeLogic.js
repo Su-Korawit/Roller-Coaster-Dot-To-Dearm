@@ -7,7 +7,7 @@ export function todayKey(d = new Date()) {
   return `${y}-${m}-${day}`
 }
 
-function shiftKey(key, days) {
+export function shiftKey(key, days) {
   const [y, m, d] = key.split('-').map(Number)
   return todayKey(new Date(y, m - 1, d + days))
 }

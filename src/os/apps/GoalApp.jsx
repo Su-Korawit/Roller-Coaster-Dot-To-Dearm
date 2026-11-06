@@ -1,7 +1,10 @@
 import { useState } from 'react'
-import { Plus, X } from 'lucide-react'
+import { Plus, X, Sparkles, CalendarClock } from 'lucide-react'
 import { useLifeStore } from '../../stores/useLifeStore'
 import { scoreGap } from '../lifeLogic'
+import { daysUntil } from '../studyPlan'
+import { findApp } from '../apps'
+import { generateStudyPlan } from '../../services/aiStudyPlan'
 
 const FIELDS = [
   ['university', 'มหาวิทยาลัย'],
@@ -9,12 +12,35 @@ const FIELDS = [
   ['major', 'สาขา'],
 ]
 
-// Goal: pick one target (university / faculty / major) and list the scores it needs.
-export default function GoalApp() {
-  const { target, scores, setTarget, addScore, setMyScore, removeScore } = useLifeStore()
+// Goal: pick one target (university / faculty / major), the exam date and the scores it needs.
+// Everything is saved to the user's account automatically. "วางแผนด้วย AI" builds the day-by-day plan
+// and opens Habit.
+export default function GoalApp({ onOpenApp }) {
+  const { target, scores, hoursPerDay, setTarget, setHoursPerDay, addScore, setMyScore, removeScore, applyPlan } = useLifeStore()
+  const [planning, setPlanning] = useState(false)
+  const [planMsg, setPlanMsg] = useState('')
+  const left = daysUntil(target.examDate)
+  const canPlan = left != null && left >= 0 && scores.length > 0
   const [subject, setSubject] = useState('')
   const [needed, setNeeded] = useState('')
   const hasTarget = FIELDS.some(([k]) => target[k])
+
+  async function plan() {
+    setPlanning(true)
+    setPlanMsg('')
+    try {
+      const out = await generateStudyPlan({ target, scores, hoursPerDay })
+      if (out.tasks.length === 0) { setPlanMsg('ยังสร้างแผนไม่ได้ ตรวจวันสอบและวิชาอีกครั้ง'); return }
+      applyPlan(out.tasks, out.summary)
+      const habit = findApp('habit')
+      if (habit && onOpenApp) onOpenApp(habit)
+    } catch (e) {
+      console.error('[GoalApp] plan failed:', e)
+      setPlanMsg('สร้างแผนไม่สำเร็จ ลองใหม่อีกครั้ง')
+    } finally {
+      setPlanning(false)
+    }
+  }
 
   function submit(e) {
     e.preventDefault()
@@ -37,6 +63,33 @@ export default function GoalApp() {
             />
           </label>
         ))}
+        <label className="flex flex-col gap-1 thai-font text-xs text-ink-soft">
+          วันสอบ (TCAS รอบ 3)
+          <input
+            type="date"
+            value={target.examDate}
+            onChange={(e) => setTarget({ examDate: e.target.value })}
+            className="px-input h-10 px-3 text-sm text-ink bg-paper"
+          />
+        </label>
+        {left != null && (
+          <p className="thai-font text-sm flex items-center gap-2 text-brand-strong font-semibold">
+            <CalendarClock size={16} aria-hidden="true" />
+            {left > 0 ? `เหลืออีก ${left} วัน` : left === 0 ? 'วันสอบคือวันนี้ สู้ๆ' : 'ผ่านวันสอบแล้ว'}
+          </p>
+        )}
+        <label className="flex flex-col gap-1 thai-font text-xs text-ink-soft">
+          อ่านหนังสือวันละกี่ชั่วโมง
+          <input
+            type="number"
+            min="0.5"
+            max="12"
+            step="0.5"
+            value={hoursPerDay}
+            onChange={(e) => setHoursPerDay(e.target.value)}
+            className="px-input h-10 px-3 text-sm text-ink bg-paper w-28"
+          />
+        </label>
         {!hasTarget && (
           <label className="flex flex-col gap-1 thai-font text-xs text-ink-soft">
             ยังไม่มีคณะ? ตอนนี้สนใจอะไรอยู่
@@ -82,6 +135,19 @@ export default function GoalApp() {
           <input type="number" value={needed} onChange={(e) => setNeeded(e.target.value)} placeholder="คะแนนที่ต้องใช้" aria-label="คะแนนที่ต้องใช้" className="px-input h-10 px-3 text-sm w-32" />
           <button type="submit" aria-label="เพิ่มวิชา" className="px-btn px-3 bg-paper"><Plus size={18} /></button>
         </form>
+      </section>
+      <section className="px-card p-4 flex flex-col gap-2" aria-label="วางแผน">
+        <button
+          type="button"
+          onClick={plan}
+          disabled={!canPlan || planning}
+          className="px-btn py-2.5 thai-font text-sm font-bold bg-brand-strong text-white disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          <Sparkles size={16} aria-hidden="true" /> {planning ? 'พี่กำลังวางแผน...' : 'วางแผนด้วย AI'}
+        </button>
+        {!canPlan && <p className="thai-font text-xs text-ink-soft">ใส่วันสอบ (ที่ยังมาไม่ถึง) และเพิ่มวิชาอย่างน้อย 1 วิชาก่อน</p>}
+        {planMsg && <p role="alert" className="thai-font text-sm text-zone-health-deep">{planMsg}</p>}
+        <p className="thai-font text-xs text-ink-soft">ข้อมูลบันทึกในบัญชีของคุณอัตโนมัติ</p>
       </section>
     </div>
   )

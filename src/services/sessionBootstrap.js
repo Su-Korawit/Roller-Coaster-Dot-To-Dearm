@@ -36,6 +36,7 @@ import { resolveConsent } from './consent'
 import { useHotbarStore } from '../stores/useHotbarStore'
 import { useResumeStore } from '../stores/useResumeStore'
 import { useGuideStore } from '../stores/useGuideStore'
+import { useLifeStore } from '../stores/useLifeStore'
 import { useConsentStore } from '../stores/useConsentStore'
 import { migrateLegacyRoadmap } from '../utils/migrateLegacyRoadmap'
 import {
@@ -61,6 +62,8 @@ import {
   hydrateResumeFromFirestore,
   setResumeSyncUser,
   hydrateGuideFromFirestore,
+  hydrateOsFromFirestore,
+  setOsSyncUser,
   setGuideSyncUser,
   setPlansSyncUser,
 } from '../lib/syncManager'
@@ -215,6 +218,11 @@ export async function bootstrapSession(firebaseUser) {
       await hydrateResumeFromFirestore(uid)
       setResumeSyncUser(uid)
     }),
+    step('hydrate/arm os apps', async () => {
+      useLifeStore.getState().adoptUser(uid)
+      await hydrateOsFromFirestore(uid)
+      setOsSyncUser(uid)
+    }),
     step('hydrate/arm hotbar', async () => {
       await hydrateHotbarFromFirestore(uid)
       setHotbarSyncUser(uid)
@@ -252,6 +260,7 @@ export function teardownSession() {
   setHotbarSyncUser(null)
   setResumeSyncUser(null)
   setGuideSyncUser(null)
+  setOsSyncUser(null)
   setPlansSyncUser(null)
   useGuideStore.getState().reset()
   useResumeStore.getState().reset()

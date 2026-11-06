@@ -5,7 +5,7 @@
 import { describe, it, beforeAll, afterAll, beforeEach } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing'
-import { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, deleteDoc, where } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, deleteDoc, where, serverTimestamp } from 'firebase/firestore'
 
 // Section admins are gated by token email — authenticate with an email claim.
 const SUPER_UID = 'IaltEhO0mPVfK3ng8npr4CdqnEE3'
@@ -423,6 +423,54 @@ describe('osAppReviews rules', () => {
     await assertSucceeds(deleteDoc(doc(alice, 'osAppReviews/goal_alice')))
     const admin = testEnv.authenticatedContext(SUPER_UID).firestore()
     await assertSucceeds(deleteDoc(doc(admin, 'osAppReviews/goal_bob')))
+  })
+})
+
+describe('osRooms + osReading rules', () => {
+  const seedUsers = async () => testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'users/alice'), { osRoomId: 'วิศวะ__คอม' })
+    await setDoc(doc(ctx.firestore(), 'users/bob'), { osRoomId: 'แพทย์' })
+    await setDoc(doc(ctx.firestore(), 'users/carol'), { name: 'no room' })
+  })
+  const msg = (over = {}) => ({ uid: 'alice', name: 'Alice', text: 'สวัสดี', createdAt: serverTimestamp(), ...over })
+
+  it('members of the room can read and post; others cannot', async () => {
+    await seedUsers()
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    await assertSucceeds(setDoc(doc(alice, 'osRooms/วิศวะ__คอม/messages/m1'), msg()))
+    await assertSucceeds(getDoc(doc(alice, 'osRooms/วิศวะ__คอม/messages/m1')))
+    await assertFails(getDoc(doc(bob, 'osRooms/วิศวะ__คอม/messages/m1')))
+    await assertFails(setDoc(doc(bob, 'osRooms/วิศวะ__คอม/messages/m2'), msg({ uid: 'bob' })))
+  })
+
+  it('anyone signed in can use the general room; signed-out cannot', async () => {
+    await seedUsers()
+    const carol = testEnv.authenticatedContext('carol').firestore()
+    await assertSucceeds(setDoc(doc(carol, 'osRooms/general/messages/g1'), msg({ uid: 'carol' })))
+    const anon = testEnv.unauthenticatedContext().firestore()
+    await assertFails(getDoc(doc(anon, 'osRooms/general/messages/g1')))
+  })
+
+  it('BLOCKS spoofed uid, empty or over-long text, and edits', async () => {
+    await seedUsers()
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(setDoc(doc(alice, 'osRooms/วิศวะ__คอม/messages/x1'), msg({ uid: 'bob' })))
+    await assertFails(setDoc(doc(alice, 'osRooms/วิศวะ__คอม/messages/x2'), msg({ text: '' })))
+    await assertFails(setDoc(doc(alice, 'osRooms/วิศวะ__คอม/messages/x3'), msg({ text: 'a'.repeat(501) })))
+    await assertSucceeds(setDoc(doc(alice, 'osRooms/วิศวะ__คอม/messages/x4'), msg()))
+    await assertFails(updateDoc(doc(alice, 'osRooms/วิศวะ__คอม/messages/x4'), { text: 'edited' }))
+  })
+
+  it('reading entry: owner writes own doc only, with sane numbers', async () => {
+    const entry = (over = {}) => ({ uid: 'alice', name: 'Alice', roomId: 'r', weekKey: '2026-11-02', weekMinutes: 120, totalMinutes: 500, ...over })
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(setDoc(doc(alice, 'osReading/alice'), entry()))
+    await assertFails(setDoc(doc(alice, 'osReading/bob'), entry({ uid: 'bob' })))
+    await assertFails(setDoc(doc(alice, 'osReading/alice'), entry({ weekMinutes: 99999 })))
+    await assertFails(setDoc(doc(alice, 'osReading/alice'), entry({ weekMinutes: 1.5 })))
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    await assertSucceeds(getDoc(doc(bob, 'osReading/alice')))
   })
 })
 
