@@ -3,7 +3,7 @@ import { useOsStore } from './useOsStore'
 
 const reset = () => useOsStore.setState({
   wallpaperId: 'lavender', installed: [], customAspect: null, customDark: false,
-  customCrop: { fx: 50, fy: 50, zoom: 1 }, customRev: 0,
+  customCrop: { fx: 50, fy: 50, zoom: 1 }, customRev: 0, avatars: {},
 })
 
 describe('useOsStore', () => {
@@ -44,6 +44,19 @@ describe('useOsStore', () => {
   it('clamps the crop it is given', () => {
     useOsStore.getState().setCustomCrop({ fx: 500, fy: -3, zoom: 99 })
     expect(useOsStore.getState().customCrop).toEqual({ fx: 100, fy: 0, zoom: 3 })
+  })
+
+  it('keeps a profile avatar per user and ignores unknown ids', () => {
+    const { setAvatar } = useOsStore.getState()
+    setAvatar('u1', 'q2')
+    setAvatar('u2', 'f1')
+    setAvatar('u1', 'nope')            // unknown id: the choice stays
+    expect(useOsStore.getState().avatars).toEqual({ u1: 'q2', u2: 'f1' })
+    setAvatar('u1', null)              // null = back to Google photo / initial
+    setAvatar('u2', null)
+    expect(useOsStore.getState().avatars).toEqual({})
+    setAvatar('', 'f1')                // no user → nothing stored
+    expect(useOsStore.getState().avatars).toEqual({})
   })
 
   it('removing the photo falls back to the default wallpaper only if it was selected', () => {

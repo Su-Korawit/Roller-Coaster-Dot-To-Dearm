@@ -1,8 +1,11 @@
 import { useState } from 'react'
+import { Pencil } from 'lucide-react'
 import { useAuthStore } from '../stores/useAuthStore'
 import Wallpaper from './Wallpaper'
 import { useWallpaperDark } from './useWallpaperDark'
 import PinPad from './PinPad'
+import ProfileAvatar from './ProfileAvatar'
+import AvatarSheet from './AvatarSheet'
 import { useClock, useDevice, useTouchPrimary, formatTime, formatDate } from './hooks'
 import { PIN_LENGTH, savePasscode, verifyPasscode, clearPasscode } from './passcode'
 
@@ -20,6 +23,7 @@ export default function PasscodeScreen({ user, mode, onDone }) {
   const [message, setMessage] = useState('')
   const [shake, setShake] = useState(0)
   const [busy, setBusy] = useState(false)
+  const [pickAvatar, setPickAvatar] = useState(false)
 
   const title = mode === 'unlock' ? 'ใส่รหัสผ่านเพื่อปลดล็อก' : first ? 'ยืนยันรหัสผ่านอีกครั้ง' : 'ตั้งรหัสผ่านสำหรับเครื่องนี้'
   const name = user.displayName || user.email || 'ผู้ใช้'
@@ -79,13 +83,18 @@ export default function PasscodeScreen({ user, mode, onDone }) {
           <div className="flex flex-col items-center gap-1 text-center">
             {!compact && (
               <>
-                {user.photoURL ? (
-                  <img src={user.photoURL} alt="" referrerPolicy="no-referrer" className="w-20 h-20 rounded-full border-2 border-line" />
-                ) : (
-                  <span className="w-20 h-20 rounded-full border-2 border-line bg-paper text-ink font-display text-3xl font-bold flex items-center justify-center">
-                    {name.trim().charAt(0).toUpperCase()}
+                <button
+                  type="button"
+                  onClick={() => setPickAvatar(true)}
+                  aria-label="เปลี่ยนรูปโปรไฟล์"
+                  title="เปลี่ยนรูปโปรไฟล์"
+                  className="relative rounded-full transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                >
+                  <ProfileAvatar user={user} size={96} />
+                  <span className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-brand-strong text-white border-2 border-paper flex items-center justify-center" aria-hidden="true">
+                    <Pencil size={13} />
                   </span>
-                )}
+                </button>
                 <p className="thai-font text-base font-semibold mt-1">{name}</p>
               </>
             )}
@@ -113,6 +122,7 @@ export default function PasscodeScreen({ user, mode, onDone }) {
           )}
         </div>
       </div>
+      {pickAvatar && <AvatarSheet user={user} onClose={() => setPickAvatar(false)} />}
     </Wallpaper>
   )
 }

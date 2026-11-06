@@ -5,13 +5,15 @@ import { useWallpaperDark } from './useWallpaperDark'
 import AppIcon from './AppIcon'
 import AppDetailsSheet from './AppDetailsSheet'
 import WallpaperSheet from './WallpaperSheet'
+import AvatarSheet from './AvatarSheet'
+import ProfileAvatar from './ProfileAvatar'
 import { HELP_APP, HELP_BUTTON_ENABLED, findApp, homeAppIds, paginate } from './apps'
 import { useDevice, useClock, formatTime, formatDate } from './hooks'
 import { useOsStore } from '../stores/useOsStore'
 
 const EMPTY_LONG_PRESS_MS = 550
 
-export default function HomeScreen({ onOpenApp, onLock }) {
+export default function HomeScreen({ user, onOpenApp, onLock }) {
   const { device, cols, rows } = useDevice()
   const now = useClock()
   const dark = useWallpaperDark()
@@ -20,6 +22,7 @@ export default function HomeScreen({ onOpenApp, onLock }) {
   const [page, setPage] = useState(0)
   const [details, setDetails] = useState(null)
   const [pickWallpaper, setPickWallpaper] = useState(false)
+  const [pickAvatar, setPickAvatar] = useState(false)
   const scroller = useRef(null)
   const pressTimer = useRef(null)
   const pressStart = useRef(null)
@@ -61,6 +64,15 @@ export default function HomeScreen({ onOpenApp, onLock }) {
     <div
       className={`absolute left-0 right-0 z-10 flex items-center gap-2 px-4 os-no-select ${desktop ? 'bottom-0 h-12 border-t-2 border-line/30 bg-paper/50 backdrop-blur-sm' : 'top-0 h-11'}`}
     >
+      <button
+        type="button"
+        onClick={() => setPickAvatar(true)}
+        aria-label="เปลี่ยนรูปโปรไฟล์"
+        title="เปลี่ยนรูปโปรไฟล์"
+        className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+      >
+        <ProfileAvatar user={user} size={30} />
+      </button>
       <p className="thai-font text-xs opacity-80 hidden sm:block">{formatDate(now)}</p>
       <span className="flex-1" />
       <button type="button" className={barBtn} onClick={() => setPickWallpaper(true)} aria-label="เปลี่ยนวอลเปเปอร์">
@@ -139,6 +151,7 @@ export default function HomeScreen({ onOpenApp, onLock }) {
           onClose={() => setDetails(null)}
         />
       )}
+      {pickAvatar && <AvatarSheet user={user} onClose={() => setPickAvatar(false)} />}
       {pickWallpaper && <WallpaperSheet onClose={() => setPickWallpaper(false)} />}
     </Wallpaper>
   )

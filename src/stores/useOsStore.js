@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { DEFAULT_WALLPAPER, WALLPAPERS } from '../os/wallpapers'
 import { DEFAULT_CROP, normalizeCrop } from '../os/customWallpaper'
+import { findAvatar } from '../os/avatars'
 
 // OS shell preferences, per device (like a phone's home screen): wallpaper + installed apps.
 // The user's own photo is kept in IndexedDB (too big for localStorage); only its crop, aspect and
@@ -17,6 +18,7 @@ export const useOsStore = create(
       customDark: false,
       customCrop: DEFAULT_CROP,
       customRev: 0,
+      avatars: {},             // { [uid]: avatarId } — profile picture chosen on this device
 
       setWallpaper: (id) =>
         set((s) => {
@@ -41,6 +43,16 @@ export const useOsStore = create(
           customCrop: DEFAULT_CROP,
           customRev: s.customRev + 1,
         })),
+
+      setAvatar: (uid, id) =>
+        set((s) => {
+          if (!uid) return s
+          if (id != null && !findAvatar(id)) return s     // unknown id: keep the current choice
+          const next = { ...s.avatars }
+          if (id == null) delete next[uid]                 // null = back to Google photo / initial
+          else next[uid] = id
+          return { avatars: next }
+        }),
 
       installApp: (id) => set((s) => (s.installed.includes(id) ? s : { installed: [...s.installed, id] })),
       uninstallApp: (id) => set((s) => ({ installed: s.installed.filter((x) => x !== id) })),

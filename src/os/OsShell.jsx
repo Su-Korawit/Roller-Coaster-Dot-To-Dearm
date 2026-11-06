@@ -25,7 +25,7 @@ function Device({ user }) {
   }
   return (
     <>
-      <HomeScreen onOpenApp={setOpenApp} onLock={() => { setOpenApp(null); setUnlocked(false) }} />
+      <HomeScreen user={user} onOpenApp={setOpenApp} onLock={() => { setOpenApp(null); setUnlocked(false) }} />
       {openApp && <AppWindow app={openApp} onClose={() => setOpenApp(null)} onOpenApp={setOpenApp} />}
     </>
   )
