@@ -29,6 +29,11 @@ export async function startVoiceCall(vars, onState) {
   client.on('call_started', () => onState('talking'))
   client.on('call_ended', () => onState('ended'))
   client.on('error', () => { onState('error', { code: 'upstream_failed' }); try { client.stopCall() } catch { /* already stopped */ } })
-  await client.startCall({ accessToken: out.access_token })
+  await client.startCall({
+    accessToken: out.access_token,
+    callId: out.call_id,
+    ...(out.transport ? { transport: out.transport } : {}),
+    ...(out.ice_servers ? { iceServers: out.ice_servers } : {}),
+  })
   return { mock: false, stop: () => { try { client.stopCall() } catch { /* ignore */ } } }
 }
