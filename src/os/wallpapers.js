@@ -9,6 +9,12 @@ export const WALLPAPERS = [
 
 export const DEFAULT_WALLPAPER = 'lavender'
 
+// Pixel-art images (ChatGPT work order 005): one per orientation so every screen shape gets a
+// native crop. Missing files fall back to the gradient above.
+export function wallpaperImage(id, orientation) {
+  return `/assets/os/wallpapers/${id}-${orientation}.webp`
+}
+
 export function getWallpaper(id) {
   return WALLPAPERS.find((w) => w.id === id) ?? WALLPAPERS[0]
 }

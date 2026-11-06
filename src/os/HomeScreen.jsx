@@ -101,7 +101,7 @@ export default function HomeScreen({ onOpenApp, onLock }) {
           ))}
         </div>
 
-        <div className="flex justify-center gap-2 pb-5 h-9 items-center" role="tablist" aria-label="หน้าจอ">
+        <div className="flex justify-center gap-2 mx-auto mb-3 px-3 h-6 items-center rounded-full bg-ink/25" role="tablist" aria-label="หน้าจอ">
           {pages.map((_, i) => (
             <button
               key={i}

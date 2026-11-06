@@ -1,6 +1,6 @@
 import { Check } from 'lucide-react'
 import OsSheet from './OsSheet'
-import { WALLPAPERS } from './wallpapers'
+import { WALLPAPERS, wallpaperImage } from './wallpapers'
 import { useOsStore } from '../stores/useOsStore'
 
 export default function WallpaperSheet({ onClose }) {
@@ -20,7 +20,7 @@ export default function WallpaperSheet({ onClose }) {
           >
             <span
               className={`relative w-full aspect-[3/4] rounded-ui border-2 ${current === w.id ? 'border-brand-strong shadow-px-sm' : 'border-hairline'}`}
-              style={{ background: w.css }}
+              style={{ background: `url(${wallpaperImage(w.id, 'portrait')}) center bottom / cover, ${w.css}`, imageRendering: 'pixelated' }}
             >
               {current === w.id && (
                 <Check size={18} className={`absolute top-1.5 right-1.5 ${w.dark ? 'text-white' : 'text-brand-strong'}`} />
