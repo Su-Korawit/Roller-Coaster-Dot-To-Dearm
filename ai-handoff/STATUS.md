@@ -1,0 +1,16 @@
+# STATUS — ใบสั่งงาน ChatGPT
+
+| เลขที่ | เรื่อง | สถานะ | ไฟล์ใบสั่งงาน | ไฟล์ผลลัพธ์ | ที่วาง |
+|---|---|---|---|---|---|
+| 001 | ไอคอนปุ่มคุยกับพี่ใจดี 512x512 | เสร็จ (ตรวจแล้ว) | to-chatgpt/001-ไอคอนปุ่มคุยกับพี่ใจดี.md | from-chatgpt/001-voice-talk-button.png | public/assets/voice/voice-talk-button.png |
+| 002 | ตัวละครพี่ใจดี 3 อารมณ์ | เสร็จ (ตรวจแล้ว) | to-chatgpt/002-ตัวละครพี่ใจดี-3อารมณ์.md | from-chatgpt/002-pijaidee-{smile,cheer,listen}.png | public/assets/voice/pijaidee-*.png |
+| 003 | ไอคอนสถานะสาย 3 อัน | เสร็จ (ตัดจากแผ่นเดียว 3 อัน) | to-chatgpt/003-ไอคอนสถานะสาย-3อัน.md | from-chatgpt/003-call-status-sheet.png | public/assets/voice/call-status-*.png |
+| 004 | ร่างข้อความไทย PDPA/ปุ่ม/ข้อผิดพลาด | เสร็จ (ตรวจ+ปรับแล้ว) | to-chatgpt/004-ร่างข้อความไทย-PDPA-และหน้าโทร.md | from-chatgpt/004-copy-th.md | src/constants/voiceCopy.js (หลังตรวจ) |
+
+## บันทึกความคืบหน้างาน voice-secretary
+
+- 2026-11-06 เฟส 0-1 เสร็จ (commit 29c3f19): endpoint/ตรรกะ/ UI/ เทสต์ผ่าน, ยังไม่มี RETELL_API_KEY -> โหมดจำลอง
+- 2026-11-06 ค่าใช้จ่ายทดสอบ Retell: $0 (ยังไม่เรียก API จริง)
+- 2026-11-06 รูปทั้ง 7 ไฟล์ผ่านโหมดเบราว์เซอร์ (แท็บใหม่, ช่องแชตว่างก่อนพิมพ์, ไม่มีข้อมูลส่วนตัวในพรอมต์) ตรวจ: PNG RGBA โปร่งใสจริง, ย่อ/จัดกึ่งกลางเป็น 512 (ตัวละคร/ปุ่ม) และ 256 (สถานะ), ขนาดไฟล์ < 150KB ต้นฉบับอยู่ from-chatgpt/ ลิขสิทธิ์: ภาพ AI generate ต้นฉบับ ไม่มีโลโก้/ตัวอักษร ผู้ใช้ควรดูด้วยตาอีกครั้ง
+- ไฟล์ค้างใน D:\Ikkyusan\Downloads ที่ไม่ใช่ของงานนี้: `ไอคอนหนังสือสีเขียวเรียบง่าย.png` (6:12 PM จากเซสชันก่อน) — ไม่ได้แตะ
+- 2026-11-06 Retell จริง: agent เปลี่ยนชื่อ "พี่ใจดี - เลขา AI" + max_call_duration 180s + publish v0 (ผ่าน publish-agent-version) · create-web-call (v3) ได้ token 1 ครั้ง ไม่เริ่มคุย ($0) · โทรออกทดสอบหา TEST_PHONE_OWN 1 สาย 47 วินาที ≈ $0.48 (call_cost 47.8 หน่วย cent) รวมใช้ ≈ $0.48 จากเพดาน $2 · เบอร์ +13192641997 ยังไม่ผูก inbound/outbound agent ใน Retell (ไม่ได้แก้)
