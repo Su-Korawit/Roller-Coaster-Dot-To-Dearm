@@ -15,6 +15,7 @@ import Toggle from './ui/Toggle'
 import SegmentedTabs from './ui/SegmentedTabs'
 import Popup from './ui/Popup'
 import DeleteAccountSheet from './DeleteAccountSheet'
+import VoiceSecretaryPanel from './voice/VoiceSecretaryPanel'
 import { playSound } from '../lib/sfx'
 import { LEGAL_PATHS } from '../constants/legal'
 
@@ -37,6 +38,7 @@ const SETTINGS_TABS = [
   { id: 'privacy', label: 'Privacy' },
   { id: 'interface', label: 'Interface' },
   { id: 'general', label: 'General' },
+  { id: 'secretary', label: 'พี่ใจดี' },
 ]
 
 const UI_VISIBILITY_ITEMS = [
@@ -296,6 +298,8 @@ export default function SettingsSheet({ onClose, onProfileUpdated }) {
             ))}
           </section>
           )}
+
+          {activeTab === 'secretary' && (<VoiceSecretaryPanel />)}
 
           {activeTab === 'general' && (
           <section className="space-y-3">
