@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { ShoppingBag, Target, CalendarCheck, CalendarDays, BookOpen, Users, Bot, Landmark, MessageSquarePlus, Settings, School, MessagesSquare, SmilePlus } from 'lucide-react'
+import { ShoppingBag, Target, CalendarCheck, CalendarDays, BookOpen, Users, Bot, Landmark, MessageSquarePlus, Settings, School, MessagesSquare, SmilePlus, Blocks } from 'lucide-react'
 import { STORE_LINKS } from './storeLinks'
 import { UNIVERSITY_ROWS, NO_EMBED_IDS, shortUniName } from '../data/universityApps'
 
@@ -138,6 +138,21 @@ const RAW_APPS = [
     defaultInstalled: true,
     features: ['เช็กอินความรู้สึก 5 ระดับ วันละครั้ง', 'ตารางสีแบบ GitHub 30 สัปดาห์ เห็นความถี่ของแต่ละอารมณ์', 'สรุป 30 วัน: อารมณ์เฉลี่ยและจำนวนวันของแต่ละระดับ', 'นับเช็กอินต่อเนื่อง'],
     load: () => import('./apps/MoodApp'),
+  },
+  {
+    id: 'block',
+    name: 'Block',
+    tagline: 'วางแผนเส้นทางเป็นบล็อกต่อกัน',
+    description: 'แผนที่เส้นทางของน้องแบบบล็อกที่ต่อกัน (Roadmap เดิม) เพิ่มบล็อกเป้าหมาย ทักษะ กิจกรรม แล้วลากเส้นเชื่อมเป็นเส้นทางไปสู่คณะหรืออาชีพที่ฝัน แชร์ลิงก์ให้คนอื่นดูได้',
+    Icon: Blocks,
+    tone: 'var(--color-zone-sci)',
+    installable: true,
+    logo: '/assets/os/apps/block.webp',
+    logoFull: true,
+    category: 'study',
+    defaultInstalled: true,
+    features: ['ต่อบล็อกเป็นเส้นทางสู่เป้าหมาย', 'ลากเส้นเชื่อมและจัดวางได้อิสระ', 'บันทึกในบัญชีอัตโนมัติ', 'แชร์ลิงก์ให้เพื่อนหรือครูดูได้'],
+    load: () => import('./apps/BlockApp'),
   },
   {
     id: 'secretary',

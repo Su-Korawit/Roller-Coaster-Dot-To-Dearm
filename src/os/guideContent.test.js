@@ -10,7 +10,7 @@ describe('guide content', () => {
   })
   it('every tip belongs to a real app and every core app has one', () => {
     for (const id of Object.keys(APP_HELP)) expect(ids.has(id), id).toBe(true)
-    for (const id of ['goal', 'habit', 'calendar', 'secretary', 'mood', 'reading', 'openhouse', 'community', 'chat', 'store', 'settings']) {
+    for (const id of ['block', 'goal', 'habit', 'calendar', 'secretary', 'mood', 'reading', 'openhouse', 'community', 'chat', 'store', 'settings']) {
       expect(APP_HELP[id]?.length, id).toBeGreaterThan(0)
     }
   })
