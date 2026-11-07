@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { ShoppingBag, Target, CalendarCheck, BookOpen, Users, Bot, Landmark, MessageSquarePlus } from 'lucide-react'
+import { ShoppingBag, Target, CalendarCheck, CalendarDays, BookOpen, Users, Bot, Landmark, MessageSquarePlus, Settings, School, GraduationCap } from 'lucide-react'
 import { STORE_LINKS } from './storeLinks'
 import { UNIVERSITY_ROWS, NO_EMBED_IDS, shortUniName } from '../data/universityApps'
 
@@ -31,6 +31,19 @@ const RAW_APPS = [
     builtIn: true,
     installable: false,
     load: () => import('./apps/StoreApp'),
+  },
+  {
+    id: 'settings',
+    name: 'Settings',
+    tagline: 'ตั้งค่าบัญชี หน้าจอ เสียง และความปลอดภัย',
+    description: 'จัดการโปรไฟล์ วอลเปเปอร์ เสียง ภาษา AI รหัสผ่านเครื่องนี้ และความเป็นส่วนตัว แยกเป็นหมวดให้หาง่าย',
+    Icon: Settings,
+    tone: 'var(--color-ink-soft)',
+    builtIn: true,
+    installable: false,
+    logo: '/assets/os/apps/settings.webp',
+    logoFull: true,
+    load: () => import('./apps/SettingsApp'),
   },
   {
     id: 'goal',
@@ -127,6 +140,50 @@ const RAW_APPS = [
     defaultInstalled: true,
     features: ['ส่งคำขอแอปใหม่หรือเว็บไซต์ที่อยากให้รวมไว้ที่นี่', 'ดูคำขอของทุกคน เรียงตามคะแนนโหวต', 'กดโหวตให้คำขอที่คุณก็อยากได้', 'ดูสถานะคำขอของตัวเอง ลบได้'],
     load: () => import('./apps/ReportApp'),
+  },
+  {
+    id: 'calendar',
+    name: 'Calendar',
+    tagline: 'ปฏิทิน TCAS70 รวมกับงานของคุณ',
+    description: 'ดูวันสำคัญของ TCAS70 (เปิดรับสมัคร สอบ ประกาศผล) บนปฏิทินเดือนเดียวกับงานใน Habit กดเพิ่มวันสำคัญลงแผนของตัวเองได้',
+    Icon: CalendarDays,
+    tone: 'var(--color-accent-pink)',
+    installable: true,
+    logo: '/assets/os/apps/calendar.webp',
+    logoFull: true,
+    category: 'study',
+    defaultInstalled: true,
+    features: ['ปฏิทินรายเดือน มีจุดสีบอกวันสำคัญ TCAS และงานใน Habit', 'กดวันที่ดูรายการของวันนั้น', 'เพิ่มวันสำคัญลงแผนของฉัน (กลายเป็นงานใน Habit)', 'รายการที่กำลังจะมาถึง พร้อมลิงก์'],
+    load: () => import('./apps/CalendarApp'),
+  },
+  {
+    id: 'openhouse',
+    name: 'Open House',
+    tagline: 'เดินดูคณะและเส้นทางเข้าทุกมหาลัย',
+    description: 'เดินสำรวจมหาวิทยาลัยจำลอง เข้าแต่ละคณะเพื่อดูสาขา เกณฑ์ และเส้นทางเข้า ไม่ต้องสมัครสมาชิกก็เล่นได้',
+    Icon: School,
+    tone: 'var(--color-zone-sci)',
+    installable: true,
+    logo: '/assets/os/apps/openhouse.webp',
+    logoFull: true,
+    category: 'admission',
+    defaultInstalled: true,
+    features: ['เดินสำรวจมหาลัยจำลองด้วยตัวละครของคุณ', 'เข้าอาคารคณะดูสาขาและเส้นทางเข้า', 'ใช้ได้โดยไม่ต้องสมัครสมาชิก', 'กด "เปิดเต็มจอ" เพื่อเล่นในแท็บใหม่'],
+    load: () => import('./apps/OpenHouseApp'),
+  },
+  {
+    id: 'tutor',
+    name: 'Tutor',
+    tagline: 'รวมเว็บสถาบันกวดวิชา 37 แห่ง',
+    description: 'รวมเว็บไซต์ของสถาบันและผู้ให้บริการกวดวิชาทั่วไทย ค้นหาตามชื่อหรือจังหวัด แล้วกดเปิดดูหลักสูตรในแท็บใหม่',
+    Icon: GraduationCap,
+    tone: 'var(--color-zone-biz)',
+    installable: true,
+    logo: '/assets/os/apps/tutor.webp',
+    logoFull: true,
+    category: 'learn',
+    features: ['ค้นหาสถาบันตามชื่อหรือจังหวัด', 'แยกออนไลน์/ทั่วประเทศ กับสถาบันในต่างจังหวัด', 'กดเปิดเว็บทางการของแต่ละสถาบัน'],
+    load: () => import('./apps/TutorApp'),
   },
   ...STORE_LINKS.map((l) => ({
     id: l.id,
