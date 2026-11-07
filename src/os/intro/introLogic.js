@@ -39,7 +39,7 @@ export const introFrameUrl = (id, n) => `/assets/os/intro/${id}-${n}.webp`
 
 // Cutscene videos made with scripts/introVideo.mjs. Ids listed here play a video (picked by screen
 // orientation) instead of the picture frames. Empty until a video is generated for that app.
-export const INTRO_VIDEOS = new Set()   // e.g. new Set(['goal', 'habit', 'community'])
+export const INTRO_VIDEOS = new Set(['goal', 'habit', 'community'])
 export const introVideoUrls = (id) => ({
   wide: `/assets/os/intro/${id}-wide.mp4`,
   tall: `/assets/os/intro/${id}-tall.mp4`,
