@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { Lock, Palette } from 'lucide-react'
+import { Lock, Palette, FolderPlus, FileText } from 'lucide-react'
 import Wallpaper from './Wallpaper'
 import { useWallpaperDark } from './useWallpaperDark'
 import AppIcon, { AppTile } from './AppIcon'
@@ -7,8 +7,11 @@ import AppDetailsSheet from './AppDetailsSheet'
 import WallpaperSheet from './WallpaperSheet'
 import AvatarSheet from './AvatarSheet'
 import ProfileAvatar from './ProfileAvatar'
-import { HELP_APP, HELP_BUTTON_ENABLED, findApp, homeAppIds, paginate } from './apps'
-import { useDevice, useClock, formatTime, formatDate } from './hooks'
+import { HELP_APP, HELP_BUTTON_ENABLED, OS_APPS, findApp, paginate } from './apps'
+import { FolderTile, FolderSheet, FileSheet } from './HomeExtras'
+import { layoutTokens, parseToken, acceptFiles } from './homeLayout'
+import { saveHomeFile, newFileId, openHomeFile } from './homeFiles'
+import { useDevice, useClock, useTouchPrimary, formatTime, formatDate } from './hooks'
 import { useOsStore } from '../stores/useOsStore'
 
 const EMPTY_LONG_PRESS_MS = 550
@@ -18,21 +21,38 @@ export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topI
   const now = useClock()
   const dark = useWallpaperDark()
   const installed = useOsStore((s) => s.installed)
+  const order = useOsStore((s) => s.order)
+  const folders = useOsStore((s) => s.folders)
+  const files = useOsStore((s) => s.files)
   const uninstallApp = useOsStore((s) => s.uninstallApp)
-  const moveApp = useOsStore((s) => s.moveApp)
+  const dropToken = useOsStore((s) => s.dropToken)
+  const touch = useTouchPrimary()
   const lastEdge = useRef(0)
   const [page, setPage] = useState(0)
   const [details, setDetails] = useState(null)
   const [pickWallpaper, setPickWallpaper] = useState(false)
   const [pickAvatar, setPickAvatar] = useState(false)
+  const [menu, setMenu] = useState(null)             // { x, y } right-click menu on empty wallpaper
+  const [openFolderId, setOpenFolderId] = useState(null)
+  const [fileInfo, setFileInfo] = useState(null)
+  const [notice, setNotice] = useState('')
   const scroller = useRef(null)
   const pressTimer = useRef(null)
   const pressStart = useRef(null)
 
-  const pages = useMemo(
-    () => paginate(homeAppIds(installed).map((id) => findApp(id)).filter(Boolean), cols * rows),
-    [installed, cols, rows],
-  )
+  // Everything on Home, in the saved order: apps, folders and dropped files (see homeLayout).
+  const entries = useMemo(() => layoutTokens({ order, installed, folders, files, apps: OS_APPS }).map((token) => {
+    const p = parseToken(token)
+    if (p.kind === 'app') { const app = findApp(p.id); return app ? { token, kind: 'app', app } : null }
+    if (p.kind === 'folder') {
+      const folder = folders.find((f) => f.id === p.id)
+      return folder ? { token, kind: 'folder', folder, app: { id: token, name: folder.name } } : null
+    }
+    const file = files.find((f) => f.id === p.id)
+    return file ? { token, kind: 'file', file, app: { id: token, name: file.name, Icon: FileText, tone: 'var(--color-zone-sci)' } } : null
+  }).filter(Boolean), [order, installed, folders, files])
+  const pages = useMemo(() => paginate(entries, cols * rows), [entries, cols, rows])
+  const openFolder = folders.find((f) => f.id === openFolderId) ?? null
   const desktop = device === 'desktop'
 
   function onScroll(e) {
@@ -67,7 +87,28 @@ export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topI
   }
   function onBgContextMenu(e) {
     e.preventDefault()
-    if (!e.target.closest('[data-os-icon]')) setPickWallpaper(true)
+    if (!e.target.closest('[data-os-icon]')) setMenu({ x: e.clientX, y: e.clientY })
+  }
+
+  // Desktop: drop files from the computer onto Home. They are kept on this device only.
+  function onFilesOver(e) {
+    if (!touch && e.dataTransfer?.types?.includes('Files')) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy' }
+  }
+  async function onFilesDrop(e) {
+    if (!e.dataTransfer?.files?.length) return
+    e.preventDefault()
+    const { ok, rejected } = acceptFiles([...e.dataTransfer.files], files.length)
+    for (const f of ok) {
+      const id = newFileId()
+      try {
+        await saveHomeFile(id, f)
+        useOsStore.getState().addFile({ id, name: f.name.slice(0, 80), size: f.size, type: f.type })
+      } catch {
+        rejected.push({ name: f.name, reason: 'บันทึกไม่ได้ (พื้นที่เก็บข้อมูลในเบราว์เซอร์ปิดอยู่หรือเต็ม)' })
+      }
+    }
+    setNotice(rejected.length ? rejected.map((r) => `${r.name}: ${r.reason}`).join(' · ') : ok.length ? `เพิ่ม ${ok.length} ไฟล์ไว้บนหน้า Home แล้ว` : '')
+    if (ok.length || rejected.length) setTimeout(() => setNotice(''), 6000)
   }
 
   const barBtn = 'w-8 h-8 flex items-center justify-center rounded-ui hover:bg-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand'
@@ -123,27 +164,26 @@ export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topI
         onPointerLeave={cancelPress}
         onPointerCancel={cancelPress}
         onContextMenu={onBgContextMenu}
+        onDragOver={onFilesOver}
+        onDrop={onFilesDrop}
       >
-        <div ref={scroller} onScroll={onScroll} className="os-pages flex flex-1 overflow-x-auto snap-x snap-mandatory">
+        <div ref={scroller} onScroll={onScroll} data-os-drop-area className="os-pages flex flex-1 overflow-x-auto snap-x snap-mandatory">
           {pages.map((items, i) => (
             <div key={i} className="w-full shrink-0 snap-start px-5 pt-6 sm:px-10 lg:px-16">
               <div
                 className="grid gap-x-2 gap-y-5 justify-items-center content-start"
                 style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
               >
-                {items.map((app) => (
-                  <AppIcon
-                    key={app.id}
-                    app={app}
-                    dark={dark}
-                    draggable={!app.builtIn}
-                    onOpen={onOpenApp}
-                    onLongPress={setDetails}
-                    onMove={moveApp}
-                    onEdge={onDragEdge}
-                    getScrollLeft={() => scroller.current?.scrollLeft ?? 0}
-                  />
-                ))}
+                {items.map((it) => {
+                  const common = { app: it.app, token: it.token, dark, draggable: true, touch, onDrop: dropToken, onEdge: onDragEdge, getScrollLeft: () => scroller.current?.scrollLeft ?? 0 }
+                  if (it.kind === 'folder') {
+                    return <AppIcon key={it.token} {...common} renderTile={() => <FolderTile folder={it.folder} />} onOpen={() => setOpenFolderId(it.folder.id)} onLongPress={() => setOpenFolderId(it.folder.id)} />
+                  }
+                  if (it.kind === 'file') {
+                    return <AppIcon key={it.token} {...common} onOpen={() => openHomeFile(it.file)} onLongPress={() => setFileInfo(it.file)} />
+                  }
+                  return <AppIcon key={it.token} {...common} onOpen={onOpenApp} onLongPress={setDetails} />
+                })}
               </div>
             </div>
           ))}
@@ -188,6 +228,27 @@ export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topI
         />
       )}
       {pickAvatar && <AvatarSheet user={user} onClose={() => setPickAvatar(false)} />}
+      {openFolder && (
+        <FolderSheet
+          folder={openFolder}
+          onOpenApp={onOpenApp}
+          onRename={(id, name) => useOsStore.getState().renameFolder(id, name)}
+          onTakeOut={(fid, aid) => useOsStore.getState().takeOutOfFolder(fid, aid)}
+          onDelete={(id) => useOsStore.getState().deleteFolder(id)}
+          onClose={() => setOpenFolderId(null)}
+        />
+      )}
+      {fileInfo && <FileSheet file={fileInfo} onOpen={openHomeFile} onRemove={(id) => useOsStore.getState().removeFile(id)} onClose={() => setFileInfo(null)} />}
+      {notice && <p role="status" className="absolute left-1/2 -translate-x-1/2 bottom-16 z-20 max-w-[90%] px-card px-4 py-2 bg-paper text-ink thai-font text-sm">{notice}</p>}
+      {menu && (
+        <>
+          <div className="fixed inset-0 z-40" onPointerDown={() => setMenu(null)} onContextMenu={(e) => { e.preventDefault(); setMenu(null) }} aria-hidden="true" />
+          <div role="menu" className="fixed z-50 px-card bg-paper text-ink p-1 flex flex-col min-w-[190px]" style={{ left: Math.min(menu.x, window.innerWidth - 200), top: Math.min(menu.y, window.innerHeight - 110) }}>
+            <button type="button" role="menuitem" onClick={() => { useOsStore.getState().newFolder(); setMenu(null) }} className="flex items-center gap-2 px-3 py-2 rounded-ui hover:bg-brand-soft thai-font text-sm text-left"><FolderPlus size={16} aria-hidden="true" /> สร้างโฟลเดอร์ใหม่</button>
+            <button type="button" role="menuitem" onClick={() => { setPickWallpaper(true); setMenu(null) }} className="flex items-center gap-2 px-3 py-2 rounded-ui hover:bg-brand-soft thai-font text-sm text-left"><Palette size={16} aria-hidden="true" /> เปลี่ยนวอลเปเปอร์</button>
+          </div>
+        </>
+      )}
       {pickWallpaper && <WallpaperSheet onClose={() => setPickWallpaper(false)} />}
     </Wallpaper>
   )
