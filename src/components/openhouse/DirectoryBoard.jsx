@@ -1,9 +1,25 @@
+import { useState } from 'react'
 import Popup from '../ui/Popup'
 import { BUILDINGS, ZONES } from '../../constants/openHouseBuildings'
 import { placementOf, doorTile } from '../../game/campusLayout'
 import { useOpenHouseUiStore } from '../../stores/useOpenHouseUiStore'
 
 const ZONE_ORDER = Object.keys(ZONES)
+
+// Panorama of the campus above the list (original pixel art); hidden if the picture is missing.
+function CampusHeader() {
+  const [failed, setFailed] = useState(false)
+  if (failed) return null
+  return (
+    <img
+      src="/assets/os/openhouse/campus-header.webp"
+      alt=""
+      draggable={false}
+      onError={() => setFailed(true)}
+      className="w-full aspect-[3/1] object-cover rounded-ui border-2 border-line-soft"
+    />
+  )
+}
 
 // The directory board at the central hall: every faculty by zone, with "เดินไป" (auto-walk to the
 // door, board closes) and "ดูเส้นทาง" (opens the faculty popup right away).
@@ -18,6 +34,7 @@ export default function DirectoryBoard({ onClose }) {
           <h2 className="pixel-font text-lg text-ink flex-1">แผนที่มหาวิทยาลัย</h2>
           <button type="button" onClick={onClose} aria-label="ปิด" className="px-btn h-9 px-3 text-sm font-bold bg-paper text-ink">ปิด</button>
         </div>
+        <CampusHeader />
         {ZONE_ORDER.map((zoneId) => {
           const zone = ZONES[zoneId]
           const list = BUILDINGS.filter((b) => b.zone === zoneId)
