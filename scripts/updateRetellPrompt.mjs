@@ -55,9 +55,15 @@ if (engine.type === 'conversation-flow') {
   console.log(`flow ${flowId}: global_prompt ${String(flow.global_prompt || '').length} -> ${GENERAL_PROMPT.length} chars; rewriting 3 nodes`)
   console.log(`  welcome : ${JSON.stringify(start.instruction.text).slice(0, 70)} -> ${JSON.stringify(FLOW_TEXT.welcome.text)}`)
   if (!apply) { console.log('dry run only. add --apply to update and publish.'); process.exit(0) }
-  await api('PATCH', `/update-conversation-flow/${flowId}`, { global_prompt: GENERAL_PROMPT, nodes })
-  const pub = await api('POST', `/publish-agent/${agentId}`, {})
-  console.log('updated and published', pub?.version != null ? `(version ${pub.version})` : '')
+  // Published agents and flows are frozen (Retell versioning): work on a DRAFT agent version (its flow gets
+  // a draft version too), then publish the draft. A draft that already exists is reused.
+  const draft = agent.is_published ? await api('POST', `/create-agent-version/${agentId}`, { base_version: agent.version }) : agent
+  const flowVersion = draft.response_engine?.version
+  console.log(`draft agent v${draft.version} (flow version ${flowVersion})`)
+  await api('PATCH', `/update-conversation-flow/${flowId}?version=${flowVersion}`, { global_prompt: GENERAL_PROMPT, nodes })
+  console.log('flow draft updated')
+  await api('POST', `/publish-agent-version/${agentId}`, { version: draft.version })
+  console.log(`published agent version ${draft.version}`)
   process.exit(0)
 }
 
@@ -70,5 +76,4 @@ console.log(`begin_message : ${JSON.stringify(llm.begin_message)} -> ${JSON.stri
 if (!apply) { console.log('dry run only. add --apply to update and publish.'); process.exit(0) }
 
 await api('PATCH', `/update-retell-llm/${llmId}`, { general_prompt: GENERAL_PROMPT, begin_message: BEGIN_MESSAGE })
-const pub = await api('POST', `/publish-agent/${agentId}`, {})
-console.log('updated and published', pub?.version != null ? `(version ${pub.version})` : '')
+console.log('LLM prompt updated (draft). publish it from the Retell dashboard.')
