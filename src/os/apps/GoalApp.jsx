@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, X, Sparkles, CalendarClock, Star, Search, Wand2, Target, ListChecks, Route, GripVertical, ChevronUp, ChevronDown } from 'lucide-react'
+import { Plus, X, Sparkles, CalendarClock, Star, Search, Wand2, Target, Route, GripVertical, ChevronUp, ChevronDown } from 'lucide-react'
 import { useLifeStore } from '../../stores/useLifeStore'
 import { useOsStore } from '../../stores/useOsStore'
 import { todayKey } from '../lifeLogic'
@@ -17,7 +17,6 @@ import { UniLogo } from '../goal/ui'
 
 const TABS = [
   { id: 'goals', label: 'เป้าหมาย', Icon: Target },
-  { id: 'scores', label: 'คะแนน', Icon: ListChecks },
   { id: 'plan', label: 'วางแผน', Icon: Route },
 ]
 
@@ -50,7 +49,7 @@ function Recommended({ goals, onOpenApp }) {
   )
 }
 
-function GoalCard({ goal, index, count, primary, onPrimary, onRemove, onMove, dragId, setDragId, onDropOn }) {
+function GoalCard({ goal, index, count, primary, onPrimary, onRemove, onMove, dragId, setDragId, onDropOn, children }) {
   return (
     <li
       draggable
@@ -83,8 +82,8 @@ function GoalCard({ goal, index, count, primary, onPrimary, onRemove, onMove, dr
           <button type="button" onClick={() => onPrimary(goal.id)} className="px-btn px-3 py-1 thai-font text-xs font-bold bg-paper">ตั้งเป็นเป้าหลัก</button>
         )}
         {goal.source === 'tcasin' && <span className="thai-font text-xs text-zone-biz-deep font-semibold">TCAS Starter · ไม่ทางการ</span>}
-        {goal.reqs.length > 0 && <span className="thai-font text-xs text-ink-soft">{goal.reqs.map((r) => r.subject).join(' · ')}</span>}
       </div>
+      {children}
     </li>
   )
 }
@@ -98,7 +97,7 @@ const STATUS = {
 
 // One bar per subject. Real scores are only published after the exam, so the bar shows readiness:
 // the fill is the share of the plan already done, the tick is how much of the time to the exam has passed.
-function ReadinessBar({ subject, exam, tasks, today }) {
+function ReadinessBar({ subject, needed, exam, tasks, today }) {
   const r = subjectReadiness({ subject, tasks, examDate: exam?.date, today })
   const [label, tone] = STATUS[r.status]
   const pct = Math.round(r.done * 100)
@@ -106,6 +105,7 @@ function ReadinessBar({ subject, exam, tasks, today }) {
     <li className="flex-1 min-w-0 flex flex-col gap-1">
       <div className="flex items-baseline gap-2 thai-font text-sm">
         <span className="font-bold shrink-0">{subject}</span>
+        {needed && <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-mist shrink-0">{needed}</span>}
         <span className="flex-1 min-w-0 truncate text-xs text-ink-soft">
           {exam ? `สอบ ${formatThaiRange(exam.date)}${exam.session ? ` ช่วง${exam.session}` : ''}${exam.exact ? ' (รอยืนยัน)' : ''}` : 'ไม่ทราบวันสอบ'}
         </span>
@@ -123,37 +123,34 @@ function ReadinessBar({ subject, exam, tasks, today }) {
   )
 }
 
-function Scores() {
-  const { scores, tasks, goals, primaryGoalId, removeScore, addScore } = useLifeStore()
-  const [subject, setSubject] = useState('')
+// Inside a goal card. Required scores come from the database (MyTCAS / TCAS Starter) and are only shown,
+// never edited. The primary goal also gets a readiness bar per subject (real scores come after the exam).
+const neededText = (r) => (r.needed ? `${r.estimated ? 'เป้า ~' : 'ต้องใช้ '}${r.needed}` : null)
+
+function GoalSubjects({ goal, primary }) {
+  const { scores, tasks } = useLifeStore()
   const today = todayKey()
-  const goal = goals.find((g) => g.id === primaryGoalId)
+  if (primary && scores.length > 0) {
+    return (
+      <div className="flex flex-col gap-3 border-t-2 border-hairline pt-3">
+        <p className="thai-font text-xs text-ink-soft">คะแนนจริงยังไม่ประกาศจนกว่าจะสอบ แถบจึงบอกความพร้อมจากแผนที่ทำแล้ว (สีเขียว) เทียบกับเวลาที่ผ่านไปก่อนวันสอบ (ขีดดำ)</p>
+        <ul className="flex flex-col gap-4">
+          {scores.map((s) => <ReadinessBar key={s.id} subject={s.subject} needed={neededText(s)} exam={subjectExam(s.subject)} tasks={tasks} today={today} />)}
+        </ul>
+      </div>
+    )
+  }
+  if (!goal.reqs.length) return null
   return (
-    <section className="px-card p-4 flex flex-col gap-3" aria-label="ความพร้อมรายวิชา">
-      {goal && (
-        <div className="flex items-center gap-3">
-          <UniLogo id={goal.universityId} name={goal.university} size={40} />
-          <div className="min-w-0">
-            <p className="thai-font text-sm font-bold truncate">{goalTitle(goal)}</p>
-            <p className="thai-font text-xs text-ink-soft truncate">{goalSubtitle(goal)}</p>
-          </div>
-        </div>
-      )}
-      <p className="thai-font text-xs text-ink-soft">คะแนนจริงยังไม่ประกาศจนกว่าจะสอบ แถบนี้จึงบอกความพร้อมจากแผนที่ทำแล้ว (สีเขียว) เทียบกับเวลาที่ผ่านไปก่อนวันสอบ (ขีดดำ)</p>
-      {scores.length === 0 && <p className="thai-font text-sm text-ink-soft">ยังไม่มีวิชา เลือกเป้าหมายก่อน หรือเพิ่มเองด้านล่าง</p>}
-      <ul className="flex flex-col gap-4">
-        {scores.map((s) => (
-          <li key={s.id} className="flex items-start gap-2">
-            <ul className="flex-1 min-w-0 flex"><ReadinessBar subject={s.subject} exam={subjectExam(s.subject)} tasks={tasks} today={today} /></ul>
-            <button type="button" onClick={() => removeScore(s.id)} aria-label={`ลบ ${s.subject}`} className="p-1 shrink-0"><X size={16} /></button>
-          </li>
-        ))}
-      </ul>
-      <form onSubmit={(e) => { e.preventDefault(); addScore(subject, 0); setSubject('') }} className="flex gap-2">
-        <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="เพิ่มวิชา เช่น TPAT3" aria-label="วิชา" className="px-input h-10 px-3 text-sm flex-1 min-w-0" />
-        <button type="submit" aria-label="เพิ่มวิชา" className="px-btn px-3 bg-paper"><Plus size={18} /></button>
-      </form>
-    </section>
+    <ul className="flex flex-col gap-1 border-t-2 border-hairline pt-3">
+      {goal.reqs.map((r) => (
+        <li key={r.subject} className="flex items-center gap-2 thai-font text-sm">
+          <span className="font-bold">{r.subject}</span>
+          <span className="text-xs text-ink-soft flex-1">{subjectExam(r.subject) ? `สอบ ${formatThaiRange(subjectExam(r.subject).date)}` : ''}</span>
+          {neededText(r) && <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-mist">{neededText(r)}</span>}
+        </li>
+      ))}
+    </ul>
   )
 }
 
@@ -230,8 +227,8 @@ function PlanTab({ onOpenApp, onGoTo }) {
   const blocker = goals.length === 0 && scores.length === 0
     ? { text: 'ยังไม่ได้เลือกเป้าหมาย เลือกคณะที่อยากเข้าก่อน พี่จะดึงวิชาและวันสอบให้', to: 'goals', label: 'ไปเลือกเป้าหมาย' }
     : scores.length === 0
-      ? { text: 'เป้าหมายนี้ยังไม่มีวิชาที่ต้องใช้ (เกณฑ์อาจยังไม่ประกาศ) เพิ่มวิชาเองได้ที่แท็บคะแนน', to: 'scores', label: 'ไปเพิ่มวิชา' }
-      : { text: 'วิชาทั้งหมดผ่านวันสอบไปแล้ว ลองเพิ่มวิชาที่ยังไม่ถึงวันสอบ หรือเปลี่ยนเป้าหมาย', to: 'scores', label: 'ไปแท็บคะแนน' }
+      ? { text: 'เป้าหมายนี้ยังไม่มีวิชาที่ต้องใช้ (เกณฑ์อาจยังไม่ประกาศ) ลองเลือกเป้าหมายอื่น หรือรอเกณฑ์ประกาศ', to: 'goals', label: 'ไปหน้าเป้าหมาย' }
+      : { text: 'วิชาทั้งหมดผ่านวันสอบไปแล้ว ลองเปลี่ยนเป้าหมาย', to: 'goals', label: 'ไปหน้าเป้าหมาย' }
 
   async function plan() {
     setPlanning(true)
@@ -334,7 +331,7 @@ export default function GoalApp({ onOpenApp }) {
       : flow.type === 'search' ? <ProgramPicker initial={flow.initial} onPick={pick} onCancel={() => setFlow({ type: 'choose' })} onStarter={(initial) => setFlow({ type: 'starter', initial })} />
       : flow.type === 'advisor' ? <Advisor onBack={() => setFlow({ type: 'choose' })} onChoose={(s) => setFlow({ type: 'search', initial: s })} />
       : <StarterPicker initial={flow.initial} onPick={pick} onBack={() => setFlow({ type: 'search' })} />
-  } else if (tab === 'scores') body = <Scores />
+  }
   else if (tab === 'plan') body = <PlanTab onOpenApp={onOpenApp} onGoTo={(t) => { setTab(t); setMsg('') }} />
   else {
     body = goals.length === 0 ? (
@@ -357,7 +354,9 @@ export default function GoalApp({ onOpenApp }) {
               onMove={(id, dir) => { const to = goals[i + dir]; if (to) reorderGoals(id, to.id) }}
               dragId={dragId} setDragId={setDragId}
               onDropOn={(toId) => { if (dragId) reorderGoals(dragId, toId); setDragId(null) }}
-            />
+            >
+              <GoalSubjects goal={g} primary={g.id === primaryGoalId} />
+            </GoalCard>
           ))}
         </ul>
         <button type="button" onClick={() => setFlow({ type: 'choose' })} disabled={full} className="px-btn py-2.5 thai-font text-sm font-bold bg-paper disabled:opacity-50 flex items-center justify-center gap-2">
