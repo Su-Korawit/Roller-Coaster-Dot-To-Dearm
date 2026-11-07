@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { INTROS, STEP_MS, FIRST_FRAME_MS, END_HOLD_MS, markIntroSeen } from './introLogic'
 import { GoalScene, HabitScene, CommunityScene } from './scenes'
+import { ReadingScene, SecretaryScene, ReportScene } from './scenes2'
 
-const SCENES = { goal: GoalScene, habit: HabitScene, community: CommunityScene }
+const SCENES = { goal: GoalScene, habit: HabitScene, community: CommunityScene, reading: ReadingScene, secretary: SecretaryScene, report: ReportScene }
 
 // Full-window story shown before Goal / Habit / Community the first time they open in a session.
 // Skippable at any time; when the last caption has been shown the app is revealed.

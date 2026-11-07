@@ -60,10 +60,11 @@ export const useOsStore = create(
     }),
     {
       name: 'rc-os-store',
-      // v1: the five core apps come pre-installed (existing devices get them once; removing stays possible).
-      version: 1,
+      // v1/v2: the core apps come pre-installed (existing devices get them once; removing stays possible).
+      // v2: Report joins the pre-installed set.
+      version: 2,
       migrate: (state, version) => {
-        if (version < 1) {
+        if (version < 2) {
           const have = Array.isArray(state?.installed) ? state.installed : []
           return { ...state, installed: [...new Set([...DEFAULT_INSTALLED, ...have])] }
         }

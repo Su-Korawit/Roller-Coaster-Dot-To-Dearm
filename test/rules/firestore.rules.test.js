@@ -719,3 +719,46 @@ describe('practice reward flag (Functions-owned)', () => {
     await assertFails(setDoc(doc(dave, 'users/dave'), { uid: 'dave', focusBySubject: { a_lv_64: 1 } }))
   })
 })
+
+describe('osRequests / osRequestVotes rules (Report app)', () => {
+  const req = (over = {}) => ({ uid: 'alice', name: 'Alice', kind: 'app', title: 'แอปจดโน้ต', url: '', reason: 'อยากได้', status: 'new', ...over })
+
+  it('a signed-in user creates their own request and everyone signed in can read it', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(setDoc(doc(alice, 'osRequests/r1'), req()))
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    await assertSucceeds(getDoc(doc(bob, 'osRequests/r1')))
+    await assertFails(getDoc(doc(testEnv.unauthenticatedContext().firestore(), 'osRequests/r1')))
+  })
+
+  it('BLOCKS bad kind, short/long title, long reason, foreign uid and a non-new status', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(setDoc(doc(alice, 'osRequests/r2'), req({ kind: 'game' })))
+    await assertFails(setDoc(doc(alice, 'osRequests/r2'), req({ title: 'ab' })))
+    await assertFails(setDoc(doc(alice, 'osRequests/r2'), req({ title: 'x'.repeat(81) })))
+    await assertFails(setDoc(doc(alice, 'osRequests/r2'), req({ reason: 'x'.repeat(301) })))
+    await assertFails(setDoc(doc(alice, 'osRequests/r2'), req({ uid: 'bob' })))
+    await assertFails(setDoc(doc(alice, 'osRequests/r2'), req({ status: 'done' })))
+  })
+
+  it('only a super-admin changes status; owner or super-admin deletes', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => { await setDoc(doc(ctx.firestore(), 'osRequests/r3'), req()) })
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(setDoc(doc(alice, 'osRequests/r3'), req({ status: 'done' })))
+    const admin = testEnv.authenticatedContext(SUPER_UID).firestore()
+    await assertSucceeds(setDoc(doc(admin, 'osRequests/r3'), req({ status: 'planned' })))
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    await assertFails(deleteDoc(doc(bob, 'osRequests/r3')))
+    await assertSucceeds(deleteDoc(doc(alice, 'osRequests/r3')))
+  })
+
+  it('votes: own id only (requestId_uid), deletable by the voter only', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(setDoc(doc(alice, 'osRequestVotes/r1_alice'), { requestId: 'r1', uid: 'alice' }))
+    await assertFails(setDoc(doc(alice, 'osRequestVotes/r1_bob'), { requestId: 'r1', uid: 'bob' }))
+    await assertFails(setDoc(doc(alice, 'osRequestVotes/other_alice'), { requestId: 'r1', uid: 'alice' }))
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    await assertFails(deleteDoc(doc(bob, 'osRequestVotes/r1_alice')))
+    await assertSucceeds(deleteDoc(doc(alice, 'osRequestVotes/r1_alice')))
+  })
+})

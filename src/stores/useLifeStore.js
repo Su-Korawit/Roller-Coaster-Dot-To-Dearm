@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { newId, toggleDone, todayKey } from '../os/lifeLogic'
 import { replaceAutoTasks, roomIdFor } from '../os/studyPlan'
+import { MAX_GOALS, applyGoalToState, goalKey } from '../os/goalLogic'
 
 // Goal / Habit / Reading data for the OS apps. Cached on the device (localStorage) and synced to
 // users/{uid}.os (see syncManager). `ownerUid` stops one account's data showing up for another
@@ -9,7 +10,9 @@ import { replaceAutoTasks, roomIdFor } from '../os/studyPlan'
 const EMPTY = () => ({
   target: { university: '', faculty: '', major: '', interest: '', examDate: '' },
   hoursPerDay: 2,
-  scores: [],   // { id, subject, needed, mine }
+  goals: [],          // up to MAX_GOALS programmes, see goalLogic.makeGoal (the first/primary drives target + scores)
+  primaryGoalId: null,
+  scores: [],   // { id, subject, needed, mine, fromGoal? }
   tasks: [],    // { id, text, tag, date, done, auto?, minutes?, subject? }
   habits: [],   // { id, name, doneDates }
   books: [],    // { id, title, totalPages, page }
@@ -24,6 +27,32 @@ export const useLifeStore = create(
       ...EMPTY(),
 
       adoptUser: (uid) => set((s) => (s.ownerUid === uid ? s : { ...EMPTY(), ownerUid: uid })),
+
+      // Add a programme as a goal (duplicates and a full list are refused). The first one becomes primary.
+      addGoal: (goal) => {
+        let result = { ok: true }
+        set((s) => {
+          if (s.goals.some((g) => goalKey(g) === goalKey(goal))) { result = { ok: false, reason: 'duplicate' }; return s }
+          if (s.goals.length >= MAX_GOALS) { result = { ok: false, reason: 'full' }; return s }
+          const goals = [...s.goals, goal]
+          if (s.primaryGoalId && s.goals.some((g) => g.id === s.primaryGoalId)) return { goals }
+          return { goals, primaryGoalId: goal.id, ...applyGoalToState(s, goal) }
+        })
+        return result
+      },
+      setPrimaryGoal: (id) =>
+        set((s) => {
+          const goal = s.goals.find((g) => g.id === id)
+          return goal ? { primaryGoalId: id, ...applyGoalToState(s, goal) } : s
+        }),
+      removeGoal: (id) =>
+        set((s) => {
+          const goals = s.goals.filter((g) => g.id !== id)
+          if (goals.length === s.goals.length) return s
+          if (s.primaryGoalId !== id) return { goals }
+          const next = goals[0]
+          return next ? { goals, primaryGoalId: next.id, ...applyGoalToState(s, next) } : { goals, primaryGoalId: null }
+        }),
 
       setTarget: (patch) => set((s) => ({ target: { ...s.target, ...patch } })),
       setHoursPerDay: (h) => set({ hoursPerDay: Math.min(12, Math.max(0.5, Number(h) || 2)) }),
@@ -69,7 +98,7 @@ export const useLifeStore = create(
           ? { readLog: { ...s.readLog, [day]: (s.readLog[day] || 0) + Math.round(minutes) } }
           : s)),
     }),
-    { name: 'rc-life-store', version: 2, migrate: (state) => ({ ...EMPTY(), ...state, ownerUid: state?.ownerUid ?? null }) },
+    { name: 'rc-life-store', version: 3, migrate: (state) => ({ ...EMPTY(), ...state, ownerUid: state?.ownerUid ?? null }) },
   ),
 )
 

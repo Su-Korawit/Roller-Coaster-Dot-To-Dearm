@@ -5,13 +5,13 @@ import { OS_APPS } from '../apps'
 beforeEach(() => resetIntrosForTest())
 
 describe('intros', () => {
-  it('Goal, Habit and Community have an intro with captions; the others do not', () => {
-    for (const id of ['goal', 'habit', 'community']) {
+  it('every core app has an intro with captions; the Store and website apps do not', () => {
+    for (const id of ['goal', 'habit', 'community', 'reading', 'secretary', 'report']) {
       const app = OS_APPS.find((a) => a.id === id)
       expect(app.intro).toBe(id)
       expect(INTROS[id].steps.length).toBeGreaterThanOrEqual(3)
     }
-    for (const id of ['reading', 'secretary', 'store']) expect(OS_APPS.find((a) => a.id === id).intro).toBeUndefined()
+    for (const id of ['store', 'link-dekd', 'uni-001']) expect(OS_APPS.find((a) => a.id === id).intro).toBeUndefined()
   })
   it('plays once per session and not with reduced motion', () => {
     const goal = OS_APPS.find((a) => a.id === 'goal')

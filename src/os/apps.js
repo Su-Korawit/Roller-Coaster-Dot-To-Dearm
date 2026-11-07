@@ -1,6 +1,7 @@
 import { lazy } from 'react'
-import { ShoppingBag, Target, CalendarCheck, BookOpen, Users, Bot } from 'lucide-react'
+import { ShoppingBag, Target, CalendarCheck, BookOpen, Users, Bot, Landmark, MessageSquarePlus } from 'lucide-react'
 import { STORE_LINKS } from './storeLinks'
+import { UNIVERSITY_ROWS, shortUniName } from '../data/universityApps'
 
 // The OS app registry — the one place to add an app to the OS.
 //   id           unique, kebab-case
@@ -13,7 +14,7 @@ import { STORE_LINKS } from './storeLinks'
 //   installable  listed in the Store; the user adds/removes it
 //   logo         optional picture for the tile (falls back to Icon); logoFull = no padding
 //   category     one of CATEGORIES (Store catalogue section)
-//   intro        'goal' | 'habit' | 'community': animated scene shown before the app opens
+//   intro        key of INTROS (intro/introLogic.js): animated scene shown before the app opens
 //   features     bullet list for the Store detail page
 //   defaultInstalled  put on every device's Home once, the user may remove it
 //   load         () => import('./apps/XxxApp') — default export is the app's React component,
@@ -73,6 +74,7 @@ const RAW_APPS = [
     logo: '/assets/os/apps/reading.webp',   // pixel-art icon (full tile)
     logoFull: true,
     category: 'study',
+    intro: 'reading',
     defaultInstalled: true,
     features: ["จับเวลาอ่าน 25 / 45 / 60 นาที","เวลาที่อ่านไปเชื่อมกับการ์ดใน Habit","อันดับเดี่ยว (สถิติของคุณ) และกลุ่ม (คณะ/สาขาเดียวกัน)","แชร์ผลวันนี้ไปที่ห้องแชตใน Community","ติดตามหน้าที่อ่านถึงของแต่ละเล่ม"],
     load: () => import('./apps/ReadingApp'),
@@ -104,9 +106,26 @@ const RAW_APPS = [
     logo: '/assets/os/apps/secretary.webp',   // pixel-art icon (full tile)
     logoFull: true,
     category: 'study',
+    intro: 'secretary',
     defaultInstalled: true,
     features: ["สรุปงานวันนี้ที่ยังไม่ทำ ติ๊กเสร็จได้ทันที","พิมพ์คุยกับพี่ใจดี พี่รู้เป้าหมายและแผนของคุณ","โทรคุยด้วยเสียง (ต้องยินยอม มีโควตาต่อวัน)"],
     load: () => import('./apps/SecretaryApp'),
+  },
+  {
+    id: 'report',
+    name: 'Report',
+    tagline: 'ขอแอปหรือเว็บไซต์ที่อยากให้มีใน OS',
+    description: 'บอกพี่ว่าอยากให้ I LOVE TCAS มีแอปหรือเว็บไซต์อะไรเพิ่ม ดูคำขอของคนอื่น กดโหวตให้อันที่อยากได้เหมือนกัน คำขอที่คนโหวตเยอะจะถูกทำก่อน',
+    Icon: MessageSquarePlus,
+    tone: 'var(--color-zone-arts)',
+    installable: true,
+    logo: '/assets/os/apps/report.webp',
+    logoFull: true,
+    category: 'os',
+    defaultInstalled: true,
+    intro: 'report',
+    features: ['ส่งคำขอแอปใหม่หรือเว็บไซต์ที่อยากให้รวมไว้ที่นี่', 'ดูคำขอของทุกคน เรียงตามคะแนนโหวต', 'กดโหวตให้คำขอที่คุณก็อยากได้', 'ดูสถานะคำขอของตัวเอง ลบได้'],
+    load: () => import('./apps/ReportApp'),
   },
   ...STORE_LINKS.map((l) => ({
     id: l.id,
@@ -123,6 +142,21 @@ const RAW_APPS = [
     features: ['เปิดเว็บไซต์จริงในหน้าต่างของเรา', l.tagline],
     installable: true,
     load: () => import('./apps/LinkApp'),
+  })),
+  // One Store app per university in myTCAS (KU keeps its original "KU Admission" tile above).
+  ...UNIVERSITY_ROWS.filter(([id]) => id !== '002').map(([id, full, url, extra]) => ({
+    id: `uni-${id}`,
+    name: shortUniName(full),
+    tagline: full,
+    description: `แอปของ ${full} รวมเว็บรับสมัครทางการ หลักสูตรจาก MyTCAS และปุ่มตั้งเป็นเป้าหมายใน Goal`,
+    Icon: Landmark,
+    tone: 'var(--color-brand)',
+    logo: `https://assets.mytcas.com/i/logo/${id}.png`,
+    category: 'university',
+    installable: true,
+    university: { id, name: full, url, extra },
+    features: ['เว็บรับสมัครทางการของมหาวิทยาลัย', 'ดูคณะ/หลักสูตรและเกณฑ์รอบ 3 จาก MyTCAS', 'ตั้งหลักสูตรของที่นี่เป็นเป้าหมายใน Goal ได้ทันที'],
+    load: () => import('./apps/UniversityApp'),
   })),
 ]
 
@@ -171,7 +205,9 @@ export function paginate(items, perPage) {
 // Store catalogue sections, in display order.
 export const CATEGORIES = [
   { id: 'study', label: 'เครื่องมือเตรียมสอบ' },
+  { id: 'os', label: 'จาก I LOVE TCAS' },
   { id: 'admission', label: 'สมัครและข้อมูลรับเข้า' },
+  { id: 'university', label: 'มหาวิทยาลัย' },
   { id: 'learn', label: 'เรียนและติว' },
   { id: 'activity', label: 'ค่ายและกิจกรรม' },
   { id: 'news', label: 'ชุมชนและข่าวสาร' },

@@ -94,7 +94,12 @@ export default function StoreApp({ onOpenApp }) {
           groupByCategory(results).map((g) => (
             <div key={g.id} className="flex flex-col gap-3">
               <h3 className="thai-font font-bold text-sm">{g.label}</h3>
-              <ul className={gridClass}>{g.apps.map(renderApp)}</ul>
+              <ul className={gridClass}>{(g.id === 'university' ? g.apps.slice(0, 8) : g.apps).map(renderApp)}</ul>
+              {g.id === 'university' && g.apps.length > 8 && (
+                <button type="button" onClick={() => setCategory('university')} className="self-center px-btn px-4 py-1.5 thai-font text-xs font-bold bg-paper">
+                  ดูมหาวิทยาลัยทั้งหมด ({g.apps.length})
+                </button>
+              )}
             </div>
           ))
         ) : (

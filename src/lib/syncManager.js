@@ -328,7 +328,7 @@ export const setResumeSyncUser = resumeSync.setSyncUser
 export const flushResumeSync = resumeSync.flush
 
 // ── OS apps (Goal / Habit / Reading) → users/{uid}.os (+ top-level osRoomId for chat-room rules) ──
-const OS_KEYS = ['target', 'hoursPerDay', 'scores', 'tasks', 'habits', 'books', 'readLog', 'planSummary']
+const OS_KEYS = ['target', 'hoursPerDay', 'goals', 'primaryGoalId', 'scores', 'tasks', 'habits', 'books', 'readLog', 'planSummary']
 const osSync = createFirestoreSync({
   store: useLifeStore,
   logName: 'syncOs',

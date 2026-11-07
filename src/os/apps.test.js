@@ -21,11 +21,11 @@ describe('homeAppIds', () => {
 })
 
 describe('registry content', () => {
-  it('has the five apps and the eight store websites', () => {
+  it('has the five apps and the nine store websites', () => {
     const ids = OS_APPS.map((a) => a.id)
     for (const id of ['goal', 'habit', 'reading', 'community', 'secretary']) expect(ids).toContain(id)
     const links = OS_APPS.filter((a) => a.url)
-    expect(links).toHaveLength(8)
+    expect(links).toHaveLength(9)
     expect(links.every((a) => a.url.startsWith('https://') && a.installable)).toBe(true)
     expect(new Set(ids).size).toBe(ids.length)
   })
@@ -61,7 +61,7 @@ describe('store catalogue', () => {
     const groups = groupByCategory(searchStoreApps(''))
     expect(groups.map((g) => g.id)).toEqual(CATEGORIES.map((c) => c.id))
     expect(groups.flatMap((g) => g.apps)).toHaveLength(OS_APPS.filter((x) => x.installable).length)
-    expect(searchStoreApps('', OS_APPS, 'admission').map((a) => a.id)).toContain('link-kuadmission')
+    expect(searchStoreApps('', OS_APPS, 'university').map((a) => a.id)).toContain('link-kuadmission')
   })
   it('KU Admission is in the Store and sites that forbid framing are flagged', async () => {
     const { findApp } = await import('./apps')
