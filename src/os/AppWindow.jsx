@@ -1,9 +1,9 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { X, Minus, Maximize2, Minimize2 } from 'lucide-react'
 import { Z_PANEL } from '../constants/zIndex'
-import AppIntro from './intro/AppIntro'
+import AppSplash from './splash/AppSplash'
 import { AppTile } from './AppIcon'
-import { shouldPlayIntro } from './intro/introLogic'
+import { hasSplash } from './splash/splashLogic'
 import { TASKBAR_H, centredPos, clampPos, windowSize } from './windowsLogic'
 
 function useViewport() {
@@ -23,7 +23,7 @@ export default function AppWindow({ win, index, isTop, desktop, onClose, onMinim
   const { Icon, Component } = app
   const { vw, vh } = useViewport()
   const drag = useRef(null)
-  const [introDone, setIntroDone] = useState(() => !shouldPlayIntro(app))
+  const [splashDone, setSplashDone] = useState(() => !hasSplash(app))
 
   useEffect(() => {
     if (!isTop) return undefined
@@ -97,7 +97,7 @@ export default function AppWindow({ win, index, isTop, desktop, onClose, onMinim
             <Component app={app} onOpenApp={onOpenApp} />
           </Suspense>
         </div>
-        {!introDone && <AppIntro introId={app.intro} onDone={() => setIntroDone(true)} />}
+        {!splashDone && <AppSplash app={app} onDone={() => setSplashDone(true)} />}
       </div>
     </div>
   )

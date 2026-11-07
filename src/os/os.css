@@ -20,11 +20,3 @@
 }
 .os-bob { animation: osBob 1.2s steps(2) infinite; }
 @media (prefers-reduced-motion: reduce) { .os-bob { animation: none; } }
-
-/* Intro scenes: leg swing while walking, one hop (climb out of the box / jump the rock). */
-@keyframes osLeg { 0%, 100% { transform: rotate(-26deg); } 50% { transform: rotate(26deg); } }
-.os-leg-a { animation: osLeg 520ms ease-in-out infinite; }
-.os-leg-b { animation: osLeg 520ms ease-in-out infinite reverse; }
-@keyframes osHop { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(-64px); } }
-.os-hop { animation: osHop 1800ms ease-in-out 1; }
-@media (prefers-reduced-motion: reduce) { .os-leg-a, .os-leg-b, .os-hop { animation: none; } }

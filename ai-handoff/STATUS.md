@@ -10,7 +10,7 @@
 | 006 | อวตารโปรไฟล์ OS 9 แบบ (หญิง/ชาย/LGBTQ+) แผ่นเดียว 3x3 | เสร็จ (แผ่นเดียว 3x3 ตัดเป็น 9 วงกลม webp 256px รวม ~126KB) | to-chatgpt/006-อวตารโปรไฟล์-9แบบ.md | from-chatgpt/006-avatars-sheet.png (1254x1254) | public/assets/os/avatars/{f1..f3,m1..m3,q1..q3}.webp |
 | 007 | โลโก้แอป OS 5 ตัว (Goal/Habit/Reading/Community/Secretary) แผ่นเดียว 3x2 | รอส่งให้ ChatGPT (โค้ดใช้ไอคอน lucide แทนไปก่อน) | to-chatgpt/007-โลโก้แอป-OS-5ตัว.md | from-chatgpt/(ไม่ได้ใช้ ChatGPT: สร้างด้วยโค้ด) | public/assets/os/apps/{goal,habit,reading,community,secretary}.webp |
 | 008 | แบนเนอร์ Store 3 ใบ + ฉากเปิดแอป Goal/Habit/Community + โลโก้แอป 4 ตัว (Goal/Habit/Reading/Community) | เสร็จ (ผู้ใช้ยืนยันส่ง+โหลดผ่านโหมดเบราว์เซอร์ 2026-11-07 แท็บใหม่ ช่องแชตว่าง พรอมต์ไม่มีข้อมูลส่วนตัว ภาพ AI ต้นฉบับ ตรวจ: ไม่มีตัวอักษรในภาพ ตัดเป็น webp รวม ~550KB) | to-chatgpt/008-แบนเนอร์Store-และฉากเปิดแอป.md | from-chatgpt/008-banners-sheet.png, 008-intro-{goal,habit,community}.png (1024x1536), 008-app-logos-sheet.png (1254x1254) | public/assets/os/banners/{welcome,plan,admission}.webp, public/assets/os/intro/{goal-1..3,habit-1..4,community-1..4}.webp, public/assets/os/apps/{goal,habit,reading,community}.webp |
-| 009 | วิดีโอฉากเปิดแอป Goal/Habit/Community (16:9 + 9:16) | เสร็จแบบชั่วคราว: ทำจากภาพ 008 ด้วย ffmpeg (เลื่อนกล้อง+เฟด ไม่ใช่วิดีโอ AI) · Sora ปิดบริการแล้ว (sora.chatgpt.com/sunset) · แชต ChatGPT ไม่มีเครื่องมือวิดีโอ · รอเครื่องมือวิดีโอ AI อื่นถ้าต้องการของจริง | to-chatgpt/009-วิดีโอฉากเปิดแอป.md | (ไม่ได้ใช้ ChatGPT: scripts/introVideoFromFrames.mjs) | public/assets/os/intro/{goal,habit,community}-{wide,tall}.mp4 |
+| 009 | วิดีโอฉากเปิดแอป | ยกเลิก (ผู้ใช้เปลี่ยนเป็นหน้า splash ภาพเดียว) · Sora ปิดบริการแล้ว | to-chatgpt/009-วิดีโอฉากเปิดแอป.md | - | - |
 
 ## บันทึกความคืบหน้างาน voice-secretary
 
@@ -24,3 +24,4 @@
 - 2026-11-06 งาน 006 อวตารโปรไฟล์: ผู้ใช้ยืนยันส่ง+โหลด (แท็บใหม่ ช่องแชตว่าง พรอมต์ไม่มีข้อมูลส่วนตัว) ตรวจ: ช่องตัดได้สะอาด 9 ช่อง ไม่มีตัวอักษร/ตาราง ภาพ AI ต้นฉบับ ผู้ใช้ควรดูด้วยตาอีกครั้ง โดยเฉพาะแถว LGBTQ+
 
 - 2026-11-07 งาน 008: ChatGPT ถามให้เลือกภาพโลโก้ 1/2 ไม่ได้ตอบ ใช้ตัวเลือก 1 ที่ดาวน์โหลด · โลโก้ Secretary และ Report ยังเป็นภาพที่วาดด้วยโค้ด (ไม่ได้อยู่ในคำสั่ง) · ปุ่มดาวน์โหลดของภาพที่ ChatGPT ให้เลือก 1/2 เป็นเมนู 2 ตัวเลือก ใช้ "ดาวน์โหลดรูปภาพ"
+- 2026-11-07 คัตซีน/วิดีโอถูกถอดออก ใช้ภาพจากงาน 008 (goal-3, habit-4, community-4) เป็นภาพ splash ที่ public/assets/os/splash/ · ถ้าอยากให้ Reading/Secretary/Report/Store มีภาพ splash ต้องสั่ง ChatGPT สร้างภาพเพิ่ม (ยังไม่มีใบสั่งงาน)

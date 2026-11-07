@@ -14,7 +14,7 @@ import { UNIVERSITY_ROWS, NO_EMBED_IDS, shortUniName } from '../data/universityA
 //   installable  listed in the Store; the user adds/removes it
 //   logo         optional picture for the tile (falls back to Icon); logoFull = no padding
 //   category     one of CATEGORIES (Store catalogue section)
-//   intro        key of INTROS (intro/introLogic.js): animated scene shown before the app opens
+//   splash       optional launch-screen art (shown while the window opens, see splash/AppSplash.jsx)
 //   features     bullet list for the Store detail page
 //   defaultInstalled  put on every device's Home once, the user may remove it
 //   load         () => import('./apps/XxxApp') — default export is the app's React component,
@@ -42,7 +42,7 @@ const RAW_APPS = [
     logo: '/assets/os/apps/goal.webp?v=2',   // pixel-art icon (full tile)
     logoFull: true,
     category: 'study',
-    intro: 'goal',
+    splash: '/assets/os/splash/goal.webp',
     defaultInstalled: true,
     features: ["เลือกมหาวิทยาลัย คณะ และสาขาเป้าหมาย","ตั้งวันสอบและนับถอยหลัง","ลิสต์คะแนนที่ต้องใช้ เทียบกับคะแนนของคุณ","กด \"วางแผนด้วย AI\" ได้แผนอ่านหนังสือรายวันถึงวันสอบ","บันทึกในบัญชีอัตโนมัติ เชื่อมกับ Habit"],
     load: () => import('./apps/GoalApp'),
@@ -58,7 +58,7 @@ const RAW_APPS = [
     logo: '/assets/os/apps/habit.webp?v=2',   // pixel-art icon (full tile)
     logoFull: true,
     category: 'study',
-    intro: 'habit',
+    splash: '/assets/os/splash/habit.webp',
     defaultInstalled: true,
     features: ["ปฏิทินรายเดือน กดดูแผนแต่ละวัน","การ์ดเลื่อนได้: นับถอยหลัง เวลาอ่าน % ทำตามแผน กลยุทธ์จากพี่","แผนวันนี้/พรุ่งนี้ พร้อมแท็ก TGAT / A-Level","to do list ของตัวเอง","นิสัยประจำวันพร้อมสถิติต่อเนื่อง"],
     load: () => import('./apps/HabitApp'),
@@ -74,7 +74,6 @@ const RAW_APPS = [
     logo: '/assets/os/apps/reading.webp?v=2',   // pixel-art icon (full tile)
     logoFull: true,
     category: 'study',
-    intro: 'reading',
     defaultInstalled: true,
     features: ["จับเวลาอ่าน 25 / 45 / 60 นาที","เวลาที่อ่านไปเชื่อมกับการ์ดใน Habit","อันดับเดี่ยว (สถิติของคุณ) และกลุ่ม (คณะ/สาขาเดียวกัน)","แชร์ผลวันนี้ไปที่ห้องแชตใน Community","ติดตามหน้าที่อ่านถึงของแต่ละเล่ม"],
     load: () => import('./apps/ReadingApp'),
@@ -90,7 +89,7 @@ const RAW_APPS = [
     logo: '/assets/os/apps/community.webp?v=2',   // pixel-art icon (full tile)
     logoFull: true,
     category: 'study',
-    intro: 'community',
+    splash: '/assets/os/splash/community.webp',
     defaultInstalled: true,
     features: ["ห้องแชตตามคณะ/สาขาที่ตั้งไว้ใน Goal","ห้องรวมสำหรับทุกคน","ค้นหาเพื่อนจากชื่อหรือโรงเรียน ส่งคำขอติดตาม","ลบข้อความของตัวเองได้"],
     load: () => import('./apps/CommunityApp'),
@@ -106,7 +105,6 @@ const RAW_APPS = [
     logo: '/assets/os/apps/secretary.webp',   // pixel-art icon (full tile)
     logoFull: true,
     category: 'study',
-    intro: 'secretary',
     defaultInstalled: true,
     features: ["สรุปงานวันนี้ที่ยังไม่ทำ ติ๊กเสร็จได้ทันที","พิมพ์คุยกับพี่ใจดี พี่รู้เป้าหมายและแผนของคุณ","โทรคุยด้วยเสียง (ต้องยินยอม มีโควตาต่อวัน)"],
     load: () => import('./apps/SecretaryApp'),
@@ -123,7 +121,6 @@ const RAW_APPS = [
     logoFull: true,
     category: 'os',
     defaultInstalled: true,
-    intro: 'report',
     features: ['ส่งคำขอแอปใหม่หรือเว็บไซต์ที่อยากให้รวมไว้ที่นี่', 'ดูคำขอของทุกคน เรียงตามคะแนนโหวต', 'กดโหวตให้คำขอที่คุณก็อยากได้', 'ดูสถานะคำขอของตัวเอง ลบได้'],
     load: () => import('./apps/ReportApp'),
   },
