@@ -21,11 +21,11 @@ describe('homeAppIds', () => {
 })
 
 describe('registry content', () => {
-  it('has the five apps and the seven store websites', () => {
+  it('has the five apps and the eight store websites', () => {
     const ids = OS_APPS.map((a) => a.id)
     for (const id of ['goal', 'habit', 'reading', 'community', 'secretary']) expect(ids).toContain(id)
     const links = OS_APPS.filter((a) => a.url)
-    expect(links).toHaveLength(7)
+    expect(links).toHaveLength(8)
     expect(links.every((a) => a.url.startsWith('https://') && a.installable)).toBe(true)
     expect(new Set(ids).size).toBe(ids.length)
   })
@@ -50,5 +50,23 @@ describe('searchStoreApps', () => {
   it('matches name or tagline, case-insensitive', () => {
     expect(searchStoreApps('NOTE', fake).map((a) => a.id)).toEqual(['notes'])
     expect(searchStoreApps('จด', fake).map((a) => a.id)).toEqual(['notes'])
+  })
+})
+
+describe('store catalogue', () => {
+  it('every installable app belongs to a known category and sections keep CATEGORIES order', async () => {
+    const { OS_APPS, CATEGORIES, groupByCategory, searchStoreApps } = await import('./apps')
+    const ids = new Set(CATEGORIES.map((c) => c.id))
+    for (const a of OS_APPS.filter((x) => x.installable)) expect(ids.has(a.category)).toBe(true)
+    const groups = groupByCategory(searchStoreApps(''))
+    expect(groups.map((g) => g.id)).toEqual(CATEGORIES.map((c) => c.id))
+    expect(groups.flatMap((g) => g.apps)).toHaveLength(OS_APPS.filter((x) => x.installable).length)
+    expect(searchStoreApps('', OS_APPS, 'admission').map((a) => a.id)).toContain('link-kuadmission')
+  })
+  it('KU Admission is in the Store and sites that forbid framing are flagged', async () => {
+    const { findApp } = await import('./apps')
+    expect(findApp('link-kuadmission').url).toBe('https://admission.ku.ac.th/')
+    expect(findApp('link-kuadmission').embed).toBe(false)
+    expect(findApp('link-tcaster').embed).toBe(true)
   })
 })

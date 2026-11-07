@@ -7,6 +7,10 @@ import LoginScreen from './LoginScreen'
 import PasscodeScreen from './PasscodeScreen'
 import HomeScreen from './HomeScreen'
 import AppWindow from './AppWindow'
+import { useDevice } from './hooks'
+import {
+  openWindow, focusWindow, closeWindow, minimizeWindow, toggleMaximize, moveWindow, topWindowId, taskbarToggle,
+} from './windowsLogic'
 import { hasPasscode } from './passcode'
 import './os.css'
 
@@ -15,7 +19,10 @@ import './os.css'
 function Device({ user }) {
   const [passcodeSet, setPasscodeSet] = useState(() => hasPasscode(user.uid))
   const [unlocked, setUnlocked] = useState(false)
-  const [openApp, setOpenApp] = useState(null)
+  const [windows, setWindows] = useState([])
+  const { device } = useDevice()
+  const open = (app) => setWindows((l) => openWindow(l, app))
+  const close = (id) => setWindows((l) => closeWindow(l, id))
 
   if (!passcodeSet) {
     return <PasscodeScreen user={user} mode="set" onDone={() => { setPasscodeSet(true); setUnlocked(true) }} />
@@ -25,8 +32,29 @@ function Device({ user }) {
   }
   return (
     <>
-      <HomeScreen user={user} onOpenApp={setOpenApp} onLock={() => { setOpenApp(null); setUnlocked(false) }} />
-      {openApp && <AppWindow app={openApp} onClose={() => setOpenApp(null)} onOpenApp={setOpenApp} />}
+      <HomeScreen
+        user={user}
+        onOpenApp={open}
+        onLock={() => { setWindows([]); setUnlocked(false) }}
+        windows={windows}
+        topId={topWindowId(windows)}
+        onTaskbar={(id) => setWindows((l) => taskbarToggle(l, id))}
+      />
+      {windows.map((w, i) => (
+        <AppWindow
+          key={w.id}
+          win={w}
+          index={i}
+          isTop={topWindowId(windows) === w.id}
+          desktop={device === 'desktop'}
+          onClose={close}
+          onMinimize={(id) => setWindows((l) => minimizeWindow(l, id))}
+          onMaximize={(id) => setWindows((l) => toggleMaximize(l, id))}
+          onFocus={(id) => setWindows((l) => focusWindow(l, id))}
+          onMove={(id, pos) => setWindows((l) => moveWindow(l, id, pos))}
+          onOpenApp={open}
+        />
+      ))}
     </>
   )
 }

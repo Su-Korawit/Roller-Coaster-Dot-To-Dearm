@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { Lock, Palette } from 'lucide-react'
 import Wallpaper from './Wallpaper'
 import { useWallpaperDark } from './useWallpaperDark'
-import AppIcon from './AppIcon'
+import AppIcon, { AppTile } from './AppIcon'
 import AppDetailsSheet from './AppDetailsSheet'
 import WallpaperSheet from './WallpaperSheet'
 import AvatarSheet from './AvatarSheet'
@@ -13,7 +13,7 @@ import { useOsStore } from '../stores/useOsStore'
 
 const EMPTY_LONG_PRESS_MS = 550
 
-export default function HomeScreen({ user, onOpenApp, onLock }) {
+export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topId = null, onTaskbar = () => {} }) {
   const { device, cols, rows } = useDevice()
   const now = useClock()
   const dark = useWallpaperDark()
@@ -74,7 +74,22 @@ export default function HomeScreen({ user, onOpenApp, onLock }) {
         <ProfileAvatar user={user} size={30} />
       </button>
       <p className="thai-font text-xs opacity-80 hidden sm:block">{formatDate(now)}</p>
-      <span className="flex-1" />
+      <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto os-pages" aria-label="แอปที่เปิดอยู่" role="toolbar">
+        {windows.map((w) => (
+          <button
+            key={w.id}
+            type="button"
+            onClick={() => onTaskbar(w.id)}
+            aria-label={`${w.app.name}${w.minimized ? ' (ย่ออยู่)' : ''}`}
+            aria-pressed={w.id === topId}
+            title={w.app.name}
+            className={`shrink-0 flex items-center gap-1.5 h-9 px-1.5 rounded-ui border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${w.id === topId ? 'bg-paper/80 border-line' : 'border-transparent hover:bg-white/30'} ${w.minimized ? 'opacity-70' : ''}`}
+          >
+            <AppTile app={w.app} size={24} />
+            <span className="thai-font text-xs font-semibold hidden md:block max-w-[96px] truncate text-ink">{w.app.name}</span>
+          </button>
+        ))}
+      </div>
       <button type="button" className={barBtn} onClick={() => setPickWallpaper(true)} aria-label="เปลี่ยนวอลเปเปอร์">
         <Palette size={16} />
       </button>

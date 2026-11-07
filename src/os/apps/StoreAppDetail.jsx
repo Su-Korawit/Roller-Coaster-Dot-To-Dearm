@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, Star, Check, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Star, Check } from 'lucide-react'
 import { AppTile } from '../AppIcon'
+import InstallButton from '../InstallButton'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useAppReviewsStore } from '../../stores/useAppReviewsStore'
 import { summarizeReviews, MAX_REVIEW_TEXT } from '../reviewsLogic'
@@ -21,7 +22,7 @@ function formatDate(ts) {
 }
 
 // Store detail page: what the app does + ratings and comments from other students.
-export default function StoreAppDetail({ app, installed, onInstall, onOpen, onBack }) {
+export default function StoreAppDetail({ app, installed, onOpen, onBack }) {
   const uid = useAuthStore((s) => s.user?.uid)
   const { reviews, loading, error, load, submit, remove } = useAppReviewsStore()
   const [draft, setDraft] = useState({})   // what the user typed; falls back to their saved review
@@ -63,13 +64,7 @@ export default function StoreAppDetail({ app, installed, onInstall, onOpen, onBa
         </div>
       </header>
 
-      <button
-        type="button"
-        onClick={() => (installed ? onOpen(app) : onInstall(app.id))}
-        className="px-btn py-2.5 thai-font text-sm font-bold bg-brand-strong text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand flex items-center justify-center gap-2"
-      >
-        {installed ? (app.url ? <><ExternalLink size={16} /> เปิด</> : 'เปิด') : 'ติดตั้ง'}
-      </button>
+      <InstallButton app={app} installed={installed} onOpen={onOpen} big />
 
       {app.features?.length > 0 && (
         <section className="px-card p-4" aria-label="สิ่งที่แอปทำได้">

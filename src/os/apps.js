@@ -12,6 +12,8 @@ import { STORE_LINKS } from './storeLinks'
 //   builtIn      always on the Home screen, cannot be removed
 //   installable  listed in the Store; the user adds/removes it
 //   logo         optional picture for the tile (falls back to Icon); logoFull = no padding
+//   category     one of CATEGORIES (Store catalogue section)
+//   intro        'goal' | 'habit' | 'community': animated scene shown before the app opens
 //   features     bullet list for the Store detail page
 //   defaultInstalled  put on every device's Home once, the user may remove it
 //   load         () => import('./apps/XxxApp') — default export is the app's React component,
@@ -38,6 +40,8 @@ const RAW_APPS = [
     installable: true,
     logo: '/assets/os/apps/goal.webp',   // pixel-art icon (full tile)
     logoFull: true,
+    category: 'study',
+    intro: 'goal',
     defaultInstalled: true,
     features: ["เลือกมหาวิทยาลัย คณะ และสาขาเป้าหมาย","ตั้งวันสอบและนับถอยหลัง","ลิสต์คะแนนที่ต้องใช้ เทียบกับคะแนนของคุณ","กด \"วางแผนด้วย AI\" ได้แผนอ่านหนังสือรายวันถึงวันสอบ","บันทึกในบัญชีอัตโนมัติ เชื่อมกับ Habit"],
     load: () => import('./apps/GoalApp'),
@@ -52,6 +56,8 @@ const RAW_APPS = [
     installable: true,
     logo: '/assets/os/apps/habit.webp',   // pixel-art icon (full tile)
     logoFull: true,
+    category: 'study',
+    intro: 'habit',
     defaultInstalled: true,
     features: ["ปฏิทินรายเดือน กดดูแผนแต่ละวัน","การ์ดเลื่อนได้: นับถอยหลัง เวลาอ่าน % ทำตามแผน กลยุทธ์จากพี่","แผนวันนี้/พรุ่งนี้ พร้อมแท็ก TGAT / A-Level","to do list ของตัวเอง","นิสัยประจำวันพร้อมสถิติต่อเนื่อง"],
     load: () => import('./apps/HabitApp'),
@@ -66,6 +72,7 @@ const RAW_APPS = [
     installable: true,
     logo: '/assets/os/apps/reading.webp',   // pixel-art icon (full tile)
     logoFull: true,
+    category: 'study',
     defaultInstalled: true,
     features: ["จับเวลาอ่าน 25 / 45 / 60 นาที","เวลาที่อ่านไปเชื่อมกับการ์ดใน Habit","อันดับเดี่ยว (สถิติของคุณ) และกลุ่ม (คณะ/สาขาเดียวกัน)","แชร์ผลวันนี้ไปที่ห้องแชตใน Community","ติดตามหน้าที่อ่านถึงของแต่ละเล่ม"],
     load: () => import('./apps/ReadingApp'),
@@ -80,6 +87,8 @@ const RAW_APPS = [
     installable: true,
     logo: '/assets/os/apps/community.webp',   // pixel-art icon (full tile)
     logoFull: true,
+    category: 'study',
+    intro: 'community',
     defaultInstalled: true,
     features: ["ห้องแชตตามคณะ/สาขาที่ตั้งไว้ใน Goal","ห้องรวมสำหรับทุกคน","ค้นหาเพื่อนจากชื่อหรือโรงเรียน ส่งคำขอติดตาม","ลบข้อความของตัวเองได้"],
     load: () => import('./apps/CommunityApp'),
@@ -94,6 +103,7 @@ const RAW_APPS = [
     installable: true,
     logo: '/assets/os/apps/secretary.webp',   // pixel-art icon (full tile)
     logoFull: true,
+    category: 'study',
     defaultInstalled: true,
     features: ["สรุปงานวันนี้ที่ยังไม่ทำ ติ๊กเสร็จได้ทันที","พิมพ์คุยกับพี่ใจดี พี่รู้เป้าหมายและแผนของคุณ","โทรคุยด้วยเสียง (ต้องยินยอม มีโควตาต่อวัน)"],
     load: () => import('./apps/SecretaryApp'),
@@ -102,12 +112,15 @@ const RAW_APPS = [
     id: l.id,
     name: l.name,
     tagline: l.tagline,
-    description: `เว็บไซต์ ${l.url} (เปิดในแท็บใหม่)`,
+    description: `เว็บไซต์ ${l.url} เปิดดูในหน้าต่างของ I LOVE TCAS (บางเว็บไม่อนุญาตให้ฝัง จะเปิดในแท็บใหม่แทน)`,
     Icon: l.Icon,
     tone: l.tone,
     logo: l.logo,
+    logoFull: true,
+    category: l.category,
+    embed: l.embed !== false,
     url: l.url,
-    features: ['เปิดเว็บไซต์จริงในแท็บใหม่', l.tagline],
+    features: ['เปิดเว็บไซต์จริงในหน้าต่างของเรา', l.tagline],
     installable: true,
     load: () => import('./apps/LinkApp'),
   })),
@@ -155,9 +168,30 @@ export function paginate(items, perPage) {
   return pages.length ? pages : [[]]
 }
 
-export function searchStoreApps(query, apps = OS_APPS) {
+// Store catalogue sections, in display order.
+export const CATEGORIES = [
+  { id: 'study', label: 'เครื่องมือเตรียมสอบ' },
+  { id: 'admission', label: 'สมัครและข้อมูลรับเข้า' },
+  { id: 'learn', label: 'เรียนและติว' },
+  { id: 'activity', label: 'ค่ายและกิจกรรม' },
+  { id: 'news', label: 'ชุมชนและข่าวสาร' },
+]
+
+export function searchStoreApps(query, apps = OS_APPS, category = 'all') {
   const q = query.trim().toLowerCase()
   return apps.filter(
-    (a) => a.installable && (!q || a.name.toLowerCase().includes(q) || (a.tagline ?? '').toLowerCase().includes(q)),
+    (a) =>
+      a.installable &&
+      (category === 'all' || a.category === category) &&
+      (!q || a.name.toLowerCase().includes(q) || (a.tagline ?? '').toLowerCase().includes(q)),
   )
+}
+
+// [{ id, label, apps }] in CATEGORIES order; empty sections are dropped, uncategorised apps go last.
+export function groupByCategory(apps) {
+  const groups = CATEGORIES.map((c) => ({ ...c, apps: apps.filter((a) => a.category === c.id) }))
+  const known = new Set(CATEGORIES.map((c) => c.id))
+  const rest = apps.filter((a) => !known.has(a.category))
+  if (rest.length) groups.push({ id: 'other', label: 'อื่นๆ', apps: rest })
+  return groups.filter((g) => g.apps.length > 0)
 }
