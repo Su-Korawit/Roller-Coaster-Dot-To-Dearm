@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { PhoneOff, Loader2, ShieldCheck } from 'lucide-react'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { usePlansStore } from '../../stores/usePlansStore'
-import { fetchStatus, voiceApi, buildStudyPlan, VoiceError } from '../../services/voiceSecretary'
+import { fetchStatus, voiceApi, buildStudyPlan, buildOsStudyPlan, VoiceError } from '../../services/voiceSecretary'
+import { useLifeStore } from '../../stores/useLifeStore'
 import { startVoiceCall } from '../../services/voiceCall'
 import {
   SECRETARY_NAME, CONSENT_TEXT, GUARDIAN_TEXT, UI_TEXT, DAY_LABELS,
@@ -78,8 +79,9 @@ function ConsentForm({ onDone }) {
   )
 }
 
-function CallButton({ status, name }) {
+function CallButton({ status, name, secretaryId }) {
   const plans = usePlansStore((s) => s.plans)
+  const goals = useLifeStore((s) => s.goals)
   const [phase, setPhase] = useState('idle') // idle | connecting | talking | ended | error
   const [mock, setMock] = useState(false)
   const [msg, setMsg] = useState('')
@@ -91,7 +93,7 @@ function CallButton({ status, name }) {
     setMsg('')
     try {
       handle.current = await startVoiceCall(
-        { student_name: name, study_plan: buildStudyPlan(plans) },
+        { student_name: name, study_plan: buildStudyPlan(plans) || buildOsStudyPlan(goals), secretary_id: secretaryId },
         (s, info) => { setPhase(s); if (info?.mock) setMock(true) },
       )
       setMock(handle.current.mock)
@@ -129,19 +131,20 @@ function CallButton({ status, name }) {
   )
 }
 
-function PhoneSettings({ status, reload }) {
+function PhoneSettings({ status, reload, secretaryId }) {
   const [phone, setPhone] = useState('')
   const [days, setDays] = useState(status.schedule?.days || [])
   const [time, setTime] = useState(status.schedule?.time || '18:30')
   const [msg, setMsg] = useState('')
   const plans = usePlansStore((s) => s.plans)
+  const goals = useLifeStore((s) => s.goals)
   const name = useAuthStore((s) => s.user?.displayName)
 
   async function save() {
     setMsg('')
     try {
       if (phone) await voiceApi('phone', { body: { phone } })
-      await voiceApi('schedule', { body: { days, time, student_name: name, study_plan: buildStudyPlan(plans) } })
+      await voiceApi('schedule', { body: { days, time, student_name: name, study_plan: buildStudyPlan(plans) || buildOsStudyPlan(goals), secretary_id: secretaryId } })
       setPhone('')
       setMsg('บันทึกแล้ว')
       reload()
@@ -168,7 +171,7 @@ function PhoneSettings({ status, reload }) {
   )
 }
 
-export default function VoiceSecretaryPanel({ hidePhone = false }) {
+export default function VoiceSecretaryPanel({ hidePhone = false, secretaryId }) {
   const name = useAuthStore((s) => s.user?.displayName) || ''
   const [data, setData] = useState(null)
   const [err, setErr] = useState('')
@@ -192,8 +195,8 @@ export default function VoiceSecretaryPanel({ hidePhone = false }) {
 
   return (
     <div className="space-y-5">
-      <CallButton status={st} name={name} />
-      {!hidePhone && <PhoneSettings status={st} reload={load} />}
+      <CallButton status={st} name={name} secretaryId={secretaryId} />
+      {!hidePhone && <PhoneSettings status={st} reload={load} secretaryId={secretaryId} />}
       <section className="flex gap-2 flex-wrap">
         <button className={btn} onClick={async () => { await voiceApi(st.doNotCall ? 'resume' : 'stop'); load() }}>
           {st.doNotCall ? UI_TEXT.resume : UI_TEXT.stop}

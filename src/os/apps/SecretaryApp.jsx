@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { Send, Home, MessageCircle, Phone, Check, Plus, History, Sparkles } from 'lucide-react'
+import { Send, Home, MessageCircle, Phone, Check, Plus, History, Sparkles, Bot, Repeat } from 'lucide-react'
+import OsSheet from '../OsSheet'
+import { SECRETARIES, secretaryById } from '../../constants/secretaries'
+import { useTcasEventsStore } from '../../stores/useTcasEventsStore'
+import { eventsWithFallback } from '../../data/tcas70'
 import VoiceSecretaryPanel from '../../components/voice/VoiceSecretaryPanel'
 import { useLifeStore } from '../../stores/useLifeStore'
 import { useAuthStore } from '../../stores/useAuthStore'
@@ -7,7 +11,7 @@ import { useSecretaryStore } from '../../stores/useSecretaryStore'
 import { todayKey } from '../lifeLogic'
 import { daysUntil, planSuccess } from '../studyPlan'
 import { effectiveExamDate } from '../goalLogic'
-import { greeting, proactiveItems } from '../secretaryLogic'
+import { greeting, proactiveItems, upcomingDeadlines } from '../secretaryLogic'
 import { findApp } from '../apps'
 import { askSecretary, buildSecretaryContext } from '../../services/aiSecretary'
 import { generateStudyPlan } from '../../services/aiStudyPlan'
@@ -20,8 +24,45 @@ const TABS = [
 ]
 const timeLabel = (ms) => new Date(ms).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
+// The secretary's picture (/assets/os/secretary/<id>.webp); falls back to a bot icon until the art exists.
+function SecretaryAvatar({ id, size = 44 }) {
+  const [broken, setBroken] = useState(false)
+  return (
+    <span className="px-card overflow-hidden bg-paper flex items-center justify-center shrink-0 rounded-full" style={{ width: size, height: size }} aria-hidden="true">
+      {broken
+        ? <Bot size={Math.round(size * 0.55)} className="text-brand-strong" />
+        : <img src={`/assets/os/secretary/${id}.webp`} alt="" draggable={false} onError={() => setBroken(true)} className="w-full h-full object-cover" />}
+    </span>
+  )
+}
+
+// Choose which secretary you work with. Same job, different personality; the call introduces her by name.
+function SecretaryPicker({ currentId, onPick, onClose }) {
+  return (
+    <OsSheet title="เลือกเลขาของน้อง" onClose={onClose}>
+      <ul className="grid grid-cols-2 gap-3 max-h-[55vh] overflow-y-auto p-1" role="radiogroup" aria-label="เลขา">
+        {SECRETARIES.map((s) => (
+          <li key={s.id}>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={currentId === s.id}
+              onClick={() => { onPick(s.id); onClose() }}
+              className={`px-btn w-full p-2 flex flex-col items-center gap-1.5 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${currentId === s.id ? 'bg-brand-soft' : 'bg-paper'}`}
+            >
+              <SecretaryAvatar id={s.id} size={64} />
+              <span className="thai-font text-sm font-bold">{s.name}</span>
+              <span className="thai-font text-xs text-ink-soft leading-snug">{s.blurb}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </OsSheet>
+  )
+}
+
 // Banner: greeting + one-line status. Art (optional) goes in /assets/os/banners/secretary-home.webp.
-function Banner({ left, percent, goalLabel }) {
+function Banner({ left, percent, goalLabel, secretary, onChange }) {
   const [artFailed, setArtFailed] = useState(false)
   return (
     <section
@@ -37,6 +78,9 @@ function Banner({ left, percent, goalLabel }) {
       )}
       <div className="relative h-full flex flex-col justify-center gap-1 p-5 max-w-[65%]">
         <h3 className="font-display font-bold text-xl sm:text-2xl leading-tight">{greeting(new Date().getHours())}</h3>
+        <button type="button" onClick={onChange} className="self-start inline-flex items-center gap-1.5 thai-font text-xs font-semibold bg-white/20 rounded-full pl-1 pr-2.5 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+          <SecretaryAvatar id={secretary.id} size={22} /> {secretary.name} <Repeat size={12} aria-hidden="true" />
+        </button>
         <p className="thai-font text-sm opacity-95">
           {left == null ? 'ยังไม่ได้ตั้งวันสอบ' : left >= 0 ? `เหลืออีก ${left} วันถึงวันสอบ` : 'ผ่านวันสอบแล้ว'} · ทำตามแผนได้ {percent}%
         </p>
@@ -48,8 +92,13 @@ function Banner({ left, percent, goalLabel }) {
 
 function HomeTab({ onOpenApp }) {
   const life = useLifeStore()
-  const { history, log } = useSecretaryStore()
+  const { history, log, secretaryId, notes, setSecretary, addNote } = useSecretaryStore()
+  const storedEvents = useTcasEventsStore((s) => s.events)
+  const secretary = secretaryById(secretaryId)
+  const [picking, setPicking] = useState(false)
+  const [answer, setAnswer] = useState('')
   const today = todayKey()
+  const deadlines = upcomingDeadlines(eventsWithFallback(storedEvents), today, 14)
   const left = daysUntil(effectiveExamDate(life.target, life.scores), today)
   const success = planSuccess(life.tasks, today)
   const [dismissed, setDismissed] = useState(() => new Set())
@@ -58,7 +107,7 @@ function HomeTab({ onOpenApp }) {
   const [quick, setQuick] = useState('')
 
   const items = proactiveItems({
-    tasks: life.tasks, goals: life.goals, scores: life.scores, examDate: effectiveExamDate(life.target, life.scores), today, hour: new Date().getHours(),
+    tasks: life.tasks, goals: life.goals, scores: life.scores, examDate: effectiveExamDate(life.target, life.scores), today, hour: new Date().getHours(), deadlines, notes,
   }).filter((i) => !dismissed.has(i.id))
 
   async function confirm(item) {
@@ -95,7 +144,8 @@ function HomeTab({ onOpenApp }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <Banner left={left} percent={success.percent} goalLabel={[life.target.faculty, life.target.major].filter(Boolean).join(' / ')} />
+      <Banner left={left} percent={success.percent} goalLabel={[life.target.faculty, life.target.major].filter(Boolean).join(' / ')} secretary={secretary} onChange={() => setPicking(true)} />
+      {picking && <SecretaryPicker currentId={secretaryId} onPick={setSecretary} onClose={() => setPicking(false)} />}
 
       <section className="px-card p-4 flex flex-col gap-3 bg-brand-soft" aria-label="พี่ขอถามก่อน">
         <h3 className="thai-font font-bold flex items-center gap-2"><Sparkles size={18} aria-hidden="true" /> พี่ขอถามก่อน</h3>
@@ -106,6 +156,15 @@ function HomeTab({ onOpenApp }) {
             return (
               <li key={i.id} className="px-card p-3 bg-paper flex flex-col gap-2">
                 <p className="thai-font text-sm">{i.text}</p>
+                {i.ask && (
+                  <form
+                    onSubmit={(e) => { e.preventDefault(); if (!answer.trim()) return; addNote(`${i.ask.prefix}: ${answer}`); log(`จำไว้: ${i.ask.prefix}`); setAnswer('') }}
+                    className="flex gap-2"
+                  >
+                    <input value={answer} onChange={(e) => setAnswer(e.target.value.slice(0, 120))} placeholder={i.ask.placeholder} aria-label={i.ask.prefix} className="px-input h-10 px-3 text-sm flex-1 min-w-0" />
+                    <button type="submit" disabled={!answer.trim()} className="px-btn px-3 thai-font text-xs font-bold bg-brand-strong text-white disabled:opacity-50">บอกพี่</button>
+                  </form>
+                )}
                 <div className="flex gap-2 flex-wrap">
                   {i.confirm && (
                     <button type="button" disabled={busy} onClick={() => confirm(i)} className="px-btn px-3 py-1.5 thai-font text-xs font-bold bg-brand-strong text-white disabled:opacity-50 flex items-center gap-1.5">
@@ -115,7 +174,7 @@ function HomeTab({ onOpenApp }) {
                   {app && onOpenApp && (
                     <button type="button" onClick={() => onOpenApp(app)} className="px-btn px-3 py-1.5 thai-font text-xs font-bold bg-brand-strong text-white">เปิด {app.name}</button>
                   )}
-                  {(i.confirm || app) && (
+                  {(i.confirm || app || i.ask) && (
                     <button type="button" onClick={() => setDismissed((d) => new Set(d).add(i.id))} className="px-btn px-3 py-1.5 thai-font text-xs font-bold bg-paper">ไว้ก่อน</button>
                   )}
                 </div>
@@ -155,6 +214,9 @@ function HomeTab({ onOpenApp }) {
 }
 
 function ChatTab() {
+  const { secretaryId, notes } = useSecretaryStore()
+  const storedEvents = useTcasEventsStore((s) => s.events)
+  const secretary = secretaryById(secretaryId)
   const [messages, setMessages] = useState([])
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
@@ -170,7 +232,8 @@ function ChatTab() {
     setText('')
     setBusy(true)
     try {
-      const answer = await askSecretary({ question: q, history, context: buildSecretaryContext(useLifeStore.getState(), todayKey()) })
+      const deadlines = upcomingDeadlines(eventsWithFallback(storedEvents), todayKey(), 14)
+      const answer = await askSecretary({ question: q, history, name: secretary.name, context: buildSecretaryContext(useLifeStore.getState(), todayKey(), { notes, deadlines }) })
       setMessages((m) => [...m, { role: 'ai', text: answer }])
     } catch (e) {
       console.error('[SecretaryApp] ask failed:', e)
@@ -182,9 +245,9 @@ function ChatTab() {
 
   return (
     <section className="px-card p-4 flex flex-col gap-3" aria-label="คุยกับพี่ใจดี">
-      <h3 className="thai-font font-bold">คุยกับพี่ใจดี (พิมพ์)</h3>
+      <h3 className="thai-font font-bold flex items-center gap-2"><SecretaryAvatar id={secretary.id} size={28} /> คุยกับ{secretary.name} (พิมพ์)</h3>
       <div className="h-80 overflow-y-auto flex flex-col gap-2" aria-live="polite">
-        {messages.length === 0 && <p className="thai-font text-sm text-ink-soft">ถามพี่ได้เลย เช่น วันนี้ควรอ่านอะไร หรือรู้สึกท้อ</p>}
+        {messages.length === 0 && <p className="thai-font text-sm text-ink-soft">ถามพี่ได้เลย เช่น วันนี้ควรอ่านอะไร หรือรู้สึกท้อ พี่รู้เป้าหมาย แผน วันสำคัญ และสิ่งที่น้องเคยบอกพี่ไว้</p>}
         {messages.map((m, i) => (
           <span key={i} className={`thai-font text-sm px-3 py-1.5 rounded-ui max-w-[85%] whitespace-pre-wrap break-words ${m.role === 'user' ? 'self-end bg-brand-strong text-white' : 'self-start bg-mist'}`}>{m.text}</span>
         ))}
@@ -210,6 +273,7 @@ function ChatTab() {
 export default function SecretaryApp({ onOpenApp }) {
   const uid = useAuthStore((s) => s.user?.uid)
   const [tab, setTab] = useState('home')
+  const secretaryId = useSecretaryStore((s) => s.secretaryId)
 
   useEffect(() => { if (uid) useSecretaryStore.getState().adoptUser(uid) }, [uid])
 
@@ -234,7 +298,7 @@ export default function SecretaryApp({ onOpenApp }) {
       <div className="p-4 sm:p-6">
         {tab === 'home' && <HomeTab onOpenApp={onOpenApp} />}
         {tab === 'chat' && <ChatTab />}
-        {tab === 'call' && <VoiceSecretaryPanel hidePhone />}
+        {tab === 'call' && <VoiceSecretaryPanel hidePhone secretaryId={secretaryId} />}
       </div>
     </div>
   )
