@@ -45,7 +45,19 @@ const ROWS = [
   ['theprotutor', 'The Pro Tutor', 'https://theprotutor.com/', ''],
 ]
 
-export const TUTORING_SITES = ROWS.map(([id, name, url, area, embed]) => ({ id: `tutor-${id}`, name, url, area, embed: embed !== false }))
+// Sites whose favicon is missing, tiny (< 64px), a placeholder (WordPress / Wix default) or shared with
+// another app on the same domain. Their tile shows the icon on a colour instead of a wrong or blurry
+// picture. Checked 2026-11-07 against the 128px favicon of every site.
+const NO_LOGO = new Set([
+  'baankrumod', 'banbodin', 'brightup', 'futureenhance', 'supk',   // no usable favicon
+  'ignite', 'findme', 'theprotutor',                               // only 32-48px
+  'baankruja',                                                     // default WordPress icon
+  'premierprep',                                                   // same domain/logo as OnDemand
+])
+
+export const TUTORING_SITES = ROWS.map(([id, name, url, area, embed]) => ({
+  id: `tutor-${id}`, name, url, area, embed: embed !== false, hasLogo: !NO_LOGO.has(id),
+}))
 
 // Site favicon at 128px (the logo for apps that have no picture of their own); the tile falls back to
 // its icon if this fails to load.

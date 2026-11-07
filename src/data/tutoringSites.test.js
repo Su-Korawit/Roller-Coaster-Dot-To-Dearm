@@ -14,6 +14,14 @@ describe('TUTORING_SITES', () => {
   })
 })
 
+describe('logos', () => {
+  it('only 26 of 36 use a favicon; the rest fall back to the icon tile', () => {
+    expect(TUTORING_SITES.filter((s) => s.hasLogo)).toHaveLength(26)
+    expect(TUTORING_SITES.find((s) => s.id === 'tutor-baankruja').hasLogo).toBe(false)   // WordPress default
+    expect(TUTORING_SITES.find((s) => s.id === 'tutor-chem-ou').hasLogo).toBe(true)
+  })
+})
+
 describe('faviconUrl', () => {
   it('uses the site host', () => {
     expect(faviconUrl('https://www.chem-ou.com/x')).toContain('domain=www.chem-ou.com')

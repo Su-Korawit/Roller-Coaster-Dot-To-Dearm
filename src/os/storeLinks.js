@@ -24,7 +24,7 @@ const TUTOR_LINKS = TUTORING_SITES.map((t) => ({
   id: t.id,
   category: 'learn',
   embed: t.embed,
-  logo: faviconUrl(t.url),
+  logo: t.hasLogo ? faviconUrl(t.url) : null,
   name: t.name,
   tagline: t.area ? `สถาบันกวดวิชา · ${t.area}` : 'สถาบันกวดวิชา · ออนไลน์/ทั่วประเทศ',
   url: t.url,
