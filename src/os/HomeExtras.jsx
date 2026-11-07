@@ -48,7 +48,7 @@ export function FolderSheet({ folder, onOpenApp, onRename, onTakeOut, onDelete, 
               <AppTile app={app} />
               <span className="thai-font text-xs truncate max-w-full">{app.name}</span>
             </button>
-            <button type="button" onClick={() => onTakeOut(folder.id, app.id)} aria-label={`นำ ${app.name} ออกจากโฟลเดอร์`} className="thai-font text-[11px] text-ink-soft underline inline-flex items-center gap-0.5">
+            <button type="button" onClick={() => onTakeOut(folder.id, app.id)} aria-label={`นำ ${app.name} ออกจากโฟลเดอร์`} className="thai-font text-xs text-ink-soft underline inline-flex items-center gap-0.5">
               <LogOut size={11} aria-hidden="true" /> นำออก
             </button>
           </li>

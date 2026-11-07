@@ -67,11 +67,7 @@ function HomePage() {
   const roomSheet = useRoomUiStore((s) => s.sheet)
   const campusOverlay = useOpenHouseUiStore((s) => s.openBuildingId !== null || s.directoryOpen)
 
-  // Daily check-in — once per day, on entering Home.
-  useEffect(() => {
-    if (useUserStore.getState().needsDailyCheckIn()) openPopup('dailyLogin')
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  // The daily mood check-in moved out of the game: it is the Mood app in the OS now.
 
   // Load the admin-editable track list (falls back to DEFAULT_TRACKS on error)
   useEffect(() => {

@@ -123,7 +123,7 @@ function Grid({ today, selected, onSelect, byDay, examDays }) {
   return (
     <section className="px-card p-3 flex flex-col gap-2" aria-label="ปฏิทินแผนอ่านหนังสือ">
       <div className="flex gap-2">
-        <div className="flex flex-col gap-[3px] pt-[18px] thai-font text-[10px] text-ink-soft shrink-0" aria-hidden="true">
+        <div className="flex flex-col gap-[3px] pt-[18px] thai-font text-xs text-ink-soft shrink-0" aria-hidden="true">
           {ROW_LABEL.map((l, i) => <span key={i} className="h-4 leading-4">{l}</span>)}
         </div>
         <div ref={scroller} className="os-pages overflow-x-auto flex-1 min-w-0 pb-1">
@@ -134,7 +134,7 @@ function Grid({ today, selected, onSelect, byDay, examDays }) {
               const prev = wi > 0 ? Number(weeks[wi - 1][0].slice(5, 7)) - 1 : -1
               return (
                 <div key={first} className="flex flex-col gap-[3px]">
-                  <span className="h-[15px] thai-font text-[10px] text-ink-soft leading-[15px] whitespace-nowrap" aria-hidden="true">{month !== prev ? MONTHS[month] : ''}</span>
+                  <span className="h-[15px] thai-font text-xs text-ink-soft leading-[15px] whitespace-nowrap" aria-hidden="true">{month !== prev ? MONTHS[month] : ''}</span>
                   {week.map((key) => {
                     const list = byDay[key] ?? []
                     const exam = examDays.get(key)

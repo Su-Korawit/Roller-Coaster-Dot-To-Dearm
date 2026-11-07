@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { ShoppingBag, Target, CalendarCheck, CalendarDays, BookOpen, Users, Bot, Landmark, MessageSquarePlus, Settings, School, MessagesSquare } from 'lucide-react'
+import { ShoppingBag, Target, CalendarCheck, CalendarDays, BookOpen, Users, Bot, Landmark, MessageSquarePlus, Settings, School, MessagesSquare, SmilePlus } from 'lucide-react'
 import { STORE_LINKS } from './storeLinks'
 import { UNIVERSITY_ROWS, NO_EMBED_IDS, shortUniName } from '../data/universityApps'
 
@@ -123,6 +123,21 @@ const RAW_APPS = [
     defaultInstalled: true,
     features: ["ห้องแชตตามคณะ/สาขาที่ตั้งไว้ใน Goal","ห้องรวมสำหรับทุกคน","ค้นหาเพื่อนจากชื่อหรือโรงเรียน ส่งคำขอติดตาม","ลบข้อความของตัวเองได้"],
     load: () => import('./apps/ChatApp'),
+  },
+  {
+    id: 'mood',
+    name: 'Mood',
+    tagline: 'เช็กอินความรู้สึกทุกวัน ดูความถี่แบบ GitHub',
+    description: 'ทุกวันกดบอกว่ารู้สึกยังไง วันละครั้ง (เปลี่ยนได้ก่อนเที่ยงคืน) แต่ละวันกลายเป็นช่องสีบนตารางแบบ GitHub ดูได้ว่าช่วงนี้อารมณ์เป็นยังไง และเช็กอินต่อเนื่องกี่วัน',
+    Icon: SmilePlus,
+    tone: 'var(--color-accent-pink)',
+    installable: true,
+    logo: '/assets/os/apps/mood.webp',
+    logoFull: true,
+    category: 'study',
+    defaultInstalled: true,
+    features: ['เช็กอินความรู้สึก 5 ระดับ วันละครั้ง', 'ตารางสีแบบ GitHub 30 สัปดาห์ เห็นความถี่ของแต่ละอารมณ์', 'สรุป 30 วัน: อารมณ์เฉลี่ยและจำนวนวันของแต่ละระดับ', 'นับเช็กอินต่อเนื่อง'],
+    load: () => import('./apps/MoodApp'),
   },
   {
     id: 'secretary',
