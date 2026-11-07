@@ -17,8 +17,8 @@ export const CALL_GOALS = {
 }
 
 export const OPENINGS = {
-  outbound_reminder: (secretary, student) => `สวัสดีค่ะ ${student} พี่${secretary.replace(/^พี่/, '')}โทรมาตามเวลาที่นัดกันไว้นะคะ ตอนนี้สะดวกคุยสั้นๆ ไหมคะ`,
-  inbound_support: (secretary, student) => `สวัสดีค่ะ ${student} พี่${secretary.replace(/^พี่/, '')}เองค่ะ วันนี้มีอะไรอยากเล่าให้พี่ฟังไหมคะ`,
+  outbound_reminder: (secretary, student) => `สวัสดีค่ะ ${student} พี่${secretary.replace(/^พี่/, '')} เลขา AI โทรมาตามเวลาที่นัดกันไว้นะคะ ตอนนี้สะดวกคุยสั้นๆ ไหมคะ`,
+  inbound_support: (secretary, student) => `สวัสดีค่ะ ${student} พี่${secretary.replace(/^พี่/, '')} เลขา AI เองค่ะ วันนี้มีอะไรอยากเล่าให้พี่ฟังไหมคะ`,
 }
 
 export const DEFAULT_SECRETARY = SECRETARIES[0]
