@@ -36,3 +36,7 @@ The OS shell (ADR for the OS at ilovetcas.com) had only the Store. The product b
 - **University apps**: 91 registry entries generated from `src/data/universityApps.js` (92 institutions in myTCAS; KU keeps its original `link-kuadmission` tile). Goal recommends the goal's university app + MyTCAS + TCAS Starter with install buttons.
 - **Report** (`osRequests`, `osRequestVotes`): requests for apps/websites, one vote per user per request, only a super-admin changes status. Rules + tests added (83 rules tests pass). Needs `firebase deploy --only firestore:rules` (queued).
 - **Intro scenes** now exist for Goal, Habit, Community, Reading, Secretary, Report. Code-drawn for now; ChatGPT brief 008 covers banners + storyboard frames to replace them.
+
+## Update 2026-11-07 (university apps = the website, drag on Home)
+- A university app now **only opens that university's admission website** (`LinkApp`), shown inside our window. Programme/score data lives in Goal, not in the university apps. 33 of the 91 sites forbid framing (X-Frame-Options), listed in `NO_EMBED_IDS` (`src/data/universityApps.js`): they show an "open in new tab" card. Re-run the header check if a site changes. KU campuses added as separate apps: Bangkhen (`link-kuadmission`), Kamphaeng Saen, Sriracha, Sakon Nakhon.
+- **Home icons can be dragged** (`AppIcon` + `moveApp` in `useOsStore`): mouse = just drag, touch = hold then drag; drop on another icon to take its slot; near the screen edge the page flips; built-ins (Store) stay first. Holding without moving still opens the details sheet.

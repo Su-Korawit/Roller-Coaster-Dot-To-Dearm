@@ -19,6 +19,8 @@ export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topI
   const dark = useWallpaperDark()
   const installed = useOsStore((s) => s.installed)
   const uninstallApp = useOsStore((s) => s.uninstallApp)
+  const moveApp = useOsStore((s) => s.moveApp)
+  const lastEdge = useRef(0)
   const [page, setPage] = useState(0)
   const [details, setDetails] = useState(null)
   const [pickWallpaper, setPickWallpaper] = useState(false)
@@ -36,6 +38,15 @@ export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topI
   function onScroll(e) {
     const el = e.currentTarget
     setPage(Math.round(el.scrollLeft / Math.max(1, el.clientWidth)))
+  }
+
+  // Carrying an icon near the screen edge flips to the neighbouring page (at most every 700 ms).
+  function onDragEdge(dir, now) {
+    if (now - lastEdge.current < 700) return
+    const next = Math.min(pages.length - 1, Math.max(0, page + dir))
+    if (next === page) return
+    lastEdge.current = now
+    goToPage(next)
   }
 
   function goToPage(i) {
@@ -121,7 +132,17 @@ export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topI
                 style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
               >
                 {items.map((app) => (
-                  <AppIcon key={app.id} app={app} dark={dark} onOpen={onOpenApp} onLongPress={setDetails} />
+                  <AppIcon
+                    key={app.id}
+                    app={app}
+                    dark={dark}
+                    draggable={!app.builtIn}
+                    onOpen={onOpenApp}
+                    onLongPress={setDetails}
+                    onMove={moveApp}
+                    onEdge={onDragEdge}
+                    getScrollLeft={() => scroller.current?.scrollLeft ?? 0}
+                  />
                 ))}
               </div>
             </div>

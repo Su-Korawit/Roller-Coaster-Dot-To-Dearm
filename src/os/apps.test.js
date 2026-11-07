@@ -21,11 +21,11 @@ describe('homeAppIds', () => {
 })
 
 describe('registry content', () => {
-  it('has the five apps and the nine store websites', () => {
+  it('has the five apps and the twelve store websites', () => {
     const ids = OS_APPS.map((a) => a.id)
     for (const id of ['goal', 'habit', 'reading', 'community', 'secretary']) expect(ids).toContain(id)
-    const links = OS_APPS.filter((a) => a.url)
-    expect(links).toHaveLength(9)
+    const links = OS_APPS.filter((a) => a.url && a.id.startsWith('link-'))
+    expect(links).toHaveLength(12)
     expect(links.every((a) => a.url.startsWith('https://') && a.installable)).toBe(true)
     expect(new Set(ids).size).toBe(ids.length)
   })
@@ -65,8 +65,25 @@ describe('store catalogue', () => {
   })
   it('KU Admission is in the Store and sites that forbid framing are flagged', async () => {
     const { findApp } = await import('./apps')
-    expect(findApp('link-kuadmission').url).toBe('https://admission.ku.ac.th/')
+    expect(findApp('link-kuadmission').url).toBe('https://admission.ku.ac.th/kuadm/')
+    for (const id of ['link-ku-kps', 'link-ku-src', 'link-ku-csc']) expect(findApp(id).category).toBe('university')
+    expect(findApp('link-ku-src').embed).toBe(true)
     expect(findApp('link-kuadmission').embed).toBe(false)
     expect(findApp('link-tcaster').embed).toBe(true)
+  })
+})
+
+describe('reorderIds (drag on Home)', () => {
+  it('moves the dragged id into the target slot, both directions', async () => {
+    const { reorderIds } = await import('./apps')
+    expect(reorderIds(['a', 'b', 'c', 'd'], 'a', 'c')).toEqual(['b', 'c', 'a', 'd'])
+    expect(reorderIds(['a', 'b', 'c', 'd'], 'd', 'b')).toEqual(['a', 'd', 'b', 'c'])
+  })
+  it('ignores unknown ids and drops onto itself', async () => {
+    const { reorderIds } = await import('./apps')
+    const ids = ['a', 'b']
+    expect(reorderIds(ids, 'a', 'a')).toBe(ids)
+    expect(reorderIds(ids, 'x', 'a')).toBe(ids)
+    expect(reorderIds(ids, 'a', 'x')).toBe(ids)
   })
 })

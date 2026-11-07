@@ -99,3 +99,8 @@ export const UNIVERSITY_ROWS = [
 // Label for a tile: "มหาวิทยาลัยเกษตรศาสตร์" → "ม.เกษตรศาสตร์", "จุฬาลงกรณ์มหาวิทยาลัย" → "จุฬาฯ".
 export const shortUniName = (full) =>
   full.replace(/^จุฬาลงกรณ์มหาวิทยาลัย$/, 'จุฬาฯ').replace(/^มหาวิทยาลัย/, 'ม.')
+
+// Sites that forbid being shown inside another site (X-Frame-Options SAMEORIGIN/DENY), checked
+// 2026-11-07. Their app opens a card with an "open in new tab" button instead of a blank frame.
+// Sites that could not be reached from the checker are left out (we try the frame first).
+export const NO_EMBED_IDS = new Set(['002', '003', '010', '014', '017', '018', '019', '026', '027', '032', '034', '035', '051', '054', '056', '068', '103', '129', '148', '158', '165', '171', '174', '191', '193', '216', '218', '221', '911', '914', '917', '918', '921'])

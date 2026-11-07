@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { DEFAULT_WALLPAPER, WALLPAPERS } from '../os/wallpapers'
 import { DEFAULT_CROP, normalizeCrop } from '../os/customWallpaper'
 import { findAvatar } from '../os/avatars'
-import { DEFAULT_INSTALLED } from '../os/apps'
+import { DEFAULT_INSTALLED, homeAppIds, findApp, reorderIds } from '../os/apps'
 
 // OS shell preferences, per device (like a phone's home screen): wallpaper + installed apps.
 // The user's own photo is kept in IndexedDB (too big for localStorage); only its crop, aspect and
@@ -56,6 +56,13 @@ export const useOsStore = create(
         }),
 
       installApp: (id) => set((s) => (s.installed.includes(id) ? s : { installed: [...s.installed, id] })),
+      // Drag on the Home screen: put `fromId` where `toId` is. Built-in apps (Store) stay first.
+      moveApp: (fromId, toId) =>
+        set((s) => {
+          const extra = homeAppIds(s.installed).filter((id) => !findApp(id)?.builtIn)
+          const next = reorderIds(extra, fromId, toId)
+          return next === extra ? s : { installed: next }
+        }),
       uninstallApp: (id) => set((s) => ({ installed: s.installed.filter((x) => x !== id) })),
     }),
     {

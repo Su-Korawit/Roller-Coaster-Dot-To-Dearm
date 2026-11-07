@@ -1,7 +1,7 @@
 import { lazy } from 'react'
 import { ShoppingBag, Target, CalendarCheck, BookOpen, Users, Bot, Landmark, MessageSquarePlus } from 'lucide-react'
 import { STORE_LINKS } from './storeLinks'
-import { UNIVERSITY_ROWS, shortUniName } from '../data/universityApps'
+import { UNIVERSITY_ROWS, NO_EMBED_IDS, shortUniName } from '../data/universityApps'
 
 // The OS app registry — the one place to add an app to the OS.
 //   id           unique, kebab-case
@@ -143,20 +143,22 @@ const RAW_APPS = [
     installable: true,
     load: () => import('./apps/LinkApp'),
   })),
-  // One Store app per university in myTCAS (KU keeps its original "KU Admission" tile above).
-  ...UNIVERSITY_ROWS.filter(([id]) => id !== '002').map(([id, full, url, extra]) => ({
+  // One Store app per university in myTCAS: it simply opens that university's own admission website
+  // (programmes and scores live in Goal). KU keeps its original "KU Admission" tile above.
+  ...UNIVERSITY_ROWS.filter(([id]) => id !== '002').map(([id, full, url]) => ({
     id: `uni-${id}`,
     name: shortUniName(full),
     tagline: full,
-    description: `แอปของ ${full} รวมเว็บรับสมัครทางการ หลักสูตรจาก MyTCAS และปุ่มตั้งเป็นเป้าหมายใน Goal`,
+    description: `เว็บรับสมัครทางการของ ${full} เปิดดูในหน้าต่างของ I LOVE TCAS (ถ้าเว็บไม่อนุญาตให้ฝัง จะเปิดในแท็บใหม่แทน)`,
     Icon: Landmark,
     tone: 'var(--color-brand)',
     logo: `https://assets.mytcas.com/i/logo/${id}.png`,
     category: 'university',
     installable: true,
-    university: { id, name: full, url, extra },
-    features: ['เว็บรับสมัครทางการของมหาวิทยาลัย', 'ดูคณะ/หลักสูตรและเกณฑ์รอบ 3 จาก MyTCAS', 'ตั้งหลักสูตรของที่นี่เป็นเป้าหมายใน Goal ได้ทันที'],
-    load: () => import('./apps/UniversityApp'),
+    url,
+    embed: !NO_EMBED_IDS.has(id),
+    features: ['เว็บรับสมัครทางการของมหาวิทยาลัย', 'ดูหลักสูตรและเกณฑ์รอบ 3 ได้ในแอป Goal'],
+    load: () => import('./apps/LinkApp'),
   })),
 ]
 
@@ -193,6 +195,17 @@ export function homeAppIds(installed = [], apps = OS_APPS) {
     if (app && app.installable && !app.builtIn && !extra.includes(id)) extra.push(id)
   }
   return [...builtIns, ...extra]
+}
+
+// Move `fromId` to where `toId` is (dropping on an icon puts the dragged one in that slot).
+// Unknown ids or from === to leave the list as it is.
+export function reorderIds(ids, fromId, toId) {
+  const from = ids.indexOf(fromId)
+  const to = ids.indexOf(toId)
+  if (from < 0 || to < 0 || from === to) return ids
+  const next = ids.filter((id) => id !== fromId)
+  next.splice(to, 0, fromId)
+  return next
 }
 
 export function paginate(items, perPage) {
