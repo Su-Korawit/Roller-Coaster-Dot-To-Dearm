@@ -8,8 +8,8 @@ import { thisWeekMinutes, sumMinutes, readingStreak, formatMinutes } from '../st
 import { findApp } from '../apps'
 
 // Reading: the study room from the original game (/home: your room, focus timer, trees) shown in the
-// window (a same-origin frame, so its stores stay separate from the OS), your logged reading stats,
-// a page tracker for your books, and a link to Community. The old timer/leaderboard card is gone.
+// window, full size (a same-origin frame, so its stores stay separate from the OS). Reading stats, the
+// page tracker for your books and the link to Community sit in a panel opened from the toolbar.
 export default function ReadingApp({ onOpenApp }) {
   const user = useAuthStore((s) => s.user)
   const { books, readLog, addBook, removeBook, setBookPage } = useLifeStore()
@@ -18,6 +18,7 @@ export default function ReadingApp({ onOpenApp }) {
   const [title, setTitle] = useState('')
   const [total, setTotal] = useState('')
   const [roomRev, setRoomRev] = useState(0)
+  const [panel, setPanel] = useState(false)
   const today = todayKey()
 
   async function share() {
@@ -36,20 +37,23 @@ export default function ReadingApp({ onOpenApp }) {
   const community = findApp('community')
 
   return (
-    <div className="p-4 sm:p-6 max-w-2xl mx-auto flex flex-col gap-5">
-      <section className="px-card overflow-hidden flex flex-col" aria-label="ห้องอ่านหนังสือ">
-        <div className="flex items-center gap-2 px-3 py-1.5 border-b-2 border-hairline bg-paper">
-          <h3 className="thai-font font-bold text-sm flex-1">ห้องอ่านหนังสือของคุณ</h3>
-          <button type="button" onClick={() => setRoomRev((r) => r + 1)} className="thai-font text-xs font-semibold text-brand-strong underline">โหลดห้องใหม่</button>
-          <a href="/home" target="_blank" rel="noopener noreferrer" className="thai-font text-xs font-semibold text-brand-strong underline">เปิดเต็มจอ</a>
-        </div>
-        {user ? (
-          <iframe key={roomRev} src="/home" title="ห้องอ่านหนังสือ" className="w-full h-[62vh] min-h-[380px] border-0 bg-mist" />
-        ) : (
-          <p className="thai-font text-sm text-ink-soft p-6">เข้าสู่ระบบเพื่อเข้าห้องอ่านหนังสือ</p>
-        )}
-      </section>
-
+    <div className="relative h-full flex flex-col bg-mist">
+      <div className="flex items-center gap-2 px-3 h-10 shrink-0 border-b-2 border-hairline bg-paper">
+        <h3 className="thai-font font-bold text-sm flex-1 truncate">ห้องอ่านหนังสือ</h3>
+        <button type="button" onClick={() => setPanel((v) => !v)} aria-pressed={panel} className={`px-btn px-3 py-1 thai-font text-xs font-bold ${panel ? 'bg-brand-strong text-white' : 'bg-paper'}`}>
+          หนังสือและสถิติ
+        </button>
+        <button type="button" onClick={() => setRoomRev((r) => r + 1)} className="thai-font text-xs font-semibold text-brand-strong underline">โหลดใหม่</button>
+        <a href="/home" target="_blank" rel="noopener noreferrer" className="thai-font text-xs font-semibold text-brand-strong underline">แท็บใหม่</a>
+      </div>
+      {user ? (
+        <iframe key={roomRev} src="/home" title="ห้องอ่านหนังสือ" allow="fullscreen" className="flex-1 w-full min-h-0 border-0 bg-mist" />
+      ) : (
+        <p className="thai-font text-sm text-ink-soft p-6">เข้าสู่ระบบเพื่อเข้าห้องอ่านหนังสือ</p>
+      )}
+      {panel && (
+        <aside className="absolute inset-x-0 bottom-0 top-10 z-10 bg-paper overflow-y-auto" aria-label="หนังสือและสถิติ">
+          <div className="p-4 sm:p-6 max-w-2xl mx-auto flex flex-col gap-5">
       <section className="px-card p-4 flex flex-col gap-3" aria-label="เวลาอ่านของฉัน">
         <div className="flex items-center gap-2">
           <Clock size={18} aria-hidden="true" />
@@ -110,6 +114,9 @@ export default function ReadingApp({ onOpenApp }) {
           <button type="submit" aria-label="เพิ่มหนังสือ" className="px-btn px-3 bg-paper"><Plus size={18} /></button>
         </form>
       </section>
+          </div>
+        </aside>
+      )}
     </div>
   )
 }
