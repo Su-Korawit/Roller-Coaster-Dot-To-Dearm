@@ -377,6 +377,30 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
     }
 
+    // OS Community feed: short posts (text, optional https image link) and one like doc per (post, user).
+    match /osPosts/{postId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 1 && request.resource.data.text.size() <= 500
+        && request.resource.data.imageUrl is string
+        && (request.resource.data.imageUrl == ''
+            || (request.resource.data.imageUrl.matches('https://.*') && request.resource.data.imageUrl.size() <= 300))
+        && request.resource.data.name is string && request.resource.data.name.size() <= 60
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if isSignedIn() && (resource.data.uid == request.auth.uid || isSuperAdmin());
+    }
+    match /osPostLikes/{likeId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.postId is string
+        && likeId == request.resource.data.postId + '_' + request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
     // OS community chat: one room per faculty+major (id = users/{uid}.osRoomId, any university) plus
     // the open room 'general'. Members = signed-in users whose own osRoomId equals the room.
     match /osRooms/{roomId}/messages/{msgId} {

@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { ShoppingBag, Target, CalendarCheck, CalendarDays, BookOpen, Users, Bot, Landmark, MessageSquarePlus, Settings, School, GraduationCap } from 'lucide-react'
+import { ShoppingBag, Target, CalendarCheck, CalendarDays, BookOpen, Users, Bot, Landmark, MessageSquarePlus, Settings, School, GraduationCap, MessagesSquare } from 'lucide-react'
 import { STORE_LINKS } from './storeLinks'
 import { UNIVERSITY_ROWS, NO_EMBED_IDS, shortUniName } from '../data/universityApps'
 
@@ -96,8 +96,8 @@ const RAW_APPS = [
   {
     id: 'community',
     name: 'Community',
-    tagline: "คุยกับเพื่อนคณะ/สาขาเดียวกัน",
-    description: "ห้องแชตของคนที่เลือกคณะและสาขาเดียวกัน แม้อยู่คนละมหาวิทยาลัย มีห้องรวมสำหรับทุกคน และค้นหาเพื่อนเพื่อติดตาม",
+    tagline: "ฟีดและโปรไฟล์ของคนเตรียมสอบ",
+    description: "แอปโซเชียลของคนเตรียมสอบ เปิดมาเจอฟีดโพสต์ เขียนโพสต์ของตัวเอง กดถูกใจ ค้นหา และดูโปรไฟล์ของแต่ละคน ส่วนห้องแชตอยู่ในแอป Chat",
     Icon: Users,
     tone: 'var(--color-zone-arts)',
     installable: true,
@@ -106,13 +106,28 @@ const RAW_APPS = [
     category: 'study',
     splash: '/assets/os/splash/community.webp',
     defaultInstalled: true,
-    features: ["ห้องแชตตามคณะ/สาขาที่ตั้งไว้ใน Goal","ห้องรวมสำหรับทุกคน","ค้นหาเพื่อนจากชื่อหรือโรงเรียน ส่งคำขอติดตาม","ลบข้อความของตัวเองได้"],
+    features: ["หน้าแรกเป็นฟีด จัดลำดับตามความนิยมและความใหม่","เขียนโพสต์ (ข้อความ และลิงก์รูป)","กดถูกใจ ค้นหาโพสต์ กรองข้อความ/สื่อ","หน้าโปรไฟล์ของแต่ละคน","ปุ่มลัดไปแอป Chat"],
     load: () => import('./apps/CommunityApp'),
+  },
+  {
+    id: 'chat',
+    name: 'Chat',
+    tagline: "แชตห้องคณะ ห้องรวม และหาเพื่อน",
+    description: "ห้องแชตของคนที่เลือกคณะและสาขาเดียวกัน แม้อยู่คนละมหาวิทยาลัย มีห้องรวมสำหรับทุกคน และค้นหาเพื่อนเพื่อติดตาม",
+    Icon: MessagesSquare,
+    tone: 'var(--color-zone-sci)',
+    installable: true,
+    logo: '/assets/os/apps/chat.webp',
+    logoFull: true,
+    category: 'study',
+    defaultInstalled: true,
+    features: ["ห้องแชตตามคณะ/สาขาที่ตั้งไว้ใน Goal","ห้องรวมสำหรับทุกคน","ค้นหาเพื่อนจากชื่อหรือโรงเรียน ส่งคำขอติดตาม","ลบข้อความของตัวเองได้"],
+    load: () => import('./apps/ChatApp'),
   },
   {
     id: 'secretary',
     name: 'Secretary',
-    tagline: "เลขา AI พี่ใจดี ตามงานให้",
+    tagline: "เลขาส่วนตัว AI พี่ใจดี ทักและจัดการงานให้",
     description: "เลขา AI ที่รู้แผนของคุณ ช่วยตามงานที่ยังไม่ทำ ให้กำลังใจ ตอบคำถามแบบพิมพ์ และโทรคุยได้",
     Icon: Bot,
     tone: 'var(--color-brand)',
@@ -122,7 +137,7 @@ const RAW_APPS = [
     logoFull: true,
     category: 'study',
     defaultInstalled: true,
-    features: ["สรุปงานวันนี้ที่ยังไม่ทำ ติ๊กเสร็จได้ทันที","พิมพ์คุยกับพี่ใจดี พี่รู้เป้าหมายและแผนของคุณ","โทรคุยด้วยเสียง (ต้องยินยอม มีโควตาต่อวัน)"],
+    features: ["หน้าแรก: พี่ทักถามก่อน (ต้องกดยืนยันก่อนทำ) จดงานให้ และดูประวัติที่พี่ทำให้","สร้างตารางอ่านหนังสือและเลื่อนงานที่ยังไม่ได้ทำ","แท็บแชทพิมพ์คุยกับพี่ใจดี พี่รู้เป้าหมายและแผนของคุณ","แท็บโทรคุยด้วยเสียง (ต้องยินยอม มีโควตาต่อวัน)"],
     load: () => import('./apps/SecretaryApp'),
   },
   {

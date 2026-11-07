@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import { newId, toggleDone, todayKey } from '../os/lifeLogic'
 import { replaceAutoTasks, roomIdFor } from '../os/studyPlan'
 import { MAX_GOALS, applyGoalToState, goalKey, moveGoal } from '../os/goalLogic'
+import { rescheduleOpen } from '../os/secretaryLogic'
 
 // Goal / Habit / Reading data for the OS apps. Cached on the device (localStorage) and synced to
 // users/{uid}.os (see syncManager). `ownerUid` stops one account's data showing up for another
@@ -80,6 +81,8 @@ export const useLifeStore = create(
 
       addTask: (text, tag = 'อื่นๆ', date = todayKey()) =>
         set((s) => (text.trim() ? { tasks: [...s.tasks, { id: newId(), text: text.trim(), tag, date, done: false }] } : s)),
+      // Secretary: move today's unfinished tasks to tomorrow.
+      postponeOpenTasks: (today = todayKey()) => set((s) => ({ tasks: rescheduleOpen(s.tasks, today) })),
       toggleTask: (id) => set((s) => ({ tasks: s.tasks.map((t) => t.id === id ? { ...t, done: !t.done } : t) })),
       removeTask: (id) => set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) })),
 

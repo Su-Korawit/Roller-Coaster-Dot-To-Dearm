@@ -168,7 +168,7 @@ function PhoneSettings({ status, reload }) {
   )
 }
 
-export default function VoiceSecretaryPanel() {
+export default function VoiceSecretaryPanel({ hidePhone = false }) {
   const name = useAuthStore((s) => s.user?.displayName) || ''
   const [data, setData] = useState(null)
   const [err, setErr] = useState('')
@@ -193,7 +193,7 @@ export default function VoiceSecretaryPanel() {
   return (
     <div className="space-y-5">
       <CallButton status={st} name={name} />
-      <PhoneSettings status={st} reload={load} />
+      {!hidePhone && <PhoneSettings status={st} reload={load} />}
       <section className="flex gap-2 flex-wrap">
         <button className={btn} onClick={async () => { await voiceApi(st.doNotCall ? 'resume' : 'stop'); load() }}>
           {st.doNotCall ? UI_TEXT.resume : UI_TEXT.stop}
