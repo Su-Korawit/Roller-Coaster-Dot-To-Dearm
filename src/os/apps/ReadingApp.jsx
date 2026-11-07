@@ -1,58 +1,24 @@
-import { useEffect, useRef, useState } from 'react'
-import { Plus, X, Play, Square, Share2, Trophy } from 'lucide-react'
+import { useState } from 'react'
+import { Plus, X, Share2, Users, Clock } from 'lucide-react'
 import { useLifeStore, selectRoomId } from '../../stores/useLifeStore'
 import { useAuthStore } from '../../stores/useAuthStore'
-import { useReadingTimerStore } from '../../stores/useReadingTimerStore'
-import { useReadingBoardStore } from '../../stores/useReadingBoardStore'
 import { useRoomChatStore } from '../../stores/useRoomChatStore'
-import { flushOsSync } from '../../lib/syncManager'
 import { readingProgress, todayKey } from '../lifeLogic'
-import { thisWeekMinutes, sumMinutes, readingStreak, rankEntries, formatMinutes } from '../studyPlan'
-import ProfileAvatar from '../ProfileAvatar'
+import { thisWeekMinutes, sumMinutes, readingStreak, formatMinutes } from '../studyPlan'
+import { findApp } from '../apps'
 
-const PRESETS = [25, 45, 60]
-
-function useNow(active) {
-  const [now, setNow] = useState(() => Date.now())
-  useEffect(() => {
-    if (!active) return undefined
-    const id = setInterval(() => setNow(Date.now()), 1000)
-    return () => clearInterval(id)
-  }, [active])
-  return now
-}
-
-const mmss = (ms) => {
-  const s = Math.max(0, Math.ceil(ms / 1000))
-  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
-}
-
-// Reading: a focus-reading room (timer + your avatar), solo stats, a group leaderboard for your
-// faculty/major room, and a page tracker for your books. Minutes feed the Habit cards.
-export default function ReadingApp() {
+// Reading: the study room from the original game (/home: your room, focus timer, trees) shown in the
+// window (a same-origin frame, so its stores stay separate from the OS), your logged reading stats,
+// a page tracker for your books, and a link to Community. The old timer/leaderboard card is gone.
+export default function ReadingApp({ onOpenApp }) {
   const user = useAuthStore((s) => s.user)
   const { books, readLog, addBook, removeBook, setBookPage } = useLifeStore()
   const roomId = useLifeStore(selectRoomId)
-  const { startedAt, plannedMin, start, finish, cancel } = useReadingTimerStore()
-  const { entries, loading, error, load, publish } = useReadingBoardStore()
-  const [board, setBoard] = useState('solo')
   const [msg, setMsg] = useState('')
   const [title, setTitle] = useState('')
   const [total, setTotal] = useState('')
-  const now = useNow(startedAt != null)
-
-  const running = startedAt != null
-  const remaining = running ? startedAt + plannedMin * 60000 - now : plannedMin * 60000
+  const [roomRev, setRoomRev] = useState(0)
   const today = todayKey()
-
-  useEffect(() => { if (roomId && user) { flushOsSync(); load(roomId) } }, [roomId, user, load])
-
-  async function stop() {
-    const minutes = finish()
-    if (!minutes) { setMsg('อ่านไม่ถึง 1 นาที ยังไม่นับเวลา'); return }
-    const err = user ? await publish() : null
-    setMsg(err ?? `บันทึกแล้ว อ่านไป ${minutes} นาที เก่งมาก`)
-  }
 
   async function share() {
     if (!roomId) return
@@ -61,111 +27,56 @@ export default function ReadingApp() {
     setMsg(err ?? 'แชร์ไปที่ห้องแล้ว')
   }
 
-  // Auto-finish when the planned time is reached (checked once a second while a session runs).
-  const stopRef = useRef(stop)
-  useEffect(() => { stopRef.current = stop })
-  useEffect(() => {
-    if (!running) return undefined
-    const id = setInterval(() => {
-      const t = useReadingTimerStore.getState()
-      if (t.startedAt != null && Date.now() >= t.startedAt + t.plannedMin * 60000) stopRef.current()
-    }, 1000)
-    return () => clearInterval(id)
-  }, [running])
-
-  const rows = rankEntries(entries, today)
   const stats = [
     ['วันนี้', formatMinutes(readLog[today] || 0)],
     ['สัปดาห์นี้', formatMinutes(thisWeekMinutes(readLog, today))],
     ['ทั้งหมด', formatMinutes(sumMinutes(readLog))],
     ['อ่านต่อเนื่อง', `${readingStreak(readLog, today)} วัน`],
   ]
+  const community = findApp('community')
 
   return (
     <div className="p-4 sm:p-6 max-w-2xl mx-auto flex flex-col gap-5">
-      <section className="px-card p-4 flex flex-col items-center gap-3" aria-label="ห้องอ่านหนังสือ" style={{ background: 'var(--color-zone-sci-soft)' }}>
-        <div className={running ? 'os-bob' : ''}>
-          {user && <ProfileAvatar user={user} size={88} />}
+      <section className="px-card overflow-hidden flex flex-col" aria-label="ห้องอ่านหนังสือ">
+        <div className="flex items-center gap-2 px-3 py-1.5 border-b-2 border-hairline bg-paper">
+          <h3 className="thai-font font-bold text-sm flex-1">ห้องอ่านหนังสือของคุณ</h3>
+          <button type="button" onClick={() => setRoomRev((r) => r + 1)} className="thai-font text-xs font-semibold text-brand-strong underline">โหลดห้องใหม่</button>
+          <a href="/home" target="_blank" rel="noopener noreferrer" className="thai-font text-xs font-semibold text-brand-strong underline">เปิดเต็มจอ</a>
         </div>
-        <p className="font-display font-bold text-4xl tabular-nums" role="timer" aria-live="off">{mmss(remaining)}</p>
-        {running ? (
-          <button type="button" onClick={stop} className="px-btn px-5 py-2 thai-font text-sm font-bold bg-paper flex items-center gap-2">
-            <Square size={14} aria-hidden="true" /> หยุดและบันทึก
-          </button>
+        {user ? (
+          <iframe key={roomRev} src="/home" title="ห้องอ่านหนังสือ" className="w-full h-[62vh] min-h-[380px] border-0 bg-mist" />
         ) : (
-          <>
-            <div className="flex gap-2" role="radiogroup" aria-label="เวลาอ่าน">
-              {PRESETS.map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  role="radio"
-                  aria-checked={plannedMin === m}
-                  onClick={() => useReadingTimerStore.setState({ plannedMin: m })}
-                  className={`px-btn px-3 py-1 thai-font text-sm font-bold ${plannedMin === m ? 'bg-brand-strong text-white' : 'bg-paper'}`}
-                >
-                  {m} น.
-                </button>
-              ))}
-            </div>
-            <button type="button" onClick={() => { setMsg(''); start(plannedMin) }} className="px-btn px-5 py-2 thai-font text-sm font-bold bg-brand-strong text-white flex items-center gap-2">
-              <Play size={14} aria-hidden="true" /> เริ่มอ่าน
-            </button>
-          </>
+          <p className="thai-font text-sm text-ink-soft p-6">เข้าสู่ระบบเพื่อเข้าห้องอ่านหนังสือ</p>
         )}
-        {running && <button type="button" onClick={cancel} className="thai-font text-xs text-ink-soft underline">ยกเลิก (ไม่นับเวลา)</button>}
-        {msg && <p role="status" className="thai-font text-sm text-brand-strong">{msg}</p>}
       </section>
 
-      <section className="px-card p-4 flex flex-col gap-3" aria-label="อันดับ">
+      <section className="px-card p-4 flex flex-col gap-3" aria-label="เวลาอ่านของฉัน">
         <div className="flex items-center gap-2">
-          <Trophy size={18} aria-hidden="true" />
-          <h3 className="thai-font font-bold flex-1">อันดับการอ่าน</h3>
-          {['solo', 'group'].map((b) => (
-            <button
-              key={b}
-              type="button"
-              aria-pressed={board === b}
-              onClick={() => setBoard(b)}
-              className={`px-btn px-3 py-1 thai-font text-xs font-bold ${board === b ? 'bg-brand-strong text-white' : 'bg-paper'}`}
-            >
-              {b === 'solo' ? 'เดี่ยว' : 'กลุ่ม'}
-            </button>
-          ))}
+          <Clock size={18} aria-hidden="true" />
+          <h3 className="thai-font font-bold flex-1">เวลาอ่านของฉัน</h3>
         </div>
-
-        {board === 'solo' && (
-          <ul className="grid grid-cols-2 gap-2">
-            {stats.map(([k, v]) => (
-              <li key={k} className="px-card p-3 thai-font">
-                <p className="text-xs text-ink-soft">{k}</p>
-                <p className="font-bold">{v}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {board === 'group' && (roomId ? (
-          <>
-            {loading && <p className="thai-font text-sm text-ink-soft">กำลังโหลด...</p>}
-            {error && <p role="alert" className="thai-font text-sm text-zone-health-deep">{error}</p>}
-            {!loading && rows.length === 0 && <p className="thai-font text-sm text-ink-soft">ยังไม่มีใครในห้องนี้ เริ่มอ่านแล้วบันทึก คุณจะเป็นคนแรก</p>}
-            <ol className="flex flex-col gap-1.5">
-              {rows.map((r) => (
-                <li key={r.uid} className={`flex items-center gap-3 thai-font text-sm px-3 py-2 rounded-ui ${r.uid === user?.uid ? 'bg-brand-soft font-bold' : 'bg-mist'}`}>
-                  <span className="w-6 text-center">{r.rank}</span>
-                  <span className="flex-1 min-w-0 truncate">{r.name}{r.uid === user?.uid ? ' (คุณ)' : ''}</span>
-                  <span>{formatMinutes(r.minutes)}</span>
-                </li>
-              ))}
-            </ol>
-            <button type="button" onClick={share} className="px-btn px-3 py-1.5 thai-font text-xs font-bold bg-paper self-start flex items-center gap-1.5">
-              <Share2 size={14} aria-hidden="true" /> แชร์ผลวันนี้ไปที่ห้อง
+        <ul className="grid grid-cols-2 gap-2">
+          {stats.map(([k, v]) => (
+            <li key={k} className="px-card p-3 thai-font">
+              <p className="text-xs text-ink-soft">{k}</p>
+              <p className="font-bold">{v}</p>
+            </li>
+          ))}
+        </ul>
+        <div className="flex flex-wrap gap-2">
+          {roomId && (
+            <button type="button" onClick={share} className="px-btn px-3 py-1.5 thai-font text-xs font-bold bg-paper flex items-center gap-1.5">
+              <Share2 size={14} aria-hidden="true" /> แชร์ผลวันนี้ไปที่ห้องคณะ
             </button>
-          </>
-        ) : (
-          <p className="thai-font text-sm text-ink-soft">ตั้งคณะและสาขาใน Goal ก่อน แล้วจะเห็นอันดับของกลุ่มเดียวกัน</p>
-        ))}
+          )}
+          {community && onOpenApp && (
+            <button type="button" onClick={() => onOpenApp(community)} className="px-btn px-3 py-1.5 thai-font text-xs font-bold bg-paper flex items-center gap-1.5">
+              <Users size={14} aria-hidden="true" /> เปิด Community
+            </button>
+          )}
+        </div>
+        {!roomId && <p className="thai-font text-xs text-ink-soft">ตั้งคณะและสาขาใน Goal ก่อน จึงแชร์ไปห้องคณะได้</p>}
+        {msg && <p role="status" className="thai-font text-sm text-brand-strong">{msg}</p>}
       </section>
 
       <section className="px-card p-4 flex flex-col gap-3" aria-label="หนังสือที่กำลังอ่าน">
