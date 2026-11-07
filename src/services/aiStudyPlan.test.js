@@ -5,7 +5,7 @@ vi.mock('../lib/geminiClient', () => ({ getModel: vi.fn(), parseJSONSafe: vi.fn(
 import { generateStudyPlan } from './aiStudyPlan'
 
 const input = {
-  target: { university: 'จุฬา', faculty: 'วิศวะ', major: 'คอม', examDate: '2027-01-05' },
+  target: { university: 'จุฬา', faculty: 'วิศวะ', major: 'คอม', examDate: '2027-01-05', examDateManual: true },
   scores: [{ id: '1', subject: 'TGAT', needed: 70, mine: 40 }, { id: '2', subject: 'A-Level คณิต', needed: 60, mine: null }],
   hoursPerDay: 2,
 }
@@ -29,6 +29,14 @@ describe('generateStudyPlan', () => {
     expect(out.aiUsed).toBe(false)
     expect(out.tasks.length).toBeGreaterThan(0)
     expect(out.summary).toContain('เหลืออีก 4 วัน')
+  })
+
+  it('plans a goal saved before the calendar existed (no dates stored) from the TCAS calendar', async () => {
+    const ask = vi.fn(async () => ({}))
+    const legacy = { target: { university: 'เกษตร', faculty: 'วิทย์', major: 'คอม', examDate: '' }, scores: [{ id: '1', subject: 'TGAT1', needed: 60, mine: null }, { id: '2', subject: 'TPAT3', needed: 60, mine: null }], hoursPerDay: 2 }
+    const out = await generateStudyPlan(legacy, { today: '2026-11-07', ask })
+    expect(out.tasks.length).toBeGreaterThan(0)
+    expect(out.tasks.at(-1).date).toBe('2027-01-30')   // TGAT/TPAT exam day
   })
 
   it('returns nothing (and does not call the AI) without a usable date or subjects', async () => {

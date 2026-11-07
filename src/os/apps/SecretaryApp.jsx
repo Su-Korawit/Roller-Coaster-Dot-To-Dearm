@@ -4,6 +4,7 @@ import VoiceSecretaryPanel from '../../components/voice/VoiceSecretaryPanel'
 import { useLifeStore } from '../../stores/useLifeStore'
 import { todayKey } from '../lifeLogic'
 import { daysUntil, planSuccess } from '../studyPlan'
+import { effectiveExamDate } from '../goalLogic'
 import { askSecretary, buildSecretaryContext } from '../../services/aiSecretary'
 
 const QUICK = ['วันนี้ต้องทำอะไรบ้าง', 'ช่วยให้กำลังใจหน่อย', 'ตอนนี้ควรเน้นวิชาไหน']
@@ -14,7 +15,7 @@ export default function SecretaryApp() {
   const today = todayKey()
   const todays = life.tasks.filter((t) => t.date === today)
   const open = todays.filter((t) => !t.done)
-  const left = daysUntil(life.target.examDate, today)
+  const left = daysUntil(effectiveExamDate(life.target, life.scores), today)
   const success = planSuccess(life.tasks, today)
   const [messages, setMessages] = useState([])
   const [text, setText] = useState('')

@@ -1,10 +1,11 @@
 import { getModel } from '../lib/geminiClient'
 import { daysUntil, planSuccess, thisWeekMinutes, formatMinutes } from '../os/studyPlan'
 import { todayKey } from '../os/lifeLogic'
+import { effectiveExamDate } from '../os/goalLogic'
 
 // A short Thai snapshot of the student's situation, given to the AI so it can follow up on their plan.
 export function buildSecretaryContext(life, today = todayKey()) {
-  const left = daysUntil(life.target.examDate, today)
+  const left = daysUntil(effectiveExamDate(life.target, life.scores), today)
   const goal = [life.target.university, life.target.faculty, life.target.major].filter(Boolean).join(' / ') || 'ยังไม่ได้ตั้งเป้าหมาย'
   const todays = life.tasks.filter((t) => t.date === today)
   const open = todays.filter((t) => !t.done).map((t) => t.text)

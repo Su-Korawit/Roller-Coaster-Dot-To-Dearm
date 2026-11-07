@@ -4,6 +4,7 @@ import { useLifeStore } from '../../stores/useLifeStore'
 import { goalProgress, habitStreak, todayKey, shiftKey } from '../lifeLogic'
 import { daysUntil, planSuccess, weekMinutes, formatMinutes } from '../studyPlan'
 import { findApp } from '../apps'
+import { effectiveExamDate } from '../goalLogic'
 
 const TAGS = ['TGAT', 'A-LEVEL', 'อื่นๆ']
 const WEEKDAYS = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส']
@@ -32,7 +33,7 @@ function Card(props) {
 // Habit: calendar + swipeable cards (countdown / reading time / success) on top,
 // then the plan for the chosen day, a to-do list and daily habits.
 export default function HabitApp({ onOpenApp }) {
-  const { target, tasks, habits, readLog, planSummary, addTask, toggleTask, removeTask, addHabit, removeHabit, toggleHabitToday } = useLifeStore()
+  const { target, scores, tasks, habits, readLog, planSummary, addTask, toggleTask, removeTask, addHabit, removeHabit, toggleHabitToday } = useLifeStore()
   const today = todayKey()
   const [selected, setSelected] = useState(today)
   const [cursor, setCursor] = useState(() => { const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() } })
@@ -49,7 +50,7 @@ export default function HabitApp({ onOpenApp }) {
   const monthLabel = new Date(cursor.y, cursor.m, 1).toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })
   const dayTasks = byDay[selected] ?? []
   const pct = goalProgress(dayTasks)
-  const left = daysUntil(target.examDate, today)
+  const left = daysUntil(effectiveExamDate(target, scores), today)
   const success = planSuccess(tasks, today)
   const week = weekMinutes(readLog, today)
   const goalLabel = [target.faculty, target.major].filter(Boolean).join(' / ')
