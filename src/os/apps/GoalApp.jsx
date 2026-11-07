@@ -1,15 +1,15 @@
 import { useState } from 'react'
-import { Plus, X, Sparkles, CalendarClock, Star, Search, Wand2, Target, ListChecks, Route } from 'lucide-react'
+import { Plus, X, Sparkles, CalendarClock, Star, Search, Wand2, Target, ListChecks, Route, GripVertical, ChevronUp, ChevronDown } from 'lucide-react'
 import { useLifeStore } from '../../stores/useLifeStore'
 import { useOsStore } from '../../stores/useOsStore'
-import { scoreGap } from '../lifeLogic'
+import { todayKey } from '../lifeLogic'
 import { daysUntil } from '../studyPlan'
 import { findApp, homeAppIds } from '../apps'
 import { AppTile } from '../AppIcon'
 import InstallButton from '../InstallButton'
-import { MAX_GOALS, goalSubtitle, goalTitle, makeGoal, planInput, universityAppId } from '../goalLogic'
+import { MAX_GOALS, goalSubtitle, goalTitle, makeGoal, planInput, universityAppId, subjectReadiness } from '../goalLogic'
 import { generateStudyPlan } from '../../services/aiStudyPlan'
-import { TCAS_CALENDAR, formatThaiRange } from '../../data/tcasCalendar'
+import { TCAS_CALENDAR, formatThaiRange, subjectExam } from '../../data/tcasCalendar'
 import ProgramPicker from '../goal/ProgramPicker'
 import StarterPicker from '../goal/StarterPicker'
 import Advisor from '../goal/Advisor'
@@ -50,16 +50,30 @@ function Recommended({ goals, onOpenApp }) {
   )
 }
 
-function GoalCard({ goal, index, primary, onPrimary, onRemove }) {
+function GoalCard({ goal, index, count, primary, onPrimary, onRemove, onMove, dragId, setDragId, onDropOn }) {
   return (
-    <li className={`px-card p-3 flex flex-col gap-2 ${primary ? 'bg-brand-soft' : 'bg-paper'}`}>
-      <div className="flex items-center gap-3">
+    <li
+      draggable
+      onDragStart={(e) => { setDragId(goal.id); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', goal.id) }}
+      onDragOver={(e) => { if (dragId) e.preventDefault() }}
+      onDrop={(e) => { e.preventDefault(); onDropOn(goal.id) }}
+      onDragEnd={() => setDragId(null)}
+      className={`px-card p-3 flex flex-col gap-2 ${primary ? 'bg-brand-soft' : 'bg-paper'} ${dragId === goal.id ? 'opacity-50' : ''}`}
+    >
+      <div className="flex items-center gap-2">
+        <span className="shrink-0 cursor-grab text-ink-soft" aria-hidden="true" title="ลากเพื่อสลับลำดับ"><GripVertical size={18} /></span>
         <span className="w-7 h-7 shrink-0 rounded-full bg-brand-strong text-white font-display font-bold text-sm flex items-center justify-center" aria-label={`อันดับ ${index + 1}`}>{index + 1}</span>
         <UniLogo id={goal.universityId} name={goal.university} size={40} />
         <div className="min-w-0 flex-1">
           <p className="thai-font text-sm font-bold truncate">{goalTitle(goal)}</p>
           <p className="thai-font text-xs text-ink-soft truncate">{goalSubtitle(goal)}</p>
         </div>
+        {count > 1 && (
+          <span className="flex flex-col shrink-0">
+            <button type="button" onClick={() => onMove(goal.id, -1)} disabled={index === 0} aria-label={`เลื่อน ${goalTitle(goal)} ขึ้น`} className="p-0.5 rounded-ui hover:bg-mist disabled:opacity-30"><ChevronUp size={16} /></button>
+            <button type="button" onClick={() => onMove(goal.id, 1)} disabled={index === count - 1} aria-label={`เลื่อน ${goalTitle(goal)} ลง`} className="p-0.5 rounded-ui hover:bg-mist disabled:opacity-30"><ChevronDown size={16} /></button>
+          </span>
+        )}
         <button type="button" onClick={() => onRemove(goal.id)} aria-label={`ลบเป้าหมาย ${goalTitle(goal)}`} className="p-1.5 rounded-ui hover:bg-mist"><X size={16} /></button>
       </div>
       <div className="flex flex-wrap items-center gap-2">
@@ -75,33 +89,68 @@ function GoalCard({ goal, index, primary, onPrimary, onRemove }) {
   )
 }
 
-function Scores() {
-  const { scores, setMyScore, removeScore, addScore } = useLifeStore()
-  const [subject, setSubject] = useState('')
-  const [needed, setNeeded] = useState('')
+const STATUS = {
+  ahead: ['ทันแผน', 'text-zone-earth-deep'],
+  behind: ['ตามให้ทัน', 'text-zone-health-deep'],
+  none: ['ยังไม่มีแผน', 'text-ink-soft'],
+  passed: ['สอบแล้ว', 'text-ink-soft'],
+}
+
+// One bar per subject. Real scores are only published after the exam, so the bar shows readiness:
+// the fill is the share of the plan already done, the tick is how much of the time to the exam has passed.
+function ReadinessBar({ subject, exam, tasks, today }) {
+  const r = subjectReadiness({ subject, tasks, examDate: exam?.date, today })
+  const [label, tone] = STATUS[r.status]
+  const pct = Math.round(r.done * 100)
   return (
-    <section className="px-card p-4 flex flex-col gap-3" aria-label="คะแนนที่ต้องใช้">
-      <h3 className="thai-font font-bold">คะแนนที่ต้องใช้</h3>
-      <p className="thai-font text-xs text-ink-soft">ดึงจากเกณฑ์ของเป้าหมายหลักให้อัตโนมัติ ใส่คะแนนที่คุณได้ แล้วพี่จะเน้นวิชาที่ยังขาดมากที่สุด</p>
+    <li className="flex-1 min-w-0 flex flex-col gap-1">
+      <div className="flex items-baseline gap-2 thai-font text-sm">
+        <span className="font-bold shrink-0">{subject}</span>
+        <span className="flex-1 min-w-0 truncate text-xs text-ink-soft">
+          {exam ? `สอบ ${formatThaiRange(exam.date)}${exam.session ? ` ช่วง${exam.session}` : ''}${exam.exact ? ' (รอยืนยัน)' : ''}` : 'ไม่ทราบวันสอบ'}
+        </span>
+        <span className={`text-xs font-bold shrink-0 ${tone}`}>{label}</span>
+      </div>
+      <div className="relative h-3.5 rounded-full border-2 border-line-soft bg-mist overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`ความพร้อม ${subject}`}>
+        <div className="h-full bg-zone-earth transition-all" style={{ width: `${pct}%` }} />
+        {r.planned > 0 && <span className="absolute top-0 bottom-0 w-0.5 bg-ink" style={{ left: `${Math.round(r.time * 100)}%` }} aria-hidden="true" />}
+      </div>
+      <p className="thai-font text-xs text-ink-soft">
+        {r.planned ? `ทำตามแผนแล้ว ${pct}%` : 'กด "วางแผนด้วย AI" ในแท็บวางแผน แถบจะเริ่มขึ้น'}
+        {r.daysLeft != null && r.daysLeft >= 0 ? ` · อีก ${r.daysLeft} วัน` : ''}
+      </p>
+    </li>
+  )
+}
+
+function Scores() {
+  const { scores, tasks, goals, primaryGoalId, removeScore, addScore } = useLifeStore()
+  const [subject, setSubject] = useState('')
+  const today = todayKey()
+  const goal = goals.find((g) => g.id === primaryGoalId)
+  return (
+    <section className="px-card p-4 flex flex-col gap-3" aria-label="ความพร้อมรายวิชา">
+      {goal && (
+        <div className="flex items-center gap-3">
+          <UniLogo id={goal.universityId} name={goal.university} size={40} />
+          <div className="min-w-0">
+            <p className="thai-font text-sm font-bold truncate">{goalTitle(goal)}</p>
+            <p className="thai-font text-xs text-ink-soft truncate">{goalSubtitle(goal)}</p>
+          </div>
+        </div>
+      )}
+      <p className="thai-font text-xs text-ink-soft">คะแนนจริงยังไม่ประกาศจนกว่าจะสอบ แถบนี้จึงบอกความพร้อมจากแผนที่ทำแล้ว (สีเขียว) เทียบกับเวลาที่ผ่านไปก่อนวันสอบ (ขีดดำ)</p>
       {scores.length === 0 && <p className="thai-font text-sm text-ink-soft">ยังไม่มีวิชา เลือกเป้าหมายก่อน หรือเพิ่มเองด้านล่าง</p>}
-      <ul className="flex flex-col gap-2">
-        {scores.map((s) => {
-          const gap = scoreGap(s.needed, s.mine)
-          return (
-            <li key={s.id} className="flex items-center gap-2 thai-font text-sm">
-              <span className="flex-1 min-w-0 truncate">{s.subject} <span className="text-ink-soft">({s.estimated ? 'เป้า ~' : 'ต้องใช้ '}{s.needed})</span></span>
-              <input type="number" value={s.mine ?? ''} onChange={(e) => setMyScore(s.id, e.target.value)} placeholder="ฉันได้" aria-label={`คะแนนของฉัน ${s.subject}`} className="px-input h-9 w-20 px-2 text-sm" />
-              <span className={`w-16 text-xs font-bold ${gap == null ? 'text-ink-soft' : gap > 0 ? 'text-zone-health-deep' : 'text-zone-earth-deep'}`}>
-                {gap == null ? '-' : gap > 0 ? `ขาด ${gap}` : 'ถึงแล้ว'}
-              </span>
-              <button type="button" onClick={() => removeScore(s.id)} aria-label={`ลบ ${s.subject}`} className="p-1"><X size={16} /></button>
-            </li>
-          )
-        })}
+      <ul className="flex flex-col gap-4">
+        {scores.map((s) => (
+          <li key={s.id} className="flex items-start gap-2">
+            <ul className="flex-1 min-w-0 flex"><ReadinessBar subject={s.subject} exam={subjectExam(s.subject)} tasks={tasks} today={today} /></ul>
+            <button type="button" onClick={() => removeScore(s.id)} aria-label={`ลบ ${s.subject}`} className="p-1 shrink-0"><X size={16} /></button>
+          </li>
+        ))}
       </ul>
-      <form onSubmit={(e) => { e.preventDefault(); addScore(subject, needed); setSubject(''); setNeeded('') }} className="flex gap-2">
-        <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="เพิ่มวิชา" aria-label="วิชา" className="px-input h-10 px-3 text-sm flex-1 min-w-0" />
-        <input type="number" value={needed} onChange={(e) => setNeeded(e.target.value)} placeholder="ที่ต้องใช้" aria-label="คะแนนที่ต้องใช้" className="px-input h-10 px-3 text-sm w-28" />
+      <form onSubmit={(e) => { e.preventDefault(); addScore(subject, 0); setSubject('') }} className="flex gap-2">
+        <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="เพิ่มวิชา เช่น TPAT3" aria-label="วิชา" className="px-input h-10 px-3 text-sm flex-1 min-w-0" />
         <button type="submit" aria-label="เพิ่มวิชา" className="px-btn px-3 bg-paper"><Plus size={18} /></button>
       </form>
     </section>
@@ -133,6 +182,25 @@ function CalendarCard({ scores }) {
           )
         })}
       </ul>
+      {subjects.length > 0 && (
+        <div className="flex flex-col gap-1.5 border-t-2 border-hairline pt-3">
+          <h4 className="thai-font text-sm font-bold">วันสอบรายวิชาของคุณ</h4>
+          <ul className="flex flex-col gap-1">
+            {subjects.map((name) => {
+              const x = subjectExam(name)
+              return (
+                <li key={name} className="flex items-center gap-2 thai-font text-sm">
+                  <span className="font-semibold flex-1 min-w-0 truncate">{name}</span>
+                  <span className="text-xs text-ink-soft">
+                    {x ? `${formatThaiRange(x.date)}${x.session ? ` · ${x.session}` : ''}${x.exact ? ' · รอยืนยัน' : ' · ดูตารางที่ mytcas.com'}` : 'ไม่ทราบวันสอบ'}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+          <p className="thai-font text-xs text-ink-soft">รายวิชาแยกวัน/ช่วงเวลาอ้างอิงจากเว็บเดียว ยังไม่ใช่ตารางทางการ ตรวจที่ mytcas.com ก่อนไปสอบจริง</p>
+        </div>
+      )}
       <ul className="flex flex-col gap-1.5 border-t-2 border-hairline pt-3">
         {TCAS_CALENDAR.rounds.map((r) => (
           <li key={r.round} className="thai-font text-xs">
@@ -231,7 +299,8 @@ function PlanTab({ onOpenApp, onGoTo }) {
 // Adding a goal: search MyTCAS (official), or let the advisor narrow it down; if MyTCAS has no match
 // the picker offers TCAS Starter (Dek-D) as an unofficial fallback.
 export default function GoalApp({ onOpenApp }) {
-  const { goals, primaryGoalId, addGoal, removeGoal, setPrimaryGoal } = useLifeStore()
+  const { goals, primaryGoalId, addGoal, removeGoal, reorderGoals } = useLifeStore()
+  const [dragId, setDragId] = useState(null)
   const [tab, setTab] = useState('goals')
   const [flow, setFlow] = useState(null)   // null | { type: 'choose' | 'search' | 'advisor' | 'starter', initial? }
   const [msg, setMsg] = useState('')
@@ -281,7 +350,15 @@ export default function GoalApp({ onOpenApp }) {
       <div className="flex flex-col gap-4">
         {msg && <p role="status" className="px-card p-3 thai-font text-sm font-semibold bg-zone-earth-soft text-zone-earth-deep">{msg}</p>}
         <ul className="flex flex-col gap-3" aria-label="เป้าหมายของฉัน">
-          {goals.map((g, i) => <GoalCard key={g.id} goal={g} index={i} primary={g.id === primaryGoalId} onPrimary={setPrimaryGoal} onRemove={removeGoal} />)}
+          {goals.map((g, i) => (
+            <GoalCard
+              key={g.id} goal={g} index={i} count={goals.length} primary={g.id === primaryGoalId}
+              onPrimary={(id) => reorderGoals(id, goals[0].id)} onRemove={removeGoal}
+              onMove={(id, dir) => { const to = goals[i + dir]; if (to) reorderGoals(id, to.id) }}
+              dragId={dragId} setDragId={setDragId}
+              onDropOn={(toId) => { if (dragId) reorderGoals(dragId, toId); setDragId(null) }}
+            />
+          ))}
         </ul>
         <button type="button" onClick={() => setFlow({ type: 'choose' })} disabled={full} className="px-btn py-2.5 thai-font text-sm font-bold bg-paper disabled:opacity-50 flex items-center justify-center gap-2">
           <Plus size={16} aria-hidden="true" /> {full ? `ครบ ${MAX_GOALS} เป้าหมายแล้ว` : `เพิ่มเป้าหมาย (${goals.length}/${MAX_GOALS})`}

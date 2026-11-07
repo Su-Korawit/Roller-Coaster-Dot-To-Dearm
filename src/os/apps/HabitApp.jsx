@@ -1,53 +1,195 @@
-import { useMemo, useState } from 'react'
-import { Plus, X, Flame, ChevronLeft, ChevronRight, CalendarClock, BookOpen, Target, Sparkles } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Plus, X, CalendarClock, BookOpen, Target, Sparkles } from 'lucide-react'
 import { useLifeStore } from '../../stores/useLifeStore'
-import { goalProgress, habitStreak, todayKey, shiftKey } from '../lifeLogic'
+import { goalProgress, todayKey, shiftKey } from '../lifeLogic'
 import { daysUntil, planSuccess, weekMinutes, formatMinutes } from '../studyPlan'
 import { findApp } from '../apps'
 import { effectiveExamDate } from '../goalLogic'
+import { subjectExam } from '../../data/tcasCalendar'
+import { gridWeeks, dayLevel, tasksByDay, weekIndexOf } from '../habitGrid'
 
 const TAGS = ['TGAT', 'A-LEVEL', 'อื่นๆ']
-const WEEKDAYS = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส']
+const ROW_LABEL = ['', 'จ', '', 'พ', '', 'ศ', '']
+const MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
+const AUTOPLAY_MS = 6000
 
-// Month grid: a dot under each day that has tasks (green when all are done).
-function monthCells(year, month) {
-  const first = new Date(year, month, 1)
-  const count = new Date(year, month + 1, 0).getDate()
-  const cells = Array(first.getDay()).fill(null)
-  for (let d = 1; d <= count; d++) cells.push(todayKey(new Date(year, month, d)))
-  return cells
-}
+// Green ramp for the grid (level 0..4), built from the theme's earth-green token.
+const LEVEL_BG = [
+  'var(--color-mist)',
+  'color-mix(in srgb, var(--color-zone-earth) 22%, white)',
+  'color-mix(in srgb, var(--color-zone-earth) 45%, white)',
+  'color-mix(in srgb, var(--color-zone-earth) 75%, white)',
+  'var(--color-zone-earth-deep)',
+]
 
-function Card(props) {
-  const { Icon, title, children, tone } = props
+// Same banner strip as the Store (swipe / dots / autoplay). Art goes in /assets/os/banners/habit-<id>.webp;
+// until it exists the slide keeps its colour gradient.
+function Banners({ slides }) {
+  const scroller = useRef(null)
+  const [index, setIndex] = useState(0)
+  const [paused, setPaused] = useState(false)
+  const [failed, setFailed] = useState({})
+
+  useEffect(() => {
+    if (paused || slides.length < 2) return undefined
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined
+    const t = setInterval(() => {
+      const el = scroller.current
+      if (!el) return
+      const cur = Math.round(el.scrollLeft / Math.max(1, el.clientWidth))
+      el.scrollTo({ left: ((cur + 1) % slides.length) * el.clientWidth, behavior: 'smooth' })
+    }, AUTOPLAY_MS)
+    return () => clearInterval(t)
+  }, [paused, slides.length])
+
   return (
-    <section className="px-card p-4 snap-center shrink-0 w-[78%] sm:w-64 flex flex-col gap-1.5" style={{ background: tone }}>
-      <h4 className="thai-font text-xs font-bold text-ink-soft flex items-center gap-1.5">
-        <Icon size={14} aria-hidden="true" /> {title}
-      </h4>
-      {children}
+    <section
+      aria-roledescription="carousel"
+      aria-label="สรุปของคุณ"
+      onPointerEnter={() => setPaused(true)}
+      onPointerLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
+    >
+      <div
+        ref={scroller}
+        onScroll={(e) => setIndex(Math.round(e.currentTarget.scrollLeft / Math.max(1, e.currentTarget.clientWidth)))}
+        className="os-pages flex overflow-x-auto snap-x snap-mandatory rounded-slot"
+      >
+        {slides.map((b, i) => (
+          <article
+            key={b.id}
+            aria-roledescription="slide"
+            aria-label={`${i + 1} จาก ${slides.length}: ${b.title}`}
+            className="px-card relative w-full shrink-0 snap-start overflow-hidden text-white aspect-[8/3] min-h-[150px]"
+            style={{ background: b.background }}
+          >
+            {!failed[b.id] && (
+              <>
+                <img src={`/assets/os/banners/habit-${b.id}.webp`} alt="" draggable={false} onError={() => setFailed((f) => ({ ...f, [b.id]: true }))} className="absolute inset-0 w-full h-full object-cover" />
+                <span className="absolute inset-0" style={{ background: `linear-gradient(90deg, ${b.scrim} 0%, ${b.scrim} 40%, transparent 80%)` }} aria-hidden="true" />
+              </>
+            )}
+            <div className="relative h-full flex flex-col justify-center gap-1 p-5 max-w-[62%]">
+              <h3 className="thai-font text-xs font-bold opacity-90 flex items-center gap-1.5"><b.Icon size={14} aria-hidden="true" /> {b.title}</h3>
+              <p className="font-display font-bold text-3xl sm:text-4xl leading-none">{b.value}<span className="thai-font text-sm font-semibold ml-1">{b.unit}</span></p>
+              {b.bar != null && (
+                <div className="h-2 rounded-full bg-white/30 overflow-hidden" role="progressbar" aria-valuenow={b.bar} aria-valuemin={0} aria-valuemax={100}>
+                  <div className="h-full bg-white" style={{ width: `${b.bar}%` }} />
+                </div>
+              )}
+              <p className="thai-font text-sm opacity-95 leading-snug line-clamp-3">{b.text}</p>
+              {b.cta && (
+                <button type="button" onClick={b.cta.onClick} className="self-start mt-1 px-btn px-3 py-1.5 thai-font text-xs font-bold bg-paper text-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
+                  {b.cta.label}
+                </button>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+      {slides.length > 1 && (
+        <div className="flex justify-center gap-2 mt-2" role="tablist" aria-label="เลือกการ์ด">
+          {slides.map((b, i) => (
+            <button
+              key={b.id}
+              type="button"
+              role="tab"
+              aria-selected={index === i}
+              aria-label={`การ์ด ${i + 1}`}
+              onClick={() => scroller.current?.scrollTo({ left: i * scroller.current.clientWidth, behavior: 'smooth' })}
+              className={`h-2.5 rounded-full bg-brand-strong transition-all ${index === i ? 'w-6' : 'w-2.5 opacity-30'}`}
+            />
+          ))}
+        </div>
+      )}
     </section>
   )
 }
 
-// Habit: calendar + swipeable cards (countdown / reading time / success) on top,
-// then the plan for the chosen day, a to-do list and daily habits.
+// GitHub-style grid: one square per day, green by how much of that day's plan is done. Exam days of the
+// student's own subjects get an amber ring (with the subject names in the tooltip).
+function Grid({ today, selected, onSelect, byDay, examDays }) {
+  const lastExam = [...examDays.keys()].sort().pop() ?? ''
+  const weeks = useMemo(() => gridWeeks(today, lastExam), [today, lastExam])
+  const scroller = useRef(null)
+
+  useEffect(() => {
+    const el = scroller.current
+    const at = weekIndexOf(weeks, today)
+    if (el && at >= 0) el.scrollLeft = Math.max(0, at * 19 - el.clientWidth / 2)
+  }, [weeks, today])
+
+  return (
+    <section className="px-card p-3 flex flex-col gap-2" aria-label="ปฏิทินแผนอ่านหนังสือ">
+      <div className="flex gap-2">
+        <div className="flex flex-col gap-[3px] pt-[18px] thai-font text-[10px] text-ink-soft shrink-0" aria-hidden="true">
+          {ROW_LABEL.map((l, i) => <span key={i} className="h-4 leading-4">{l}</span>)}
+        </div>
+        <div ref={scroller} className="os-pages overflow-x-auto flex-1 min-w-0 pb-1">
+          <div className="flex gap-[3px] w-max">
+            {weeks.map((week, wi) => {
+              const first = week[0]
+              const month = Number(first.slice(5, 7)) - 1
+              const prev = wi > 0 ? Number(weeks[wi - 1][0].slice(5, 7)) - 1 : -1
+              return (
+                <div key={first} className="flex flex-col gap-[3px]">
+                  <span className="h-[15px] thai-font text-[10px] text-ink-soft leading-[15px] whitespace-nowrap" aria-hidden="true">{month !== prev ? MONTHS[month] : ''}</span>
+                  {week.map((key) => {
+                    const list = byDay[key] ?? []
+                    const exam = examDays.get(key)
+                    const level = dayLevel(list)
+                    const title = `${Number(key.slice(8))} ${MONTHS[Number(key.slice(5, 7)) - 1]}${exam ? ` · สอบ ${exam.join(', ')}` : ''}${list.length ? ` · ทำแล้ว ${list.filter((t) => t.done).length}/${list.length}` : ''}`
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => onSelect(key)}
+                        title={title}
+                        aria-label={title}
+                        aria-pressed={key === selected}
+                        className={`w-4 h-4 rounded-[3px] border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand
+                          ${key === selected ? 'border-brand-strong ring-2 ring-brand-strong' : key === today ? 'border-ink' : 'border-transparent'}
+                          ${exam ? 'ring-2 ring-zone-biz' : ''}`}
+                        style={{ background: LEVEL_BG[level] }}
+                      />
+                    )
+                  })}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 thai-font text-xs text-ink-soft flex-wrap">
+        <span>น้อย</span>
+        {LEVEL_BG.map((c, i) => <i key={i} className="w-3.5 h-3.5 rounded-[3px]" style={{ background: c }} />)}
+        <span>ทำครบ</span>
+        <span className="ml-auto inline-flex items-center gap-1"><i className="w-3.5 h-3.5 rounded-[3px] ring-2 ring-zone-biz bg-paper" /> วันสอบ</span>
+      </div>
+    </section>
+  )
+}
+
+// Habit: stat banners + a GitHub-style plan grid on top, then the plan for the chosen day and a to-do list.
 export default function HabitApp({ onOpenApp }) {
-  const { target, scores, tasks, habits, readLog, planSummary, addTask, toggleTask, removeTask, addHabit, removeHabit, toggleHabitToday } = useLifeStore()
+  const { target, scores, tasks, readLog, planSummary, addTask, toggleTask, removeTask } = useLifeStore()
   const today = todayKey()
   const [selected, setSelected] = useState(today)
-  const [cursor, setCursor] = useState(() => { const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() } })
   const [text, setText] = useState('')
   const [tag, setTag] = useState(TAGS[0])
-  const [habit, setHabit] = useState('')
 
-  const byDay = useMemo(() => {
-    const map = {}
-    for (const t of tasks) (map[t.date] ||= []).push(t)
+  const byDay = useMemo(() => tasksByDay(tasks), [tasks])
+  // Exam day → subjects the student takes that day (own subjects only).
+  const examDays = useMemo(() => {
+    const map = new Map()
+    for (const s of scores) {
+      const x = subjectExam(s.subject)
+      if (x) map.set(x.date, [...(map.get(x.date) ?? []), s.subject])
+    }
     return map
-  }, [tasks])
-  const cells = useMemo(() => monthCells(cursor.y, cursor.m), [cursor])
-  const monthLabel = new Date(cursor.y, cursor.m, 1).toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })
+  }, [scores])
+
   const dayTasks = byDay[selected] ?? []
   const pct = goalProgress(dayTasks)
   const left = daysUntil(effectiveExamDate(target, scores), today)
@@ -57,83 +199,48 @@ export default function HabitApp({ onOpenApp }) {
   const hasPlan = tasks.some((t) => t.auto)
   const goal = findApp('goal')
 
-  function moveMonth(delta) {
-    setCursor(({ y, m }) => { const d = new Date(y, m + delta, 1); return { y: d.getFullYear(), m: d.getMonth() } })
-  }
+  const slides = [
+    {
+      id: 'countdown', title: 'นับถอยหลังสอบ', Icon: CalendarClock,
+      value: left == null ? '-' : left >= 0 ? left : 0, unit: 'วัน',
+      text: goalLabel || 'ยังไม่ได้ตั้งเป้าหมาย',
+      background: 'linear-gradient(110deg, var(--color-brand-strong) 45%, var(--color-zone-soc))', scrim: 'var(--color-brand-strong)',
+      cta: left == null && goal && onOpenApp ? { label: 'ตั้งเป้าหมาย', onClick: () => onOpenApp(goal) } : null,
+    },
+    {
+      id: 'reading', title: 'เวลาอ่านหนังสือ', Icon: BookOpen,
+      value: formatMinutes(week), unit: '',
+      text: `7 วันที่ผ่านมา · วันนี้ ${formatMinutes(readLog[today] || 0)}`,
+      background: 'linear-gradient(110deg, var(--color-zone-sci-deep) 45%, var(--color-zone-sci))', scrim: 'var(--color-zone-sci-deep)',
+    },
+    {
+      id: 'success', title: 'ทำตามแผนได้', Icon: Target,
+      value: success.percent, unit: '%', bar: success.percent,
+      text: `${formatMinutes(success.doneMin)} จาก ${formatMinutes(success.plannedMin)} ที่วางไว้`,
+      background: 'linear-gradient(110deg, var(--color-zone-earth-deep) 45%, var(--color-zone-earth))', scrim: 'var(--color-zone-earth-deep)',
+    },
+    ...(planSummary ? [{
+      id: 'strategy', title: 'กลยุทธ์จากพี่', Icon: Sparkles, value: '', unit: '', text: planSummary,
+      background: 'linear-gradient(110deg, var(--color-zone-biz-deep) 45%, var(--color-zone-biz))', scrim: 'var(--color-zone-biz-deep)',
+    }] : []),
+  ]
 
   const dayLabel = selected === today ? 'วันนี้' : selected === shiftKey(today, 1) ? 'พรุ่งนี้'
     : new Date(`${selected}T00:00:00`).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
 
   return (
     <div className="p-4 sm:p-6 max-w-2xl mx-auto flex flex-col gap-5">
-      <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-1" aria-label="การ์ดสรุป">
-        <Card Icon={CalendarClock} title="นับถอยหลังสอบ" tone="var(--color-zone-soc-soft)">
-          <p className="font-display font-bold text-3xl leading-none">
-            {left == null ? '-' : left >= 0 ? left : 0}<span className="thai-font text-sm font-semibold ml-1">วัน</span>
-          </p>
-          <p className="thai-font text-xs text-ink-soft truncate">{goalLabel || 'ยังไม่ได้ตั้งเป้าหมาย'}</p>
-          {left == null && goal && onOpenApp && (
-            <button type="button" onClick={() => onOpenApp(goal)} className="px-btn px-3 py-1 thai-font text-xs font-bold bg-paper self-start mt-1">
-              <Target size={12} className="inline mr-1" aria-hidden="true" />ตั้งเป้าหมาย
-            </button>
-          )}
-        </Card>
-        <Card Icon={BookOpen} title="เวลาอ่านหนังสือ" tone="var(--color-zone-sci-soft)">
-          <p className="font-display font-bold text-2xl leading-none">{formatMinutes(week)}</p>
-          <p className="thai-font text-xs text-ink-soft">7 วันที่ผ่านมา · วันนี้ {formatMinutes(readLog[today] || 0)}</p>
-        </Card>
-        <Card Icon={Target} title="ทำตามแผนได้" tone="var(--color-zone-earth-soft)">
-          <p className="font-display font-bold text-3xl leading-none">{success.percent}%</p>
-          <div className="h-2 rounded-full bg-paper overflow-hidden" role="progressbar" aria-valuenow={success.percent} aria-valuemin={0} aria-valuemax={100}>
-            <div className="h-full bg-zone-earth-deep" style={{ width: `${success.percent}%` }} />
-          </div>
-          <p className="thai-font text-xs text-ink-soft">{formatMinutes(success.doneMin)} จาก {formatMinutes(success.plannedMin)} ที่วางไว้</p>
-        </Card>
-        {planSummary && (
-          <Card Icon={Sparkles} title="กลยุทธ์จากพี่" tone="var(--color-zone-biz-soft)">
-            <p className="thai-font text-sm leading-relaxed">{planSummary}</p>
-          </Card>
-        )}
-      </div>
-
-      <section className="px-card p-3 flex flex-col gap-2" aria-label="ปฏิทิน">
-        <div className="flex items-center justify-between">
-          <button type="button" onClick={() => moveMonth(-1)} aria-label="เดือนก่อน" className="p-1.5"><ChevronLeft size={18} /></button>
-          <h3 className="thai-font font-bold text-sm">{monthLabel}</h3>
-          <button type="button" onClick={() => moveMonth(1)} aria-label="เดือนถัดไป" className="p-1.5"><ChevronRight size={18} /></button>
-        </div>
-        <div className="grid grid-cols-7 gap-1 text-center thai-font text-xs text-ink-soft">
-          {WEEKDAYS.map((w) => <span key={w}>{w}</span>)}
-        </div>
-        <div className="grid grid-cols-7 gap-1">
-          {cells.map((key, i) => {
-            if (!key) return <span key={`e${i}`} />
-            const list = byDay[key] ?? []
-            const allDone = list.length > 0 && list.every((t) => t.done)
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setSelected(key)}
-                aria-label={key}
-                aria-pressed={key === selected}
-                className={`h-10 rounded-ui flex flex-col items-center justify-center thai-font text-xs gap-0.5
-                  ${key === selected ? 'bg-brand-strong text-white' : key === today ? 'bg-brand-soft font-bold' : 'hover:bg-mist'}
-                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand`}
-              >
-                {Number(key.slice(8))}
-                <span className={`w-1.5 h-1.5 rounded-full ${list.length ? (allDone ? 'bg-zone-earth' : 'bg-zone-biz') : 'bg-transparent'}`} />
-              </button>
-            )
-          })}
-        </div>
-      </section>
+      <Banners slides={slides} />
+      <Grid today={today} selected={selected} onSelect={setSelected} byDay={byDay} examDays={examDays} />
 
       <section className="px-card p-4 flex flex-col gap-3" aria-label={`แผน${dayLabel}`}>
         <div className="flex items-center justify-between">
           <h3 className="thai-font font-bold">แผน{dayLabel}</h3>
           <span className="thai-font text-sm font-bold text-brand-strong">{pct}%</span>
         </div>
+        {examDays.get(selected) && (
+          <p className="thai-font text-sm font-bold text-zone-biz-deep">วันสอบ: {examDays.get(selected).join(', ')}</p>
+        )}
         <div className="h-2.5 rounded-full bg-mist overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
           <div className="h-full bg-zone-earth transition-all" style={{ width: `${pct}%` }} />
         </div>
@@ -158,36 +265,6 @@ export default function HabitApp({ onOpenApp }) {
           </select>
           <input value={text} onChange={(e) => setText(e.target.value)} placeholder="to do: เช่น ทำข้อสอบ TGAT 1 ชุด" aria-label="เพิ่ม to do" className="px-input h-10 px-3 text-sm flex-1 min-w-0" />
           <button type="submit" aria-label="เพิ่มงาน" className="px-btn px-3 bg-paper"><Plus size={18} /></button>
-        </form>
-      </section>
-
-      <section className="px-card p-4 flex flex-col gap-3" aria-label="นิสัย">
-        <h3 className="thai-font font-bold">นิสัยประจำวัน</h3>
-        {habits.length === 0 && <p className="thai-font text-sm text-ink-soft">สร้างนิสัย เช่น อ่านหนังสือ 30 นาที</p>}
-        <ul className="flex flex-col gap-2">
-          {habits.map((h) => {
-            const done = h.doneDates.includes(today)
-            const streak = habitStreak(h.doneDates, today)
-            return (
-              <li key={h.id} className="flex items-center gap-2 thai-font text-sm">
-                <button
-                  type="button"
-                  onClick={() => toggleHabitToday(h.id)}
-                  aria-pressed={done}
-                  className={`px-btn px-3 py-1 text-xs font-bold ${done ? 'bg-zone-earth-soft text-zone-earth-deep' : 'bg-paper'}`}
-                >
-                  {done ? 'ทำแล้ว' : 'ทำวันนี้'}
-                </button>
-                <span className="flex-1 min-w-0 truncate">{h.name}</span>
-                <span className="flex items-center gap-1 text-xs font-bold text-zone-biz-deep"><Flame size={14} />{streak}</span>
-                <button type="button" onClick={() => removeHabit(h.id)} aria-label={`ลบ ${h.name}`} className="p-1"><X size={16} /></button>
-              </li>
-            )
-          })}
-        </ul>
-        <form onSubmit={(e) => { e.preventDefault(); addHabit(habit); setHabit('') }} className="flex gap-2">
-          <input value={habit} onChange={(e) => setHabit(e.target.value)} placeholder="นิสัยใหม่" aria-label="นิสัยใหม่" className="px-input h-10 px-3 text-sm flex-1 min-w-0" />
-          <button type="submit" aria-label="เพิ่มนิสัย" className="px-btn px-3 bg-paper"><Plus size={18} /></button>
         </form>
       </section>
     </div>

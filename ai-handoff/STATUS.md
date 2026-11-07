@@ -13,6 +13,7 @@
 | 009 | วิดีโอฉากเปิดแอป | ยกเลิก (ผู้ใช้เปลี่ยนเป็นหน้า splash ภาพเดียว) · Sora ปิดบริการแล้ว | to-chatgpt/009-วิดีโอฉากเปิดแอป.md | - | - |
 | 010 | ภาพปกแอป (key art) 7 ภาพสำหรับหน้า splash: Goal/Habit/Reading/Community/Secretary/Report/Store (3:2 ภาพเดียวต่อแอป) | เสร็จ (ผู้ใช้ยืนยันส่ง+โหลดผ่านโหมดเบราว์เซอร์ 2026-11-07 แท็บใหม่ ช่องแชตว่าง พรอมต์ไม่มีข้อมูลส่วนตัว ภาพ AI ต้นฉบับ ตรวจ: 1536x1024 ไม่มีตัวอักษรในภาพ แปลงเป็น webp 1440x960 รวม ~1MB) | to-chatgpt/010-ภาพปกแอป-splash-7ภาพ.md | from-chatgpt/010-splash-{goal,habit,reading,community,secretary,report,store}.png | public/assets/os/splash/{id}.webp |
 | 011 | โลโก้แอป OS 4 ตัว (Calendar/Settings/Open House/Tutor) แผ่นเดียว 2x2 | รอส่งให้ ChatGPT (โค้ดใช้ไอคอน lucide แทนไปก่อน) | to-chatgpt/011-โลโก้แอป-Calendar-Settings-OpenHouse-Tutor.md | from-chatgpt/011-app-logos-sheet.png | public/assets/os/apps/{calendar,settings,openhouse,tutor}.webp |
+| 012 | ภาพแบนเนอร์ Habit 4 ภาพ (countdown/reading/success/strategy) 8:3 | รอส่งให้ ChatGPT (โค้ดใช้พื้นไล่สีแทนไปก่อน) | to-chatgpt/012-ภาพแบนเนอร์-Habit-4ภาพ.md | from-chatgpt/012-habit-{id}.png | public/assets/os/banners/habit-{id}.webp |
 
 ## บันทึกความคืบหน้างาน voice-secretary
 

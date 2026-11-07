@@ -1,6 +1,7 @@
 import { newId } from './lifeLogic'
 import { UNIVERSITY_ROWS } from '../data/universityApps'
 import { examDateForSubject, firstExamDate } from '../data/tcasCalendar'
+import { daysUntil } from './studyPlan'
 
 // Goal app logic (pure): turning a MyTCAS / TCAS Starter programme into a goal, and keeping the
 // student's score list in step with the primary goal.
@@ -121,3 +122,33 @@ export function planInput(target, scores = []) {
 
 // First exam day for the countdown ('' when a manual date was cleared).
 export const effectiveExamDate = (target, scores) => planInput(target, scores).examDate
+
+// Drag-and-drop order: move `fromId` to where `toId` is. Unknown ids or from === to keep the list as is.
+export function moveGoal(goals, fromId, toId) {
+  const from = goals.findIndex((g) => g.id === fromId)
+  const to = goals.findIndex((g) => g.id === toId)
+  if (from < 0 || to < 0 || from === to) return goals
+  const next = goals.filter((g) => g.id !== fromId)
+  next.splice(to, 0, goals[from])
+  return next
+}
+
+// Readiness of one subject before the real score exists (scores come out after the exam):
+//   done  0..1  share of that subject's planned minutes already ticked off
+//   time  0..1  how far we are from the first planned day to the exam day (the tick on the bar)
+//   status 'none' (no plan) | 'passed' | 'ahead' (done >= time) | 'behind'
+export function subjectReadiness({ subject, tasks = [], examDate, today }) {
+  const mine = tasks.filter((t) => t.auto && t.subject === subject)
+  const planned = mine.reduce((a, t) => a + (t.minutes || 0), 0)
+  const doneMin = mine.filter((t) => t.done).reduce((a, t) => a + (t.minutes || 0), 0)
+  const left = daysUntil(examDate, today)
+  const done = planned ? doneMin / planned : 0
+  let time = 0
+  if (left != null && mine.length) {
+    const start = mine.map((t) => t.date).sort()[0]
+    const span = daysUntil(examDate, start)
+    time = span > 0 ? Math.min(1, Math.max(0, (span - left) / span)) : 1
+  }
+  const status = left != null && left < 0 ? 'passed' : !planned ? 'none' : done >= time ? 'ahead' : 'behind'
+  return { done, time, planned, doneMin, daysLeft: left, status }
+}
