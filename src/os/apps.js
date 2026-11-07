@@ -22,6 +22,7 @@ import { UNIVERSITY_ROWS, NO_EMBED_IDS, shortUniName } from '../data/universityA
 const RAW_APPS = [
   {
     id: 'store',
+    splash: '/assets/os/splash/store.webp',
     name: 'Store',
     tagline: 'ร้านแอปของ I LOVE TCAS',
     description: 'ค้นหาและติดตั้งแอปเพิ่มลงในเครื่องของคุณ',
@@ -71,6 +72,7 @@ const RAW_APPS = [
     Icon: BookOpen,
     tone: 'var(--color-zone-sci)',
     installable: true,
+    splash: '/assets/os/splash/reading.webp',
     logo: '/assets/os/apps/reading.webp?v=2',   // pixel-art icon (full tile)
     logoFull: true,
     category: 'study',
@@ -102,6 +104,7 @@ const RAW_APPS = [
     Icon: Bot,
     tone: 'var(--color-brand)',
     installable: true,
+    splash: '/assets/os/splash/secretary.webp',
     logo: '/assets/os/apps/secretary.webp',   // pixel-art icon (full tile)
     logoFull: true,
     category: 'study',
@@ -117,6 +120,7 @@ const RAW_APPS = [
     Icon: MessageSquarePlus,
     tone: 'var(--color-zone-arts)',
     installable: true,
+    splash: '/assets/os/splash/report.webp',
     logo: '/assets/os/apps/report.webp',
     logoFull: true,
     category: 'os',
