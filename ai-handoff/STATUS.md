@@ -16,6 +16,7 @@
 | 012 | ภาพแบนเนอร์ Habit 4 ภาพ (countdown/reading/success/strategy) 8:3 | เสร็จ (2026-11-07 ผู้ใช้ยืนยันส่ง+โหลดผ่านโหมดเบราว์เซอร์ แท็บใหม่ ช่องแชตว่าง พรอมต์ไม่มีข้อมูลส่วนตัว ส่งทีละภาพในแชตเดียว ภาพ AI ต้นฉบับ ตรวจ: ไม่มีตัวอักษรในภาพ ซ้ายโล่งพอวางข้อความ แปลงเป็น webp 1200px) | to-chatgpt/012-ภาพแบนเนอร์-Habit-4ภาพ.md | from-chatgpt/012-habit-{id}.png | public/assets/os/banners/habit-{id}.webp |
 | 013 | แบนเนอร์หน้าแรก Secretary (โลโก้ Chat ย้ายไป 011) | เสร็จ (ส่ง+โหลดพร้อมกับ 012 ผ่านโหมดเบราว์เซอร์ ภาพ AI ต้นฉบับ ไม่มีตัวอักษร แปลงเป็น webp 1200px) | to-chatgpt/013-โลโก้Chat-และแบนเนอร์Secretary.md | from-chatgpt/013-secretary-home.png | public/assets/os/banners/secretary-home.webp |
 | 014 | ภาพเลขา AI 6 คน (ผู้หญิงทั้งหมด) แผ่นเดียว 3x2 | เสร็จ (2026-11-07 ผู้ใช้ยืนยันส่ง+โหลดผ่านโหมดเบราว์เซอร์ แท็บใหม่ ช่องแชตว่าง พรอมต์ไม่มีข้อมูลส่วนตัว ภาพ AI ต้นฉบับ ไม่มีตัวอักษร ตัดเป็น webp 256px) | to-chatgpt/014-ภาพเลขา-6คน.md | from-chatgpt/014-secretaries-sheet.png | public/assets/os/secretary/{id}.webp |
+| 015 | โลโก้ Block + splash 5 แอป (Open House/Block/Mood/Calendar/Chat) + พาโนรามามหาวิทยาลัยสำหรับ Open House | เสร็จ (2026-11-07 ผู้ใช้สั่งให้สร้างภาพได้เลยโดยไม่ต้องถามซ้ำ ส่งผ่านโหมดเบราว์เซอร์ แท็บใหม่ ช่องแชตว่าง พรอมต์ไม่มีข้อมูลส่วนตัว ภาพ AI ต้นฉบับ ตรวจ: ไม่มีตัวอักษรในภาพ) | to-chatgpt/015-ภาพแอปใหม่-Block-splash-และภาพเกม.md | from-chatgpt/015-*.png | public/assets/os/{apps,splash,openhouse}/ |
 
 ## บันทึกความคืบหน้างาน voice-secretary
 
