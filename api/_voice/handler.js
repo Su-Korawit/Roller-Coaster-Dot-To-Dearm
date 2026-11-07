@@ -3,6 +3,7 @@
 // Rules: uid comes ONLY from the verified Firebase ID token; consent, quota, phone
 // allow-list and ceilings are decided here, never by the client.
 import crypto from 'node:crypto'
+import { buildStudentContext } from './context.js'
 import { Buffer } from 'node:buffer'
 import {
   limitsFromEnv, buildConsent, consentValid, normalizeThaiPhone, validSchedule, reserveWebCall,
@@ -95,7 +96,8 @@ export function createVoiceHandler(deps) {
       })
       return { ok: false, reason: 'revoked_before_dial' }
     }
-    const v = dialogVars(decision.profile || {})
+    const os = await (store.readOs ? store.readOs(uid).catch(() => null) : null)
+    const v = dialogVars({ ...(decision.profile || {}), mode: 'outbound_reminder', student_context: buildStudentContext(os, t) })
     try {
       await retell.createPhoneCall({
         apiKey: e.RETELL_API_KEY, agentId: e.RETELL_AGENT_ID, fromNumber: e.RETELL_FROM_NUMBER,
@@ -229,7 +231,9 @@ export function createVoiceHandler(deps) {
       if (sched && !validSchedule(sched)) return fail(res, 'bad_schedule')
       const r = await store.tx(uid, t, (state) => {
         if (sched && !consentValid(state.consent, t)) return { result: { error: 'consent_required' } }
-        const profile = sched ? dialogVars(body) : null // only what the call script needs, kept while a schedule exists
+        // only what the call script needs, sanitised, kept while a schedule exists
+        const dv = dialogVars(body)
+        const profile = sched ? { student_name: dv.student_name, study_plan: dv.study_plan, secretary_id: dv.secretary_id } : null
         return { state: { ...state, profile, schedule: sched ? { days: [...new Set(sched.days)].sort(), time: sched.time } : null }, result: {} }
       })
       return r.error ? fail(res, r.error) : send(res, 200, { ok: true })
@@ -243,7 +247,8 @@ export function createVoiceHandler(deps) {
         return x.ok ? { state: x.state, global: x.global, result: x } : { result: x }
       })
       if (!r.ok) return fail(res, r.reason)
-      const vars = dialogVars(body)
+      const os = await (store.readOs ? store.readOs(uid).catch(() => null) : null)
+      const vars = dialogVars({ ...body, mode: 'inbound_support', student_context: buildStudentContext(os, t) })
       const refund = () => store.tx(uid, t, (state, global) => {
         const s = settleCall(state, global, { callKey, actualSeconds: 0, now: t })
         return { state: s.state, global: s.global, result: null }

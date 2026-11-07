@@ -1,4 +1,5 @@
 // api/_voice/logic.js
+import { CALL_MODES, CALL_GOALS, OPENINGS, secretaryName, validSecretaryId } from './persona.js'
 // Pure rules for the "พี่ใจดี" voice secretary: consent, trial, quota, ceilings,
 // scheduling. No I/O here — store.js wraps these in Firestore transactions so a
 // quota check and its write can never race (Codex review, DECISIONS.md).
@@ -341,10 +342,25 @@ export function cleanVar(v, max, fallback) {
   return s || fallback
 }
 
-export function dialogVars({ student_name, study_plan }) {
+// Variables handed to the Retell agent (read as {{name}} in its prompt, see docs/voice-prompt.md).
+//   student_name / study_plan   from the client (sanitised), study_plan = short goal summary
+//   secretary_id                the secretary the student picked (validated; unknown -> default)
+//   mode                        'outbound_reminder' (she calls) | 'inbound_support' (the student calls)
+//   student_context             built on the server from the synced plan (never taken from the client)
+export function dialogVars({ student_name, study_plan, secretary_id, mode, student_context }) {
+  const callMode = CALL_MODES.includes(mode) ? mode : 'inbound_support'
+  const id = validSecretaryId(secretary_id)
+  const name = cleanVar(student_name, 40, 'เพื่อน')
+  const secretary = secretaryName(id)
   return {
-    student_name: cleanVar(student_name, 40, 'เพื่อน'),
+    student_name: name,
     study_plan: cleanVar(study_plan, 300, 'ยังไม่ได้ตั้งแผน TCAS'),
+    secretary_id: id,
+    secretary_name: secretary,
+    call_mode: callMode,
+    call_goal: CALL_GOALS[callMode],
+    opening: OPENINGS[callMode](secretary, name),
+    student_context: cleanVar(student_context, 900, 'ยังไม่มีข้อมูลแผนของน้อง'),
   }
 }
 
