@@ -1,10 +1,11 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
-import { X, Minus, Maximize2, Minimize2 } from 'lucide-react'
+import { X, Minus, Maximize2, Minimize2, CircleHelp } from 'lucide-react'
 import { Z_PANEL } from '../constants/zIndex'
 import AppSplash from './splash/AppSplash'
 import { AppTile } from './AppIcon'
 import { hasSplash } from './splash/splashLogic'
 import { TASKBAR_H, centredPos, clampPos, windowSize } from './windowsLogic'
+import { APP_HELP } from './guideContent'
 
 function useViewport() {
   const [vp, setVp] = useState(() => ({ vw: window.innerWidth, vh: window.innerHeight }))
@@ -24,6 +25,8 @@ export default function AppWindow({ win, index, isTop, desktop, onClose, onMinim
   const { vw, vh } = useViewport()
   const drag = useRef(null)
   const [splashDone, setSplashDone] = useState(() => !hasSplash(app))
+  const [help, setHelp] = useState(false)
+  const tips = APP_HELP[app.id]
 
   useEffect(() => {
     if (!isTop) return undefined
@@ -79,6 +82,11 @@ export default function AppWindow({ win, index, isTop, desktop, onClose, onMinim
           <h2 className="thai-font font-bold text-sm truncate">{app.name}</h2>
           {app.tagline && <p className="thai-font text-xs text-ink-soft truncate hidden sm:block">{app.tagline}</p>}
         </div>
+        {tips && (
+          <button type="button" onClick={() => setHelp((v) => !v)} aria-pressed={help} aria-label={`วิธีใช้ ${app.name}`} title="วิธีใช้" className={btn}>
+            <CircleHelp size={17} />
+          </button>
+        )}
         <button type="button" onClick={() => onMinimize(win.id)} aria-label={`ย่อ ${app.name}`} className={btn}>
           <Minus size={18} />
         </button>
@@ -91,6 +99,11 @@ export default function AppWindow({ win, index, isTop, desktop, onClose, onMinim
           <X size={18} />
         </button>
       </header>
+      {help && tips && (
+        <ul className="shrink-0 border-b-2 border-hairline bg-brand-soft px-4 py-2.5 flex flex-col gap-1 thai-font text-xs list-disc list-inside" aria-label={`วิธีใช้ ${app.name}`}>
+          {tips.map((t) => <li key={t}>{t}</li>)}
+        </ul>
+      )}
       <div className="flex-1 min-h-0 relative">
         <div className="absolute inset-0 overflow-y-auto">
           <Suspense fallback={<p className="thai-font text-sm text-ink-soft p-6">กำลังเปิด...</p>}>

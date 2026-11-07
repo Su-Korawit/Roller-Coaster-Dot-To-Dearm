@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
-import { Lock, Palette, FolderPlus, FileText } from 'lucide-react'
+import { Lock, Palette, FolderPlus, FileText, CircleHelp } from 'lucide-react'
+import OsGuide from './OsGuide'
 import Wallpaper from './Wallpaper'
 import { useWallpaperDark } from './useWallpaperDark'
 import AppIcon, { AppTile } from './AppIcon'
@@ -24,6 +25,7 @@ export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topI
   const order = useOsStore((s) => s.order)
   const folders = useOsStore((s) => s.folders)
   const files = useOsStore((s) => s.files)
+  const guideSeen = useOsStore((s) => s.guideSeen)
   const uninstallApp = useOsStore((s) => s.uninstallApp)
   const dropToken = useOsStore((s) => s.dropToken)
   const touch = useTouchPrimary()
@@ -36,6 +38,7 @@ export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topI
   const [openFolderId, setOpenFolderId] = useState(null)
   const [fileInfo, setFileInfo] = useState(null)
   const [notice, setNotice] = useState('')
+  const [guideOpen, setGuideOpen] = useState(false)
   const scroller = useRef(null)
   const pressTimer = useRef(null)
   const pressStart = useRef(null)
@@ -142,6 +145,9 @@ export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topI
           </button>
         ))}
       </div>
+      <button type="button" className={barBtn} onClick={() => setGuideOpen(true)} aria-label="คู่มือใช้งาน" title="คู่มือใช้งาน">
+        <CircleHelp size={16} />
+      </button>
       <button type="button" className={barBtn} onClick={() => setPickWallpaper(true)} aria-label="เปลี่ยนวอลเปเปอร์">
         <Palette size={16} />
       </button>
@@ -226,6 +232,9 @@ export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topI
           onUninstall={(app) => uninstallApp(app.id)}
           onClose={() => setDetails(null)}
         />
+      )}
+      {(!guideSeen || guideOpen) && (
+        <OsGuide onOpenApp={onOpenApp} onClose={() => { useOsStore.getState().markGuideSeen(); setGuideOpen(false) }} />
       )}
       {pickAvatar && <AvatarSheet user={user} onClose={() => setPickAvatar(false)} />}
       {openFolder && (

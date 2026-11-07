@@ -27,6 +27,7 @@ export const useOsStore = create(
       order: [],               // saved Home arrangement (tokens, see homeLayout); repaired on read
       folders: [],             // { id, name, appIds }
       files: [],               // { id, name, size, type } — bytes in IndexedDB (homeFiles)
+      guideSeen: false,        // the welcome tour has been shown on this device
 
       setWallpaper: (id) =>
         set((s) => {
@@ -62,6 +63,7 @@ export const useOsStore = create(
           return { avatars: next }
         }),
 
+      markGuideSeen: () => set({ guideSeen: true }),
       installApp: (id) => set((s) => (s.installed.includes(id) ? s : { installed: [...s.installed, id] })),
       // Home drag and drop. `onto` null = dropped on empty space (goes to the end); mode 'folder' =
       // dropped on the middle of an app (touch), which makes a folder of the two.
