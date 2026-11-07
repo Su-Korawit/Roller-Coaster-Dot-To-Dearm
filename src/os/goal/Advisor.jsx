@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Sparkles } from 'lucide-react'
 import { suggestPrograms } from '../../services/aiAdvisor'
 import { daysUntil } from '../studyPlan'
+import { effectiveExamDate } from '../goalLogic'
 import { useLifeStore } from '../../stores/useLifeStore'
 import { BackBar, PickRow, Loading } from './ui'
 
@@ -32,7 +33,8 @@ function Chips({ options, value, onToggle, label }) {
 // "ยังไม่รู้จะเรียนอะไร": two taps + an optional note → five suggestions. Tapping one opens the
 // MyTCAS picker at that university so the goal always comes from official data.
 export default function Advisor({ onBack, onChoose }) {
-  const examDate = useLifeStore((s) => s.target.examDate)
+  const target = useLifeStore((s) => s.target)
+  const scores = useLifeStore((s) => s.scores)
   const [interests, setInterests] = useState([])
   const [subjects, setSubjects] = useState([])
   const [note, setNote] = useState('')
@@ -43,7 +45,7 @@ export default function Advisor({ onBack, onChoose }) {
     e.preventDefault()
     setState({ status: 'loading', list: [] })
     try {
-      const list = await suggestPrograms({ interests, subjects, note, daysLeft: daysUntil(examDate) })
+      const list = await suggestPrograms({ interests, subjects, note, daysLeft: daysUntil(effectiveExamDate(target, scores)) })
       setState({ status: list.length ? 'done' : 'empty', list })
     } catch (err) {
       console.error('[Advisor] suggest failed:', err)

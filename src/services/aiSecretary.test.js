@@ -5,7 +5,7 @@ vi.mock('../lib/geminiClient', () => ({ getModel: vi.fn(), parseJSONSafe: vi.fn(
 import { buildSecretaryContext, buildSecretaryPrompt, askSecretary } from './aiSecretary'
 
 const life = {
-  target: { university: 'จุฬา', faculty: 'วิศวะ', major: 'คอม', examDate: '2027-01-10' },
+  target: { university: 'จุฬา', faculty: 'วิศวะ', major: 'คอม', examDate: '2027-01-10', examDateManual: true },
   scores: [{ subject: 'TGAT', needed: 70, mine: 40 }, { subject: 'คณิต', needed: 60, mine: null }],
   tasks: [
     { date: '2027-01-01', text: 'TGAT 60 นาที', done: false, auto: true, minutes: 60 },

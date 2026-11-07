@@ -105,3 +105,19 @@ export function universityIdByName(name, rows = UNIVERSITY_ROWS) {
   const hit = matchByName(rows.map(([id, full]) => ({ id, name: full })), name, 'name')
   return hit?.id ?? null
 }
+
+// The exam dates every consumer (planner, countdowns, Secretary, Habit) uses. They come from the TCAS
+// calendar by subject, so goals saved before the calendar existed (no dates stored) still work.
+// A hand-set date (`target.examDateManual`) overrides the calendar for every subject.
+export function planInput(target, scores = []) {
+  if (target?.examDateManual) {
+    return { examDate: target.examDate || '', scores: scores.map((x) => ({ ...x, examDate: null })) }
+  }
+  return {
+    examDate: firstExamDate(scores),
+    scores: scores.map((x) => ({ ...x, examDate: x.examDate || examDateForSubject(x.subject) })),
+  }
+}
+
+// First exam day for the countdown ('' when a manual date was cleared).
+export const effectiveExamDate = (target, scores) => planInput(target, scores).examDate

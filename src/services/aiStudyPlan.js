@@ -1,18 +1,21 @@
 import { getModel, parseJSONSafe } from '../lib/geminiClient'
 import { buildStudyPlan, planToTasks, daysUntil } from '../os/studyPlan'
 import { todayKey } from '../os/lifeLogic'
+import { planInput } from '../os/goalLogic'
 
 // Builds the day-by-day plan to the exam day. The schedule itself is computed locally (so it always
 // works and is predictable); the AI only adds a short Thai strategy note and one tip per subject,
 // which are appended to the first task of each subject. If the AI call fails the plan is still returned.
 export async function generateStudyPlan({ target, scores, hoursPerDay }, { today = todayKey(), ask = askGemini } = {}) {
-  const days = buildStudyPlan({ today, examDate: target.examDate, scores, hoursPerDay })
+  const plan = planInput(target, scores)
+  const days = buildStudyPlan({ today, examDate: plan.examDate, scores: plan.scores, hoursPerDay })
   if (days.length === 0) return { tasks: [], summary: '', aiUsed: false, days: 0 }
 
-  let summary = fallbackSummary(target, scores, today)
+  const left = daysUntil(plan.examDate, today)
+  let summary = fallbackSummary(left, scores)
   let aiUsed = false
   try {
-    const out = await ask({ target, scores, hoursPerDay, daysLeft: daysUntil(target.examDate, today) })
+    const out = await ask({ target, scores, hoursPerDay, daysLeft: left })
     if (out?.summary) { summary = String(out.summary).slice(0, 400); aiUsed = true }
     const tips = new Map((out?.tips ?? []).map((t) => [String(t.subject).trim(), String(t.tip).slice(0, 160)]))
     const seen = new Set()
@@ -28,8 +31,7 @@ export async function generateStudyPlan({ target, scores, hoursPerDay }, { today
   return { tasks: planToTasks(days), summary, aiUsed, days: days.length }
 }
 
-function fallbackSummary(target, scores, today) {
-  const left = daysUntil(target.examDate, today)
+function fallbackSummary(left, scores) {
   const gaps = scores
     .filter((s) => s.mine != null && s.needed - s.mine > 0)
     .sort((a, b) => (b.needed - b.mine) - (a.needed - a.mine))

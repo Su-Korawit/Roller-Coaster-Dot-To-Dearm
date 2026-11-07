@@ -83,3 +83,21 @@ describe('universityIdByName', () => {
     expect(universityIdByName('ไม่มีจริงเลย')).toBeNull()
   })
 })
+
+describe('planInput (dates for the planner and countdowns)', () => {
+  it('derives exam dates from the calendar for goals saved without dates', async () => {
+    const { planInput, effectiveExamDate } = await import('./goalLogic')
+    const target = { examDate: '' }
+    const scores = [{ subject: 'TGAT1' }, { subject: 'A-Level ฟิสิกส์' }, { subject: 'ภาษาไทย' }]
+    const out = planInput(target, scores)
+    expect(out.scores.map((x) => x.examDate)).toEqual(['2027-01-30', '2027-03-13', null])
+    expect(out.examDate).toBe('2027-01-30')            // fallback for subjects without their own day
+    expect(effectiveExamDate(target, scores)).toBe('2027-01-30')
+  })
+  it('a hand-set date wins for every subject; a cleared manual date plans nothing', async () => {
+    const { planInput } = await import('./goalLogic')
+    const out = planInput({ examDate: '2027-02-20', examDateManual: true }, [{ subject: 'TGAT1', examDate: '2027-01-30' }])
+    expect(out).toEqual({ examDate: '2027-02-20', scores: [{ subject: 'TGAT1', examDate: null }] })
+    expect(planInput({ examDate: '', examDateManual: true }, []).examDate).toBe('')
+  })
+})

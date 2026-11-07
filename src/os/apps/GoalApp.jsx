@@ -7,9 +7,9 @@ import { daysUntil } from '../studyPlan'
 import { findApp, homeAppIds } from '../apps'
 import { AppTile } from '../AppIcon'
 import InstallButton from '../InstallButton'
-import { MAX_GOALS, goalSubtitle, goalTitle, makeGoal, universityAppId } from '../goalLogic'
+import { MAX_GOALS, goalSubtitle, goalTitle, makeGoal, planInput, universityAppId } from '../goalLogic'
 import { generateStudyPlan } from '../../services/aiStudyPlan'
-import { TCAS_CALENDAR, firstExamDate, formatThaiRange } from '../../data/tcasCalendar'
+import { TCAS_CALENDAR, formatThaiRange } from '../../data/tcasCalendar'
 import ProgramPicker from '../goal/ProgramPicker'
 import StarterPicker from '../goal/StarterPicker'
 import Advisor from '../goal/Advisor'
@@ -149,14 +149,21 @@ function CalendarCard({ scores }) {
   )
 }
 
-function PlanTab({ onOpenApp }) {
-  const { target, scores, hoursPerDay, setTarget, setHoursPerDay, applyPlan } = useLifeStore()
+function PlanTab({ onOpenApp, onGoTo }) {
+  const { target, scores, goals, hoursPerDay, setTarget, setHoursPerDay, applyPlan } = useLifeStore()
   const [planning, setPlanning] = useState(false)
   const [planMsg, setPlanMsg] = useState('')
   const [custom, setCustom] = useState(false)
-  const left = daysUntil(target.examDate)
+  // Dates come from the TCAS calendar by subject (planInput), so older saved goals work too.
+  const input = planInput(target, scores)
+  const left = daysUntil(input.examDate)
   // Each subject is planned up to its own exam day (see studyPlan); at least one must still be ahead.
-  const canPlan = scores.some((x) => { const n = daysUntil(x.examDate || target.examDate); return n != null && n >= 0 })
+  const canPlan = input.scores.some((x) => { const n = daysUntil(x.examDate || input.examDate); return n != null && n >= 0 })
+  const blocker = goals.length === 0 && scores.length === 0
+    ? { text: 'ยังไม่ได้เลือกเป้าหมาย เลือกคณะที่อยากเข้าก่อน พี่จะดึงวิชาและวันสอบให้', to: 'goals', label: 'ไปเลือกเป้าหมาย' }
+    : scores.length === 0
+      ? { text: 'เป้าหมายนี้ยังไม่มีวิชาที่ต้องใช้ (เกณฑ์อาจยังไม่ประกาศ) เพิ่มวิชาเองได้ที่แท็บคะแนน', to: 'scores', label: 'ไปเพิ่มวิชา' }
+      : { text: 'วิชาทั้งหมดผ่านวันสอบไปแล้ว ลองเพิ่มวิชาที่ยังไม่ถึงวันสอบ หรือเปลี่ยนเป้าหมาย', to: 'scores', label: 'ไปแท็บคะแนน' }
 
   async function plan() {
     setPlanning(true)
@@ -183,7 +190,7 @@ function PlanTab({ onOpenApp }) {
         {left != null && (
           <p className="thai-font text-sm flex items-center gap-2 text-brand-strong font-semibold">
             <CalendarClock size={16} aria-hidden="true" />
-            {left > 0 ? `เหลืออีก ${left} วันถึงวันสอบวิชาแรก (${formatThaiRange(target.examDate)})` : left === 0 ? 'วันสอบคือวันนี้ สู้ๆ' : 'วันสอบวิชาแรกผ่านไปแล้ว'}
+            {left > 0 ? `เหลืออีก ${left} วันถึงวันสอบวิชาแรก (${formatThaiRange(input.examDate)})` : left === 0 ? 'วันสอบคือวันนี้ สู้ๆ' : 'วันสอบวิชาแรกผ่านไปแล้ว'}
           </p>
         )}
         <p className="thai-font text-xs text-ink-soft">พี่จัดแผนให้แต่ละวิชาอ่านถึงวันสอบของวิชานั้น เช่น TGAT ถึง 30 ม.ค. ส่วน A-Level ต่อไปถึง 13 มี.ค.</p>
@@ -194,7 +201,12 @@ function PlanTab({ onOpenApp }) {
         <button type="button" onClick={plan} disabled={!canPlan || planning} className="px-btn py-2.5 thai-font text-sm font-bold bg-brand-strong text-white disabled:opacity-50 flex items-center justify-center gap-2">
           <Sparkles size={16} aria-hidden="true" /> {planning ? 'พี่กำลังวางแผน...' : 'วางแผนด้วย AI'}
         </button>
-        {!canPlan && <p className="thai-font text-xs text-ink-soft">เลือกเป้าหมายก่อน และต้องมีวิชาที่ยังไม่ถึงวันสอบ</p>}
+        {!canPlan && (
+          <div className="flex flex-col items-start gap-2">
+            <p className="thai-font text-sm text-ink-soft">{blocker.text}</p>
+            <button type="button" onClick={() => onGoTo(blocker.to)} className="px-btn px-3 py-1.5 thai-font text-xs font-bold bg-paper">{blocker.label}</button>
+          </div>
+        )}
         {planMsg && <p role="alert" className="thai-font text-sm text-zone-health-deep">{planMsg}</p>}
         <div className="border-t-2 border-hairline pt-3 flex flex-col gap-2">
           {custom ? (
@@ -203,7 +215,7 @@ function PlanTab({ onOpenApp }) {
                 วันสอบที่ตั้งเอง (ใช้แทนปฏิทินกับทุกวิชา)
                 <input type="date" value={target.examDate} onChange={(e) => setTarget({ examDate: e.target.value, examDateManual: true })} className="px-input h-10 px-3 text-sm text-ink bg-paper" />
               </label>
-              <button type="button" onClick={() => { setCustom(false); setTarget({ examDateManual: false, examDate: firstExamDate(scores) }) }} className="self-start thai-font text-xs font-semibold text-brand-strong underline">กลับไปใช้ปฏิทิน TCAS</button>
+              <button type="button" onClick={() => { setCustom(false); setTarget({ examDateManual: false, examDate: '' }) }} className="self-start thai-font text-xs font-semibold text-brand-strong underline">กลับไปใช้ปฏิทิน TCAS</button>
             </>
           ) : (
             <button type="button" onClick={() => setCustom(true)} className="self-start thai-font text-xs font-semibold text-ink-soft underline">ตั้งวันสอบเอง (ไม่จำเป็น)</button>
@@ -254,7 +266,7 @@ export default function GoalApp({ onOpenApp }) {
       : flow.type === 'advisor' ? <Advisor onBack={() => setFlow({ type: 'choose' })} onChoose={(s) => setFlow({ type: 'search', initial: s })} />
       : <StarterPicker initial={flow.initial} onPick={pick} onBack={() => setFlow({ type: 'search' })} />
   } else if (tab === 'scores') body = <Scores />
-  else if (tab === 'plan') body = <PlanTab onOpenApp={onOpenApp} />
+  else if (tab === 'plan') body = <PlanTab onOpenApp={onOpenApp} onGoTo={(t) => { setTab(t); setMsg('') }} />
   else {
     body = goals.length === 0 ? (
       <div className="flex flex-col gap-4">
