@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { Lock, Palette } from 'lucide-react'
 import Wallpaper from './Wallpaper'
 import { useWallpaperDark } from './useWallpaperDark'
-import AppIcon from './AppIcon'
+import AppIcon, { AppTile } from './AppIcon'
 import AppDetailsSheet from './AppDetailsSheet'
 import WallpaperSheet from './WallpaperSheet'
 import AvatarSheet from './AvatarSheet'
@@ -13,12 +13,14 @@ import { useOsStore } from '../stores/useOsStore'
 
 const EMPTY_LONG_PRESS_MS = 550
 
-export default function HomeScreen({ user, onOpenApp, onLock }) {
+export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topId = null, onTaskbar = () => {} }) {
   const { device, cols, rows } = useDevice()
   const now = useClock()
   const dark = useWallpaperDark()
   const installed = useOsStore((s) => s.installed)
   const uninstallApp = useOsStore((s) => s.uninstallApp)
+  const moveApp = useOsStore((s) => s.moveApp)
+  const lastEdge = useRef(0)
   const [page, setPage] = useState(0)
   const [details, setDetails] = useState(null)
   const [pickWallpaper, setPickWallpaper] = useState(false)
@@ -36,6 +38,15 @@ export default function HomeScreen({ user, onOpenApp, onLock }) {
   function onScroll(e) {
     const el = e.currentTarget
     setPage(Math.round(el.scrollLeft / Math.max(1, el.clientWidth)))
+  }
+
+  // Carrying an icon near the screen edge flips to the neighbouring page (at most every 700 ms).
+  function onDragEdge(dir, now) {
+    if (now - lastEdge.current < 700) return
+    const next = Math.min(pages.length - 1, Math.max(0, page + dir))
+    if (next === page) return
+    lastEdge.current = now
+    goToPage(next)
   }
 
   function goToPage(i) {
@@ -74,7 +85,22 @@ export default function HomeScreen({ user, onOpenApp, onLock }) {
         <ProfileAvatar user={user} size={30} />
       </button>
       <p className="thai-font text-xs opacity-80 hidden sm:block">{formatDate(now)}</p>
-      <span className="flex-1" />
+      <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto os-pages" aria-label="แอปที่เปิดอยู่" role="toolbar">
+        {windows.map((w) => (
+          <button
+            key={w.id}
+            type="button"
+            onClick={() => onTaskbar(w.id)}
+            aria-label={`${w.app.name}${w.minimized ? ' (ย่ออยู่)' : ''}`}
+            aria-pressed={w.id === topId}
+            title={w.app.name}
+            className={`shrink-0 flex items-center gap-1.5 h-9 px-1.5 rounded-ui border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${w.id === topId ? 'bg-paper/80 border-line' : 'border-transparent hover:bg-white/30'} ${w.minimized ? 'opacity-70' : ''}`}
+          >
+            <AppTile app={w.app} size={24} />
+            <span className="thai-font text-xs font-semibold hidden md:block max-w-[96px] truncate text-ink">{w.app.name}</span>
+          </button>
+        ))}
+      </div>
       <button type="button" className={barBtn} onClick={() => setPickWallpaper(true)} aria-label="เปลี่ยนวอลเปเปอร์">
         <Palette size={16} />
       </button>
@@ -106,7 +132,17 @@ export default function HomeScreen({ user, onOpenApp, onLock }) {
                 style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
               >
                 {items.map((app) => (
-                  <AppIcon key={app.id} app={app} dark={dark} onOpen={onOpenApp} onLongPress={setDetails} />
+                  <AppIcon
+                    key={app.id}
+                    app={app}
+                    dark={dark}
+                    draggable={!app.builtIn}
+                    onOpen={onOpenApp}
+                    onLongPress={setDetails}
+                    onMove={moveApp}
+                    onEdge={onDragEdge}
+                    getScrollLeft={() => scroller.current?.scrollLeft ?? 0}
+                  />
                 ))}
               </div>
             </div>

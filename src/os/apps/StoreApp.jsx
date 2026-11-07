@@ -1,17 +1,58 @@
 import { useState } from 'react'
-import { Search, Sparkles, Rocket } from 'lucide-react'
+import { Search, Rocket } from 'lucide-react'
 import { AppTile } from '../AppIcon'
-import { OS_APPS, homeAppIds, searchStoreApps } from '../apps'
+import InstallButton from '../InstallButton'
+import { CATEGORIES, OS_APPS, findApp, groupByCategory, homeAppIds, searchStoreApps } from '../apps'
 import { useOsStore } from '../../stores/useOsStore'
+import StoreAppDetail from './StoreAppDetail'
+import StoreBanners from './StoreBanners'
 
-// Store: search, banner, installable apps. Creating/selling apps is the next step (teaser only).
+// Store: search, banners, catalogue by category, install with a download bar. Creating/selling apps is the next step (teaser only).
 export default function StoreApp({ onOpenApp }) {
   const [query, setQuery] = useState('')
+  const [category, setCategory] = useState('all')
+  const [detailId, setDetailId] = useState(null)
   const installed = useOsStore((s) => s.installed)
-  const installApp = useOsStore((s) => s.installApp)
-  const results = searchStoreApps(query)
+  const results = searchStoreApps(query, OS_APPS, category)
   const onHome = homeAppIds(installed)
   const catalogEmpty = !OS_APPS.some((a) => a.installable)
+  const grouped = category === 'all' && !query.trim()
+
+  function onBannerAction(action) {
+    if (action.type === 'category') setCategory(action.categoryId)
+    else if (action.type === 'open') {
+      const app = findApp(action.appId)
+      if (app) onOpenApp(app)
+    }
+  }
+
+  const detailApp = detailId ? OS_APPS.find((a) => a.id === detailId) : null
+  if (detailApp) {
+    return (
+      <StoreAppDetail
+        app={detailApp}
+        installed={onHome.includes(detailApp.id)}
+        onOpen={onOpenApp}
+        onBack={() => setDetailId(null)}
+      />
+    )
+  }
+
+  const renderApp = (app) => (
+    <li key={app.id} className="flex flex-col items-center gap-1.5 text-center">
+      <button
+        type="button"
+        onClick={() => setDetailId(app.id)}
+        aria-label={`ดูรายละเอียด ${app.name}`}
+        className="flex flex-col items-center gap-1.5 max-w-full rounded-ui active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+      >
+        <AppTile app={app} />
+        <span className="thai-font text-xs font-semibold truncate max-w-full">{app.name}</span>
+      </button>
+      <InstallButton app={app} installed={onHome.includes(app.id)} onOpen={onOpenApp} />
+    </li>
+  )
+  const gridClass = 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4'
 
   return (
     <div className="p-4 sm:p-6 max-w-3xl mx-auto flex flex-col gap-5">
@@ -27,42 +68,42 @@ export default function StoreApp({ onOpenApp }) {
         />
       </label>
 
-      <section
-        className="px-card p-5 flex items-center gap-4 text-white"
-        style={{ background: 'linear-gradient(135deg, var(--color-zone-soc), var(--color-brand-strong))' }}
-        aria-label="แบนเนอร์"
-      >
-        <Sparkles size={36} aria-hidden="true" />
-        <div>
-          <h3 className="font-display font-bold text-lg">ยินดีต้อนรับสู่ Store</h3>
-          <p className="thai-font text-sm opacity-90">แอปใหม่ๆ สำหรับเส้นทาง TCAS ของคุณ กำลังจะมาเร็วๆ นี้</p>
-        </div>
-      </section>
+      <StoreBanners onAction={onBannerAction} />
 
-      <section aria-label="แอปทั้งหมด">
-        {results.length > 0 ? (
-          <ul className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
-            {results.map((app) => {
-              const has = onHome.includes(app.id)
-              return (
-                <li key={app.id} className="flex flex-col items-center gap-1.5 text-center">
-                  <AppTile app={app} />
-                  <span className="thai-font text-xs font-semibold truncate max-w-full">{app.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => (has ? onOpenApp(app) : installApp(app.id))}
-                    className="px-btn px-3 py-1 thai-font text-xs font-bold bg-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-                  >
-                    {has ? 'เปิด' : 'ติดตั้ง'}
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
-        ) : (
+      <div className="flex gap-2 overflow-x-auto os-pages -mx-1 px-1 pb-1" role="tablist" aria-label="หมวดหมู่">
+        {[{ id: 'all', label: 'ทั้งหมด' }, ...CATEGORIES].map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            role="tab"
+            aria-selected={category === c.id}
+            onClick={() => setCategory(c.id)}
+            className={`px-btn px-3 py-1 thai-font text-xs font-bold whitespace-nowrap shrink-0 ${category === c.id ? 'bg-brand-strong text-white' : 'bg-paper'}`}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+
+      <section aria-label="แอปทั้งหมด" className="flex flex-col gap-6">
+        {results.length === 0 ? (
           <p className="thai-font text-sm text-ink-soft text-center py-8">
             {catalogEmpty ? 'ยังไม่มีแอปให้ติดตั้ง เร็วๆ นี้' : `ไม่พบแอปที่ตรงกับ "${query}"`}
           </p>
+        ) : grouped ? (
+          groupByCategory(results).map((g) => (
+            <div key={g.id} className="flex flex-col gap-3">
+              <h3 className="thai-font font-bold text-sm">{g.label}</h3>
+              <ul className={gridClass}>{(g.id === 'university' ? g.apps.slice(0, 8) : g.apps).map(renderApp)}</ul>
+              {g.id === 'university' && g.apps.length > 8 && (
+                <button type="button" onClick={() => setCategory('university')} className="self-center px-btn px-4 py-1.5 thai-font text-xs font-bold bg-paper">
+                  ดูมหาวิทยาลัยทั้งหมด ({g.apps.length})
+                </button>
+              )}
+            </div>
+          ))
+        ) : (
+          <ul className={gridClass}>{results.map(renderApp)}</ul>
         )}
       </section>
 

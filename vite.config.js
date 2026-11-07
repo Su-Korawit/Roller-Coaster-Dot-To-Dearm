@@ -83,15 +83,20 @@ function voiceApiPlugin() {
 
 // Dev-only middleware that runs api/mytcas.js directly inside vite dev server.
 // In production, Vercel routes /api/mytcas to the real serverless function.
-function mytcasApiPlugin() {
+// Literal import() paths so the config bundler resolves them relative to this file.
+const API_HANDLERS = {
+  '/api/mytcas': () => import('./api/mytcas.js'),
+  '/api/tcasin': () => import('./api/tcasin.js'),
+}
+function mytcasApiPlugin(route = '/api/mytcas') {
   return {
-    name: 'mytcas-api-dev',
+    name: `dev-api-${route.replace(/\W/g, '-')}`,
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         const [path, search = ''] = req.url.split('?')
-        if (path !== '/api/mytcas') return next()
+        if (path !== route) return next()
         try {
-          const { default: handler } = await import('./api/mytcas.js')
+          const { default: handler } = await API_HANDLERS[route]()
           // mytcas.js reads req.query; vite doesn't populate it in dev.
           req.query = Object.fromEntries(new URLSearchParams(search))
           const mockRes = {
@@ -115,5 +120,5 @@ function mytcasApiPlugin() {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(), camphubApiPlugin(), mytcasApiPlugin(), voiceApiPlugin()],
+  plugins: [react(), tailwindcss(), camphubApiPlugin(), mytcasApiPlugin(), mytcasApiPlugin('/api/tcasin'), voiceApiPlugin()],
 })

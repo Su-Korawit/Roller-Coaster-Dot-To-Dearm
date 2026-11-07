@@ -334,6 +334,82 @@ service cloud.firestore {
         (resource.data.createdBy == request.auth.uid || isSuperAdmin());
     }
 
+    // OS Store app reviews: one doc per (app, user) with id `${appId}_${uid}`. Signed-in read;
+    // a user writes only their own review (1-5 stars, comment <= 500 chars);
+    // delete own or super-admin (moderation).
+    match /osAppReviews/{reviewId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && reviewId == request.resource.data.appId + '_' + request.auth.uid
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1 && request.resource.data.rating <= 5
+        && request.resource.data.text is string
+        && request.resource.data.text.size() <= 500
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 60;
+      allow delete: if isSignedIn() &&
+        (resource.data.uid == request.auth.uid || isSuperAdmin());
+    }
+
+    // OS "Report" app: requests for new apps/websites, plus one vote doc per (request, user).
+    // Only a super-admin changes a request's status (new → planned → done).
+    match /osRequests/{requestId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.kind in ['app', 'website']
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 3 && request.resource.data.title.size() <= 80
+        && request.resource.data.url is string && request.resource.data.url.size() <= 200
+        && request.resource.data.reason is string && request.resource.data.reason.size() <= 300
+        && request.resource.data.name is string && request.resource.data.name.size() <= 60
+        && request.resource.data.status == 'new';
+      allow update: if isSuperAdmin();
+      allow delete: if isSignedIn() && (resource.data.uid == request.auth.uid || isSuperAdmin());
+    }
+    match /osRequestVotes/{voteId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.requestId is string
+        && voteId == request.resource.data.requestId + '_' + request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // OS community chat: one room per faculty+major (id = users/{uid}.osRoomId, any university) plus
+    // the open room 'general'. Members = signed-in users whose own osRoomId equals the room.
+    match /osRooms/{roomId}/messages/{msgId} {
+      function inRoom() {
+        return roomId == 'general'
+          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('osRoomId', '') == roomId;
+      }
+      allow read: if isSignedIn() && inRoom();
+      allow create: if isSignedIn() && inRoom()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 1 && request.resource.data.text.size() <= 500
+        && request.resource.data.name is string && request.resource.data.name.size() <= 60
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if isSignedIn() &&
+        (resource.data.uid == request.auth.uid || isSuperAdmin());
+    }
+
+    // OS Reading leaderboard entry: one doc per user (id = uid), written only by its owner.
+    match /osReading/{uid} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.name is string && request.resource.data.name.size() <= 60
+        && request.resource.data.roomId is string && request.resource.data.roomId.size() <= 130
+        && request.resource.data.weekKey is string && request.resource.data.weekKey.size() <= 10
+        && request.resource.data.weekMinutes is int
+        && request.resource.data.weekMinutes >= 0 && request.resource.data.weekMinutes <= 10080
+        && request.resource.data.totalMinutes is int && request.resource.data.totalMinutes >= 0;
+      allow delete: if isSignedIn() && (request.auth.uid == uid || isSuperAdmin());
+    }
+
     // Entitlement catalog — priced unlockables. Signed-in read; super-admin
     // writes (pricing experiments without a deploy). Purchases themselves are
     // executed only by the purchaseEntitlement Cloud Function (Admin SDK).

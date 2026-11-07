@@ -42,25 +42,29 @@ export default function LoginScreen() {
     }
   }
 
+  // Glass panel over the wallpaper (design.md §19) — same material as the passcode panel
+  const panelTone = dark ? 'bg-ink/25' : 'bg-paper/40'
+  const linkTone = dark ? 'text-white' : 'text-brand-strong'
+
   return (
     <Wallpaper scroll className="flex flex-col items-center px-6">
-      <div className="relative z-10 mt-[10vh] text-center os-no-select">
+      <div className="relative z-10 mt-[8vh] text-center os-no-select shrink-0">
         <p className="font-display text-7xl sm:text-8xl lg:text-9xl font-bold tracking-tight leading-none">{formatTime(now)}</p>
         <p className="thai-font mt-2 text-lg sm:text-xl opacity-85">{formatDate(now)}</p>
       </div>
 
-      <div className="relative z-10 mt-auto mb-[8vh] w-full max-w-sm">
-        <h1 className="wordmark-font text-center text-lg mb-4 leading-relaxed">I LOVE TCAS</h1>
-        <div className="px-card p-5 animate-pop text-ink">
+      <div className="relative z-10 flex-1 w-full flex items-center justify-center py-6">
+        <div className={`w-full max-w-sm rounded-sheet backdrop-blur-sm px-6 py-6 animate-pop ${panelTone}`}>
+          <h1 className="wordmark-font text-center text-lg mb-5 leading-relaxed">I LOVE TCAS</h1>
           <fieldset className="mb-4 space-y-2 thai-font text-xs">
             <legend className="sr-only">ข้อกำหนดและความยินยอม</legend>
             <label className="flex items-start gap-2">
               <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} className="mt-0.5" />
               <span>
                 ฉันได้อ่านและยอมรับ{' '}
-                <a href={LEGAL_PATHS.terms} target="_blank" rel="noopener noreferrer" className="underline text-brand-strong">ข้อกำหนดการใช้งาน</a>
+                <a href={LEGAL_PATHS.terms} target="_blank" rel="noopener noreferrer" className={`underline font-semibold ${linkTone}`}>ข้อกำหนดการใช้งาน</a>
                 {' '}และ{' '}
-                <a href={LEGAL_PATHS.privacy} target="_blank" rel="noopener noreferrer" className="underline text-brand-strong">นโยบายความเป็นส่วนตัว</a>
+                <a href={LEGAL_PATHS.privacy} target="_blank" rel="noopener noreferrer" className={`underline font-semibold ${linkTone}`}>นโยบายความเป็นส่วนตัว</a>
               </span>
             </label>
             <label className="flex items-start gap-2">
@@ -74,7 +78,7 @@ export default function LoginScreen() {
             onClick={handleGoogle}
             disabled={busy}
             aria-label="เข้าสู่ระบบด้วย Google"
-            className="px-btn w-full flex items-center justify-center gap-2.5 bg-paper rounded-xl py-3
+            className="px-btn w-full flex items-center justify-center gap-2.5 bg-paper text-ink rounded-xl py-3
               disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1"
           >
             <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -87,12 +91,12 @@ export default function LoginScreen() {
           </button>
 
           {error && (
-            <p className="thai-font text-xs text-danger text-center leading-relaxed mt-3" role="alert">{error}</p>
+            <p className="thai-font text-xs text-danger font-semibold text-center leading-relaxed mt-3" role="alert">{error}</p>
           )}
+          <p className="thai-font text-xs text-center mt-4 opacity-75">
+            ล็อกอินครั้งแรก แล้วตั้งรหัสผ่านสำหรับเครื่องนี้
+          </p>
         </div>
-        <p className={`thai-font text-xs text-center mt-3 ${dark ? 'text-white/70' : 'text-ink-soft'}`}>
-          ล็อกอินครั้งแรก แล้วตั้งรหัสผ่านสำหรับเครื่องนี้
-        </p>
       </div>
     </Wallpaper>
   )

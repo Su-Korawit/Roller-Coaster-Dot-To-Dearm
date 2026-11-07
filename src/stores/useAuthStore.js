@@ -9,6 +9,7 @@ import {
 } from 'firebase/auth'
 import { auth } from '../firebase'
 import { bootstrapSession, teardownSession } from '../services/sessionBootstrap'
+import { PROMO, PROMO_USER } from '../lib/promo'
 
 // Custom claims (e.g. `creator`) ride on the ID token. A failed read must never
 // block sign-in, so it degrades to "no claims".
@@ -22,7 +23,7 @@ async function readClaims(firebaseUser) {
 }
 
 export const useAuthStore = create((set, get) => {
-  onAuthStateChanged(auth, async (firebaseUser) => {
+  if (!PROMO) onAuthStateChanged(auth, async (firebaseUser) => {
     // A throw anywhere in bootstrap/teardown must never leave `loading` stuck
     // at true — every gate in the app (RequireAuth/RequireAdmin) blocks on it,
     // so a stuck true renders an infinite spinner or, for RequireAdmin, a
@@ -42,9 +43,9 @@ export const useAuthStore = create((set, get) => {
   })
 
   return {
-    user: null,
+    user: PROMO ? PROMO_USER : null,
     claims: null,
-    loading: true,
+    loading: !PROMO,
 
     // A role granted while signed in only shows up on a new token.
     refreshClaims: async () => {

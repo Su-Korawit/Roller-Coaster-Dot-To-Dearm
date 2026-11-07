@@ -23,6 +23,8 @@ import { useSchoolStore } from '../stores/useSchoolStore'
 import { useHotbarStore } from '../stores/useHotbarStore'
 import { useResumeStore } from '../stores/useResumeStore'
 import { useGuideStore } from '../stores/useGuideStore'
+import { useLifeStore } from '../stores/useLifeStore'
+import { roomIdFor } from '../os/studyPlan'
 import { usePlansStore, planStateFromProfile } from '../stores/usePlansStore'
 import { mergeResume } from './resumeRules'
 
@@ -324,6 +326,26 @@ const resumeSync = createFirestoreSync({
 export const hydrateResumeFromFirestore = resumeSync.hydrate
 export const setResumeSyncUser = resumeSync.setSyncUser
 export const flushResumeSync = resumeSync.flush
+
+// ── OS apps (Goal / Habit / Reading) → users/{uid}.os (+ top-level osRoomId for chat-room rules) ──
+const OS_KEYS = ['target', 'hoursPerDay', 'goals', 'primaryGoalId', 'scores', 'tasks', 'habits', 'books', 'readLog', 'planSummary']
+const osSync = createFirestoreSync({
+  store: useLifeStore,
+  logName: 'syncOs',
+  delayMs: 1500,
+  toDoc: (state) => ({
+    os: Object.fromEntries(OS_KEYS.map((k) => [k, state[k]])),
+    osRoomId: roomIdFor(state.target.faculty, state.target.major),
+    osUpdatedAt: serverTimestamp(),
+  }),
+  fromDoc: (data) => (data.os ? Object.fromEntries(OS_KEYS.filter((k) => k in data.os).map((k) => [k, data.os[k]])) : {}),
+  changed: (s, p) => OS_KEYS.some((k) => s[k] !== p[k]),
+  needsSeed: (data) => !data.os,
+})
+
+export const hydrateOsFromFirestore = osSync.hydrate
+export const setOsSyncUser = osSync.setSyncUser
+export const flushOsSync = osSync.flush
 
 // Back to the signed-in user's own world. `mapKey` (optional) switches the map key in the same
 // state update, so presence never briefly joins the user's own world under the previous map's key.

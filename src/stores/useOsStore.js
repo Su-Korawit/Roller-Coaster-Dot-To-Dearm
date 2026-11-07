@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import { DEFAULT_WALLPAPER, WALLPAPERS } from '../os/wallpapers'
 import { DEFAULT_CROP, normalizeCrop } from '../os/customWallpaper'
 import { findAvatar } from '../os/avatars'
+import { DEFAULT_INSTALLED, homeAppIds, findApp, reorderIds } from '../os/apps'
 
 // OS shell preferences, per device (like a phone's home screen): wallpaper + installed apps.
 // The user's own photo is kept in IndexedDB (too big for localStorage); only its crop, aspect and
@@ -13,7 +14,7 @@ export const useOsStore = create(
   persist(
     (set) => ({
       wallpaperId: DEFAULT_WALLPAPER,
-      installed: [],
+      installed: DEFAULT_INSTALLED,
       customAspect: null,      // null = no photo saved
       customDark: false,
       customCrop: DEFAULT_CROP,
@@ -55,8 +56,27 @@ export const useOsStore = create(
         }),
 
       installApp: (id) => set((s) => (s.installed.includes(id) ? s : { installed: [...s.installed, id] })),
+      // Drag on the Home screen: put `fromId` where `toId` is. Built-in apps (Store) stay first.
+      moveApp: (fromId, toId) =>
+        set((s) => {
+          const extra = homeAppIds(s.installed).filter((id) => !findApp(id)?.builtIn)
+          const next = reorderIds(extra, fromId, toId)
+          return next === extra ? s : { installed: next }
+        }),
       uninstallApp: (id) => set((s) => ({ installed: s.installed.filter((x) => x !== id) })),
     }),
-    { name: 'rc-os-store' },
+    {
+      name: 'rc-os-store',
+      // v1/v2: the core apps come pre-installed (existing devices get them once; removing stays possible).
+      // v2: Report joins the pre-installed set.
+      version: 2,
+      migrate: (state, version) => {
+        if (version < 2) {
+          const have = Array.isArray(state?.installed) ? state.installed : []
+          return { ...state, installed: [...new Set([...DEFAULT_INSTALLED, ...have])] }
+        }
+        return state
+      },
+    },
   ),
 )

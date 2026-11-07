@@ -15,6 +15,9 @@ const m = vi.hoisted(() => ({
   hydrateGuide: vi.fn(),
   setPlansSyncUser: vi.fn(),
   setGuideSyncUser: vi.fn(),
+  hydrateOs: vi.fn(),
+  setOsSyncUser: vi.fn(),
+  adoptOsUser: vi.fn(),
   resetGuide: vi.fn(),
   setResumeSyncUser: vi.fn(),
   resetResume: vi.fn(),
@@ -106,8 +109,11 @@ vi.mock('../lib/syncManager', () => ({
   setResumeSyncUser: (...a) => m.setResumeSyncUser(...a),
   hydrateGuideFromFirestore: (...a) => m.hydrateGuide(...a),
   setGuideSyncUser: (...a) => m.setGuideSyncUser(...a),
+  hydrateOsFromFirestore: (...a) => m.hydrateOs(...a),
+  setOsSyncUser: (...a) => m.setOsSyncUser(...a),
   setPlansSyncUser: (...a) => m.setPlansSyncUser(...a),
 }))
+vi.mock('../stores/useLifeStore', () => ({ useLifeStore: { getState: () => ({ adoptUser: m.adoptOsUser }) } }))
 vi.mock('../stores/useGuideStore', () => ({ useGuideStore: { getState: () => ({ reset: m.resetGuide }) } }))
 vi.mock('../stores/useResumeStore', () => ({ useResumeStore: { getState: () => ({ reset: m.resetResume }) } }))
 vi.mock('../stores/useHotbarStore', () => ({ useHotbarStore: { getState: () => ({ reset: m.resetHotbar }) } }))
@@ -208,6 +214,9 @@ describe('bootstrapSession', () => {
     await bootstrapSession({ uid: 'u1' })
     expect(m.hydrateGuide).toHaveBeenCalledWith('u1')
     expect(m.setGuideSyncUser).toHaveBeenCalledWith('u1')
+    expect(m.adoptOsUser).toHaveBeenCalledWith('u1')
+    expect(m.hydrateOs).toHaveBeenCalledWith('u1')
+    expect(m.setOsSyncUser).toHaveBeenCalledWith('u1')
   })
 
   it('hydrates resume points and arms their sync writer on login', async () => {
@@ -369,6 +378,7 @@ describe('teardownSession', () => {
   it('disarms the guide sync and forgets its progress on logout', () => {
     teardownSession()
     expect(m.setGuideSyncUser).toHaveBeenCalledWith(null)
+    expect(m.setOsSyncUser).toHaveBeenCalledWith(null)
     expect(m.resetGuide).toHaveBeenCalled()
   })
 
