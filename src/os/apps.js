@@ -39,7 +39,7 @@ const RAW_APPS = [
     Icon: Target,
     tone: 'var(--color-zone-health)',
     installable: true,
-    logo: '/assets/os/apps/goal.webp',   // pixel-art icon (full tile)
+    logo: '/assets/os/apps/goal.webp?v=2',   // pixel-art icon (full tile)
     logoFull: true,
     category: 'study',
     intro: 'goal',
@@ -55,7 +55,7 @@ const RAW_APPS = [
     Icon: CalendarCheck,
     tone: 'var(--color-zone-earth)',
     installable: true,
-    logo: '/assets/os/apps/habit.webp',   // pixel-art icon (full tile)
+    logo: '/assets/os/apps/habit.webp?v=2',   // pixel-art icon (full tile)
     logoFull: true,
     category: 'study',
     intro: 'habit',
@@ -71,7 +71,7 @@ const RAW_APPS = [
     Icon: BookOpen,
     tone: 'var(--color-zone-sci)',
     installable: true,
-    logo: '/assets/os/apps/reading.webp',   // pixel-art icon (full tile)
+    logo: '/assets/os/apps/reading.webp?v=2',   // pixel-art icon (full tile)
     logoFull: true,
     category: 'study',
     intro: 'reading',
@@ -87,7 +87,7 @@ const RAW_APPS = [
     Icon: Users,
     tone: 'var(--color-zone-arts)',
     installable: true,
-    logo: '/assets/os/apps/community.webp',   // pixel-art icon (full tile)
+    logo: '/assets/os/apps/community.webp?v=2',   // pixel-art icon (full tile)
     logoFull: true,
     category: 'study',
     intro: 'community',

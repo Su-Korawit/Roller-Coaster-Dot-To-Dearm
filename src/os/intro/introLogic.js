@@ -32,6 +32,11 @@ export const INTROS = {
   },
 }
 
+// Illustrated frames (public/assets/os/intro/<id>-<n>.webp), one per caption. Apps without frames, or
+// whose pictures fail to load, use the code-drawn scene in scenes.jsx / scenes2.jsx.
+export const INTRO_FRAMES = { goal: 3, habit: 4, community: 4 }
+export const introFrameUrl = (id, n) => `/assets/os/intro/${id}-${n}.webp`
+
 const seen = new Set()
 export const hasSeenIntro = (id) => seen.has(id)
 export const markIntroSeen = (id) => { seen.add(id) }

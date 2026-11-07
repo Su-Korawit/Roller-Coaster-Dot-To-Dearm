@@ -4,7 +4,7 @@ import { makeGoal, MAX_GOALS } from '../os/goalLogic'
 
 const mk = (n, extra = {}) => makeGoal({ source: 'mytcas', programId: `P${n}`, university: `U${n}`, faculty: `F${n}`, program: `Prog${n}`, reqs: [{ subject: 'TGAT1', needed: 60 }], ...extra })
 
-beforeEach(() => useLifeStore.setState({ ownerUid: null, goals: [], primaryGoalId: null, scores: [], target: { university: '', faculty: '', major: '', interest: '', examDate: '2027-01-10' } }))
+beforeEach(() => useLifeStore.setState({ ownerUid: null, goals: [], primaryGoalId: null, scores: [], target: { university: '', faculty: '', major: '', interest: '', examDate: '2027-01-10', examDateManual: true } }))
 
 describe('goals', () => {
   it('first goal becomes primary and fills target + scores', () => {

@@ -59,6 +59,8 @@ const BANNERS = [
     cta: 'เริ่มที่ Goal',
     action: { type: 'open', appId: 'goal' },
     background: 'linear-gradient(110deg, var(--color-brand-strong) 40%, var(--color-zone-soc))',
+    image: '/assets/os/banners/welcome.webp',
+    scrim: 'var(--color-brand-strong)',
     Scene: MountainScene,
   },
   {
@@ -68,6 +70,8 @@ const BANNERS = [
     cta: 'เปิด Habit',
     action: { type: 'open', appId: 'habit' },
     background: 'linear-gradient(110deg, var(--color-zone-sci-deep) 40%, var(--color-zone-sci))',
+    image: '/assets/os/banners/plan.webp',
+    scrim: 'var(--color-zone-sci-deep)',
     Scene: CalendarScene,
   },
   {
@@ -77,9 +81,24 @@ const BANNERS = [
     cta: 'ดูหมวดสมัครและข้อมูลรับเข้า',
     action: { type: 'category', categoryId: 'admission' },
     background: 'linear-gradient(110deg, var(--color-zone-earth-deep) 40%, var(--color-zone-earth))',
+    image: '/assets/os/banners/admission.webp',
+    scrim: 'var(--color-zone-earth-deep)',
     Scene: SchoolScene,
   },
 ]
+
+// Illustration (generated art) with a colour scrim on the left so the text stays readable.
+// If the picture fails to load, the code-drawn scene is shown instead.
+function BannerArt({ banner }) {
+  const [failed, setFailed] = useState(false)
+  if (failed) return <banner.Scene />
+  return (
+    <>
+      <img src={banner.image} alt="" draggable={false} onError={() => setFailed(true)} className="absolute inset-0 w-full h-full object-cover" />
+      <span className="absolute inset-0" style={{ background: `linear-gradient(90deg, ${banner.scrim} 0%, ${banner.scrim} 38%, transparent 78%)` }} aria-hidden="true" />
+    </>
+  )
+}
 
 const AUTOPLAY_MS = 5000
 
@@ -129,8 +148,8 @@ export default function StoreBanners({ onAction }) {
             className="px-card relative w-full shrink-0 snap-start overflow-hidden text-white aspect-[8/3] min-h-[150px]"
             style={{ background: b.background }}
           >
-            <b.Scene />
-            <div className="relative h-full flex flex-col justify-center gap-1.5 p-5 max-w-[62%]">
+            <BannerArt banner={b} />
+            <div className="relative h-full flex flex-col justify-center gap-1.5 p-5 max-w-[58%]">
               <h3 className="font-display font-bold text-lg sm:text-2xl leading-tight">{b.title}</h3>
               <p className="thai-font text-sm opacity-95 leading-snug">{b.text}</p>
               <button

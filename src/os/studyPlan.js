@@ -22,30 +22,36 @@ export function subjectWeight({ needed = 0, mine = null }) {
   return Math.max(gap, 5)
 }
 
-export const MAX_PLAN_DAYS = 120
+export const MAX_PLAN_DAYS = 200
 const SLOT_MIN = 15
 
-// Deterministic day-by-day plan from `today` to exam day (inclusive), at most MAX_PLAN_DAYS days.
-// Each day splits `hoursPerDay` into at most 3 subject blocks (multiples of 15 min). Subjects with
-// the biggest score gap come up more often (smooth weighted round-robin).
+// Deterministic day-by-day plan from `today` to the last exam day (inclusive), at most MAX_PLAN_DAYS days.
+// Each subject is studied up to ITS exam day (`score.examDate`, else the plan's `examDate`): e.g. TGAT stops
+// on its exam day while A-Level goes on to its own. Subjects whose day has passed are left out.
+// Each day splits `hoursPerDay` into at most 3 subject blocks (multiples of 15 min). Subjects with the
+// biggest score gap come up more often (smooth weighted round-robin).
 // Returns [{ date, tasks: [{ subject, minutes, tag, text }] }].
 export function buildStudyPlan({ today = todayKey(), examDate, scores = [], hoursPerDay = 2 }) {
-  const left = daysUntil(examDate, today)
   const subjects = scores.filter((s) => s.subject?.trim())
-  if (left == null || left < 0 || subjects.length === 0) return []
-  const dayCount = Math.min(left + 1, MAX_PLAN_DAYS)
+  // Days from today to each subject's exam day (null = no valid date → not planned).
+  const last = subjects.map((s) => daysUntil(s.examDate || examDate, today))
+  const usable = last.filter((n) => n != null && n >= 0)
+  if (subjects.length === 0 || usable.length === 0) return []
+  const dayCount = Math.min(Math.max(...usable) + 1, MAX_PLAN_DAYS)
   const total = Math.max(SLOT_MIN, Math.round((Math.max(0.25, hoursPerDay) * 60) / SLOT_MIN) * SLOT_MIN)
   const weights = subjects.map(subjectWeight)
-  const sum = weights.reduce((a, b) => a + b, 0)
   const credit = subjects.map(() => 0)
   const days = []
   for (let i = 0; i < dayCount; i++) {
+    const active = subjects.map((_, j) => j).filter((j) => last[j] != null && last[j] >= i)
+    if (active.length === 0) break
+    const sum = active.reduce((acc, j) => acc + weights[j], 0)
     const pick = []
-    const slots = Math.min(3, subjects.length)
+    const slots = Math.min(3, active.length)
     for (let k = 0; k < slots; k++) {
-      for (let j = 0; j < subjects.length; j++) credit[j] += weights[j]
+      for (const j of active) credit[j] += weights[j]
       let best = -1
-      for (let j = 0; j < subjects.length; j++) {
+      for (const j of active) {
         if (!pick.includes(j) && (best === -1 || credit[j] > credit[best])) best = j
       }
       credit[best] -= sum
@@ -55,14 +61,14 @@ export function buildStudyPlan({ today = todayKey(), examDate, scores = [], hour
     const units = total / SLOT_MIN
     const chosen = pick.slice(0, units)
     const cw = chosen.map((j) => weights[j])
-    const csum = cw.reduce((a, b) => a + b, 0)
+    const csum = cw.reduce((acc, w) => acc + w, 0)
     const spare = units - chosen.length
     const quota = cw.map((w) => (w / csum) * spare)
     const got = quota.map((q) => Math.floor(q))
-    let rest = spare - got.reduce((a, b) => a + b, 0)
+    let rest = spare - got.reduce((acc, n) => acc + n, 0)
     quota
       .map((q, idx) => ({ idx, frac: q - Math.floor(q) }))
-      .sort((a, b) => b.frac - a.frac || a.idx - b.idx)
+      .sort((x, y) => y.frac - x.frac || x.idx - y.idx)
       .forEach(({ idx }) => { if (rest > 0) { got[idx] += 1; rest -= 1 } })
     const tasks = chosen.map((j, idx) => {
       const minutes = (1 + got[idx]) * SLOT_MIN

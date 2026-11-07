@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { INTROS, shouldPlayIntro, markIntroSeen, resetIntrosForTest, introDuration, STEP_MS } from './introLogic'
+import fs from 'node:fs'
+import { INTROS, INTRO_FRAMES, introFrameUrl, shouldPlayIntro, markIntroSeen, resetIntrosForTest, introDuration, STEP_MS } from './introLogic'
 import { OS_APPS } from '../apps'
 
 beforeEach(() => resetIntrosForTest())
@@ -25,5 +26,14 @@ describe('intros', () => {
   it('lasts long enough for every step to be read', () => {
     expect(introDuration('habit')).toBeGreaterThan(4 * STEP_MS)
     expect(introDuration('nope')).toBeGreaterThan(0)
+  })
+})
+
+describe('illustrated frames', () => {
+  it('have one picture file per caption', () => {
+    for (const [id, count] of Object.entries(INTRO_FRAMES)) {
+      expect(count).toBe(INTROS[id].steps.length)
+      for (let n = 1; n <= count; n++) expect(fs.existsSync(`public${introFrameUrl(id, n)}`)).toBe(true)
+    }
   })
 })

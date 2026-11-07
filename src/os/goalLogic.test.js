@@ -31,11 +31,18 @@ describe('score requirements', () => {
 
 describe('applyGoalToState', () => {
   const goal = makeGoal({ university: 'จุฬา', faculty: 'วิศวกรรมศาสตร์', program: 'วิศวกรรมคอม', reqs: [{ subject: 'TGAT1', needed: 60, weight: 50 }, { subject: 'TPAT3', needed: 60, weight: 50 }] })
-  const base = { target: { university: '', faculty: '', major: '', interest: 'x', examDate: '2027-01-10' }, scores: [] }
+  const base = { target: { university: '', faculty: '', major: '', interest: 'x', examDate: '' }, scores: [] }
   it('sets the target text and goal scores, keeping exam date and interest', () => {
     const out = applyGoalToState(base, goal)
-    expect(out.target).toMatchObject({ university: 'จุฬา', faculty: 'วิศวกรรมศาสตร์', major: 'วิศวกรรมคอม', examDate: '2027-01-10', interest: 'x' })
+    expect(out.target).toMatchObject({ university: 'จุฬา', faculty: 'วิศวกรรมศาสตร์', major: 'วิศวกรรมคอม', examDate: '2027-01-30', interest: 'x' })   // TGAT/TPAT3 → official first exam day
     expect(out.scores.map((s) => s.subject)).toEqual(['TGAT1', 'TPAT3'])
+  })
+  it('keeps a hand-set exam date; goal scores carry their own exam day', () => {
+    const out = applyGoalToState({ target: { ...base.target, examDate: '2027-02-20', examDateManual: true }, scores: [] }, goal)
+    expect(out.target.examDate).toBe('2027-02-20')
+    const auto = applyGoalToState(base, makeGoal({ reqs: [{ subject: 'A-Level ฟิสิกส์', needed: 50 }, { subject: 'TGAT', needed: 50 }] }))
+    expect(auto.scores.map((x) => x.examDate)).toEqual(['2027-03-13', '2027-01-30'])
+    expect(auto.target.examDate).toBe('2027-01-30')
   })
   it('switching goal replaces goal scores, keeps manual ones and my scores by subject', () => {
     const first = applyGoalToState({ ...base, scores: [{ id: 'm', subject: 'ภาษาไทย', needed: 50, mine: 40 }] }, goal)

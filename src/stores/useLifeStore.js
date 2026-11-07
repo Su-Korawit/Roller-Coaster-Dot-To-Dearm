@@ -8,7 +8,7 @@ import { MAX_GOALS, applyGoalToState, goalKey } from '../os/goalLogic'
 // users/{uid}.os (see syncManager). `ownerUid` stops one account's data showing up for another
 // on a shared device: adoptUser() clears everything when a different user signs in.
 const EMPTY = () => ({
-  target: { university: '', faculty: '', major: '', interest: '', examDate: '' },
+  target: { university: '', faculty: '', major: '', interest: '', examDate: '', examDateManual: false },
   hoursPerDay: 2,
   goals: [],          // up to MAX_GOALS programmes, see goalLogic.makeGoal (the first/primary drives target + scores)
   primaryGoalId: null,

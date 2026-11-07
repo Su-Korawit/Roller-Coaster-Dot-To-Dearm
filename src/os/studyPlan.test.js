@@ -43,7 +43,28 @@ describe('buildStudyPlan', () => {
     expect(buildStudyPlan({ today: '2027-01-01', examDate: '2027-01-10', scores: [] })).toEqual([])
   })
   it('caps very long plans', () => {
-    expect(buildStudyPlan({ today: '2027-01-01', examDate: '2028-12-31', scores })).toHaveLength(120)
+    expect(buildStudyPlan({ today: '2027-01-01', examDate: '2028-12-31', scores })).toHaveLength(200)
+  })
+  it('plans each subject only up to its own exam day', () => {
+    const mixed = [
+      { id: '1', subject: 'TGAT', needed: 60, mine: null, examDate: '2027-01-03' },
+      { id: '2', subject: 'A-Level คณิต', needed: 60, mine: null, examDate: '2027-01-06' },
+    ]
+    const days = buildStudyPlan({ today: '2027-01-01', examDate: '2027-01-03', scores: mixed })
+    expect(days).toHaveLength(6)   // runs to the later exam
+    const subjectsOn = (i) => days[i].tasks.map((t) => t.subject)
+    expect(subjectsOn(0)).toEqual(expect.arrayContaining(['TGAT', 'A-Level คณิต']))
+    expect(subjectsOn(2)).toContain('TGAT')                 // TGAT exam day itself is still studied
+    for (const i of [3, 4, 5]) expect(subjectsOn(i)).toEqual(['A-Level คณิต'])
+  })
+  it('leaves out subjects whose exam day has passed', () => {
+    const mixed = [
+      { id: '1', subject: 'TGAT', needed: 60, mine: null, examDate: '2026-12-01' },
+      { id: '2', subject: 'A-Level คณิต', needed: 60, mine: null, examDate: '2027-01-02' },
+    ]
+    const days = buildStudyPlan({ today: '2027-01-01', examDate: '2027-01-02', scores: mixed })
+    expect(days.flatMap((d) => d.tasks.map((t) => t.subject))).not.toContain('TGAT')
+    expect(buildStudyPlan({ today: '2027-01-01', scores: [{ subject: 'X', needed: 1 }] })).toEqual([])
   })
   it('works with a single subject', () => {
     const one = buildStudyPlan({ today: '2027-01-01', examDate: '2027-01-02', scores: [scores[0]], hoursPerDay: 1 })

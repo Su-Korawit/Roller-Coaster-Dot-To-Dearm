@@ -1,5 +1,6 @@
 import { newId } from './lifeLogic'
 import { UNIVERSITY_ROWS } from '../data/universityApps'
+import { examDateForSubject, firstExamDate } from '../data/tcasCalendar'
 
 // Goal app logic (pure): turning a MyTCAS / TCAS Starter programme into a goal, and keeping the
 // student's score list in step with the primary goal.
@@ -64,9 +65,16 @@ export function applyGoalToState({ target, scores }, goal) {
   const have = new Set(manual.map((s) => s.subject))
   const fromGoal = goal.reqs
     .filter((r) => !have.has(r.subject))
-    .map((r) => ({ id: newId(), subject: r.subject, needed: r.needed, mine: mineBySubject.get(r.subject) ?? null, fromGoal: true, estimated: !!r.estimated, weight: r.weight }))
+    .map((r) => ({ id: newId(), subject: r.subject, needed: r.needed, mine: mineBySubject.get(r.subject) ?? null, fromGoal: true, estimated: !!r.estimated, weight: r.weight, examDate: examDateForSubject(r.subject) }))
   return {
-    target: { ...target, university: goal.university, faculty: goal.faculty, major: goal.program },
+    // The exam day comes from the official TCAS calendar (first exam among the goal's subjects) unless the student set it by hand.
+    target: {
+      ...target,
+      university: goal.university,
+      faculty: goal.faculty,
+      major: goal.program,
+      examDate: target.examDateManual && target.examDate ? target.examDate : firstExamDate(goal.reqs),
+    },
     scores: [...manual, ...fromGoal],
   }
 }

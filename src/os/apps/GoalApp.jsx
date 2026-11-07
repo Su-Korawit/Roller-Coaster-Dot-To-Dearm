@@ -9,6 +9,7 @@ import { AppTile } from '../AppIcon'
 import InstallButton from '../InstallButton'
 import { MAX_GOALS, goalSubtitle, goalTitle, makeGoal, universityAppId } from '../goalLogic'
 import { generateStudyPlan } from '../../services/aiStudyPlan'
+import { TCAS_CALENDAR, firstExamDate, formatThaiRange } from '../../data/tcasCalendar'
 import ProgramPicker from '../goal/ProgramPicker'
 import StarterPicker from '../goal/StarterPicker'
 import Advisor from '../goal/Advisor'
@@ -107,12 +108,55 @@ function Scores() {
   )
 }
 
+// Official TCAS calendar so the student never has to look dates up. Exams that match the primary
+// goal's subjects are highlighted; every date comes from src/data/tcasCalendar.js.
+function CalendarCard({ scores }) {
+  const subjects = scores.map((x) => x.subject)
+  const mine = (e) => subjects.some((name) => e.match.test(name))
+  return (
+    <section className="px-card p-4 flex flex-col gap-3" aria-label={`ปฏิทิน ${TCAS_CALENDAR.label}`}>
+      <div>
+        <h3 className="thai-font font-bold">ปฏิทิน {TCAS_CALENDAR.label}</h3>
+        <p className="thai-font text-xs text-ink-soft">วันสำคัญของทุกรอบ ใส่ให้อัตโนมัติ ไม่ต้องหาเอง</p>
+      </div>
+      <ul className="flex flex-col gap-2">
+        {TCAS_CALENDAR.exams.map((e) => {
+          const left = daysUntil(e.start)
+          return (
+            <li key={e.id} className={`flex items-center gap-3 rounded-ui px-3 py-2 ${mine(e) ? 'bg-brand-soft' : 'bg-mist'}`}>
+              <span className="min-w-0 flex-1">
+                <span className="block thai-font text-sm font-semibold">{e.label}{mine(e) ? ' · วิชาของคุณ' : ''}</span>
+                <span className="block thai-font text-xs text-ink-soft">{formatThaiRange(e.start, e.end)}</span>
+              </span>
+              <span className="thai-font text-xs font-bold text-brand-strong shrink-0">{left == null ? '' : left > 0 ? `อีก ${left} วัน` : left === 0 ? 'วันนี้' : 'ผ่านแล้ว'}</span>
+            </li>
+          )
+        })}
+      </ul>
+      <ul className="flex flex-col gap-1.5 border-t-2 border-hairline pt-3">
+        {TCAS_CALENDAR.rounds.map((r) => (
+          <li key={r.round} className="thai-font text-xs">
+            <span className="font-bold text-sm">รอบ {r.round} {r.label}</span>
+            <span className="block text-ink-soft">
+              {[r.start ? `รับสมัคร ${formatThaiRange(r.start, r.end)}` : '', r.result ? `ประกาศผล ${formatThaiRange(r.result)}` : ''].filter(Boolean).join(' · ')}
+              {r.note ? `${r.start || r.result ? ' · ' : ''}${r.note}` : ''}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="thai-font text-xs text-ink-soft">รวบรวมเมื่อ 7 พ.ย. 2569 จากปฏิทิน ทปอ. ที่เว็บข่าวหลายแห่งรายงานตรงกัน ตรวจประกาศล่าสุดที่ mytcas.com ก่อนสมัครจริง</p>
+    </section>
+  )
+}
+
 function PlanTab({ onOpenApp }) {
   const { target, scores, hoursPerDay, setTarget, setHoursPerDay, applyPlan } = useLifeStore()
   const [planning, setPlanning] = useState(false)
   const [planMsg, setPlanMsg] = useState('')
+  const [custom, setCustom] = useState(false)
   const left = daysUntil(target.examDate)
-  const canPlan = left != null && left >= 0 && scores.length > 0
+  // Each subject is planned up to its own exam day (see studyPlan); at least one must still be ahead.
+  const canPlan = scores.some((x) => { const n = daysUntil(x.examDate || target.examDate); return n != null && n >= 0 })
 
   async function plan() {
     setPlanning(true)
@@ -132,29 +176,42 @@ function PlanTab({ onOpenApp }) {
   }
 
   return (
-    <section className="px-card p-4 flex flex-col gap-3" aria-label="วางแผน">
-      <h3 className="thai-font font-bold">วางแผนอ่านหนังสือ</h3>
-      <label className="flex flex-col gap-1 thai-font text-xs text-ink-soft">
-        วันสอบ (TCAS รอบ 3)
-        <input type="date" value={target.examDate} onChange={(e) => setTarget({ examDate: e.target.value })} className="px-input h-10 px-3 text-sm text-ink bg-paper" />
-      </label>
-      {left != null && (
-        <p className="thai-font text-sm flex items-center gap-2 text-brand-strong font-semibold">
-          <CalendarClock size={16} aria-hidden="true" />
-          {left > 0 ? `เหลืออีก ${left} วัน` : left === 0 ? 'วันสอบคือวันนี้ สู้ๆ' : 'ผ่านวันสอบแล้ว'}
-        </p>
-      )}
-      <label className="flex flex-col gap-1 thai-font text-xs text-ink-soft">
-        อ่านหนังสือวันละกี่ชั่วโมง
-        <input type="number" min="0.5" max="12" step="0.5" value={hoursPerDay} onChange={(e) => setHoursPerDay(e.target.value)} className="px-input h-10 px-3 text-sm text-ink bg-paper w-28" />
-      </label>
-      <button type="button" onClick={plan} disabled={!canPlan || planning} className="px-btn py-2.5 thai-font text-sm font-bold bg-brand-strong text-white disabled:opacity-50 flex items-center justify-center gap-2">
-        <Sparkles size={16} aria-hidden="true" /> {planning ? 'พี่กำลังวางแผน...' : 'วางแผนด้วย AI'}
-      </button>
-      {!canPlan && <p className="thai-font text-xs text-ink-soft">ใส่วันสอบที่ยังมาไม่ถึง และมีวิชาอย่างน้อย 1 วิชา (มาจากเป้าหมายอัตโนมัติ)</p>}
-      {planMsg && <p role="alert" className="thai-font text-sm text-zone-health-deep">{planMsg}</p>}
-      <p className="thai-font text-xs text-ink-soft">ข้อมูลบันทึกในบัญชีของคุณอัตโนมัติ</p>
-    </section>
+    <div className="flex flex-col gap-4">
+      <CalendarCard scores={scores} />
+      <section className="px-card p-4 flex flex-col gap-3" aria-label="วางแผน">
+        <h3 className="thai-font font-bold">วางแผนอ่านหนังสือ</h3>
+        {left != null && (
+          <p className="thai-font text-sm flex items-center gap-2 text-brand-strong font-semibold">
+            <CalendarClock size={16} aria-hidden="true" />
+            {left > 0 ? `เหลืออีก ${left} วันถึงวันสอบวิชาแรก (${formatThaiRange(target.examDate)})` : left === 0 ? 'วันสอบคือวันนี้ สู้ๆ' : 'วันสอบวิชาแรกผ่านไปแล้ว'}
+          </p>
+        )}
+        <p className="thai-font text-xs text-ink-soft">พี่จัดแผนให้แต่ละวิชาอ่านถึงวันสอบของวิชานั้น เช่น TGAT ถึง 30 ม.ค. ส่วน A-Level ต่อไปถึง 13 มี.ค.</p>
+        <label className="flex flex-col gap-1 thai-font text-xs text-ink-soft">
+          อ่านหนังสือวันละกี่ชั่วโมง
+          <input type="number" min="0.5" max="12" step="0.5" value={hoursPerDay} onChange={(e) => setHoursPerDay(e.target.value)} className="px-input h-10 px-3 text-sm text-ink bg-paper w-28" />
+        </label>
+        <button type="button" onClick={plan} disabled={!canPlan || planning} className="px-btn py-2.5 thai-font text-sm font-bold bg-brand-strong text-white disabled:opacity-50 flex items-center justify-center gap-2">
+          <Sparkles size={16} aria-hidden="true" /> {planning ? 'พี่กำลังวางแผน...' : 'วางแผนด้วย AI'}
+        </button>
+        {!canPlan && <p className="thai-font text-xs text-ink-soft">เลือกเป้าหมายก่อน และต้องมีวิชาที่ยังไม่ถึงวันสอบ</p>}
+        {planMsg && <p role="alert" className="thai-font text-sm text-zone-health-deep">{planMsg}</p>}
+        <div className="border-t-2 border-hairline pt-3 flex flex-col gap-2">
+          {custom ? (
+            <>
+              <label className="flex flex-col gap-1 thai-font text-xs text-ink-soft">
+                วันสอบที่ตั้งเอง (ใช้แทนปฏิทินกับทุกวิชา)
+                <input type="date" value={target.examDate} onChange={(e) => setTarget({ examDate: e.target.value, examDateManual: true })} className="px-input h-10 px-3 text-sm text-ink bg-paper" />
+              </label>
+              <button type="button" onClick={() => { setCustom(false); setTarget({ examDateManual: false, examDate: firstExamDate(scores) }) }} className="self-start thai-font text-xs font-semibold text-brand-strong underline">กลับไปใช้ปฏิทิน TCAS</button>
+            </>
+          ) : (
+            <button type="button" onClick={() => setCustom(true)} className="self-start thai-font text-xs font-semibold text-ink-soft underline">ตั้งวันสอบเอง (ไม่จำเป็น)</button>
+          )}
+        </div>
+        <p className="thai-font text-xs text-ink-soft">ข้อมูลบันทึกในบัญชีของคุณอัตโนมัติ</p>
+      </section>
+    </div>
   )
 }
 
@@ -162,7 +219,7 @@ function PlanTab({ onOpenApp }) {
 // Adding a goal: search MyTCAS (official), or let the advisor narrow it down; if MyTCAS has no match
 // the picker offers TCAS Starter (Dek-D) as an unofficial fallback.
 export default function GoalApp({ onOpenApp }) {
-  const { goals, primaryGoalId, addGoal, removeGoal, setPrimaryGoal, target } = useLifeStore()
+  const { goals, primaryGoalId, addGoal, removeGoal, setPrimaryGoal } = useLifeStore()
   const [tab, setTab] = useState('goals')
   const [flow, setFlow] = useState(null)   // null | { type: 'choose' | 'search' | 'advisor' | 'starter', initial? }
   const [msg, setMsg] = useState('')
@@ -171,7 +228,7 @@ export default function GoalApp({ onOpenApp }) {
     const res = addGoal(makeGoal(input))
     setFlow(null)
     setTab('goals')
-    setMsg(res.ok ? `เพิ่ม "${input.program}" เป็นเป้าหมายแล้ว` : res.reason === 'duplicate' ? 'เป้าหมายนี้มีอยู่แล้ว' : `เพิ่มได้สูงสุด ${MAX_GOALS} เป้าหมาย ลบอันเดิมก่อน`)
+    setMsg(res.ok ? '' : res.reason === 'duplicate' ? 'เป้าหมายนี้มีอยู่แล้ว' : `เพิ่มได้สูงสุด ${MAX_GOALS} เป้าหมาย ลบอันเดิมก่อน`)
   }
 
   const full = goals.length >= MAX_GOALS
@@ -211,11 +268,6 @@ export default function GoalApp({ onOpenApp }) {
     ) : (
       <div className="flex flex-col gap-4">
         {msg && <p role="status" className="px-card p-3 thai-font text-sm font-semibold bg-zone-earth-soft text-zone-earth-deep">{msg}</p>}
-        {!target.examDate && (
-          <button type="button" onClick={() => setTab('plan')} className="px-card p-3 flex items-center gap-2 text-left thai-font text-sm bg-zone-biz-soft">
-            <CalendarClock size={18} aria-hidden="true" /> ยังไม่ได้ตั้งวันสอบ กดเพื่อตั้งก่อนให้พี่วางแผน
-          </button>
-        )}
         <ul className="flex flex-col gap-3" aria-label="เป้าหมายของฉัน">
           {goals.map((g, i) => <GoalCard key={g.id} goal={g} index={i} primary={g.id === primaryGoalId} onPrimary={setPrimaryGoal} onRemove={removeGoal} />)}
         </ul>

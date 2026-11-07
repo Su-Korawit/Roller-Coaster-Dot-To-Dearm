@@ -2,6 +2,7 @@ import { Suspense, useEffect, useRef, useState } from 'react'
 import { X, Minus, Maximize2, Minimize2 } from 'lucide-react'
 import { Z_PANEL } from '../constants/zIndex'
 import AppIntro from './intro/AppIntro'
+import { AppTile } from './AppIcon'
 import { shouldPlayIntro } from './intro/introLogic'
 import { TASKBAR_H, centredPos, clampPos, windowSize } from './windowsLogic'
 
@@ -73,12 +74,11 @@ export default function AppWindow({ win, index, isTop, desktop, onClose, onMinim
         onDoubleClick={(e) => { if (desktop && !e.target.closest('button')) onMaximize(win.id) }}
         className={`flex items-center gap-2 px-3 h-11 shrink-0 border-b-2 border-hairline bg-mist os-no-select ${desktop && !maximized ? 'cursor-grab active:cursor-grabbing touch-none' : ''}`}
       >
-        {Icon && (
-          <span className="w-6 h-6 rounded-md flex items-center justify-center text-white" style={{ background: app.tone }}>
-            <Icon size={14} />
-          </span>
-        )}
-        <h2 className="thai-font font-bold text-sm flex-1 truncate">{app.name}</h2>
+        {(app.logo || Icon) && <AppTile app={app} size={30} />}
+        <div className="min-w-0 flex-1 leading-tight">
+          <h2 className="thai-font font-bold text-sm truncate">{app.name}</h2>
+          {app.tagline && <p className="thai-font text-xs text-ink-soft truncate hidden sm:block">{app.tagline}</p>}
+        </div>
         <button type="button" onClick={() => onMinimize(win.id)} aria-label={`ย่อ ${app.name}`} className={btn}>
           <Minus size={18} />
         </button>
