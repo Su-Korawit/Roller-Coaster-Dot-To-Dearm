@@ -71,9 +71,6 @@ export default function AppSplash({ app, onDone }) {
         </p>
       </div>
 
-      {/* Credit (art is AI-generated) */}
-      <p className="hidden md:block absolute right-5 bottom-4 thai-font text-xs opacity-70">ภาพปก: สร้างด้วย AI (ChatGPT)</p>
-
       {/* Thin progress bar on the bottom edge */}
       <div className="absolute inset-x-0 bottom-0 h-1.5 bg-white/15" aria-hidden="true">
         <span className="block h-full bg-white" style={{ width: `${pct}%` }} />

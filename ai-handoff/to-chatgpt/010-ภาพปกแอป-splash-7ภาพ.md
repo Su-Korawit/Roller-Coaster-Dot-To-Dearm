@@ -25,4 +25,4 @@
 ## ไฟล์และที่วาง
 - ผลลัพธ์จาก ChatGPT: `ai-handoff/from-chatgpt/010-splash-{goal,habit,reading,community,secretary,report,store}.png` (1536x1024)
 - Claude Code แปลงเป็น `public/assets/os/splash/<app>.webp` (1440x960, ~110-200KB) และอ้างใน `splash` ของ `src/os/apps.js`
-- ในภาพจะมีเครดิต "ภาพปก: สร้างด้วย AI (ChatGPT)" ที่มุมล่างขวาของหน้า splash
+- หน้า splash ไม่แสดงเครดิตบนจอ (เจ้าของโปรเจกต์สั่งถอดออก)
