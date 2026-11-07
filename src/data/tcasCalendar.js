@@ -19,10 +19,36 @@ export const TCAS_CALENDAR = {
   ],
 }
 
+// Day (and half-day) of individual subjects inside the exam windows above. Found on ONE write-up only
+// (OnDemand, "เลือก 5 สนามสอบ TGAT/TPAT A-Level (TCAS70)", checked 2026-11-07), so `confirmed: false`
+// and the UI says "รอยืนยัน". Subjects that are missing here (A-Level คณิต 1 / เคมี / อังกฤษ ...) fall back
+// to the first day of their window until the official timetable is checked on mytcas.com.
+export const SUBJECT_EXAMS = [
+  { match: /^TPAT\s?3/i, date: '2027-01-30', session: 'เช้า' },
+  { match: /^TGAT/i, date: '2027-01-30', session: 'บ่าย' },
+  { match: /^TPAT\s?5/i, date: '2027-01-31', session: 'เช้า' },
+  { match: /^TPAT\s?2/i, date: '2027-01-31', session: 'บ่าย' },
+  { match: /^TPAT\s?4/i, date: '2027-02-01', session: 'เช้า' },
+  { match: /^(A[\s-]?LEVEL|A_LV)\s*ชีว/i, date: '2027-03-13', session: 'เช้า' },
+  { match: /^(A[\s-]?LEVEL|A_LV)\s*ฟิสิกส์/i, date: '2027-03-13', session: 'สาย' },
+  { match: /^(A[\s-]?LEVEL|A_LV)\s*ภาษาไทย/i, date: '2027-03-13', session: 'บ่าย' },
+  { match: /^(A[\s-]?LEVEL|A_LV)\s*สังคม/i, date: '2027-03-13', session: 'บ่าย' },
+  { match: /^(A[\s-]?LEVEL|A_LV)\s*คณิตศาสตร์ประยุกต์\s*2/i, date: '2027-03-15', session: 'เช้า' },
+]
+
+// { date, session, confirmed, window } for a subject label, or null if it is not an exam we know.
+// `window` is the whole exam period it belongs to; `session` is only set when the day is known per subject.
+export function subjectExam(subject = '') {
+  const s = String(subject).trim()
+  const win = TCAS_CALENDAR.exams.find((e) => e.match.test(s))
+  if (!win) return null
+  const one = SUBJECT_EXAMS.find((e) => e.match.test(s))
+  return { date: one?.date ?? win.start, session: one?.session ?? null, confirmed: false, exact: !!one, window: win }
+}
+
 // Exam day of a subject label ("TGAT1", "TPAT3", "A-Level คณิตศาสตร์ 1"), or null if unknown.
 export function examDateForSubject(subject = '') {
-  const s = String(subject).trim()
-  return TCAS_CALENDAR.exams.find((e) => e.match.test(s))?.start ?? null
+  return subjectExam(subject)?.date ?? null
 }
 
 // First exam day among a goal's subjects (the date everything must be ready for first). Falls back

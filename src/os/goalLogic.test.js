@@ -101,3 +101,33 @@ describe('planInput (dates for the planner and countdowns)', () => {
     expect(planInput({ examDate: '', examDateManual: true }, []).examDate).toBe('')
   })
 })
+
+describe('moveGoal', () => {
+  it('moves a goal to the target slot and ignores bad ids', async () => {
+    const { moveGoal } = await import('./goalLogic')
+    const g = [{ id: 'a' }, { id: 'b' }, { id: 'c' }]
+    expect(moveGoal(g, 'c', 'a').map((x) => x.id)).toEqual(['c', 'a', 'b'])
+    expect(moveGoal(g, 'a', 'c').map((x) => x.id)).toEqual(['b', 'c', 'a'])
+    expect(moveGoal(g, 'a', 'a')).toBe(g)
+    expect(moveGoal(g, 'x', 'a')).toBe(g)
+  })
+})
+
+describe('subjectReadiness', () => {
+  const task = (date, minutes, done) => ({ auto: true, subject: 'TGAT1', date, minutes, done })
+  it('none without a plan', async () => {
+    const { subjectReadiness } = await import('./goalLogic')
+    expect(subjectReadiness({ subject: 'TGAT1', tasks: [], examDate: '2027-01-30', today: '2027-01-01' }).status).toBe('none')
+  })
+  it('compares done share with elapsed time', async () => {
+    const { subjectReadiness } = await import('./goalLogic')
+    const tasks = [task('2027-01-01', 60, true), task('2027-01-10', 60, false)]
+    const r = subjectReadiness({ subject: 'TGAT1', tasks, examDate: '2027-01-31', today: '2027-01-16' })
+    expect(r.done).toBe(0.5)
+    expect(r.time).toBeCloseTo(0.5, 1)
+    expect(r.status).toBe('ahead')
+    const late = subjectReadiness({ subject: 'TGAT1', tasks, examDate: '2027-01-31', today: '2027-01-26' })
+    expect(late.status).toBe('behind')
+    expect(subjectReadiness({ subject: 'TGAT1', tasks, examDate: '2027-01-31', today: '2027-02-02' }).status).toBe('passed')
+  })
+})

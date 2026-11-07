@@ -33,10 +33,14 @@ export function AppTile({ app, size = 60 }) {
 
 const EDGE_PX = 56
 
-// Home-screen icon. Tap → open. Right-click, or hold and release without moving → details.
-// Drag (mouse: just move; touch: hold first) → pick the icon up and drop it on another icon to
-// reorder (built-in apps stay put). Near the left/right edge it asks Home to flip the page.
-export default function AppIcon({ app, onOpen, onLongPress, dark = false, draggable = false, onMove, onEdge, getScrollLeft }) {
+// Home-screen icon (app, folder or file). Tap → open. Right-click, or hold and release without
+// moving → details. Drag (mouse: just move; touch: hold first) → pick it up and drop it:
+//   on another icon     → take its slot (touch: on the middle of an app → make a folder of the two)
+//   on a folder         → an app joins the folder
+//   on empty Home space → goes to the end
+// Near the left/right edge it asks Home to flip the page. `token` identifies the icon in the layout
+// (defaults to the app id); `renderTile` replaces the square picture (folders show a mini grid).
+export default function AppIcon({ app, token = app.id, renderTile, onOpen, onLongPress, dark = false, draggable = false, touch = false, onDrop, onEdge, getScrollLeft }) {
   const timer = useRef(null)
   const start = useRef(null)
   const fired = useRef(false)      // a hold or drag happened: swallow the click that follows
@@ -98,10 +102,15 @@ export default function AppIcon({ app, onOpen, onLongPress, dark = false, dragga
     setDrag(null)
     if (!dropped) return
     if (!st?.moved) { onLongPress(app); return }      // held without moving → details
-    const under = document.elementsFromPoint(e.clientX, e.clientY)
-      .map((el) => el.closest?.('[data-app-id]'))
-      .find((el) => el && el.dataset.appId !== app.id)
-    if (under && under.dataset.draggable === '1') onMove?.(app.id, under.dataset.appId)
+    const stack = document.elementsFromPoint(e.clientX, e.clientY)
+    const under = stack.map((el) => el.closest?.('[data-token]')).find((el) => el && el.dataset.token !== token)
+    if (under && under.dataset.draggable === '1') {
+      const r = under.getBoundingClientRect()
+      const middle = Math.abs(e.clientX - (r.left + r.width / 2)) < r.width * 0.25 && Math.abs(e.clientY - (r.top + r.height / 2)) < r.height * 0.25
+      onDrop?.(token, under.dataset.token, touch && middle ? 'folder' : 'reorder')
+    } else if (!under && stack.some((el) => el.dataset?.osDropArea != null)) {
+      onDrop?.(token, null, 'reorder')
+    }
   }
 
   function onClick() {
@@ -113,7 +122,7 @@ export default function AppIcon({ app, onOpen, onLongPress, dark = false, dragga
     <button
       type="button"
       data-os-icon
-      data-app-id={app.id}
+      data-token={token}
       data-draggable={draggable ? '1' : '0'}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -127,7 +136,7 @@ export default function AppIcon({ app, onOpen, onLongPress, dark = false, dragga
       className={`os-no-select flex flex-col items-center gap-1.5 p-1 rounded-ui focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand
         ${drag ? 'cursor-grabbing' : 'active:scale-95 transition-transform'}`}
     >
-      <AppTile app={app} />
+      {renderTile ? renderTile() : <AppTile app={app} />}
       <span className={`thai-font text-[12px] leading-tight text-center max-w-full truncate ${dark ? 'text-white' : 'text-ink'}`}>
         {app.name}
       </span>

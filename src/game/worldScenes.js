@@ -45,7 +45,9 @@ const CRITTER_SHEETS = {
   chicken: { key: 'critter_chicken', file: 'Free_Chicken_Sprites.png', frame: 16, idle: [0, 1], walk: [4, 5, 6], speed: 9 },
   cow:     { key: 'critter_cow',     file: 'Free_Cow_Sprites.png',     frame: 32, idle: [0],    walk: [0, 1, 2], speed: 6 },
 }
-export const getZoom = (w) => w < 768 ? 1.5 : w < 1024 ? 3 : 2.5
+// Default camera zoom from the canvas width. It used to jump to 3 (768-1023 px) and 2.5 (wider), which
+// showed a few giant tiles on tablets and in the OS window; now it grows smoothly and stays under 2.2.
+export const getZoom = (w) => (w < 768 ? 1.5 : Math.min(2.2, Math.max(1.5, w / 520)))
 
 // ── Asset helpers ─────────────────────────────────────────────────────────────
 
@@ -610,7 +612,7 @@ export class MapScene extends Phaser.Scene {
 
     this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY) => {
       const current = this.cameras.main.zoom
-      const next = Phaser.Math.Clamp(current + (deltaY > 0 ? -0.1 : 0.1), 1.0, 3.0)
+      const next = Phaser.Math.Clamp(current + (deltaY > 0 ? -0.1 : 0.1), 0.8, 3.0)
       this.cameras.main.setZoom(next)
       this.game.events.emit('zoomChanged', next)
     })
@@ -698,7 +700,7 @@ export class MapScene extends Phaser.Scene {
       if (this.lastPinchDist !== null) {
         const next = Phaser.Math.Clamp(
           this.cameras.main.zoom + (dist - this.lastPinchDist) * 0.005,
-          1.0, 3.0
+          0.8, 3.0
         )
         this.cameras.main.setZoom(next)
         this.game.events.emit('zoomChanged', next)

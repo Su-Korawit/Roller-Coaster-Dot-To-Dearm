@@ -7,6 +7,9 @@ import { useOsStore } from '../../stores/useOsStore'
 import StoreAppDetail from './StoreAppDetail'
 import StoreBanners from './StoreBanners'
 
+// Long sections show 8 apps with a "see all" button.
+const COLLAPSED = new Set(['university', 'learn'])
+
 // Store: search, banners, catalogue by category, install with a download bar. Creating/selling apps is the next step (teaser only).
 export default function StoreApp({ onOpenApp }) {
   const [query, setQuery] = useState('')
@@ -94,10 +97,10 @@ export default function StoreApp({ onOpenApp }) {
           groupByCategory(results).map((g) => (
             <div key={g.id} className="flex flex-col gap-3">
               <h3 className="thai-font font-bold text-sm">{g.label}</h3>
-              <ul className={gridClass}>{(g.id === 'university' ? g.apps.slice(0, 8) : g.apps).map(renderApp)}</ul>
-              {g.id === 'university' && g.apps.length > 8 && (
-                <button type="button" onClick={() => setCategory('university')} className="self-center px-btn px-4 py-1.5 thai-font text-xs font-bold bg-paper">
-                  ดูมหาวิทยาลัยทั้งหมด ({g.apps.length})
+              <ul className={gridClass}>{(COLLAPSED.has(g.id) ? g.apps.slice(0, 8) : g.apps).map(renderApp)}</ul>
+              {COLLAPSED.has(g.id) && g.apps.length > 8 && (
+                <button type="button" onClick={() => setCategory(g.id)} className="self-center px-btn px-4 py-1.5 thai-font text-xs font-bold bg-paper">
+                  ดู{g.label}ทั้งหมด ({g.apps.length})
                 </button>
               )}
             </div>

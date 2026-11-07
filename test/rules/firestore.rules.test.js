@@ -762,3 +762,44 @@ describe('osRequests / osRequestVotes rules (Report app)', () => {
     await assertSucceeds(deleteDoc(doc(alice, 'osRequestVotes/r1_alice')))
   })
 })
+
+describe('osPosts / osPostLikes rules (Community feed)', () => {
+  const post = (over = {}) => ({ uid: 'alice', name: 'Alice', text: 'สวัสดี', imageUrl: '', createdAt: serverTimestamp(), ...over })
+
+  it('a signed-in user posts as themselves; everyone signed in reads', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(setDoc(doc(alice, 'osPosts/p1'), post()))
+    await assertSucceeds(setDoc(doc(alice, 'osPosts/p2'), post({ imageUrl: 'https://x.com/a.png' })))
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    await assertSucceeds(getDoc(doc(bob, 'osPosts/p1')))
+    await assertFails(getDoc(doc(testEnv.unauthenticatedContext().firestore(), 'osPosts/p1')))
+  })
+
+  it('BLOCKS empty/long text, non-https image, foreign uid and edits', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertFails(setDoc(doc(alice, 'osPosts/p3'), post({ text: '' })))
+    await assertFails(setDoc(doc(alice, 'osPosts/p3'), post({ text: 'x'.repeat(501) })))
+    await assertFails(setDoc(doc(alice, 'osPosts/p3'), post({ imageUrl: 'http://x.com/a.png' })))
+    await assertFails(setDoc(doc(alice, 'osPosts/p3'), post({ uid: 'bob' })))
+    await assertSucceeds(setDoc(doc(alice, 'osPosts/p4'), post()))
+    await assertFails(updateDoc(doc(alice, 'osPosts/p4'), { text: 'edited' }))
+  })
+
+  it('only the author or a super-admin deletes a post', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => { await setDoc(doc(ctx.firestore(), 'osPosts/p5'), { uid: 'alice', name: 'A', text: 'x', imageUrl: '' }) })
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    await assertFails(deleteDoc(doc(bob, 'osPosts/p5')))
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(deleteDoc(doc(alice, 'osPosts/p5')))
+  })
+
+  it('likes: own id only (postId_uid), deletable by the liker only', async () => {
+    const alice = testEnv.authenticatedContext('alice').firestore()
+    await assertSucceeds(setDoc(doc(alice, 'osPostLikes/p1_alice'), { postId: 'p1', uid: 'alice' }))
+    await assertFails(setDoc(doc(alice, 'osPostLikes/p1_bob'), { postId: 'p1', uid: 'bob' }))
+    await assertFails(setDoc(doc(alice, 'osPostLikes/other_alice'), { postId: 'p1', uid: 'alice' }))
+    const bob = testEnv.authenticatedContext('bob').firestore()
+    await assertFails(deleteDoc(doc(bob, 'osPostLikes/p1_alice')))
+    await assertSucceeds(deleteDoc(doc(alice, 'osPostLikes/p1_alice')))
+  })
+})

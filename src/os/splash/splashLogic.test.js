@@ -6,7 +6,7 @@ import { OS_APPS } from '../apps'
 describe('splash screen', () => {
   it('only apps with art get one, and the art file exists', () => {
     const withArt = OS_APPS.filter(hasSplash)
-    expect(withArt.map((a) => a.id).sort()).toEqual(['community', 'goal', 'habit', 'reading', 'report', 'secretary', 'store'])
+    expect(withArt.map((a) => a.id).sort()).toEqual(['block', 'calendar', 'chat', 'community', 'goal', 'habit', 'mood', 'openhouse', 'reading', 'report', 'secretary', 'store'])
     for (const app of withArt) expect(fs.existsSync(`public${app.splash}`)).toBe(true)
     expect(hasSplash(OS_APPS.find((a) => a.id === 'link-dekd'))).toBe(false)   // websites open directly
     expect(hasSplash(null)).toBe(false)

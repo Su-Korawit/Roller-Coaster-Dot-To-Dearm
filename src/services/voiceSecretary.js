@@ -51,3 +51,12 @@ export function buildStudyPlan(plans) {
     })
     .join('; ')
 }
+
+/** Same, from the goals picked in the OS Goal app (rank = order, max 3). */
+export function buildOsStudyPlan(goals) {
+  return (Array.isArray(goals) ? goals : [])
+    .slice(0, 3)
+    .map((g) => [g.program || g.faculty, g.university].filter(Boolean).join(' '))
+    .filter(Boolean)
+    .join('; ')
+}

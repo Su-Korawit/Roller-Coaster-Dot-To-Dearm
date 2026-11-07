@@ -85,9 +85,22 @@ describe('web-call', () => {
     expect(r.body).toMatchObject({ ok: true, mock: false, access_token: 'tok_real' })
     const arg = retell.createWebCall.mock.calls[0][0]
     expect(arg.agentId).toBe('agent_x')
-    expect(arg.vars).toEqual({ student_name: 'มะลิ', study_plan: 'แผน' })
+    expect(arg.vars).toMatchObject({ student_name: 'มะลิ', study_plan: 'แผน', call_mode: 'inbound_support', secretary_id: 'jaidee', secretary_name: 'พี่ใจดี' })
+    expect(arg.vars.call_goal).toContain('น้องเป็นฝ่ายโทรหาพี่เอง')
     expect(arg.metadata.uid).toBe('u1') // from token, not from the body
     expect(JSON.stringify(r.body)).not.toContain('"k"')
+  })
+
+  it('web call: the chosen secretary and the plan read on the SERVER (not the client) reach the agent', async () => {
+    const { call, retell, store } = setup({ RETELL_API_KEY: 'k', RETELL_AGENT_ID: 'agent_x' })
+    store.osData.set('u1', { target: { faculty: 'วิศวะ', examDate: '2026-11-16' }, tasks: [{ date: '2026-11-06', text: 'ทำข้อสอบฟิสิกส์', done: false }] })
+    await call('consent', { body: adult })
+    await call('web-call', { body: { student_name: 'มะลิ', secretary_id: 'mali', student_context: 'ข้อมูลปลอมจาก client' } })
+    const v = retell.createWebCall.mock.calls[0][0].vars
+    expect(v.secretary_name).toBe('พี่มะลิ')
+    expect(v.student_context).toContain('วิศวะ')
+    expect(v.student_context).toContain('ทำข้อสอบฟิสิกส์')
+    expect(v.student_context).not.toContain('ปลอม')
   })
 
   it('upstream failure refunds the reservation', async () => {
@@ -190,6 +203,8 @@ describe('dial-due (outbound)', () => {
     expect(arg.toNumber).toBe('+66899999999')
     expect(arg.fromNumber).toBe('+13192641997')
     expect(arg.vars.student_name).toBe('มะลิ')
+    expect(arg.vars.call_mode).toBe('outbound_reminder')
+    expect(arg.vars.call_goal).toContain('พี่เป็นฝ่ายโทรหาน้อง')
     expect((await cron(s)).body.dialed).toBe(0) // once per day
     expect(s.retell.createPhoneCall).toHaveBeenCalledTimes(1)
   })

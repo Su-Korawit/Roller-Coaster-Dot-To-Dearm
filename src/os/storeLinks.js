@@ -1,9 +1,10 @@
 import { Tent, Trophy, Medal, GraduationCap, Calculator, Newspaper, ClipboardList, School, Search } from 'lucide-react'
+import { TUTORING_SITES, faviconUrl } from '../data/tutoringSites'
 
 // Websites listed in the Store. They open in a new tab (most sites block being embedded).
 // `embed: false` = the site forbids being shown inside other sites (X-Frame-Options / frame-ancestors, checked 2026-11-07).
 // `category` is one of CATEGORIES in apps.js; logos are full-bleed squares (no inner padding).
-export const STORE_LINKS = [
+const BASE_LINKS = [
   { id: 'link-camphub', category: 'activity', embed: false, logo: '/assets/os/logos/link-camphub.webp', name: 'Camphub', tagline: 'ค่าย/กิจกรรมสำหรับนักเรียน', url: 'https://www.camphub.in.th/', Icon: Tent, tone: 'var(--color-zone-earth)' },
   { id: 'link-tcaster', category: 'learn', logo: '/assets/os/logos/link-tcaster.webp', name: 'TCASter', tagline: 'ข้อมูลและติวเข้ามหาวิทยาลัย', url: 'https://tcaster.net/', Icon: GraduationCap, tone: 'var(--color-zone-sci)' },
   { id: 'link-portcas', category: 'activity', logo: '/assets/os/logos/link-portcas.webp', name: 'Portcas', tagline: 'รวมการแข่งขัน/ประกวด', url: 'https://www.portcas.com/competition', Icon: Trophy, tone: 'var(--color-zone-biz)' },
@@ -17,3 +18,18 @@ export const STORE_LINKS = [
   { id: 'link-dekd', category: 'news', embed: false, logo: '/assets/os/logos/link-dekd.webp', name: 'Dek-D', tagline: 'ชุมชนและข่าวสารวัยเรียน', url: 'https://www.dek-d.com/', Icon: Newspaper, tone: 'var(--color-zone-arts)' },
   { id: 'link-dekd-pre', category: 'admission', embed: false, logo: '/assets/os/logos/link-dekd-pre.webp', name: 'Dek-D Admission', tagline: 'ข้อมูลรับตรง/แอดมิชชัน', url: 'https://www.dek-d.com/pre-admission/', Icon: Medal, tone: 'var(--color-zone-soc)' },
 ]
+
+// One Store app per tutoring institute (category 'learn'), same as SmartMathPro above. Logo = the site's favicon.
+const TUTOR_LINKS = TUTORING_SITES.map((t) => ({
+  id: t.id,
+  category: 'learn',
+  embed: t.embed,
+  logo: t.hasLogo ? faviconUrl(t.url) : null,
+  name: t.name,
+  tagline: t.area ? `สถาบันกวดวิชา · ${t.area}` : 'สถาบันกวดวิชา · ออนไลน์/ทั่วประเทศ',
+  url: t.url,
+  Icon: GraduationCap,
+  tone: 'var(--color-zone-sci)',
+}))
+
+export const STORE_LINKS = [...BASE_LINKS, ...TUTOR_LINKS]

@@ -166,7 +166,23 @@ describe('schedule', () => {
 
 describe('dialogVars', () => {
   it('sanitises and falls back politely', () => {
-    expect(dialogVars({})).toEqual({ student_name: 'เพื่อน', study_plan: 'ยังไม่ได้ตั้งแผน TCAS' })
+    const d = dialogVars({})
+    expect(d).toMatchObject({ student_name: 'เพื่อน', study_plan: 'ยังไม่ได้ตั้งแผน TCAS', secretary_id: 'jaidee', secretary_name: 'พี่ใจดี', call_mode: 'inbound_support' })
+    expect(d.student_context).toBe('ยังไม่มีข้อมูลแผนของน้อง')
     expect(dialogVars({ student_name: 'มะลิ\n\x00', study_plan: 'a'.repeat(999) }).study_plan.length).toBe(300)
+  })
+  it('outbound and inbound calls get different goals and openings', () => {
+    const out = dialogVars({ student_name: 'มะลิ', mode: 'outbound_reminder', secretary_id: 'dao' })
+    const inn = dialogVars({ student_name: 'มะลิ', mode: 'inbound_support', secretary_id: 'dao' })
+    expect(out.call_goal).not.toBe(inn.call_goal)
+    expect(out.opening).toContain('โทรมาตามเวลาที่นัด')
+    expect(inn.opening).toContain('อยากเล่าให้พี่ฟัง')
+    expect(out.secretary_name).toBe('พี่ดาว')
+    expect(inn.call_goal).toContain('1323')
+  })
+  it('unknown secretary / mode fall back instead of reaching the agent', () => {
+    const d = dialogVars({ secretary_id: 'hacker', mode: 'evil' })
+    expect(d.secretary_id).toBe('jaidee')
+    expect(d.call_mode).toBe('inbound_support')
   })
 })

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { withMood } from '../os/moodLogic'
 import { persist } from 'zustand/middleware'
 import { nextStreak } from '../utils/streakCycle'
 
@@ -95,6 +96,16 @@ export const useUserStore = create(
           bestStreak: Math.max(state.bestStreak ?? 0, result.streak),
         })
         return result
+      },
+
+      // Mood app: first check-in of the day counts like the old popup (stack + streak); later taps only
+      // change today's mood. One entry per day.
+      recordMood: (level, todayStr) => {
+        const today = todayStr ?? new Date().toISOString().slice(0, 10)
+        if (get().lastLoginDate !== today) return get().addDailyFeel(level, today)
+        const s = get()
+        set({ feelingNotes: withMood(s.feelingNotes, today, level) })
+        return { streak: s.streak, changed: false, broken: false }
       },
 
       // Returns true if the user has NOT yet checked in today

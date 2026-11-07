@@ -36,3 +36,15 @@ describe('calendar data', () => {
     expect([...starts].sort()).toEqual(starts)
   })
 })
+
+describe('subjectExam', () => {
+  it('knows the day of individual subjects and falls back to the window start', async () => {
+    const { subjectExam } = await import('./tcasCalendar')
+    expect(subjectExam('TPAT2')).toMatchObject({ date: '2027-01-31', session: 'บ่าย', exact: true })
+    expect(subjectExam('TPAT4').date).toBe('2027-02-01')
+    expect(subjectExam('A-Level คณิตศาสตร์ประยุกต์ 2').date).toBe('2027-03-15')
+    // not in the per-subject table → first day of the window, not exact
+    expect(subjectExam('A-Level เคมี')).toMatchObject({ date: '2027-03-13', exact: false })
+    expect(subjectExam('ภาษาไทย')).toBeNull()
+  })
+})

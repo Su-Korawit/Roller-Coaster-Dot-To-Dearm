@@ -21,7 +21,43 @@ function formatDate(ts) {
   return ms ? new Date(ms).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) : 'เมื่อสักครู่'
 }
 
-// Store detail page: what the app does + ratings and comments from other students.
+// Preview pictures of the app: /assets/os/shots/<id>-1..N.webp (N = app.shots, default 3 for the core
+// apps). A picture that is missing is skipped; with none at all the section is hidden.
+function Shots({ app }) {
+  const count = app.shots ?? (app.defaultInstalled ? 3 : 0)
+  const [failed, setFailed] = useState({})
+  const [big, setBig] = useState(null)
+  const list = Array.from({ length: count }, (_, i) => i + 1).filter((n) => !failed[n])
+  if (list.length === 0) return null
+  return (
+    <section aria-label="ภาพตัวอย่าง" className="flex flex-col gap-2">
+      <h4 className="thai-font font-bold">ภาพตัวอย่าง</h4>
+      <ul className="flex gap-3 overflow-x-auto os-pages pb-1">
+        {list.map((n) => (
+          <li key={n} className="shrink-0">
+            <button type="button" onClick={() => setBig(n)} aria-label={`ขยายภาพตัวอย่าง ${n}`} className="block rounded-ui focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
+              <img
+                src={`/assets/os/shots/${app.id}-${n}.webp`}
+                alt={`ภาพตัวอย่าง ${app.name} ${n}`}
+                loading="lazy"
+                draggable={false}
+                onError={() => setFailed((f) => ({ ...f, [n]: true }))}
+                className="h-52 w-auto rounded-ui border-2 border-line-soft bg-mist"
+              />
+            </button>
+          </li>
+        ))}
+      </ul>
+      {big && (
+        <div className="fixed inset-0 z-[70] bg-ink/70 flex items-center justify-center p-4" onClick={() => setBig(null)} role="dialog" aria-modal="true" aria-label="ภาพตัวอย่างขยาย">
+          <img src={`/assets/os/shots/${app.id}-${big}.webp`} alt="" className="max-w-full max-h-full rounded-ui border-2 border-line" />
+        </div>
+      )}
+    </section>
+  )
+}
+
+// Store detail page: what the app does + preview pictures + ratings and comments from other students.
 export default function StoreAppDetail({ app, installed, onOpen, onBack }) {
   const uid = useAuthStore((s) => s.user?.uid)
   const { reviews, loading, error, load, submit, remove } = useAppReviewsStore()
@@ -65,6 +101,8 @@ export default function StoreAppDetail({ app, installed, onOpen, onBack }) {
       </header>
 
       <InstallButton app={app} installed={installed} onOpen={onOpen} big />
+
+      <Shots key={app.id} app={app} />
 
       {app.features?.length > 0 && (
         <section className="px-card p-4" aria-label="สิ่งที่แอปทำได้">

@@ -57,6 +57,12 @@ export function createFirestoreStore(admin) {
       const s = await db.collection(USER_COL).doc(uid).get()
       return s.exists ? { ...emptyState(), ...s.data() } : emptyState()
     },
+    // The plan the student synced from the OS apps (Goal / Habit): users/{uid}.os. Server-only read.
+    async readOs(uid) {
+      const s = await db.collection('users').doc(uid).get()
+      const os = s.exists ? s.data().os : null
+      return os && typeof os === 'object' ? os : null
+    },
     async readGlobal(now) {
       const s = await db.collection(GLOBAL_COL).doc(bkk(now).dayKey).get()
       return s.exists ? { ...emptyGlobal(), ...s.data() } : emptyGlobal()
@@ -91,6 +97,10 @@ export function createMemoryStore() {
     },
     async read(uid) {
       return users.has(uid) ? structuredClone(users.get(uid)) : emptyState()
+    },
+    osData: new Map(),
+    async readOs(uid) {
+      return this.osData.get(uid) ?? null
     },
     async readGlobal(now) {
       return globals.get(bkk(now).dayKey) || emptyGlobal()
