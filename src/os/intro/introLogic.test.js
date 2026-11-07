@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import fs from 'node:fs'
-import { INTROS, INTRO_FRAMES, introFrameUrl, shouldPlayIntro, markIntroSeen, resetIntrosForTest, introDuration, STEP_MS } from './introLogic'
+import { INTROS, INTRO_FRAMES, INTRO_VIDEOS, pickVideoUrl, stepDuration, introFrameUrl, shouldPlayIntro, markIntroSeen, resetIntrosForTest, introDuration, STEP_MS } from './introLogic'
 import { OS_APPS } from '../apps'
 
 beforeEach(() => resetIntrosForTest())
@@ -35,5 +35,25 @@ describe('illustrated frames', () => {
       expect(count).toBe(INTROS[id].steps.length)
       for (let n = 1; n <= count; n++) expect(fs.existsSync(`public${introFrameUrl(id, n)}`)).toBe(true)
     }
+  })
+})
+
+describe('cutscene videos (responsive)', () => {
+  it('picks the tall file on portrait screens and the wide one otherwise', () => {
+    const ids = new Set(['goal'])
+    expect(pickVideoUrl('goal', true, ids)).toBe('/assets/os/intro/goal-tall.mp4')
+    expect(pickVideoUrl('goal', false, ids)).toBe('/assets/os/intro/goal-wide.mp4')
+    expect(pickVideoUrl('habit', false, ids)).toBeNull()
+  })
+  it('every registered video has both files on disk', () => {
+    for (const id of INTRO_VIDEOS) {
+      expect(fs.existsSync(`public/assets/os/intro/${id}-wide.mp4`)).toBe(true)
+      expect(fs.existsSync(`public/assets/os/intro/${id}-tall.mp4`)).toBe(true)
+    }
+  })
+  it('shares the clip length between captions, with a floor; pictures keep STEP_MS', () => {
+    expect(stepDuration(4, 12)).toBe(3000)
+    expect(stepDuration(4, 2)).toBe(1200)
+    expect(stepDuration(3, 0)).toBe(STEP_MS)
   })
 })

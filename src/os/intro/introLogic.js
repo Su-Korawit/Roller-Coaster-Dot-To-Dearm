@@ -37,6 +37,20 @@ export const INTROS = {
 export const INTRO_FRAMES = { goal: 3, habit: 4, community: 4 }
 export const introFrameUrl = (id, n) => `/assets/os/intro/${id}-${n}.webp`
 
+// Cutscene videos made with scripts/introVideo.mjs. Ids listed here play a video (picked by screen
+// orientation) instead of the picture frames. Empty until a video is generated for that app.
+export const INTRO_VIDEOS = new Set()   // e.g. new Set(['goal', 'habit', 'community'])
+export const introVideoUrls = (id) => ({
+  wide: `/assets/os/intro/${id}-wide.mp4`,
+  tall: `/assets/os/intro/${id}-tall.mp4`,
+})
+export const pickVideoUrl = (id, portrait, ids = INTRO_VIDEOS) => (ids.has(id) ? introVideoUrls(id)[portrait ? 'tall' : 'wide'] : null)
+
+// Milliseconds per caption: a video's length is shared equally between the captions (min 1.2 s);
+// pictures use STEP_MS.
+export const stepDuration = (stepCount, videoSeconds) =>
+  videoSeconds > 0 && stepCount > 0 ? Math.max(1200, Math.round((videoSeconds * 1000) / stepCount)) : STEP_MS
+
 const seen = new Set()
 export const hasSeenIntro = (id) => seen.has(id)
 export const markIntroSeen = (id) => { seen.add(id) }
