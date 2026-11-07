@@ -1,62 +1,54 @@
 // Tutoring institutes and online providers found on the providers' own websites
-// (source: thailand-tutoring-directory.html, "เว็บไซต์ของสถาบันและผู้ให้บริการกวดวิชาที่ตรวจพบ").
-// Use these to look at courses and programmes; the registry check lives in the source table.
-// [name, url, area]  area = '' for online / nationwide brands, else the province.
+// (source: thailand-tutoring-directory.html, "เว็บไซต์ของสถาบันและผู้ให้บริการกวดวิชาที่ตรวจพบ", 37 sites).
+// Each one becomes its own Store app (see storeLinks.js) that opens the site, like SmartMathPro.
+// SmartMathPro already exists as `link-smartmathpro`, so the other 36 are listed here.
+//
+// [id, name, url, area, embed]
+//   area  '' = online / nationwide, else the province (shown in the tagline)
+//   embed false = the site forbids being framed (X-Frame-Options / frame-ancestors, checked 2026-11-07)
 const ROWS = [
-  ['OnDemand', 'https://www.ondemand.in.th/', ''],
-  ['WE BY THE BRAIN', 'https://www.webythebrain.com/', ''],
-  ['Enconcept', 'https://enconcept.com/', ''],
-  ['เคมี อ.อุ๊ / วรรณสรณ์', 'https://www.chem-ou.com/', ''],
-  ['Applied Physics', 'https://www.appliedphysics.ac.th/', ''],
-  ['Bio BEAM Center', 'https://www.biobeamcenter.com/', ''],
-  ['Da’Vance / อาจารย์ปิง', 'https://www.davance.com/', ''],
-  ['SmartMathPro', 'https://www.smartmathpro.com/', ''],
-  ['ideal Physics', 'https://idealphysics.com/', ''],
-  ['Math Mavens Thailand', 'https://mathmavens.co.th/', ''],
-  ['Rose Marie Academy', 'https://www.rose-marie.ac.th/', ''],
-  ['Dek-D School', 'https://school.dek-d.com/', ''],
-  ['OpenDurian', 'https://www.opendurian.com/', ''],
-  ['findme', 'https://www.findme.ac.th/', ''],
-  ['บ้านครูมด', 'https://www.baankrumod.com/', ''],
-  ['บ้านครูจ๋า', 'https://www.baankruja.com/', ''],
-  ['บ้านบดินทร์ติวเตอร์', 'https://www.banbodintutor.com/', ''],
-  ['ติวเตอร์ลูกน้ำ', 'https://purimprat.com/', ''],
-  ['CWD Tutor / ชลวัตร', 'https://chonlawat.com/', ''],
-  ['Top One', 'https://toponeschool.com/', ''],
-  ['Bright Up Tutor', 'https://www.brightuptutor.com/th', ''],
-  ['Q Tutor', 'https://www.qtutorgroup.com/', ''],
-  ['กวดวิชาวิภาภรณ์', 'https://www.kru-wi.com/', 'ขอนแก่น'],
-  ['กวดวิชาแก่นวิทย์', 'https://kw-center.com/', 'ขอนแก่น'],
-  ['ตรงใจติวเตอร์', 'https://trongjaitutor.com/', 'ขอนแก่น / เชียงใหม่'],
-  ['SPTUTOR', 'https://www.sptutor.com/', 'อุบลราชธานี'],
-  ['Future Enhance Skills', 'https://www.futureeducation.co.th/', 'นครราชสีมา'],
-  ['Phuket PALS', 'https://phuketpals.org/th/tutoring-services-th/', 'ภูเก็ต'],
-  ['เชียงใหม่ คาเด็ท เซ็นเตอร์', 'https://www.cmcadet.com/', 'เชียงใหม่'],
-  ['DNP The Tutor', 'https://www.dnpthetutor.com/', 'เชียงราย'],
-  ['Ignite by OnDemand', 'https://onlineshop.ignitebyondemand.com/', ''],
-  ['Interpass', 'https://interpass.in.th/', ''],
-  ['AIMS', 'https://aims.co.th/', ''],
-  ['Premier Prep', 'https://www.ondemand.in.th/premierprep/', ''],
-  ['คณิตศาสตร์ อ.อรรณพ', 'https://annop.ac.th/', ''],
-  ['SupK Center', 'https://www.supk.com/School', ''],
-  ['The Pro Tutor', 'https://theprotutor.com/', ''],
+  ['ondemand', 'OnDemand', 'https://www.ondemand.in.th/', ''],
+  ['webythebrain', 'WE BY THE BRAIN', 'https://www.webythebrain.com/', ''],
+  ['enconcept', 'Enconcept', 'https://enconcept.com/', ''],
+  ['chem-ou', 'เคมี อ.อุ๊', 'https://www.chem-ou.com/', ''],
+  ['appliedphysics', 'Applied Physics', 'https://www.appliedphysics.ac.th/', ''],
+  ['biobeam', 'Bio BEAM Center', 'https://www.biobeamcenter.com/', ''],
+  ['davance', 'Da’Vance', 'https://www.davance.com/', ''],
+  ['idealphysics', 'ideal Physics', 'https://idealphysics.com/', '', false],
+  ['mathmavens', 'Math Mavens', 'https://mathmavens.co.th/', ''],
+  ['rosemarie', 'Rose Marie Academy', 'https://www.rose-marie.ac.th/', ''],
+  ['dekd-school', 'Dek-D School', 'https://school.dek-d.com/', ''],
+  ['opendurian', 'OpenDurian', 'https://www.opendurian.com/', ''],
+  ['findme', 'findme', 'https://www.findme.ac.th/', ''],
+  ['baankrumod', 'บ้านครูมด', 'https://www.baankrumod.com/', ''],
+  ['baankruja', 'บ้านครูจ๋า', 'https://www.baankruja.com/', ''],
+  ['banbodin', 'บ้านบดินทร์ติวเตอร์', 'https://www.banbodintutor.com/', ''],
+  ['looknam', 'ติวเตอร์ลูกน้ำ', 'https://purimprat.com/', '', false],
+  ['cwdtutor', 'CWD Tutor', 'https://chonlawat.com/', ''],
+  ['topone', 'Top One', 'https://toponeschool.com/', ''],
+  ['brightup', 'Bright Up Tutor', 'https://www.brightuptutor.com/th', ''],
+  ['qtutor', 'Q Tutor', 'https://www.qtutorgroup.com/', ''],
+  ['kruwi', 'กวดวิชาวิภาภรณ์', 'https://www.kru-wi.com/', 'ขอนแก่น'],
+  ['kwcenter', 'กวดวิชาแก่นวิทย์', 'https://kw-center.com/', 'ขอนแก่น'],
+  ['trongjai', 'ตรงใจติวเตอร์', 'https://trongjaitutor.com/', 'ขอนแก่น / เชียงใหม่'],
+  ['sptutor', 'SPTUTOR', 'https://www.sptutor.com/', 'อุบลราชธานี'],
+  ['futureenhance', 'Future Enhance Skills', 'https://www.futureeducation.co.th/', 'นครราชสีมา'],
+  ['phuketpals', 'Phuket PALS', 'https://phuketpals.org/th/tutoring-services-th/', 'ภูเก็ต'],
+  ['cmcadet', 'เชียงใหม่ คาเด็ท เซ็นเตอร์', 'https://www.cmcadet.com/', 'เชียงใหม่', false],
+  ['dnpthetutor', 'DNP The Tutor', 'https://www.dnpthetutor.com/', 'เชียงราย'],
+  ['ignite', 'Ignite by OnDemand', 'https://onlineshop.ignitebyondemand.com/', '', false],
+  ['interpass', 'Interpass', 'https://interpass.in.th/', ''],
+  ['aims', 'AIMS', 'https://aims.co.th/', ''],
+  ['premierprep', 'Premier Prep', 'https://www.ondemand.in.th/premierprep/', ''],
+  ['annop', 'คณิตศาสตร์ อ.อรรณพ', 'https://annop.ac.th/', ''],
+  ['supk', 'SupK Center', 'https://www.supk.com/School', ''],
+  ['theprotutor', 'The Pro Tutor', 'https://theprotutor.com/', ''],
 ]
 
-export const TUTORING_SITES = ROWS.map(([name, url, area]) => ({ name, url, area }))
+export const TUTORING_SITES = ROWS.map(([id, name, url, area, embed]) => ({ id: `tutor-${id}`, name, url, area, embed: embed !== false }))
 
-// Filter by name or area, case-insensitive; `area` is 'all' | 'online' | a province name.
-export function searchTutoring(query = '', area = 'all', sites = TUTORING_SITES) {
-  const q = query.trim().toLowerCase()
-  return sites.filter(
-    (s) =>
-      (area === 'all' || (area === 'online' ? !s.area : s.area.includes(area))) &&
-      (!q || s.name.toLowerCase().includes(q) || s.area.includes(q)),
-  )
-}
-
-// Province names that appear in the list, sorted by how many institutes they have.
-export function tutoringAreas(sites = TUTORING_SITES) {
-  const count = {}
-  for (const s of sites) for (const a of s.area.split(' / ').filter(Boolean)) count[a] = (count[a] ?? 0) + 1
-  return Object.entries(count).sort((a, b) => b[1] - a[1]).map(([a]) => a)
+// Site favicon at 128px (the logo for apps that have no picture of their own); the tile falls back to
+// its icon if this fails to load.
+export const faviconUrl = (url) => {
+  try { return `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=128` } catch { return null }
 }

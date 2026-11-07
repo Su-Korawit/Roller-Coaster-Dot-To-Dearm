@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { ShoppingBag, Target, CalendarCheck, CalendarDays, BookOpen, Users, Bot, Landmark, MessageSquarePlus, Settings, School, GraduationCap, MessagesSquare } from 'lucide-react'
+import { ShoppingBag, Target, CalendarCheck, CalendarDays, BookOpen, Users, Bot, Landmark, MessageSquarePlus, Settings, School, MessagesSquare } from 'lucide-react'
 import { STORE_LINKS } from './storeLinks'
 import { UNIVERSITY_ROWS, NO_EMBED_IDS, shortUniName } from '../data/universityApps'
 
@@ -185,20 +185,6 @@ const RAW_APPS = [
     defaultInstalled: true,
     features: ['เดินสำรวจมหาลัยจำลองด้วยตัวละครของคุณ', 'เข้าอาคารคณะดูสาขาและเส้นทางเข้า', 'ใช้ได้โดยไม่ต้องสมัครสมาชิก', 'กด "เปิดเต็มจอ" เพื่อเล่นในแท็บใหม่'],
     load: () => import('./apps/OpenHouseApp'),
-  },
-  {
-    id: 'tutor',
-    name: 'Tutor',
-    tagline: 'รวมเว็บสถาบันกวดวิชา 37 แห่ง',
-    description: 'รวมเว็บไซต์ของสถาบันและผู้ให้บริการกวดวิชาทั่วไทย ค้นหาตามชื่อหรือจังหวัด แล้วกดเปิดดูหลักสูตรในแท็บใหม่',
-    Icon: GraduationCap,
-    tone: 'var(--color-zone-biz)',
-    installable: true,
-    logo: '/assets/os/apps/tutor.webp',
-    logoFull: true,
-    category: 'learn',
-    features: ['ค้นหาสถาบันตามชื่อหรือจังหวัด', 'แยกออนไลน์/ทั่วประเทศ กับสถาบันในต่างจังหวัด', 'กดเปิดเว็บทางการของแต่ละสถาบัน'],
-    load: () => import('./apps/TutorApp'),
   },
   ...STORE_LINKS.map((l) => ({
     id: l.id,
