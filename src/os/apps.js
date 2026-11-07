@@ -117,6 +117,7 @@ const RAW_APPS = [
     Icon: MessagesSquare,
     tone: 'var(--color-zone-sci)',
     installable: true,
+    splash: '/assets/os/splash/chat.webp',
     logo: '/assets/os/apps/chat.webp',
     logoFull: true,
     category: 'study',
