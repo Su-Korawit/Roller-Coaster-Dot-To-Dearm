@@ -14,7 +14,7 @@ export function buildStudentContext(os, now) {
   const today = bkk(now).dayKey
   const target = os.target || {}
   const tasks = Array.isArray(os.tasks) ? os.tasks : []
-  const lines = []
+  const lines = [`วันนี้คือ ${today}`]
 
   const goal = [target.university, target.faculty, target.major].filter(Boolean).map((x) => clip(x, 60)).join(' / ')
   lines.push(`เป้าหมาย: ${goal || 'ยังไม่ได้ตั้งเป้าหมาย'}`)
