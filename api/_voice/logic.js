@@ -22,7 +22,7 @@ export const CONSENT_VERSION = 'voice-pdpa-2026-11-v1'
 export const ADULT_AGE = 20            // Thai majority; year-only birth data -> conservative (see isAdult)
 export const TRIAL_DAYS = 3
 export const BKK_OFFSET_MS = 7 * 3600 * 1000
-export const CALL_WINDOW = { startHour: 9, endHour: 20 }   // never dial outside 09:00-20:00 Bangkok
+export const CALL_WINDOW = { startHour: 6, endHour: 22 }   // never dial outside 06:00-22:00 Bangkok (last schedule time 21:59)
 
 export const DEFAULT_LIMITS = {
   trialWebSeconds: 600,       // 10 min total in trial
