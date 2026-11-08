@@ -4,6 +4,7 @@
 // allow-list and ceilings are decided here, never by the client.
 import crypto from 'node:crypto'
 import { buildStudentContext } from './context.js'
+import { runTool, TOOL_NAMES } from './tools.js'
 import { Buffer } from 'node:buffer'
 import {
   limitsFromEnv, buildConsent, consentValid, normalizeThaiPhone, validSchedule, reserveWebCall,
@@ -41,6 +42,20 @@ function bearer(req) {
 function safeEqual(a, b) {
   const x = Buffer.from(String(a)), y = Buffer.from(String(b))
   return x.length === y.length && crypto.timingSafeEqual(x, y)
+}
+
+const WRITE_TOOLS = new Set(['add_task', 'move_tasks', 'complete_task'])
+const TOOL_WINDOW_MS = 40 * 60 * 1000   // a call's tools stop working long after the call could have ended
+// What the secretary says when a caller to the phone number cannot be served (read from student_context).
+const DENY_TEXT = {
+  not_registered: 'เบอร์ที่โทรเข้ามายังไม่ได้ผูกกับบัญชีในแอป Secretary หรือมีหลายบัญชีใช้เบอร์เดียวกัน',
+  consent_required: 'บัญชีนี้ยังไม่ได้กดยินยอมใช้เลขาเสียง',
+  do_not_call: 'บัญชีนี้กด "หยุดรับสาย" ไว้',
+  trial_expired: 'ช่วงทดลองใช้เลขาเสียงหมดแล้ว',
+  daily_quota: 'วันนี้ใช้โควตาเลขาเสียงครบแล้ว',
+  trial_quota: 'โควตาทดลองใช้เลขาเสียงหมดแล้ว',
+  too_fast: 'โทรถี่เกินไป ขอให้รอสักครู่แล้วโทรใหม่',
+  system_busy: 'ตอนนี้สายเต็ม ขอให้โทรใหม่ภายหลัง',
 }
 
 const TERMINAL = new Set(['answered', 'no_answer', 'busy', 'failed', 'declined', 'voicemail', 'error'])
@@ -158,6 +173,69 @@ export function createVoiceHandler(deps) {
         }
       }
       return send(res, 200, { ok: true })
+    }
+
+    // ── Retell inbound-call webhook: someone dialed the phone number. Match the caller to an account by the
+    //    phone saved in the Secretary app, run the same gates as a Web Call, and answer with the call's variables.
+    if (action === 'inbound') {
+      if (req.method !== 'POST') return fail(res, 'method_not_allowed')
+      if (!e.RETELL_API_KEY) return fail(res, 'voice_unavailable')
+      if (!(await retell.verifyWebhook(req.body, e.RETELL_API_KEY, req.headers['x-retell-signature']))) {
+        return send(res, 401, { ok: false, error: 'bad_signature' })
+      }
+      const answer = (vars, metadata) => send(res, 200, { call_inbound: { dynamic_variables: vars, ...(metadata ? { metadata } : {}) } })
+      const unknown = (reason) => answer(dialogVars({ mode: 'inbound_unknown', student_context: DENY_TEXT[reason] || DENY_TEXT.not_registered }))
+      const phone = normalizeThaiPhone(String(req.body?.call_inbound?.from_number || ''))
+      const uid = phone ? await store.findUidByPhone(phone) : null
+      if (!uid) return unknown('not_registered')
+      const callKey = rid()
+      const r = await store.tx(uid, t, (state, global) => {
+        if (state.doNotCall) return { result: { ok: false, reason: 'do_not_call' } }
+        const x = reserveWebCall(state, global, { now: t, limits, callKey })
+        return x.ok ? { state: x.state, global: x.global, result: x } : { result: x }
+      })
+      if (!r.ok) return unknown(r.reason)
+      const [os, name, state] = await Promise.all([
+        store.readOs ? store.readOs(uid).catch(() => null) : null,
+        store.readName ? store.readName(uid).catch(() => null) : null,
+        store.read(uid),
+      ])
+      const profile = state.profile || {}
+      return answer(
+        dialogVars({ ...profile, student_name: name || profile.student_name, mode: 'inbound_support', student_context: buildStudentContext(os, t) }),
+        { uid, callKey, kind: 'phone-in' },
+      )
+    }
+
+    // ── Retell custom function (a tool the secretary calls mid-call). Signature proves it is Retell; the uid
+    //    comes only from the call's own metadata and the call must hold a live reservation. Replies are always
+    //    200 with a Thai `message` so the agent can say what happened.
+    if (action === 'tool') {
+      if (req.method !== 'POST') return fail(res, 'method_not_allowed')
+      if (!e.RETELL_API_KEY) return fail(res, 'voice_unavailable')
+      if (!(await retell.verifyWebhook(req.body, e.RETELL_API_KEY, req.headers['x-retell-signature']))) {
+        return send(res, 401, { ok: false, error: 'bad_signature' })
+      }
+      const say = (message, extra = {}) => send(res, 200, { message, ...extra })
+      const name = String(req.body?.name || '')
+      const md = req.body?.call?.metadata || {}
+      if (!TOOL_NAMES.includes(name)) return say('ฟังก์ชันนี้ยังไม่รองรับ')
+      if (!md.uid || !md.callKey) return say('ยังไม่รู้ว่าผู้โทรคือใคร จึงดูหรือแก้แผนไม่ได้ ให้น้องผูกเบอร์ในแอป Secretary ก่อน')
+      const state = await store.read(md.uid)
+      const res0 = state.reservations?.[md.callKey]
+      if (!res0 || res0.settled || t - res0.at > TOOL_WINDOW_MS) return say('สายนี้หมดเวลาแล้ว ใช้ฟังก์ชันไม่ได้')
+      if (state.doNotCall || !consentValid(state.consent, t)) return say('บัญชีนี้ยังไม่ได้ยินยอมหรือหยุดรับสายไว้ จึงใช้ฟังก์ชันไม่ได้')
+      const args = req.body?.args
+      const newId = (n) => `v${n.toString(36)}${rid().replace(/[^a-z0-9]/gi, '').slice(0, 3)}`
+      if (!WRITE_TOOLS.has(name)) {
+        const os = await (store.readOs ? store.readOs(md.uid).catch(() => null) : null)
+        if (!os) return say('ยังไม่มีแผนของน้อง ให้ตั้งเป้าหมายในแอป Goal ก่อน')
+        return say(runTool(name, args, { os, now: t, newId }).message)
+      }
+      let out = null
+      const w = await store.updateOsTasks(md.uid, t, (os) => { out = runTool(name, args, { os, now: t, newId }); return out.tasks || null })
+      if (!w.ok) return say('ยังไม่มีแผนของน้อง ให้ตั้งเป้าหมายในแอป Goal ก่อน')
+      return say(out.message, { changed: !!w.changed })
     }
 
     // ── Scheduler / manual trigger: authenticated by CRON_SECRET ────────────

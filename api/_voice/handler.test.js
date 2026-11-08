@@ -261,3 +261,100 @@ describe('dial-due (outbound)', () => {
     expect((await cron(s)).body.dialed).toBe(0)
   })
 })
+
+describe('inbound phone call + tools', () => {
+  const live = { RETELL_API_KEY: 'k', RETELL_AGENT_ID: 'a' }
+  const sig = { 'x-retell-signature': 'sig' }
+  const inbound = (call, from) => call('inbound', { auth: false, headers: sig, body: { event: 'call_inbound', call_inbound: { from_number: from, to_number: '+13192641997', agent_id: 'a' } } })
+  const tool = (call, name, args, metadata) => call('tool', { auth: false, headers: sig, body: { name, args, call: { metadata } } })
+  const TODAY = '2026-11-06'
+
+  async function registered(extraEnv = {}) {
+    const s = setup({ ...live, ...extraEnv })
+    await s.call('consent', { body: adult })
+    await s.call('phone', { body: { phone: OWN } })
+    s.store.names.set('u1', 'มะลิ')
+    s.store.osData.set('u1', { target: { faculty: 'วิศวะ' }, tasks: [{ id: 't1', text: 'อ่านฟิสิกส์', tag: 'A-Level', date: TODAY, done: false }] })
+    return s
+  }
+
+  it('rejects an inbound webhook with a bad signature', async () => {
+    const { call, retell } = await registered()
+    retell.verifyWebhook.mockResolvedValueOnce(false)
+    expect((await inbound(call, '+66899999999')).code).toBe(401)
+  })
+
+  it('recognises the caller by the saved phone, greets by name and hands over the plan + call metadata', async () => {
+    const { call } = await registered()
+    const r = await inbound(call, '+66899999999')
+    expect(r.code).toBe(200)
+    const ci = r.body.call_inbound
+    expect(ci.metadata).toMatchObject({ uid: 'u1', kind: 'phone-in' })
+    expect(ci.dynamic_variables.call_mode).toBe('inbound_support')
+    expect(ci.dynamic_variables.student_name).toBe('มะลิ')
+    expect(ci.dynamic_variables.student_context).toContain('อ่านฟิสิกส์')
+    expect(ci.dynamic_variables.student_context).toContain(`วันนี้คือ ${TODAY}`)
+  })
+
+  it('an unknown number gets the register-your-phone script and no metadata', async () => {
+    const { call } = await registered()
+    const r = await inbound(call, '+66811111111')
+    expect(r.body.call_inbound.dynamic_variables.call_mode).toBe('inbound_unknown')
+    expect(r.body.call_inbound.metadata).toBeUndefined()
+    expect(JSON.stringify(r.body)).not.toContain('อ่านฟิสิกส์')
+  })
+
+  it('does not serve a revoked or stopped account, and two accounts on one number are nobody', async () => {
+    const s = await registered()
+    await s.call('stop')
+    expect((await inbound(s.call, '+66899999999')).body.call_inbound.dynamic_variables.call_mode).toBe('inbound_unknown')
+    await s.call('resume')
+    await s.call('consent', { uid: 'u2', body: adult })
+    await s.call('phone', { uid: 'u2', body: { phone: OWN } })
+    expect((await inbound(s.call, '+66899999999')).body.call_inbound.dynamic_variables.call_mode).toBe('inbound_unknown')
+  })
+
+  it('inbound call uses the web quota (daily cap stops a second call)', async () => {
+    const { call, advance } = await registered({ VOICE_TRIAL_WEB_SECONDS_PER_DAY: '180' })
+    expect((await inbound(call, '+66899999999')).body.call_inbound.metadata).toBeTruthy()
+    advance(60000)
+    expect((await inbound(call, '+66899999999')).body.call_inbound.dynamic_variables.call_mode).toBe('inbound_unknown')
+  })
+
+  it('tools: read today, add, move and complete tasks, and the OS store sees them', async () => {
+    const { call, store } = await registered()
+    const md = (await inbound(call, '+66899999999')).body.call_inbound.metadata
+    const sched = await tool(call, 'get_schedule', {}, md)
+    expect(sched.body.message).toContain('อ่านฟิสิกส์')
+    const added = await tool(call, 'add_task', { text: 'ทบทวน TGAT', date: 'tomorrow' }, md)
+    expect(added.body.changed).toBe(true)
+    expect(store.osData.get('u1').tasks.map((x) => x.text)).toContain('ทบทวน TGAT')
+    expect(store.voiceRev.get('u1')).toBeGreaterThan(0)
+    await tool(call, 'move_tasks', { to_date: '+2' }, md)
+    expect(store.osData.get('u1').tasks.find((x) => x.id === 't1').date).toBe('2026-11-08')
+    await tool(call, 'complete_task', { text: 'ฟิสิกส์' }, md)
+    expect(store.osData.get('u1').tasks.find((x) => x.id === 't1').done).toBe(true)
+    expect((await tool(call, 'get_admission_news', {}, md)).body.message).toContain('mytcas.com')
+  })
+
+  it('tools refuse: bad signature, no metadata, unknown call, settled call, unknown tool', async () => {
+    const { call, retell, store } = await registered()
+    const md = (await inbound(call, '+66899999999')).body.call_inbound.metadata
+    retell.verifyWebhook.mockResolvedValueOnce(false)
+    expect((await tool(call, 'add_task', { text: 'x' }, md)).code).toBe(401)
+    expect((await tool(call, 'add_task', { text: 'x' }, undefined)).body.message).toContain('ผูกเบอร์')
+    expect((await tool(call, 'add_task', { text: 'x' }, { uid: 'u1', callKey: 'nope' })).body.message).toContain('หมดเวลา')
+    expect((await tool(call, 'delete_all', {}, md)).body.message).toContain('ไม่รองรับ')
+    await call('webhook', { auth: false, headers: sig, body: { event: 'call_ended', call: { duration_ms: 1000, metadata: md } } })
+    expect((await tool(call, 'add_task', { text: 'x' }, md)).body.message).toContain('หมดเวลา')
+    expect(store.osData.get('u1').tasks).toHaveLength(1)
+  })
+
+  it('tools never touch another account: uid comes from the call metadata of a live reservation only', async () => {
+    const { call, store } = await registered()
+    store.osData.set('u2', { tasks: [] })
+    const md = (await inbound(call, '+66899999999')).body.call_inbound.metadata
+    await tool(call, 'add_task', { text: 'x', uid: 'u2' }, md)
+    expect(store.osData.get('u2').tasks).toHaveLength(0)
+  })
+})
