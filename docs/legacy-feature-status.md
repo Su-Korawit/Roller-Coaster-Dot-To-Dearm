@@ -1,5 +1,7 @@
 # ❤️ I LOVE TCAS
 
+> **ARCHIVE — describes the pre-OS app (June 2026), not the current product.** The product is now a web OS (login → passcode → Home → apps); see [README.md](../README.md), [CONTEXT.md](../CONTEXT.md) and ADR 0029. Routes such as `/select/*`, `/why`, `/skills`, `/tasks` below no longer exist; status marks reflect the old app and are not maintained.
+
 A mobile-first **productivity RPG** (เดิมชื่อ Roller Coaster) for Thai high school and early university students. Real-life growth — choosing a career path, building mastery, studying for TCAS, and maintaining social relationships — is framed as a game with pixel-art aesthetics, AI-powered guidance, and a live social layer.
 
 > **⚠️ License — All Rights Reserved.** This repository is source-visible for

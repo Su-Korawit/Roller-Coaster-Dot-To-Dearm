@@ -1,6 +1,8 @@
 # CONTEXT.md — I LOVE TCAS
 
-Mobile-first React web app for Thai students: gamified career planning, MBTI profiling, university/program selection, AI-generated daily tasks, a node-based roadmap builder, social matching, and a PromptPay-backed shop. Firebase is the backend; Vercel hosts the frontend and light serverless functions.
+A web **OS for Thai TCAS students**, at `ilovetcas.com` and `app.ilovetcas.com`: sign in with Google → device passcode → Home (app icons, wallpaper, clock) → apps open in windows. Apps: Goal, Habit, Reading, Community, Chat, Mood, Block, Secretary (AI), Calendar, Open House, Report, plus a Store of installable apps and websites (ADR-0029). Firebase is the backend; Vercel hosts the frontend and light serverless functions.
+
+> **Two generations live in this repo.** The **OS** (`src/os/`) is the product users see. The **pre-OS app** (MBTI onboarding, tasks, skills, social match, the Phaser home) is still routed (`/home`, `/roadmap`, …) but is no longer the front door. Parts of it run *inside* OS apps: Reading frames `/home` (the study room), Open House frames `/openhouse`, Block reuses the Roadmap. Sections below marked **(pre-OS)** describe that older layer; the glossary tags each term.
 
 ## Brand
 
@@ -42,6 +44,7 @@ Mobile-first React web app for Thai students: gamified career planning, MBTI pro
 ├── scripts/          One-off scripts (uploadAssets.mjs)
 ├── test/rules/       Firestore security-rules tests (vitest.rules.config.js)
 └── src/
+    ├── os/                     THE PRODUCT: OsShell, apps.js registry, Home, Store, passcode, windows; apps in os/apps/
     ├── App.jsx                 Route definitions + layout guards
     ├── main.jsx                React root entry
     ├── firebase.js             Firebase init + env validation
@@ -178,22 +181,29 @@ className="!w-3 !h-3 !bg-green-400 !border-white !border-2"
 
 ## Routing
 
-Defined in `src/App.jsx`. Guards wrap layout:
+Defined in `src/App.jsx`; it picks a route tree from the **Site key** (hostname, `src/lib/site.js`). Vercel `vercel.json` rewrites all paths → `index.html` (SPA).
 
 ```
-RequireAdmin  →  /admin
-MobileLayout
-  RequireAuth
-    /why, /select/*, /home, /roadmap, /skills, /tasks
-AuthPage, RegisterPage  (public)
+app site (app.ilovetcas.com, localhost, *.vercel.app)
+  /                OsShell (login → consent → passcode → Home)      ← the product
+  /welcome         old landing page
+  /home            HomePage (Phaser study room) — framed by the Reading app
+  /roadmap         RoadmapPage (RequireAuth)
+  /openhouse       Open House campus (guest-usable) — framed by the Open House app
+  /admin           RequireAdmin
+  /studio/*        RequireCreator (article editor)
+  /auth /privacy /terms /news/:id /dev/ui (dev only)
+hub site (ilovetcas.com, www)
+  /                OsShell (ADR-0029 apex-homepage)
+  /articles /blog/:slug /category/:cat /search   content site
+  /openhouse /privacy /terms
+  /home /roadmap /auth /admin  → redirect to app.ilovetcas.com
+roadmap. / tcas. / news. / school.  feature sites (ADR-0012)
 ```
 
-Vercel `vercel.json` rewrites all paths → `index.html` (SPA).
+`ilovetcas.com` and `www` must be in Firebase Authentication → Authorized domains. Auth session, passcode and Home layout are per origin (ADR-0029).
 
-**Restructure in progress (ADR-0012):** the app is being split across subdomains —
-`ilovetcas.com` (Hub), `roadmap./tcas./news./school.ilovetcas.com` (Feature sites),
-`app.ilovetcas.com` (this full tree). `App.jsx` switches route trees on the Site key
-resolved from the hostname; unknown hosts (`*.vercel.app`, `localhost`) resolve to `app`.
+**(pre-OS)** The `/select/*`, `/why`, `/skills`, `/tasks` onboarding routes from the first app no longer exist in the route tree.
 
 ---
 
@@ -244,8 +254,28 @@ Central visual feature. Files:
 
 ## Domain Vocabulary
 
+The OS terms come first, down to **Guide** (OS). Every term after that belongs to the **pre-OS** app or to the study-room / Open House games that the Reading and Open House apps frame; they stay valid for that code.
+
 | Term | Meaning |
 |---|---|
+| **OS / OS shell** | The product front door (`src/os/OsShell.jsx`, served at `/` on `ilovetcas.com` and `app.ilovetcas.com`). State machine: loading → login → consent (PDPA) → set/unlock passcode → Home. Remounted per uid so accounts never share unlocked state |
+| **Device passcode** | 6-digit PIN per device, SHA-256 salted with the uid (`rc-os:<uid>:<pin>`), stored in localStorage `rc-os-pass-<uid>`. Never sent to Firestore. Unlock state is memory-only (refresh locks). Forgotten → sign in with Google again. `src/os/passcode.js` |
+| **OS app** | One entry in `RAW_APPS` of `src/os/apps.js` (id, name, tagline, Icon, tone, category, features, `load`). Lazy-loaded component in `src/os/apps/XxxApp.jsx`, rendered in an **App window** with `{ onOpenApp }`. Adding a feature = adding an app |
+| **Built-in app** | `builtIn: true` (Store, Settings): always on Home, cannot be removed |
+| **Installable / defaultInstalled** | `installable` apps are listed in the Store and added or removed by the user; `defaultInstalled` ones are put on every device once (Goal, Habit, Reading, Community, Chat, Mood, Block, Secretary, Report, Calendar, Open House) |
+| **Store** | The built-in app catalogue: search, category chips (`CATEGORIES`), banners, detail page with reviews. Install = simulated download (`installer.js`) then the app lands on Home. Holds OS apps, external **Link apps** (`storeLinks.js`) and **University apps** (one per myTCAS university, from `src/data/universityApps.js`) |
+| **Link app / University app** | An app that only opens a website (`LinkApp`) inside the window via iframe; sites that forbid framing (`embed: false`, `NO_EMBED_IDS`) show an "open in new tab" card |
+| **Home** | `HomeScreen`: paged grid of **tokens** (app id, `f:<folderId>`, `file:<fileId>`; pure logic in `homeLayout.js`), wallpaper, clock, drag to reorder, folders, dropped files (≤ 20, ≤ 5 MB, bytes in IndexedDB). Phones/tablets: status bar on top; desktop: taskbar at the bottom |
+| **App window** | `AppWindow` + `windowsLogic.js`: desktop windows drag, maximize, minimize to taskbar chips; phone/tablet windows are full-screen. Minimized windows stay mounted |
+| **Splash** | Launch screen of an app with art (`splash` in registry, `src/os/splash/AppSplash.jsx`): key art, name, progress bar, ~2 s. Websites open without one. Cutscenes were removed |
+| **useOsStore** | Per-device OS preferences (`rc-os-store`): wallpaper, installed apps, Home order, folders, files, avatar choice, `guideSeen`. Not synced to Firestore |
+| **useLifeStore** | The OS's synced data (`users/{uid}.os`, debounced via `createFirestoreSync`): goals, plan tasks, habits, books, reading log. `ownerUid` + `adoptUser()` clear the cache when another account signs in |
+| **Goal (OS)** | Up to 5 target programmes (`goals`, `primaryGoalId`); primary drives `target`, scores, Habit, the Community room and Secretary. Source of programmes and score weights is MyTCAS (`/api/mytcas`); TCAS Starter (`/api/tcasin`) only when MyTCAS has no match |
+| **Study plan** | Deterministic planner (`src/os/studyPlan.js`: weighted round-robin by score gap, 15-minute units, up to 200 days, each subject studied until its own exam day). The AI only adds a Thai strategy note and a tip per subject |
+| **Secretary / พี่ใจดี** | AI secretary app: asks before acting, makes schedules, chat (Gemini) and voice call (Retell via `/api/voice`, consent + daily quota). See `docs/voice-secretary.md` |
+| **OS room (Community/Chat)** | `osRooms/{roomId}/messages`; `roomId` = faculty + major (any university) or `general`, derived into `users/{uid}.osRoomId` for security rules |
+| **App review / Report** | `osAppReviews/{appId}_{uid}` (one per user, 1–5 stars, ≤ 500 chars). Report app: `osRequests` + `osRequestVotes`, one vote per user, only a super-admin changes status |
+| **Guide** (OS) | Welcome tour on first run (`guideContent.js`, `OsGuide`) and per-app "วิธีใช้" tips behind `?`. Not the same as the pre-OS **Guide** below |
 | **Profile** | The bundle of onboarding selections (mbti, program, career, masteryTrack, university) attached to a User document under `profile.*`. Written via `shapes.profileFields` and read via `shapes.readProfile` (the single shape seam in `src/lib/db.js`); `schoolId` stays top-level because Firestore queries filter on it |
 | **Roadmap** | The node-based visual plan a student builds for their career path |
 | **Node / Edge** | React Flow graph elements (ProcessNode, ConditionNode, etc.) |
