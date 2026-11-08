@@ -63,6 +63,31 @@ export function createFirestoreStore(admin) {
       const os = s.exists ? s.data().os : null
       return os && typeof os === 'object' ? os : null
     },
+    // Display name for the call greeting (users/{uid}.displayName), first word only. Server-only read.
+    async readName(uid) {
+      const s = await db.collection('users').doc(uid).get()
+      const n = s.exists ? s.data().displayName : null
+      return typeof n === 'string' ? n.trim().split(/\s+/)[0] : null
+    },
+    // Who owns this phone number? Exactly one match or null (two accounts on one number = nobody is served).
+    async findUidByPhone(phone) {
+      const q = await db.collection(USER_COL).where('phone', '==', phone).limit(2).get()
+      return q.size === 1 ? q.docs[0].id : null
+    },
+    // Apply a voice tool's task change to users/{uid}.os.tasks in one transaction, and bump osVoiceRev so an
+    // open OS client re-hydrates. `fn(os)` returns the new tasks array or null for "no change".
+    async updateOsTasks(uid, now, fn) {
+      const ref = db.collection('users').doc(uid)
+      return db.runTransaction(async (t) => {
+        const snap = await t.get(ref)
+        const os = snap.exists ? snap.data().os : null
+        if (!os || typeof os !== 'object') return { ok: false, reason: 'no_plan' }
+        const tasks = fn(os)
+        if (!tasks) return { ok: true, changed: false }
+        t.update(ref, { 'os.tasks': tasks, osVoiceRev: now, osUpdatedAt: admin.firestore.FieldValue.serverTimestamp() })
+        return { ok: true, changed: true }
+      })
+    },
     async readGlobal(now) {
       const s = await db.collection(GLOBAL_COL).doc(bkk(now).dayKey).get()
       return s.exists ? { ...emptyGlobal(), ...s.data() } : emptyGlobal()
@@ -101,6 +126,24 @@ export function createMemoryStore() {
     osData: new Map(),
     async readOs(uid) {
       return this.osData.get(uid) ?? null
+    },
+    names: new Map(),
+    async readName(uid) {
+      return this.names.get(uid) ?? null
+    },
+    async findUidByPhone(phone) {
+      const hits = [...users.entries()].filter(([, s]) => s.phone === phone)
+      return hits.length === 1 ? hits[0][0] : null
+    },
+    voiceRev: new Map(),
+    async updateOsTasks(uid, now, fn) {
+      const os = this.osData.get(uid)
+      if (!os) return { ok: false, reason: 'no_plan' }
+      const tasks = fn(os)
+      if (!tasks) return { ok: true, changed: false }
+      this.osData.set(uid, { ...os, tasks })
+      this.voiceRev.set(uid, now)
+      return { ok: true, changed: true }
     },
     async readGlobal(now) {
       return globals.get(bkk(now).dayKey) || emptyGlobal()
