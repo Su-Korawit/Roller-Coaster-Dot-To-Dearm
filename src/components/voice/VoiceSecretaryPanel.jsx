@@ -5,6 +5,7 @@ import { usePlansStore } from '../../stores/usePlansStore'
 import { fetchStatus, voiceApi, buildStudyPlan, buildOsStudyPlan, VoiceError } from '../../services/voiceSecretary'
 import { useLifeStore } from '../../stores/useLifeStore'
 import { startVoiceCall } from '../../services/voiceCall'
+import { isCallAllowed } from '../../services/voiceAccess'
 import {
   SECRETARY_NAME, CONSENT_TEXT, GUARDIAN_TEXT, UI_TEXT, DAY_LABELS,
 } from '../../constants/voiceCopy'
@@ -173,6 +174,7 @@ function PhoneSettings({ status, reload, secretaryId }) {
 
 export default function VoiceSecretaryPanel({ hidePhone = false, secretaryId }) {
   const name = useAuthStore((s) => s.user?.displayName) || ''
+  const email = useAuthStore((s) => s.user?.email)
   const [data, setData] = useState(null)
   const [err, setErr] = useState('')
   const [tick, setTick] = useState(0)
@@ -186,6 +188,9 @@ export default function VoiceSecretaryPanel({ hidePhone = false, secretaryId }) 
     return () => { live = false }
   }, [tick])
 
+  if (!isCallAllowed(email)) {
+    return <p role="alert" className="thai-font text-[13px] text-danger">ระบบโทรของเลขายังไม่เปิดให้ใช้งานกับบัญชีนี้ (ทดสอบภายในเท่านั้น)</p>
+  }
   if (err) return <p role="alert" className="thai-font text-[13px] text-danger">{err}</p>
   if (!data) return <Loader2 className="animate-spin" aria-label="กำลังโหลด" />
   if (data.mode === 'off') return <p className="thai-font text-[13px] text-ink-soft">{SECRETARY_NAME}: ฟีเจอร์นี้ยังไม่เปิดให้ใช้งาน</p>
