@@ -17,8 +17,8 @@ export default function LoadingScene({ label = 'Loading...', character = 'INFP',
   const bg = backdropUrl(backdropFor(seed), portrait)
   return (
     <div
-      className="h-full w-full flex flex-col items-center justify-center gap-4 px-6 px-sky-bg bg-cover bg-center"
-      style={{ backgroundImage: `url(${bg}), linear-gradient(180deg, #E1F3FB 0%, #F4F1FF 100%)`, imageRendering: 'pixelated' }}
+      className="h-full w-full flex flex-col items-center justify-center gap-4 px-6"
+      style={{ backgroundImage: `url(${bg}), linear-gradient(180deg, #E1F3FB 0%, #F4F1FF 100%)`, backgroundSize: 'cover, auto', backgroundPosition: 'center bottom', backgroundRepeat: 'no-repeat', imageRendering: 'pixelated' }}
     >
       {compact ? null : (
         <>
