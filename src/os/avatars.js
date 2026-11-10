@@ -1,11 +1,5 @@
 // Profile avatars (ChatGPT work order 006). One sheet cut into 9 circles under
 // public/assets/os/avatars/<id>.webp. Choice is stored per user on this device.
-export const AVATAR_GROUPS = [
-  { id: 'f', label: 'หญิง' },
-  { id: 'm', label: 'ชาย' },
-  { id: 'q', label: 'LGBTQ+' },
-]
-
 export const AVATARS = [
   { id: 'f1', group: 'f', name: 'ผมยาวมัดครึ่ง' },
   { id: 'f2', group: 'f', name: 'ผมบ็อบ กิ๊บชมพู' },

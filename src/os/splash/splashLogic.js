@@ -1,8 +1,8 @@
 // Splash (launch) screen of an app window, like a desktop app's: full-bleed key art, app logo + name,
 // a status line and a thin progress bar. Only apps with art (`app.splash`) get one.
 
-export const SPLASH_MS = 2000
-export const SPLASH_REDUCED_MS = 700   // shorter when the user asked for less motion
+export const SPLASH_MS = 1000
+export const SPLASH_REDUCED_MS = 400   // shorter when the user asked for less motion
 
 export const hasSplash = (app) => typeof app?.splash === 'string' && app.splash.length > 0
 

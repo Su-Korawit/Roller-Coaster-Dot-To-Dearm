@@ -68,6 +68,7 @@ export default function AppIcon({ app, token = app.id, renderTile, onOpen, onLon
   function onPointerDown(e) {
     if (e.button != null && e.button !== 0) return
     fired.current = false
+    app.load?.()    // warm the app's code chunk while the finger is still down (cached by the browser)
     start.current = { x: e.clientX, y: e.clientY, scroll0: 0, moved: false, mouse: e.pointerType === 'mouse' }
     cancel()
     timer.current = setTimeout(() => {
@@ -133,11 +134,11 @@ export default function AppIcon({ app, token = app.id, renderTile, onOpen, onLon
       onContextMenu={(e) => { e.preventDefault(); cancel(); if (!drag) { fired.current = true; onLongPress(app) } }}
       aria-label={app.name}
       style={drag ? { transform: `translate(${drag.x}px, ${drag.y}px) scale(1.12)`, zIndex: 40, position: 'relative', filter: 'drop-shadow(0 6px 6px rgb(0 0 0 / 0.3))', touchAction: 'none' } : undefined}
-      className={`os-no-select flex flex-col items-center gap-1.5 p-1 rounded-ui focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand
+      className={`os-no-select flex flex-col items-center gap-1.5 p-1 w-full min-w-0 rounded-ui focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand
         ${drag ? 'cursor-grabbing' : 'active:scale-95 transition-transform'}`}
     >
       {renderTile ? renderTile() : <AppTile app={app} />}
-      <span className={`thai-font text-[12px] leading-tight text-center max-w-full truncate ${dark ? 'text-white' : 'text-ink'}`}>
+      <span className={`thai-font text-[12px] leading-tight text-center w-full min-w-0 line-clamp-2 [overflow-wrap:anywhere] ${dark ? 'text-white' : 'text-ink'}`}>
         {app.name}
       </span>
     </button>
