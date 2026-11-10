@@ -313,6 +313,12 @@ service cloud.firestore {
     }
 
     // Hub settings (LINE OpenChat info, featured article): public read, super-admin write.
+    // Anonymous aggregate counters written by /api/track (Admin SDK bypasses rules).
+    match /analyticsDaily/{day} {
+      allow read: if isSuperAdmin() || userEmail() == 'o.korawitt@gmail.com';
+      allow write: if false;
+    }
+
     match /siteConfig/{docId} {
       allow read: if true;
       allow write: if isSuperAdmin();

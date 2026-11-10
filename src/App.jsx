@@ -1,14 +1,15 @@
 import { useEffect } from 'react'
 import { lazy, Suspense } from 'react'
-import { Navigate, Outlet, Route, Routes, useParams } from 'react-router-dom'
+import { Navigate, Outlet, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import { useAuthStore } from './stores/useAuthStore'
 import { getAdminSections } from './constants/admin'
-import OnboardingModal from './components/onboarding/OnboardingModal'
 import ConsentGate from './components/ConsentGate'
 import LoadingScene from './components/ui/LoadingScene'
 import RequireCreator from './components/studio/RequireCreator'
 import FxLayer from './components/hud/FxLayer'
 import { installUiSounds } from './lib/sfx'
+import { trackView } from './lib/track'
+import AnalyticsConsent from './components/AnalyticsConsent'
 import { useConsentStore } from './stores/useConsentStore'
 import { currentSite } from './lib/site'
 import { SITES } from './constants/sites'
@@ -16,6 +17,8 @@ import { SITES } from './constants/sites'
 // Route-level code splitting: each page loads on first navigation, keeping the
 // entry chunk free of Phaser (HomePage→GameCanvas), React Flow (RoadmapPage),
 // Leaflet, and the admin dashboard.
+// Onboarding drags in the 370 kB onboardingData tables; only the game routes need it, so keep it out of the entry chunk.
+const OnboardingModal = lazy(() => import('./components/onboarding/OnboardingModal'))
 const HomePage = lazy(() => import('./pages/HomePage'))
 const AdminPage = lazy(() => import('./pages/AdminPage'))
 const AuthPage = lazy(() => import('./pages/AuthPage'))
@@ -75,7 +78,7 @@ function MobileLayout() {
       <main className="flex-1 relative overflow-hidden">
         <Outlet />
       </main>
-      {user && <OnboardingModal />}
+      {user && <Suspense fallback={null}><OnboardingModal /></Suspense>}
       <FxLayer />
     </div>
   )
@@ -288,6 +291,10 @@ function SiteRoutes() {
 }
 
 function App() {
+  // Anonymous page-view count (no-op until the visitor consents, see lib/track.js).
+  const { pathname } = useLocation()
+  useEffect(() => { trackView(pathname) }, [pathname])
+
   // One delegated listener gives every button/link/tab the UI click blip.
   useEffect(() => installUiSounds(), [])
 
@@ -305,6 +312,7 @@ function App() {
   return (
     <Suspense fallback={<LoadingScreen />}>
       <SiteRoutes />
+      <AnalyticsConsent />
     </Suspense>
   )
 }

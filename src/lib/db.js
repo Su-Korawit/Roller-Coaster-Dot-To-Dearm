@@ -83,6 +83,7 @@ export const cols = {
   fileBagItems:   collection(db, 'fileBagItems'),
   fileBagFolders: collection(db, 'fileBagFolders'),
   bagSettings:     collection(db, 'bagSettings'),
+  analyticsDaily:  collection(db, 'analyticsDaily'),
   articles:        collection(db, 'articles'),
   articleDrafts:   collection(db, 'articleDrafts'),
   chatMessages: (chatId) => collection(db, 'chats', chatId, 'messages'),
