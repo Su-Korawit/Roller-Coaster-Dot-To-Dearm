@@ -40,7 +40,7 @@ export default function UniversityRow({ university, round, zone, expanded, onTog
         </span>
         <span className="text-right">
           <b className="pixel-font block text-lg leading-none text-ink">{seats}</b>
-          <span className="thai-font text-xs text-ink-soft">ที่นั่ง</span>
+          <span className="thai-font text-xs text-ink-soft" title="รวมทุกโครงการ บางโครงการใช้โควตาร่วมกัน ตัวเลขจริงอาจน้อยกว่า">ที่นั่งรวม*</span>
         </span>
       </button>
       {expanded && (

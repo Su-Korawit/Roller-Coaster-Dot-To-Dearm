@@ -11,7 +11,6 @@ import { MAX_GOALS, goalSubtitle, goalTitle, makeGoal, planInput, universityAppI
 import { generateStudyPlan } from '../../services/aiStudyPlan'
 import { TCAS_CALENDAR, formatThaiRange, subjectExam } from '../../data/tcasCalendar'
 import ProgramPicker from '../goal/ProgramPicker'
-import StarterPicker from '../goal/StarterPicker'
 import Advisor from '../goal/Advisor'
 import { UniLogo } from '../goal/ui'
 
@@ -20,9 +19,9 @@ const TABS = [
   { id: 'plan', label: 'วางแผน', Icon: Route },
 ]
 
-// Apps worth installing for the student's goals: each goal's university app + MyTCAS + TCAS Starter.
+// Apps worth installing for the student's goals: each goal's university app + MyTCAS.
 function recommendedApps(goals) {
-  const ids = [...new Set([...goals.map((g) => universityAppId(g.universityId)), 'link-mytcas', 'link-tcasin'].filter(Boolean))]
+  const ids = [...new Set([...goals.map((g) => universityAppId(g.universityId)), 'link-mytcas'].filter(Boolean))]
   return ids.map((id) => findApp(id)).filter(Boolean)
 }
 
@@ -81,7 +80,6 @@ function GoalCard({ goal, index, count, primary, onPrimary, onRemove, onMove, dr
         ) : (
           <button type="button" onClick={() => onPrimary(goal.id)} className="px-btn px-3 py-1 thai-font text-xs font-bold bg-paper">ตั้งเป็นเป้าหลัก</button>
         )}
-        {goal.source === 'tcasin' && <span className="thai-font text-xs text-zone-biz-deep font-semibold">TCAS Starter · ไม่ทางการ</span>}
       </div>
       {children}
     </li>
@@ -123,7 +121,7 @@ function ReadinessBar({ subject, needed, exam, tasks, today }) {
   )
 }
 
-// Inside a goal card. Required scores come from the database (MyTCAS / TCAS Starter) and are only shown,
+// Inside a goal card. Required scores come from the database (MyTCAS) and are only shown,
 // never edited. The primary goal also gets a readiness bar per subject (real scores come after the exam).
 const neededText = (r) => (r.needed ? `${r.estimated ? 'เป้า ~' : 'ต้องใช้ '}${r.needed}` : null)
 
@@ -293,13 +291,12 @@ function PlanTab({ onOpenApp, onGoTo }) {
 }
 
 // Goal: a small app of its own. Tabs: goals (up to 5, one primary) / scores / plan.
-// Adding a goal: search MyTCAS (official), or let the advisor narrow it down; if MyTCAS has no match
-// the picker offers TCAS Starter (Dek-D) as an unofficial fallback.
+// Adding a goal: search MyTCAS (official), or let the advisor narrow it down.
 export default function GoalApp({ onOpenApp }) {
   const { goals, primaryGoalId, addGoal, removeGoal, reorderGoals } = useLifeStore()
   const [dragId, setDragId] = useState(null)
   const [tab, setTab] = useState('goals')
-  const [flow, setFlow] = useState(null)   // null | { type: 'choose' | 'search' | 'advisor' | 'starter', initial? }
+  const [flow, setFlow] = useState(null)   // null | { type: 'choose' | 'search' | 'advisor', initial? }
   const [msg, setMsg] = useState('')
 
   function pick(input) {
@@ -328,9 +325,8 @@ export default function GoalApp({ onOpenApp }) {
   let body
   if (flow) {
     body = flow.type === 'choose' ? chooser
-      : flow.type === 'search' ? <ProgramPicker initial={flow.initial} onPick={pick} onCancel={() => setFlow({ type: 'choose' })} onStarter={(initial) => setFlow({ type: 'starter', initial })} />
-      : flow.type === 'advisor' ? <Advisor onBack={() => setFlow({ type: 'choose' })} onChoose={(s) => setFlow({ type: 'search', initial: s })} />
-      : <StarterPicker initial={flow.initial} onPick={pick} onBack={() => setFlow({ type: 'search' })} />
+      : flow.type === 'search' ? <ProgramPicker initial={flow.initial} onPick={pick} onCancel={() => setFlow({ type: 'choose' })} />
+      : <Advisor onBack={() => setFlow({ type: 'choose' })} onChoose={(s) => setFlow({ type: 'search', initial: s })} />
   }
   else if (tab === 'plan') body = <PlanTab onOpenApp={onOpenApp} onGoTo={(t) => { setTab(t); setMsg('') }} />
   else {

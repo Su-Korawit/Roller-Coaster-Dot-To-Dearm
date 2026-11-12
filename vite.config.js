@@ -86,7 +86,6 @@ function voiceApiPlugin() {
 // Literal import() paths so the config bundler resolves them relative to this file.
 const API_HANDLERS = {
   '/api/mytcas': () => import('./api/mytcas.js'),
-  '/api/tcasin': () => import('./api/tcasin.js'),
 }
 function mytcasApiPlugin(route = '/api/mytcas') {
   return {
@@ -120,5 +119,5 @@ function mytcasApiPlugin(route = '/api/mytcas') {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(), camphubApiPlugin(), mytcasApiPlugin(), mytcasApiPlugin('/api/tcasin'), voiceApiPlugin()],
+  plugins: [react(), tailwindcss(), camphubApiPlugin(), mytcasApiPlugin(), voiceApiPlugin()],
 })

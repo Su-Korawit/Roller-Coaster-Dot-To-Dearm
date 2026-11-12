@@ -3,7 +3,7 @@ import { X } from 'lucide-react'
 import { Z_SHEET } from '../constants/zIndex'
 
 // Small dialog used by the Home screen: bottom sheet on phones, centred card on larger screens.
-export default function OsSheet({ title, onClose, children }) {
+export default function OsSheet({ title, onClose, children, wide = false }) {
   useEffect(() => {
     function onKey(e) { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
@@ -20,7 +20,7 @@ export default function OsSheet({ title, onClose, children }) {
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="px-card bg-paper text-ink w-full sm:max-w-md p-5 pb-7 sm:pb-5 animate-pop rounded-b-none sm:rounded-b-[var(--radius-ui)]"
+        className={`px-card bg-paper text-ink w-full ${wide ? 'sm:max-w-2xl' : 'sm:max-w-md'} p-5 pb-7 sm:pb-5 animate-pop rounded-b-none sm:rounded-b-[var(--radius-ui)]`}
       >
         <div className="flex items-center justify-between mb-3">
           <h2 className="thai-font font-bold text-base">{title}</h2>

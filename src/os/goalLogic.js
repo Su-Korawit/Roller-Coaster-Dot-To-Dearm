@@ -44,7 +44,7 @@ export const goalKey = (g) => g.programId ? `${g.source}:${g.programId}` : `${g.
 export function makeGoal(input) {
   return {
     id: newId(),
-    source: input.source ?? 'manual',          // 'mytcas' | 'tcasin' | 'manual'
+    source: input.source ?? 'manual',          // 'mytcas' | 'manual'
     universityId: input.universityId ?? null,  // MyTCAS id ('001'); links to the university's Store app
     university: input.university ?? '',
     faculty: input.faculty ?? '',

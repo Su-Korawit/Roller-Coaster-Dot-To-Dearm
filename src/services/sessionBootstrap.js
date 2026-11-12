@@ -37,6 +37,7 @@ import { useHotbarStore } from '../stores/useHotbarStore'
 import { useResumeStore } from '../stores/useResumeStore'
 import { useGuideStore } from '../stores/useGuideStore'
 import { useLifeStore } from '../stores/useLifeStore'
+import { useOsStore } from '../stores/useOsStore'
 import { useConsentStore } from '../stores/useConsentStore'
 import { migrateLegacyRoadmap } from '../utils/migrateLegacyRoadmap'
 import {
@@ -63,6 +64,8 @@ import {
   setResumeSyncUser,
   hydrateGuideFromFirestore,
   hydrateOsFromFirestore,
+  hydrateOsDeviceFromFirestore,
+  setOsDeviceSyncUser,
   setOsSyncUser,
   setGuideSyncUser,
   setPlansSyncUser,
@@ -223,6 +226,11 @@ export async function bootstrapSession(firebaseUser) {
       await hydrateOsFromFirestore(uid)
       setOsSyncUser(uid)
     }),
+    step('hydrate/arm os device', async () => {
+      const first = useOsStore.getState().adoptUser(uid)
+      await hydrateOsDeviceFromFirestore(uid, { first })
+      setOsDeviceSyncUser(uid)
+    }),
     step('hydrate/arm hotbar', async () => {
       await hydrateHotbarFromFirestore(uid)
       setHotbarSyncUser(uid)
@@ -261,6 +269,7 @@ export function teardownSession() {
   setResumeSyncUser(null)
   setGuideSyncUser(null)
   setOsSyncUser(null)
+  setOsDeviceSyncUser(null)
   setPlansSyncUser(null)
   useGuideStore.getState().reset()
   useResumeStore.getState().reset()

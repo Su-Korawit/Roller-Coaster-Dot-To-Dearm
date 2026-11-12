@@ -27,8 +27,15 @@ export const useOsStore = create(
       order: [],               // saved Home arrangement (tokens, see homeLayout); repaired on read
       folders: [],             // { id, name, appIds }
       files: [],               // { id, name, size, type } — bytes in IndexedDB (homeFiles)
+      cloudUid: null,          // account whose installed apps / layout this device has merged with
       guideSeen: false,        // the welcome tour has been shown on this device
 
+      // Called at login: true the first time this device meets this account (merge instead of overwrite).
+      adoptUser: (uid) => {
+        if (!uid || useOsStore.getState().cloudUid === uid) return false
+        set({ cloudUid: uid })
+        return true
+      },
       setWallpaper: (id) =>
         set((s) => {
           if (id === CUSTOM_WALLPAPER) return s.customAspect ? { wallpaperId: id } : s
