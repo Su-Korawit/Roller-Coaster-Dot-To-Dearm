@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { Check, ImagePlus, Film } from 'lucide-react'
 import CropSheet from './CropSheet'
-import { WALLPAPER_CATEGORIES, wallpapersIn, getWallpaper, wallpaperImage } from './wallpapers'
+import { WALLPAPER_CATEGORIES, WALLPAPER_KINDS, wallpapersIn, getWallpaper, wallpaperImage } from './wallpapers'
 import { useOsStore, CUSTOM_WALLPAPER } from '../stores/useOsStore'
 import { useCustomWallpaperUrl } from './useCustomWallpaperUrl'
 import { cropImgStyle, prepareImage, saveWallpaperBlob, deleteWallpaperBlob } from './customWallpaper'
@@ -67,28 +67,39 @@ export default function WallpaperPicker({ maxHeight = '55vh' }) {
       </div>
 
       {tab !== MINE && (
-        <div className={grid} style={{ maxHeight }} role="radiogroup" aria-label="วอลเปเปอร์">
-          {wallpapersIn(tab).map((w) => (
-            <button
-              key={w.id}
-              type="button"
-              role="radio"
-              aria-checked={current === w.id}
-              onClick={() => setWallpaper(w.id)}
-              className="flex flex-col items-center gap-1.5 focus-visible:outline-none"
-            >
-              <span
-                className={`${swatch} ${ring(current === w.id)}`}
-                style={{ background: `url(${wallpaperImage(w.id, 'portrait')}) center bottom / cover, ${w.css}`, imageRendering: 'pixelated' }}
-              >
-                {w.video && <Film size={14} className={`absolute bottom-1.5 left-1.5 ${w.dark ? 'text-white' : 'text-brand-strong'}`} aria-label="มีวิดีโอเคลื่อนไหว" />}
-                {current === w.id && (
-                  <Check size={18} className={`absolute top-1.5 right-1.5 ${w.dark ? 'text-white' : 'text-brand-strong'}`} />
-                )}
-              </span>
-              <span className="thai-font text-xs text-center leading-tight">{w.name}</span>
-            </button>
-          ))}
+        <div className="overflow-y-auto p-1" style={{ maxHeight }} role="radiogroup" aria-label="วอลเปเปอร์">
+          {(tab === 'classic' ? [{ id: 'all', name: null }] : WALLPAPER_KINDS).map((k) => {
+            const items = tab === 'classic' ? wallpapersIn(tab) : wallpapersIn(tab, k.id)
+            if (items.length === 0) return null
+            return (
+              <section key={k.id} className="mb-3">
+                {k.name && <h3 className="thai-font text-xs font-bold text-ink-soft mb-2">{k.name}</h3>}
+                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+                  {items.map((w) => (
+                    <button
+                      key={w.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={current === w.id}
+                      onClick={() => setWallpaper(w.id)}
+                      className="flex flex-col items-center gap-1.5 focus-visible:outline-none"
+                    >
+                      <span
+                        className={`${swatch} ${ring(current === w.id)}`}
+                        style={{ background: `url(${wallpaperImage(w.id, 'portrait')}) center bottom / cover, ${w.css}`, imageRendering: 'pixelated' }}
+                      >
+                        {w.video && <Film size={14} className={`absolute bottom-1.5 left-1.5 ${w.dark ? 'text-white' : 'text-brand-strong'}`} aria-label="มีวิดีโอเคลื่อนไหว" />}
+                        {current === w.id && (
+                          <Check size={18} className={`absolute top-1.5 right-1.5 ${w.dark ? 'text-white' : 'text-brand-strong'}`} />
+                        )}
+                      </span>
+                      <span className="thai-font text-xs text-center leading-tight">{w.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )
+          })}
         </div>
       )}
 

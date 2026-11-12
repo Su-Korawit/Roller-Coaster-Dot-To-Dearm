@@ -8,10 +8,16 @@ describe('wallpapers', () => {
     expect(WALLPAPERS.every((w) => cats.has(w.category))).toBe(true)
   })
 
-  it('has the EU and USA & Canada collections', () => {
-    expect(wallpapersIn('eu').length).toBeGreaterThan(0)
-    expect(wallpapersIn('na').length).toBeGreaterThan(0)
-    expect(WALLPAPER_CATEGORIES.map((c) => c.name)).toEqual(expect.arrayContaining(['EU', 'USA & Canada']))
+  it('has the five country collections, each with countryside and city', () => {
+    expect(WALLPAPER_CATEGORIES.map((c) => c.name)).toEqual(expect.arrayContaining(['EU', 'USA & Canada', 'จีน', 'เกาหลี', 'ญี่ปุ่น']))
+    for (const c of ['eu', 'na', 'cn', 'kr', 'jp']) {
+      expect(wallpapersIn(c, 'country').length).toBeGreaterThan(0)
+      expect(wallpapersIn(c, 'city').length).toBeGreaterThan(0)
+    }
+  })
+
+  it('every wallpaper has a kind', () => {
+    expect(WALLPAPERS.every((w) => w.kind === 'country' || w.kind === 'city')).toBe(true)
   })
 
   it('builds image and video paths and falls back to the first wallpaper', () => {
