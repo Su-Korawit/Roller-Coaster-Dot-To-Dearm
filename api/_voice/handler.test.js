@@ -140,8 +140,8 @@ describe('web-call', () => {
 describe('consent / settings', () => {
   it('minor needs guardian', async () => {
     const { call } = setup()
-    expect((await call('consent', { body: { birthYear: 2010, accepted: true } })).body.error).toBe('guardian_required')
-    const ok = await call('consent', { body: { birthYear: 2010, accepted: true, guardian: { name: 'สมชาย ใจดี', relationship: 'บิดา', phone: '0812345678', confirmed: true } } })
+    expect((await call('consent', { body: { birthYear: 2016, accepted: true } })).body.error).toBe('guardian_required')
+    const ok = await call('consent', { body: { birthYear: 2016, accepted: true, guardian: { name: 'สมชาย ใจดี', relationship: 'บิดา', phone: '0812345678', confirmed: true } } })
     expect(ok.code).toBe(200)
   })
 

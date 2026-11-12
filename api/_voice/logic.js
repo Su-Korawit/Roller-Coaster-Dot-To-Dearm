@@ -19,7 +19,7 @@ import { CALL_MODES, CALL_GOALS, OPENINGS, secretaryName, validSecretaryId } fro
 // }
 
 export const CONSENT_VERSION = 'voice-pdpa-2026-11-v1'
-export const ADULT_AGE = 20            // Thai majority; year-only birth data -> conservative (see isAdult)
+export const ADULT_AGE = 13            // minimum age without a guardian (matches the sign-up policy); year-only birth data -> conservative (see isAdult)
 export const TRIAL_DAYS = 3
 export const BKK_OFFSET_MS = 7 * 3600 * 1000
 export const CALL_WINDOW = { startHour: 9, endHour: 20 }   // never dial outside 09:00-20:00 Bangkok

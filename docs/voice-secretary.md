@@ -33,7 +33,7 @@ npm run dev
 4. ตั้ง env ข้างบนใน Vercel แล้ว deploy (ต้อง HTTPS สำหรับไมค์)
 
 ## เปิดโหมดโทรจริง (ตามลำดับ ห้ามข้าม)
-1. ทบทวนข้อความ PDPA/ผู้ปกครองกับผู้เชี่ยวชาญ (ดู DECISIONS.md: ผู้ใช้ <20 ปี, ช่องยินยอมแยกสำหรับเบอร์โทร)
+1. ทบทวนข้อความ PDPA/ผู้ปกครองกับผู้เชี่ยวชาญ (ดู DECISIONS.md: ผู้ใช้ <13 ปี, ช่องยินยอมแยกสำหรับเบอร์โทร)
 2. ทดสอบกับเบอร์ตัวเอง: ตั้ง `TEST_PHONE_OWN`, `DIALING_ENABLED=true`; ใน Firestore ตั้ง `voiceSecretary/<uid ตัวเอง>.paid = true` (ยังไม่มีระบบจ่ายเงิน); ตั้งเวลาในแท็บ "พี่ใจดี" หรือยิง `POST /api/voice/dial-due` ด้วย `Authorization: Bearer $CRON_SECRET` และ body `{"uid":"<uid>"}` (ข้ามเวลานัด แต่ยังผ่านด่านยินยอม/โควตา/เพดาน/ช่วงเวลา 09-20)
 3. ตั้งตัวเรียก `dial-due` ทุก ~15 นาที (Vercel Pro cron หรือ scheduler ภายนอก; Hobby ทำได้แค่วันละครั้ง จึงยังไม่ใส่ใน vercel.json)
 4. ต่อระบบจ่ายเงินให้ตั้ง `paid` ผ่าน webhook ที่ตรวจแล้วเท่านั้น (`api/_voice/payments.js`) แล้วค่อยตั้ง `DIAL_ONLY_TEST_PHONE=false`
