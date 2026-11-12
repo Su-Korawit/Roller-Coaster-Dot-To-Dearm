@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ChevronRight, ChevronLeft, Loader2, Palette, Image as ImageIcon, Lock } from 'lucide-react'
+import { ChevronRight, ChevronLeft, Loader2, Image as ImageIcon, Lock } from 'lucide-react'
 import { getDoc, updateDoc } from 'firebase/firestore'
 import { updateProfile } from 'firebase/auth'
 import { auth } from '../../firebase'
@@ -11,7 +11,11 @@ import VoiceSecretaryPanel from '../../components/voice/VoiceSecretaryPanel'
 import DeleteAccountSheet from '../../components/DeleteAccountSheet'
 import { playSound } from '../../lib/sfx'
 import { LEGAL_PATHS } from '../../constants/legal'
-import WallpaperSheet from '../WallpaperSheet'
+import WallpaperPicker from '../WallpaperPicker'
+import { getWallpaper, wallpaperImage } from '../wallpapers'
+import { useOsStore, CUSTOM_WALLPAPER } from '../../stores/useOsStore'
+import { useCustomWallpaperUrl } from '../useCustomWallpaperUrl'
+import { cropImgStyle } from '../customWallpaper'
 import AvatarSheet from '../AvatarSheet'
 import ProfileAvatar from '../ProfileAvatar'
 import PinPad from '../PinPad'
@@ -128,17 +132,41 @@ function AccountPage({ user }) {
   )
 }
 
+// Like a phone's wallpaper settings: a small preview of the Home screen, then the gallery below it.
+function WallpaperPreview() {
+  const id = useOsStore((s) => s.wallpaperId)
+  const hasPhoto = useOsStore((s) => s.customAspect != null)
+  const crop = useOsStore((s) => s.customCrop)
+  const custom = id === CUSTOM_WALLPAPER && hasPhoto
+  const photoUrl = useCustomWallpaperUrl(custom)
+  const wp = getWallpaper(custom ? undefined : id)
+  return (
+    <div
+      className="relative mx-auto w-32 aspect-[9/16] rounded-[18px] border-4 border-brand-strong overflow-hidden shadow-px-sm"
+      style={{ background: custom ? undefined : `url(${wallpaperImage(wp.id, 'portrait')}) center bottom / cover, ${wp.css}`, imageRendering: 'pixelated' }}
+      role="img"
+      aria-label={`วอลเปเปอร์ปัจจุบัน: ${custom ? 'รูปของฉัน' : wp.name}`}
+    >
+      {custom && photoUrl && <img src={photoUrl} alt="" draggable={false} className="w-full h-full" style={cropImgStyle(crop)} />}
+      <div className="absolute inset-x-2 top-3 grid grid-cols-4 gap-1.5" aria-hidden="true">
+        {Array.from({ length: 8 }, (_, i) => <span key={i} className={`aspect-square rounded-md ${wp.dark && !custom ? 'bg-white/40' : 'bg-white/70'}`} />)}
+      </div>
+    </div>
+  )
+}
+
 function DisplayPage({ user }) {
-  const [wall, setWall] = useState(false)
   const [avatar, setAvatar] = useState(false)
   return (
     <>
-      <Group>
-        <button type="button" onClick={() => setWall(true)} className={btn}><Palette size={16} /> เปลี่ยนวอลเปเปอร์</button>
-        <button type="button" onClick={() => setAvatar(true)} className={btn}><ImageIcon size={16} /> เปลี่ยนรูปโปรไฟล์บนหน้า Home</button>
+      <Group title="วอลเปเปอร์">
+        <WallpaperPreview />
+        <WallpaperPicker maxHeight="45vh" />
         <p className="thai-font text-xs text-ink-soft">ลองกดค้างที่พื้นหลังหน้า Home ก็เปิดตัวเลือกวอลเปเปอร์ได้เหมือนกัน</p>
       </Group>
-      {wall && <WallpaperSheet onClose={() => setWall(false)} />}
+      <Group>
+        <button type="button" onClick={() => setAvatar(true)} className={btn}><ImageIcon size={16} /> เปลี่ยนรูปโปรไฟล์บนหน้า Home</button>
+      </Group>
       {avatar && <AvatarSheet user={user} onClose={() => setAvatar(false)} />}
     </>
   )

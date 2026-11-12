@@ -162,7 +162,8 @@ export default function FacultyPopup({ buildingId, onClose }) {
         {body}
 
         <footer className="px-3 py-2 border-t-2 border-line bg-mist thai-font text-xs text-ink-soft shrink-0">
-          {updated ? `ข้อมูลจาก MyTCAS อัปเดต ${updated}` : 'ข้อมูลจาก MyTCAS'}
+          <p>{updated ? `ข้อมูลจาก MyTCAS อัปเดต ${updated}` : 'ข้อมูลจาก MyTCAS'}</p>
+          <p className="mt-0.5">* ที่นั่งรวมทุกโครงการในรอบนี้ บางโครงการใช้โควตาร่วมกัน จำนวนรับจริงอาจน้อยกว่า ตรวจที่เว็บมหาวิทยาลัยอีกครั้ง</p>
         </footer>
       </section>
     </div>

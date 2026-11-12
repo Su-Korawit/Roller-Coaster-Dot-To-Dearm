@@ -6,13 +6,12 @@ import { BackBar, SearchBox, PickRow, UniLogo, Loading, Failed } from './ui'
 
 const has = (text, q) => String(text ?? '').toLowerCase().includes(q.trim().toLowerCase())
 
-// "ยังไม่เจอ" card: MyTCAS is the main source; TCAS Starter (Dek-D) is offered when nothing matches.
-function NotFound({ what, query, onStarter }) {
+// "ยังไม่เจอ" card: MyTCAS is the only source.
+function NotFound({ what, query }) {
   return (
     <div className="px-card p-4 flex flex-col gap-2 bg-brand-soft text-center">
       <p className="thai-font text-sm font-semibold">ไม่พบ{what}{query ? ` "${query}"` : ''}ใน MyTCAS</p>
-      <p className="thai-font text-xs text-ink-soft">ลองหาจากเว็บ TCAS Starter ของ Dek-D แทนได้ (ไม่ใช่ข้อมูลทางการ)</p>
-      <button type="button" onClick={onStarter} className="self-center px-btn px-4 py-1.5 thai-font text-xs font-bold bg-paper">ค้นหาใน TCAS Starter</button>
+      <p className="thai-font text-xs text-ink-soft">ลองพิมพ์คำอื่น หรือเลือกจากรายการแทน</p>
     </div>
   )
 }
@@ -75,7 +74,7 @@ function Detail({ program, uni, faculty, onBack, onPick }) {
 
 // Pick university → faculty → programme from MyTCAS (official). `initial` jumps straight to a
 // university (and pre-fills the faculty search), used by the advisor and the university apps.
-export default function ProgramPicker({ onPick, onStarter, onCancel, initial = null, lockUniversityId = null }) {
+export default function ProgramPicker({ onPick, onCancel, initial = null, lockUniversityId = null }) {
   const unis = useTcasUniversities()
   const [uni, setUni] = useState(null)
   const [fac, setFac] = useState(null)
@@ -101,7 +100,6 @@ export default function ProgramPicker({ onPick, onStarter, onCancel, initial = n
   const shownFacs = useMemo(() => facs.faculties.filter((f) => has(f.faculty_name_th, query)), [facs.faculties, query])
   const shownProgs = useMemo(() => progs.programs.filter((p) => has(p.program_name_th, query) || has(p.field_name_th, query)), [progs.programs, query])
 
-  const starter = (extra = {}) => onStarter?.({ university: uni?.university_name_th ?? '', query, ...extra })
   const go = (setter, value) => { setter(value); setQuery('') }
 
   if (uni && fac && program) {
@@ -116,7 +114,7 @@ export default function ProgramPicker({ onPick, onStarter, onCancel, initial = n
         {progs.loading ? <Loading /> : progs.error ? <Failed onRetry={progs.refetch} /> : (
           <>
             {shownProgs.map((p) => <PickRow key={p.program_id} title={p.program_name_th} sub={p.field_name_th || p.program_type_name_th} onClick={() => setProgram(p)} />)}
-            {shownProgs.length === 0 && <NotFound what="หลักสูตร" query={query} onStarter={() => starter({ level: 'prog', faculty: fac.faculty_name_th })} />}
+            {shownProgs.length === 0 && <NotFound what="หลักสูตร" query={query} />}
           </>
         )}
       </div>
@@ -131,7 +129,7 @@ export default function ProgramPicker({ onPick, onStarter, onCancel, initial = n
         {facs.loading ? <Loading /> : facs.error ? <Failed onRetry={facs.refetch} /> : (
           <>
             {shownFacs.map((f) => <PickRow key={f.faculty_id} title={f.faculty_name_th} sub={`${f.program_count} หลักสูตร`} onClick={() => go(setFac, f)} />)}
-            {shownFacs.length === 0 && <NotFound what="คณะ" query={query} onStarter={() => starter({ level: 'fac' })} />}
+            {shownFacs.length === 0 && <NotFound what="คณะ" query={query} />}
           </>
         )}
       </div>
@@ -147,7 +145,7 @@ export default function ProgramPicker({ onPick, onStarter, onCancel, initial = n
           {shownUnis.map((u) => (
             <PickRow key={u.university_id} title={u.university_name_th} sub={`${u.faculty_count} คณะ · ${u.program_count} หลักสูตร`} leading={<UniLogo id={u.university_id} name={u.university_name_th} />} onClick={() => go(setUni, u)} />
           ))}
-          {shownUnis.length === 0 && <NotFound what="มหาวิทยาลัย" query={query} onStarter={() => starter({ level: 'uni', university: '' })} />}
+          {shownUnis.length === 0 && <NotFound what="มหาวิทยาลัย" query={query} />}
         </>
       )}
     </div>

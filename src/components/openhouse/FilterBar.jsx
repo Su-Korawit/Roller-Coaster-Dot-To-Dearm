@@ -1,7 +1,7 @@
 import { Search } from 'lucide-react'
 
 const SORTS = [
-  { id: 'seats', label: 'ที่นั่งมากสุด' },
+  { id: 'seats', label: 'ที่นั่งรวมมากสุด' },
   { id: 'name', label: 'ชื่อ ก–ฮ' },
   { id: 'programs', label: 'หลักสูตรมากสุด' },
 ]

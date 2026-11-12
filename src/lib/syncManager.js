@@ -24,6 +24,8 @@ import { useHotbarStore } from '../stores/useHotbarStore'
 import { useResumeStore } from '../stores/useResumeStore'
 import { useGuideStore } from '../stores/useGuideStore'
 import { useLifeStore } from '../stores/useLifeStore'
+import { useOsStore } from '../stores/useOsStore'
+import { toOsDevice, cleanOsDevice, applyCloud, mergeFirstAdopt, sameDevice } from '../os/osDeviceSync'
 import { roomIdFor } from '../os/studyPlan'
 import { usePlansStore, planStateFromProfile } from '../stores/usePlansStore'
 import { mergeResume } from './resumeRules'
@@ -346,6 +348,34 @@ const osSync = createFirestoreSync({
 export const hydrateOsFromFirestore = osSync.hydrate
 export const setOsSyncUser = osSync.setSyncUser
 export const flushOsSync = osSync.flush
+
+// ── OS device state (installed apps, Home layout, preset wallpaper) → users/{uid}.osDevice ──
+// Follows the account, so apps installed on the phone show up on the desktop. A device meeting this
+// account for the first time merges instead of overwriting (see mergeFirstAdopt).
+let osDeviceFirst = false
+const osDeviceSync = createFirestoreSync({
+  store: useOsStore,
+  logName: 'syncOsDevice',
+  delayMs: 1000,
+  toDoc: (state) => ({ osDevice: toOsDevice(state), osDeviceUpdatedAt: serverTimestamp() }),
+  fromDoc: (data) => {
+    const cloud = cleanOsDevice(data.osDevice)
+    if (!cloud) return {}
+    const local = useOsStore.getState()
+    return osDeviceFirst ? mergeFirstAdopt(local, cloud) : applyCloud(local, cloud)
+  },
+  changed: (s, p) => s.installed !== p.installed || s.order !== p.order || s.folders !== p.folders || s.wallpaperId !== p.wallpaperId,
+  needsSeed: (data) => !data.osDevice || osDeviceFirst,
+})
+
+export function hydrateOsDeviceFromFirestore(uid, { first = false } = {}) {
+  osDeviceFirst = first
+  return osDeviceSync.hydrate(uid)
+}
+export const setOsDeviceSyncUser = osDeviceSync.setSyncUser
+export const isOsDevicePending = osDeviceSync.isPending
+export const flushOsDeviceSync = osDeviceSync.flush
+export { sameDevice as osDeviceEquals }
 
 // Back to the signed-in user's own world. `mapKey` (optional) switches the map key in the same
 // state update, so presence never briefly joins the user's own world under the previous map's key.
