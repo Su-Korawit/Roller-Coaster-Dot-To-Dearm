@@ -97,6 +97,8 @@
 
     { "source": "/api/voice/:action", "destination": "/api/voice?action=:action" },
 
+    { "source": "/api/track", "destination": "/api/content?route=track" },
+
     { "source": "/(.*)", "destination": "/app.html" }
   ]
 }

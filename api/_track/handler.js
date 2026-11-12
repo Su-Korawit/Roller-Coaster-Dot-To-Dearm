@@ -1,14 +1,16 @@
-// api/track.js — POST /api/track. Anonymous, aggregate-only analytics beacon (page views + app opens).
+// POST /api/track — anonymous, aggregate-only analytics beacon (page views + app opens).
 // Increments counters in analyticsDaily/{YYYY-MM-DD}; only the admin dashboard can read them.
-import { buildUpdate } from './_track/logic.js'
-import { getAdmin } from './_voice/store.js'
+// Not its own Vercel function (the Hobby plan caps api/ at 12 files): vercel.json rewrites
+// /api/track to /api/content?route=track and content.js calls handleTrack().
+import { buildUpdate } from './logic.js'
 
-export default async function handler(req, res) {
+export async function handleTrack(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ ok: false })
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body
     const upd = buildUpdate(body)
     if (!upd) return res.status(400).json({ ok: false })
+    const { getAdmin } = await import('../_voice/store.js')
     const admin = await getAdmin()
     const inc = admin.firestore.FieldValue.increment
     const data = {}
