@@ -165,7 +165,7 @@ function PhoneSettings({ status, reload, secretaryId }) {
             className={`px-btn w-10 h-10 border-2 border-line thai-font text-[13px] ${days.includes(i) ? 'bg-brand-strong text-white' : 'bg-paper text-ink'}`}>{d}</button>
         ))}
       </div>
-      <input type="time" className={input} value={time} min="09:00" max="19:59" onChange={(e) => setTime(e.target.value)} />
+      <input type="time" className={input} value={time} min="06:00" max="21:59" onChange={(e) => setTime(e.target.value)} />
       <button className={btn} disabled={!days.length} onClick={save}>{UI_TEXT.save}</button>
       {msg && <p role="status" className="thai-font text-[13px] text-ink-soft">{msg}</p>}
     </section>

@@ -134,9 +134,14 @@ describe('outbound phone gates', () => {
   it('missing TEST_PHONE_OWN while restricted -> refuse', () => {
     expect(canDialOut(ready(), g0, { now: NOW, limits: L, env: { DIALING_ENABLED: 'true' } })).toMatchObject({ reason: 'restricted_to_test_phone' })
   })
-  it('respects call window (Bangkok 09-20)', () => {
+  it('respects call window (Bangkok 06-22)', () => {
     const night = Date.UTC(2026, 10, 6, 16, 0, 0) // 23:00 BKK
     expect(canDialOut(ready(), g0, { now: night, limits: L, env })).toMatchObject({ reason: 'outside_call_window' })
+    const at = (h, m = 0) => Date.UTC(2026, 10, 6, h - 7, m, 0)
+    expect(canDialOut(ready(), g0, { now: at(5, 59), limits: L, env })).toMatchObject({ reason: 'outside_call_window' })
+    expect(canDialOut(ready(), g0, { now: at(6), limits: L, env }).ok).toBe(true)
+    expect(canDialOut(ready(), g0, { now: at(21, 59), limits: L, env }).ok).toBe(true)
+    expect(canDialOut(ready(), g0, { now: at(22), limits: L, env })).toMatchObject({ reason: 'outside_call_window' })
   })
   it('per-user and global daily caps', () => {
     const r = reservePhoneCall(ready(), g0, { now: NOW, limits: L, callKey: 'p1' })
@@ -150,6 +155,10 @@ describe('schedule', () => {
   it('validates days/time inside the call window', () => {
     expect(validSchedule({ days: [1, 3, 5], time: '18:30' })).toBe(true)
     expect(validSchedule({ days: [1], time: '23:00' })).toBe(false)
+    expect(validSchedule({ days: [1], time: '06:00' })).toBe(true)
+    expect(validSchedule({ days: [1], time: '21:59' })).toBe(true)
+    expect(validSchedule({ days: [1], time: '22:00' })).toBe(false)
+    expect(validSchedule({ days: [1], time: '05:59' })).toBe(false)
     expect(validSchedule({ days: [], time: '18:30' })).toBe(false)
     expect(validSchedule({ days: [9], time: '18:30' })).toBe(false)
   })

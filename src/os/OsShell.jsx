@@ -13,6 +13,7 @@ import {
 } from './windowsLogic'
 import { hasPasscode } from './passcode'
 import { trackEvent } from '../lib/track'
+import { useVoiceSync } from './useVoiceSync'
 import './os.css'
 
 // The "device" for one signed-in user. Remounted per uid (key), so a different account never
@@ -22,6 +23,7 @@ function Device({ user }) {
   const [unlocked, setUnlocked] = useState(false)
   const [windows, setWindows] = useState([])
   const { device } = useDevice()
+  useVoiceSync(user.uid)
   const open = (app) => {
     trackEvent(`app_${app.id}`)
     // Sites that forbid embedding (X-Frame-Options) can't be shown in a window: go straight to a
