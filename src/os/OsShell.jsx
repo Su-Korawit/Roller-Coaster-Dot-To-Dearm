@@ -12,6 +12,7 @@ import {
   openWindow, focusWindow, closeWindow, minimizeWindow, toggleMaximize, moveWindow, topWindowId, taskbarToggle,
 } from './windowsLogic'
 import { hasPasscode } from './passcode'
+import { trackEvent } from '../lib/track'
 import { useVoiceSync } from './useVoiceSync'
 import './os.css'
 
@@ -23,7 +24,16 @@ function Device({ user }) {
   const [windows, setWindows] = useState([])
   const { device } = useDevice()
   useVoiceSync(user.uid)
-  const open = (app) => setWindows((l) => openWindow(l, app))
+  const open = (app) => {
+    trackEvent(`app_${app.id}`)
+    // Sites that forbid embedding (X-Frame-Options) can't be shown in a window: go straight to a
+    // new tab instead of a dead-end card. Called from the tap handler, so popup blockers allow it.
+    if (app.url && app.embed === false) {
+      window.open(app.url, '_blank', 'noopener,noreferrer')
+      return
+    }
+    setWindows((l) => openWindow(l, app))
+  }
   const close = (id) => setWindows((l) => closeWindow(l, id))
 
   if (!passcodeSet) {

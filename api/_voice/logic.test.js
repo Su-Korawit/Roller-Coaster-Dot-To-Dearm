@@ -35,11 +35,11 @@ describe('consent', () => {
     expect(consentValid(c, NOW)).toBe(true)
   })
   it('minor without guardian is rejected', () => {
-    expect(() => buildConsent({ birthYear: 2010, accepted: true }, NOW)).toThrow(/guardian/)
+    expect(() => buildConsent({ birthYear: 2016, accepted: true }, NOW)).toThrow(/guardian/)
   })
-  it('minor with guardian ok; year-only 20-year-old is treated as minor (conservative)', () => {
-    expect(consentValid(buildConsent({ birthYear: 2010, accepted: true, guardian }, NOW), NOW)).toBe(true)
-    expect(isAdult(2006, NOW)).toBe(false)
+  it('minor with guardian ok; year-only 13-year-old is treated as minor (conservative)', () => {
+    expect(consentValid(buildConsent({ birthYear: 2016, accepted: true, guardian }, NOW), NOW)).toBe(true)
+    expect(isAdult(2013, NOW)).toBe(false)
   })
   it('requires explicit acceptance and sane birth year', () => {
     expect(() => buildConsent({ birthYear: 1990, accepted: false }, NOW)).toThrow()

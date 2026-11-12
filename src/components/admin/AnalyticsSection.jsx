@@ -1,8 +1,9 @@
 import { useState, useCallback, useMemo } from 'react'
-import { getDocs, limit, query } from 'firebase/firestore'
+import { documentId, getDocs, limit, orderBy, query } from 'firebase/firestore'
 import { MBTI_TYPES } from '../../game/assetManifest'
 import { cols, shapes } from '../../lib/db'
 import { useTcasUniversities } from '../../hooks/useMytcas'
+import { summarizeTraffic } from './trafficLogic'
 
 // Reads the `users` collection client-side (admin-only Firestore rule guards
 // this). Capped at AGG_LIMIT as a safety valve so a huge collection can't blow up
@@ -53,7 +54,11 @@ async function getAggregate() {
     .sort(([, a], [, b]) => b - a)
     .slice(0, 10)
 
-  return { total, signupsByDay, mbtiCounts, topUniversities, topPrograms }
+  // Anonymous traffic counters written by /api/track (only visitors who accepted analytics).
+  const tsnap = await getDocs(query(cols.analyticsDaily, orderBy(documentId(), 'desc'), limit(30)))
+  const traffic = summarizeTraffic(tsnap.docs.map((d) => ({ id: d.id, ...d.data() })))
+
+  return { total, signupsByDay, mbtiCounts, topUniversities, topPrograms, traffic }
 }
 
 function Bar({ label, value, max, color = 'bg-brand' }) {
@@ -125,7 +130,7 @@ export default function AnalyticsSection() {
     )
   }
 
-  const { total, signupsByDay, mbtiCounts, topUniversities, topPrograms } = data
+  const { total, signupsByDay, mbtiCounts, topUniversities, topPrograms, traffic } = data
   const maxMbti = Math.max(...MBTI_TYPES.map((m) => mbtiCounts[m] ?? 0), 1)
   const maxUni  = Math.max(...topUniversities.map(([, v]) => v), 1)
   const maxProg = Math.max(...topPrograms.map(([, v]) => v), 1)
@@ -147,6 +152,42 @@ export default function AnalyticsSection() {
           Refresh
         </button>
       </div>
+
+      {/* Visitors (anonymous, consented) — the main number */}
+      <section>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">ผู้เข้าชมเว็บ (30 วันล่าสุด)</h3>
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          {[['ผู้เข้าชมวันนี้', traffic.todayVisitors], ['เข้าชมหน้าวันนี้', traffic.todayViews], ['ผู้เข้าชมรวม', traffic.visitors], ['เข้าชมหน้ารวม', traffic.views]].map(([l, v]) => (
+            <div key={l} className="rounded-xl bg-white p-3">
+              <p className="text-2xl font-bold text-ink">{v.toLocaleString()}</p>
+              <p className="text-xs text-gray-500">{l}</p>
+            </div>
+          ))}
+        </div>
+        {traffic.views === 0 && <p className="text-xs text-gray-500">ยังไม่มีข้อมูล (นับเฉพาะผู้ที่กดยินยอมคุกกี้)</p>}
+        <div className="space-y-1.5">
+          {traffic.perDay.map(([day, v]) => (
+            <Bar key={day} label={day.slice(5)} value={v} max={Math.max(...traffic.perDay.map(([, x]) => x), 1)} color="bg-brand" />
+          ))}
+        </div>
+        {traffic.topApps.length > 0 && (
+          <div className="mt-5">
+            <p className="text-xs font-semibold text-gray-600 mb-2">แอปที่เปิดบ่อย</p>
+            <div className="space-y-1.5">{traffic.topApps.map(([k, v]) => <Bar key={k} label={k} value={v} max={traffic.topApps[0][1]} color="bg-accent-pink" />)}</div>
+          </div>
+        )}
+        {traffic.topPages.length > 0 && (
+          <div className="mt-5">
+            <p className="text-xs font-semibold text-gray-600 mb-2">หน้าที่เข้าบ่อย</p>
+            <div className="space-y-1.5">{traffic.topPages.map(([k, v]) => <Bar key={k} label={k} value={v} max={traffic.topPages[0][1]} color="bg-brand-strong" />)}</div>
+          </div>
+        )}
+        {(traffic.devices.length > 0 || traffic.refs.length > 0) && (
+          <p className="mt-4 text-xs text-gray-500">
+            อุปกรณ์: {traffic.devices.map(([k, v]) => `${k} ${v}`).join(' · ') || '-'} · มาจาก: {traffic.refs.map(([k, v]) => `${k.replace(/_/g, '.')} ${v}`).join(' · ') || '-'}
+          </p>
+        )}
+      </section>
 
       {/* Signups over time */}
       {signupsByDay.length > 0 && (

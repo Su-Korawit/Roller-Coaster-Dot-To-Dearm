@@ -97,6 +97,10 @@ const hubJsonLd = [
 ]
 
 export default async function handler(req, res, deps = {}) {
+  if (req.query?.route === 'track') {
+    const { handleTrack } = await import('./_track/handler.js')
+    return handleTrack(req, res)
+  }
   const fetchImpl = deps.fetchImpl ?? globalThis.fetch
   const rest = createFirestoreRest({
     fetchImpl,
