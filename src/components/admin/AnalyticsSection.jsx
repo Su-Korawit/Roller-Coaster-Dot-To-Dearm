@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react'
-import { documentId, getDocs, limit, orderBy, query } from 'firebase/firestore'
+import { documentId, getDocs, limit, query, where } from 'firebase/firestore'
 import { MBTI_TYPES } from '../../game/assetManifest'
 import { cols, shapes } from '../../lib/db'
 import { useTcasUniversities } from '../../hooks/useMytcas'
@@ -55,7 +55,9 @@ async function getAggregate() {
     .slice(0, 10)
 
   // Anonymous traffic counters written by /api/track (only visitors who accepted analytics).
-  const tsnap = await getDocs(query(cols.analyticsDaily, orderBy(documentId(), 'desc'), limit(30)))
+  // Range on the document id (YYYY-MM-DD): a single-field query, so no composite index is needed.
+  const cutoff = new Date(Date.now() + 7 * 3600e3 - 30 * 86400e3).toISOString().slice(0, 10)
+  const tsnap = await getDocs(query(cols.analyticsDaily, where(documentId(), '>=', cutoff), limit(40)))
   const traffic = summarizeTraffic(tsnap.docs.map((d) => ({ id: d.id, ...d.data() })))
 
   return { total, signupsByDay, mbtiCounts, topUniversities, topPrograms, traffic }
