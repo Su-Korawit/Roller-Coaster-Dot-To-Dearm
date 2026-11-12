@@ -2,18 +2,19 @@
 // `dark` tells the UI to use light text. `video: true` means a looping clip exists next to the
 // images (see wallpaperVideo); leave it off until the .mp4 files are in public/assets/os/wallpapers.
 export const WALLPAPER_CATEGORIES = [
-  { id: 'classic', name: 'คลาสสิก' },
-  { id: 'eu', name: 'EU' },
-  { id: 'na', name: 'USA & Canada' },
-  { id: 'cn', name: 'จีน' },
-  { id: 'kr', name: 'เกาหลี' },
-  { id: 'jp', name: 'ญี่ปุ่น' },
+  { id: 'classic', name: 'สีพาสเทล' },
+  { id: 'eu', name: 'ยุโรปมนตร์เสน่ห์' },
+  { id: 'na', name: 'อเมริกาเหนือ' },
+  { id: 'cn', name: 'แดนมังกร' },
+  { id: 'kr', name: 'เกาหลีหวานซ่อนกลิ่น' },
+  { id: 'jp', name: 'ญี่ปุ่นยามมนต์' },
+  { id: 'th', name: 'ไทยแลนด์ไทยแท้' },
 ]
 
 // kind: 'country' (countryside / nature) or 'city'. The picker groups each collection by it.
 export const WALLPAPER_KINDS = [
-  { id: 'country', name: 'ชนบทและธรรมชาติ' },
-  { id: 'city', name: 'เมือง' },
+  { id: 'country', name: 'ธรรมชาติและชนบท' },
+  { id: 'city', name: 'แสงสีเมืองใหญ่' },
 ]
 
 const g = (a, b, c) => `linear-gradient(170deg, ${a} 0%, ${b} 55%, ${c} 100%)`
@@ -54,6 +55,12 @@ export const WALLPAPERS = [
   { id: 'jp-sakura', category: 'jp', kind: 'country', name: 'หมู่บ้านซากุระ', dark: false, css: g('#FDEAF1', '#F6C6D8', '#9FD1A8') },
   { id: 'jp-kyoto', category: 'jp', kind: 'city', name: 'ถนนเมืองเก่า', dark: false, css: g('#FBE9D6', '#E9B98E', '#8C6E5A') },
   { id: 'jp-tokyo-night', category: 'jp', kind: 'city', name: 'โตเกียวยามค่ำ', dark: true, css: g('#16193F', '#4A2F7A', '#E0508A') },
+
+  // Thailand
+  { id: 'th-rice', category: 'th', kind: 'country', name: 'ทุ่งนาเขียวขจี', dark: false, css: g('#E2F3D6', '#BFE08A', '#5E9A4B') },
+  { id: 'th-island', category: 'th', kind: 'country', name: 'เกาะทะเลอันดามัน', dark: false, css: g('#D5F0F5', '#8FD6D3', '#F2E0A8') },
+  { id: 'th-temple', category: 'th', kind: 'city', name: 'วัดเก่าริมน้ำ', dark: false, css: g('#FFF0C9', '#F2C98A', '#C9824A') },
+  { id: 'th-bangkok-night', category: 'th', kind: 'city', name: 'กรุงเทพฯ ยามค่ำ', dark: true, css: g('#1B1F4D', '#5B2F7A', '#E8A04A') },
 ]
 
 export const DEFAULT_WALLPAPER = 'lavender'

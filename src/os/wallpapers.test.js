@@ -9,7 +9,7 @@ describe('wallpapers', () => {
   })
 
   it('has the five country collections, each with countryside and city', () => {
-    expect(WALLPAPER_CATEGORIES.map((c) => c.name)).toEqual(expect.arrayContaining(['EU', 'USA & Canada', 'จีน', 'เกาหลี', 'ญี่ปุ่น']))
+    expect(WALLPAPER_CATEGORIES.map((c) => c.id)).toEqual(expect.arrayContaining(['eu', 'na', 'cn', 'kr', 'jp']))
     for (const c of ['eu', 'na', 'cn', 'kr', 'jp']) {
       expect(wallpapersIn(c, 'country').length).toBeGreaterThan(0)
       expect(wallpapersIn(c, 'city').length).toBeGreaterThan(0)
