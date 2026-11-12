@@ -69,7 +69,7 @@ export default function LoginScreen() {
             </label>
             <label className="flex items-start gap-2">
               <input type="checkbox" checked={age} onChange={(e) => setAge(e.target.checked)} className="mt-0.5" />
-              <span>ฉันอายุ 20 ปีขึ้นไป หรือได้รับความยินยอมจากผู้ปกครองแล้ว</span>
+              <span>ฉันอายุ 13 ปีขึ้นไป หรือได้รับความยินยอมจากผู้ปกครองแล้ว</span>
             </label>
           </fieldset>
 
