@@ -60,3 +60,9 @@
   .os-win-enter { animation: none; }
   .os-win-min, .os-win-out { scale: 1; translate: 0 0; }
 }
+
+@keyframes osWidgetIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { [class*='osWidgetIn'] { animation: none; } }

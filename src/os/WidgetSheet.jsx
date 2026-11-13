@@ -1,12 +1,12 @@
 import { Check, Plus } from 'lucide-react'
 import OsSheet from './OsSheet'
 import { useOsStore } from '../stores/useOsStore'
-import { MAX_WIDGETS, WIDGET_DEFS } from './widgetsLogic'
+import { MAX_WIDGETS, WIDGET_DEFS, cleanWidgetIds } from './widgetsLogic'
 import { findApp } from './apps'
 
 // Pick which widgets sit on the Home screen (at most MAX_WIDGETS).
 export default function WidgetSheet({ onClose }) {
-  const widgets = useOsStore((s) => s.widgets)
+  const widgets = cleanWidgetIds(useOsStore((s) => s.widgets))
   const installed = useOsStore((s) => s.installed)
   const toggle = useOsStore((s) => s.toggleWidget)
   const full = widgets.length >= MAX_WIDGETS
@@ -22,7 +22,7 @@ export default function WidgetSheet({ onClose }) {
           return (
             <li key={d.id} className="flex items-center gap-3">
               <div className="min-w-0 flex-1">
-                <p className="thai-font text-sm font-bold">{d.name}</p>
+                <p className="thai-font text-sm font-bold">{d.name} <span className="font-normal text-xs text-ink-soft">· {d.size === 'small' ? 'เล็ก' : 'กลาง'}</span></p>
                 <p className="thai-font text-xs text-ink-soft">{missing ? `ต้องติดตั้งแอป ${app?.name ?? ''} ก่อน` : d.hint}</p>
               </div>
               <button

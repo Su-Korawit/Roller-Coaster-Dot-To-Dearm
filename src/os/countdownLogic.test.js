@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatDays, urgency, subjectCountdowns, nextCountdown, portfolioDeadlines, seasonMilestones } from './countdownLogic'
+import { formatDays, urgency, subjectCountdowns, nextCountdown, portfolioDeadlines, seasonMilestones, nearestPortfolio } from './countdownLogic'
 
 const TODAY = '2026-11-13'
 
@@ -85,5 +85,22 @@ describe('seasonMilestones', () => {
     const rows = seasonMilestones(TODAY)
     expect(rows.length).toBeGreaterThan(5)
     expect(rows[0].days).toBeGreaterThanOrEqual(0)
+  })
+})
+
+describe('nearestPortfolio', () => {
+  const goals = [{ id: 'a' }, { id: 'b' }]
+  it('picks the soonest upcoming one across goals', () => {
+    const byGoal = {
+      a: { rows: [{ title: 'ผ่านแล้ว', days: -2 }, { title: 'A1', days: 20 }] },
+      b: { rows: [{ title: 'B1', days: 9 }] },
+    }
+    const n = nearestPortfolio(byGoal, goals)
+    expect(n).toMatchObject({ title: 'B1', days: 9 })
+    expect(n.goal.id).toBe('b')
+  })
+  it('null when nothing is upcoming', () => {
+    expect(nearestPortfolio({ a: { rows: [{ days: -1 }] } }, goals)).toBeNull()
+    expect(nearestPortfolio({}, [])).toBeNull()
   })
 })

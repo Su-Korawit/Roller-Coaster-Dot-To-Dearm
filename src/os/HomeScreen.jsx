@@ -8,7 +8,7 @@ import AppDetailsSheet from './AppDetailsSheet'
 import WallpaperSheet from './WallpaperSheet'
 import WidgetCard from './WidgetCards'
 import WidgetSheet from './WidgetSheet'
-import { visibleWidgets } from './widgetsLogic'
+import { visibleWidgets, widgetSpan } from './widgetsLogic'
 import AvatarSheet from './AvatarSheet'
 import ProfileAvatar from './ProfileAvatar'
 import { HELP_APP, HELP_BUTTON_ENABLED, OS_APPS, findApp, paginate } from './apps'
@@ -183,8 +183,17 @@ export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topI
         onDrop={onFilesDrop}
       >
         {widgets.length > 0 && (
-          <div className="os-pages shrink-0 flex gap-3 overflow-x-auto px-5 pt-4 sm:px-10 lg:px-16" role="group" aria-label="วิดเจ็ต">
-            {widgets.map((w) => <WidgetCard key={w.id} id={w.id} onOpen={() => { const a = findApp(w.appId); if (a) onOpenApp(a) }} />)}
+          <div
+            className="shrink-0 grid gap-x-2 gap-y-3 px-5 pt-4 sm:px-10 lg:px-16 [grid-auto-flow:dense]"
+            style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gridAutoRows: '7.5rem' }}
+            role="group"
+            aria-label="วิดเจ็ต"
+          >
+            {widgets.map((w) => (
+              <div key={w.id} style={{ gridColumn: `span ${widgetSpan(w.size, cols)}` }} className="min-w-0 animate-[osWidgetIn_360ms_cubic-bezier(0.34,1.35,0.5,1)_backwards]">
+                <WidgetCard id={w.id} onOpen={() => { const a = findApp(w.appId); if (a) onOpenApp(a) }} />
+              </div>
+            ))}
           </div>
         )}
         <div ref={scroller} onScroll={onScroll} data-os-drop-area className="os-pages flex flex-1 overflow-x-auto snap-x snap-mandatory">

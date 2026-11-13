@@ -75,3 +75,15 @@ export function seasonMilestones(today, calendar = TCAS_CALENDAR) {
   const past = withDays.filter((r) => r.days < 0).sort((a, b) => b.date.localeCompare(a.date))
   return [...upcoming, ...past]
 }
+
+// The portfolio deadline that comes first (today or later) across all goals, or null.
+// `byGoal` = { [goalId]: { rows: portfolioDeadlines(...) } }, `goals` keeps their order (first = primary goal).
+export function nearestPortfolio(byGoal = {}, goals = []) {
+  let best = null
+  for (const g of goals) {
+    for (const r of byGoal[g.id]?.rows ?? []) {
+      if (r.days != null && r.days >= 0 && (!best || r.days < best.days)) best = { ...r, goal: g }
+    }
+  }
+  return best
+}

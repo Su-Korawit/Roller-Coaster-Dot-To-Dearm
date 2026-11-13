@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Target, ListChecks, Briefcase, CalendarClock } from 'lucide-react'
 import { useLifeStore } from '../../stores/useLifeStore'
 import { todayKey } from '../lifeLogic'
 import { goalTitle, goalSubtitle } from '../goalLogic'
-import { loadUniversityProjects, findProgram, thaiDate } from '../checklistProjects'
-import { formatDays, urgency, subjectCountdowns, nextCountdown, portfolioDeadlines, seasonMilestones } from '../countdownLogic'
+import { thaiDate } from '../checklistProjects'
+import { useGoalPortfolios } from '../useGoalPortfolios'
+import { formatDays, urgency, subjectCountdowns, nextCountdown, seasonMilestones } from '../countdownLogic'
 import { findApp } from '../apps'
 
 const TONE = {
@@ -26,25 +27,6 @@ function Section({ icon, title, children, hint }) {
       {children}
     </section>
   )
-}
-
-// Portfolio deadlines of one goal (round 1 projects of its programme), loaded from the university snapshot.
-function useGoalPortfolios(goals, today) {
-  const [byGoal, setByGoal] = useState({})
-  const key = goals.map((g) => `${g.id}:${g.universityId}:${g.programId}`).join('|')
-  useEffect(() => {
-    let alive = true
-    goals.forEach(async (g) => {
-      if (!g.universityId || !g.programId) { if (alive) setByGoal((m) => ({ ...m, [g.id]: { status: 'none', rows: [] } })); return }
-      const shard = await loadUniversityProjects(g.universityId)
-      if (!alive) return
-      if (!shard) { setByGoal((m) => ({ ...m, [g.id]: { status: 'error', rows: [] } })); return }
-      setByGoal((m) => ({ ...m, [g.id]: { status: 'ready', rows: portfolioDeadlines(findProgram(shard, g.programId), today) } }))
-    })
-    return () => { alive = false }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, today])
-  return byGoal
 }
 
 // Countdown: days left to every exam subject, to each portfolio deadline of your goals, and to the TCAS milestones.
