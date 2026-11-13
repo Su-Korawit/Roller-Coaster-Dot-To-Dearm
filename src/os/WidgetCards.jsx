@@ -17,7 +17,7 @@ function Card({ icon, label, onOpen, children }) {
       aria-label={`${label} (เปิดแอป)`}
       className="px-card bg-paper/90 backdrop-blur-sm text-ink text-left p-3 w-40 h-24 shrink-0 flex flex-col justify-between active:scale-[0.97] transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
     >
-      <span className="thai-font text-[11px] font-semibold text-ink-soft flex items-center gap-1.5">{icon} {label}</span>
+      <span className="thai-font text-xs font-semibold text-ink-soft flex items-center gap-1.5">{icon} {label}</span>
       {children}
     </button>
   )
@@ -33,7 +33,7 @@ function CountdownWidget({ onOpen }) {
       {next ? (
         <div className="leading-tight">
           <p className="font-display font-extrabold text-3xl text-brand-strong tabular-nums">{next.days === 0 ? 'วันนี้' : next.days} <span className="thai-font text-xs font-bold text-ink">{next.days > 0 ? 'วัน' : ''}</span></p>
-          <p className="thai-font text-[11px] text-ink-soft truncate">{next.subject} · {thaiDate(next.date)}</p>
+          <p className="thai-font text-xs text-ink-soft truncate">{next.subject} · {thaiDate(next.date)}</p>
         </div>
       ) : <p className="thai-font text-xs text-ink-soft">ตั้งเป้าหมายใน Goal เพื่อดูวันสอบ</p>}
     </Card>
@@ -62,7 +62,7 @@ function ReadingWidget({ onOpen }) {
     <Card icon={<BookOpen size={12} aria-hidden="true" />} label="อ่านหนังสือ" onOpen={onOpen}>
       <div className="leading-tight">
         <p className="font-display font-extrabold text-2xl">{formatMinutes(thisWeekMinutes(readLog, today))}</p>
-        <p className="thai-font text-[11px] text-ink-soft">สัปดาห์นี้ · ต่อเนื่อง {readingStreak(readLog, today)} วัน</p>
+        <p className="thai-font text-xs text-ink-soft">สัปดาห์นี้ · ต่อเนื่อง {readingStreak(readLog, today)} วัน</p>
       </div>
     </Card>
   )
@@ -74,7 +74,7 @@ function SecretaryWidget({ onOpen }) {
     <Card icon={<Bot size={12} aria-hidden="true" />} label="เลขา AI" onOpen={onOpen}>
       <div className="leading-tight">
         <p className="font-display font-extrabold text-2xl tabular-nums">{st.left} <span className="thai-font text-xs font-bold">ข้อความ</span></p>
-        <p className="thai-font text-[11px] text-ink-soft">เหลือคุยกับพี่วันนี้</p>
+        <p className="thai-font text-xs text-ink-soft">เหลือคุยกับพี่วันนี้</p>
       </div>
     </Card>
   )

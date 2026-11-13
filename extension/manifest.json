@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "I LOVE TCAS",
+  "description": "เปิด I LOVE TCAS เป็นแผงข้างจอ ใช้ข้างเว็บ MyTCAS และเว็บมหาวิทยาลัยได้โดยไม่ต้องสลับแท็บ",
+  "version": "0.1.0",
+  "minimum_chrome_version": "116",
+  "icons": { "32": "icons/32.png", "128": "icons/128.png" },
+  "action": { "default_title": "เปิด I LOVE TCAS" },
+  "permissions": ["sidePanel", "storage"],
+  "background": { "service_worker": "background.js" },
+  "side_panel": { "default_path": "sidepanel.html" },
+  "content_scripts": [
+    {
+      "matches": ["https://www.mytcas.com/*", "https://*.ac.th/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

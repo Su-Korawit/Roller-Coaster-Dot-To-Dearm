@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useConsentStore } from '../stores/useConsentStore'
 import ConsentGate from '../components/ConsentGate'
@@ -12,6 +12,8 @@ import {
   openWindow, focusWindow, closeWindow, minimizeWindow, toggleMaximize, moveWindow, topWindowId, taskbarToggle,
 } from './windowsLogic'
 import { hasPasscode } from './passcode'
+import { appIdFromSearch } from './deepLink'
+import { findApp } from './apps'
 import { trackEvent } from '../lib/track'
 import { useVoiceSync } from './useVoiceSync'
 import { useOsDeviceSync } from './useOsDeviceSync'
@@ -37,6 +39,18 @@ function Device({ user }) {
     setWindows((l) => openWindow(l, app))
   }
   const close = (id) => setWindows((l) => closeWindow(l, id))
+
+  // "?open=<app id>" (Chrome extension, bookmarks): open that app once, right after unlock.
+  useEffect(() => {
+    if (!unlocked) return
+    const id = appIdFromSearch(window.location.search)
+    if (!id) return
+    const app = findApp(id)
+    if (app?.load) open(app)
+    const url = new URL(window.location.href)
+    url.searchParams.delete('open')
+    window.history.replaceState(null, '', url)
+  }, [unlocked])
 
   if (!passcodeSet) {
     return <PasscodeScreen user={user} mode="set" onDone={() => { setPasscodeSet(true); setUnlocked(true) }} />
