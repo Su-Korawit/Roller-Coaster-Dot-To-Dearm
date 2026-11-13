@@ -1,11 +1,14 @@
 import { useMemo, useRef, useState } from 'react'
-import { Lock, Palette, FolderPlus, FileText, CircleHelp } from 'lucide-react'
+import { Lock, Palette, FolderPlus, FileText, CircleHelp, LayoutGrid } from 'lucide-react'
 import OsGuide from './OsGuide'
 import Wallpaper from './Wallpaper'
 import { useWallpaperDark } from './useWallpaperDark'
 import AppIcon, { AppTile } from './AppIcon'
 import AppDetailsSheet from './AppDetailsSheet'
 import WallpaperSheet from './WallpaperSheet'
+import WidgetCard from './WidgetCards'
+import WidgetSheet from './WidgetSheet'
+import { visibleWidgets } from './widgetsLogic'
 import AvatarSheet from './AvatarSheet'
 import ProfileAvatar from './ProfileAvatar'
 import { HELP_APP, HELP_BUTTON_ENABLED, OS_APPS, findApp, paginate } from './apps'
@@ -26,6 +29,7 @@ export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topI
   const folders = useOsStore((s) => s.folders)
   const files = useOsStore((s) => s.files)
   const guideSeen = useOsStore((s) => s.guideSeen)
+  const widgetIds = useOsStore((s) => s.widgets)
   const uninstallApp = useOsStore((s) => s.uninstallApp)
   const dropToken = useOsStore((s) => s.dropToken)
   const touch = useTouchPrimary()
@@ -34,6 +38,7 @@ export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topI
   const [details, setDetails] = useState(null)
   const [pickWallpaper, setPickWallpaper] = useState(false)
   const [pickAvatar, setPickAvatar] = useState(false)
+  const [pickWidgets, setPickWidgets] = useState(false)
   const [menu, setMenu] = useState(null)             // { x, y } right-click menu on empty wallpaper
   const [openFolderId, setOpenFolderId] = useState(null)
   const [fileInfo, setFileInfo] = useState(null)
@@ -57,6 +62,7 @@ export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topI
   const pages = useMemo(() => paginate(entries, cols * rows), [entries, cols, rows])
   const openFolder = folders.find((f) => f.id === openFolderId) ?? null
   const desktop = device === 'desktop'
+  const widgets = useMemo(() => visibleWidgets(widgetIds, (id) => { const a = findApp(id); return !!a && (a.builtIn || installed.includes(id)) }), [widgetIds, installed])
 
   function onScroll(e) {
     const el = e.currentTarget
@@ -148,6 +154,9 @@ export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topI
       <button type="button" className={barBtn} onClick={() => setGuideOpen(true)} aria-label="คู่มือใช้งาน" title="คู่มือใช้งาน">
         <CircleHelp size={16} />
       </button>
+      <button type="button" className={barBtn} onClick={() => setPickWidgets(true)} aria-label="จัดวิดเจ็ต" title="จัดวิดเจ็ต">
+        <LayoutGrid size={16} />
+      </button>
       <button type="button" className={barBtn} onClick={() => setPickWallpaper(true)} aria-label="เปลี่ยนวอลเปเปอร์">
         <Palette size={16} />
       </button>
@@ -173,6 +182,11 @@ export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topI
         onDragOver={onFilesOver}
         onDrop={onFilesDrop}
       >
+        {widgets.length > 0 && (
+          <div className="os-pages shrink-0 flex gap-3 overflow-x-auto px-5 pt-4 sm:px-10 lg:px-16" role="group" aria-label="วิดเจ็ต">
+            {widgets.map((w) => <WidgetCard key={w.id} id={w.id} onOpen={() => { const a = findApp(w.appId); if (a) onOpenApp(a) }} />)}
+          </div>
+        )}
         <div ref={scroller} onScroll={onScroll} data-os-drop-area className="os-pages flex flex-1 overflow-x-auto snap-x snap-mandatory">
           {pages.map((items, i) => (
             <div key={i} className="w-full shrink-0 snap-start px-5 pt-6 sm:px-10 lg:px-16">
@@ -252,12 +266,14 @@ export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topI
       {menu && (
         <>
           <div className="fixed inset-0 z-40" onPointerDown={() => setMenu(null)} onContextMenu={(e) => { e.preventDefault(); setMenu(null) }} aria-hidden="true" />
-          <div role="menu" className="fixed z-50 px-card bg-paper text-ink p-1 flex flex-col min-w-[190px]" style={{ left: Math.min(menu.x, window.innerWidth - 200), top: Math.min(menu.y, window.innerHeight - 110) }}>
+          <div role="menu" className="fixed z-50 px-card bg-paper text-ink p-1 flex flex-col min-w-[190px]" style={{ left: Math.min(menu.x, window.innerWidth - 200), top: Math.min(menu.y, window.innerHeight - 150) }}>
             <button type="button" role="menuitem" onClick={() => { useOsStore.getState().newFolder(); setMenu(null) }} className="flex items-center gap-2 px-3 py-2 rounded-ui hover:bg-brand-soft thai-font text-sm text-left"><FolderPlus size={16} aria-hidden="true" /> สร้างโฟลเดอร์ใหม่</button>
+            <button type="button" role="menuitem" onClick={() => { setPickWidgets(true); setMenu(null) }} className="flex items-center gap-2 px-3 py-2 rounded-ui hover:bg-brand-soft thai-font text-sm text-left"><LayoutGrid size={16} aria-hidden="true" /> จัดวิดเจ็ต</button>
             <button type="button" role="menuitem" onClick={() => { setPickWallpaper(true); setMenu(null) }} className="flex items-center gap-2 px-3 py-2 rounded-ui hover:bg-brand-soft thai-font text-sm text-left"><Palette size={16} aria-hidden="true" /> เปลี่ยนวอลเปเปอร์</button>
           </div>
         </>
       )}
+      {pickWidgets && <WidgetSheet onClose={() => setPickWidgets(false)} />}
       {pickWallpaper && <WallpaperSheet onClose={() => setPickWallpaper(false)} />}
     </Wallpaper>
   )
