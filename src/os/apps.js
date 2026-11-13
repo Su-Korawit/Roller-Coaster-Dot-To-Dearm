@@ -249,6 +249,7 @@ const RAW_APPS = [
     category: l.category,
     embed: l.embed !== false,
     url: l.url,
+    shots: 1,   // public/assets/os/shots/<id>-1.webp from scripts/shotLinks.mjs; hidden if missing
     features: ['เปิดเว็บไซต์จริงในหน้าต่างของเรา', l.tagline],
     installable: true,
     load: () => import('./apps/LinkApp'),
@@ -332,6 +333,7 @@ export const CATEGORIES = [
   { id: 'admission', label: 'สมัครและข้อมูลรับเข้า' },
   { id: 'university', label: 'มหาวิทยาลัย' },
   { id: 'learn', label: 'เรียนและติว' },
+  { id: 'exam', label: 'คลังข้อสอบ' },
   { id: 'activity', label: 'ค่ายและกิจกรรม' },
   { id: 'news', label: 'ชุมชนและข่าวสาร' },
 ]

@@ -1,4 +1,4 @@
-import { Tent, Trophy, Medal, GraduationCap, Calculator, Newspaper, ClipboardList, School, Search } from 'lucide-react'
+import { Tent, Trophy, Medal, GraduationCap, Calculator, Newspaper, ClipboardList, School, Search, FileText, Library, BookOpen } from 'lucide-react'
 import { TUTORING_SITES, faviconUrl } from '../data/tutoringSites'
 
 // Websites listed in the Store. They open in a new tab (most sites block being embedded).
@@ -21,6 +21,21 @@ const BASE_LINKS = [
   { id: 'link-dekd-pre', category: 'admission', embed: false, logo: '/assets/os/logos/link-dekd-pre.webp', name: 'Dek-D Admission', tagline: 'ข้อมูลรับตรง/แอดมิชชัน', url: 'https://www.dek-d.com/pre-admission/', Icon: Medal, tone: 'var(--color-zone-soc)' },
 ]
 
+// คลังข้อสอบ: เว็บรวมข้อสอบเก่า/ข้อสอบจำลอง/เฉลย. Logo = the site's favicon.
+const EXAM_ROWS = [
+  ['roonpii', 'Roonpii', 'ข้อสอบเก่ามหาวิทยาลัยและคลังข้อสอบ', 'https://www.roonpii.com/papers', FileText],
+  ['smartmathpro-exam', 'SmartMathPro ข้อสอบฟรี', 'ข้อสอบคณิตศาสตร์ให้ฝึกฟรี', 'https://www.smartmathpro.com/exam-free/', Calculator],
+  ['rathcenter', 'Rath Center', 'ข้อสอบและสื่อฝึกทำโจทย์', 'https://rathcenter.com/#/', Library],
+  ['tcaster-mini-exam', 'TCASter Mini Exam', 'ข้อสอบย่อยจาก TCASter', 'https://tcaster.net/mini-exam-fix/', FileText],
+  ['mytcas-answers', 'MyTCAS เฉลยข้อสอบ', 'เฉลยข้อสอบอย่างเป็นทางการ', 'https://www.mytcas.com/answers/', ClipboardList],
+  ['posn', 'สอวน. (POSN)', 'ข้อสอบโอลิมปิกวิชาการ', 'https://www.posn.or.th/examination/', Trophy],
+  ['collegeboard', 'College Board', 'SAT / AP ข้อสอบอย่างเป็นทางการ', 'https://www.collegeboard.org/', GraduationCap],
+  ['satpanda', 'SAT Panda', 'เตรียมสอบ SAT', 'https://www.satpanda.com/index.html', BookOpen],
+]
+const EXAM_LINKS = EXAM_ROWS.map(([id, name, tagline, url, Icon]) => ({
+  id: `link-exam-${id}`, category: 'exam', logo: faviconUrl(url), name, tagline, url, Icon, tone: 'var(--color-zone-biz)',
+}))
+
 // One Store app per tutoring institute (category 'learn'), same as SmartMathPro above. Logo = the site's favicon.
 const TUTOR_LINKS = TUTORING_SITES.map((t) => ({
   id: t.id,
@@ -34,4 +49,4 @@ const TUTOR_LINKS = TUTORING_SITES.map((t) => ({
   tone: 'var(--color-zone-sci)',
 }))
 
-export const STORE_LINKS = [...BASE_LINKS, ...TUTOR_LINKS]
+export const STORE_LINKS = [...BASE_LINKS, ...EXAM_LINKS, ...TUTOR_LINKS]
