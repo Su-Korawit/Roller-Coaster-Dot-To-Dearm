@@ -20,6 +20,7 @@
 | 016 | ภาพสไลด์ส่วนเทคนิค 4 ภาพ (ปก, วิธีสร้าง, ต้นทุน, หน้าสรุป) | เสร็จ (2026-11-08 ผู้ใช้ยืนยันส่ง+โหลดผ่านเบราว์เซอร์ในแอป แท็บใหม่ ช่องแชตว่าง พรอมต์ไม่มีข้อมูลส่วนตัว ภาพ AI ต้นฉบับ ตรวจ: ไม่มีตัวอักษรในภาพ B/C โปร่งใสจริง แปลงเป็น webp รวม ~190KB) | to-chatgpt/016-ภาพสไลด์ส่วนเทคนิค-4ภาพ.md | from-chatgpt/016-slide-{cover,close}.png (1672x941), 016-slide-{build,cost}.png (1254x1254) | asset ของ artifact สไลด์ (ไม่ลงโค้ดแอป) |
 | 017 | สรุปโปรเจกต์ให้ ChatGPT เป็นติวเตอร์ (ไม่ใช่ภาพ) | เสร็จ (2026-11-08 ผู้ใช้ยืนยันส่ง: แนบไฟล์ผ่านแอป ChatGPT โหมด Chat แชตใหม่ ไม่มี secret/ข้อมูลส่วนตัวในไฟล์ ChatGPT ตอบสรุป 10 บรรทัดตรงกับไฟล์) | to-chatgpt/017-project-briefing.md | (คำตอบอยู่ในแชต ChatGPT: สรุปภาพรวมโปรเจกต์) | ใช้ในแชต ChatGPT เท่านั้น |
 | 017 | โปสเตอร์โฆษณาแอป 2 แบบ (แนวตั้ง 2:3, แนวนอน 16:9) ไม่มีตัวอักษร เว้นที่วางข้อความ | รอส่งให้ ChatGPT | to-chatgpt/017-โปสเตอร์โฆษณาแอป.md | from-chatgpt/017-poster-{portrait,landscape}.png | ยังไม่ลงโค้ดแอป |
+| 020 | โลโก้ + ภาพ splash แอป Checklist (2 ภาพ) | รอส่งให้ ChatGPT (โค้ดใช้ภาพพิกเซลชั่วคราวจาก scripts/makeChecklistArt.mjs ไปก่อน) | to-chatgpt/020-ภาพแอป-Checklist.md | from-chatgpt/020-checklist-{logo,splash}.png | public/assets/os/apps/checklist.webp, public/assets/os/splash/checklist.webp |
 
 ## บันทึกความคืบหน้างาน voice-secretary
 

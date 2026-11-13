@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, X, Sparkles, CalendarClock, Star, Search, Wand2, Target, Route, GripVertical, ChevronUp, ChevronDown } from 'lucide-react'
+import { Plus, X, Sparkles, CalendarClock, Star, Search, Wand2, Target, Route, GripVertical, ChevronUp, ChevronDown, ListChecks } from 'lucide-react'
 import { useLifeStore } from '../../stores/useLifeStore'
 import { useOsStore } from '../../stores/useOsStore'
 import { todayKey } from '../lifeLogic'
@@ -358,6 +358,12 @@ export default function GoalApp({ onOpenApp }) {
         <button type="button" onClick={() => setFlow({ type: 'choose' })} disabled={full} className="px-btn py-2.5 thai-font text-sm font-bold bg-paper disabled:opacity-50 flex items-center justify-center gap-2">
           <Plus size={16} aria-hidden="true" /> {full ? `ครบ ${MAX_GOALS} เป้าหมายแล้ว` : `เพิ่มเป้าหมาย (${goals.length}/${MAX_GOALS})`}
         </button>
+        {onOpenApp && findApp('checklist') && (
+          <button type="button" onClick={() => onOpenApp(findApp('checklist'))} className="px-card p-3 flex items-center gap-3 text-left bg-paper active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
+            <ListChecks size={24} className="text-brand-strong shrink-0" aria-hidden="true" />
+            <span><span className="block thai-font font-bold text-sm">Checklist การสมัคร</span><span className="block thai-font text-xs text-ink-soft">ดูโครงการรอบ 1 Portfolio และรอบ 2 Quota ของเป้าหมายเหล่านี้ พร้อมรายการเอกสารที่ต้องเตรียม</span></span>
+          </button>
+        )}
         <Recommended goals={goals} onOpenApp={onOpenApp} />
       </div>
     )
