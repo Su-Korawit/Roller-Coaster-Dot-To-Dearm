@@ -19,7 +19,7 @@ for (const l of STORE_LINKS) {
   if (only.length && !only.includes(l.id)) continue
   const png = join(tmp, `${l.id}.png`)
   try {
-    execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--virtual-time-budget=8000', '--window-size=390,780', `--screenshot=${png}`, l.url], { timeout: 40000, stdio: 'ignore' })
+    execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--virtual-time-budget=5000', '--window-size=390,780', `--screenshot=${png}`, l.url], { timeout: 90000, stdio: 'ignore' })
     if (!existsSync(png)) throw new Error('no file')
     await sharp(png).resize({ height: 624 }).webp({ quality: 72 }).toFile(`${OUT}/${l.id}-1.webp`)
     rmSync(png)
