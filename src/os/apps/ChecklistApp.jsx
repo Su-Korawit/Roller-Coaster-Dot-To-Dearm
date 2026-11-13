@@ -8,7 +8,7 @@ import {
 } from '../checklistLogic'
 import {
   loadUniversityProjects, loadProjectManifest, universityIdOfProgram, goalProjects, findProgram,
-  projectChecklist, projectProgress, projectKey, projectTitle, majorName, ROUND_NAMES, ROUNDS,
+  loadUniversityAnnouncements, announcementFor, projectChecklist, projectProgress, projectKey, projectTitle, majorName, thaiDate, ROUND_NAMES, ROUNDS,
 } from '../checklistProjects'
 import { goalTitle, goalSubtitle } from '../goalLogic'
 
@@ -89,8 +89,20 @@ function ListCard({ entry, checkedMap, onOpen }) {
   )
 }
 
+// Announcement-derived items of a university (null until loaded, or when it has none).
+function useAnnouncements(universityId) {
+  const [state, setState] = useState({ id: null, data: null })
+  useEffect(() => {
+    let live = true
+    if (universityId) loadUniversityAnnouncements(universityId).then((data) => { if (live) setState({ id: universityId, data }) })
+    return () => { live = false }
+  }, [universityId])
+  return state.id === universityId ? state.data : null
+}
+
 function ProjectRow({ program, project, checkedMap, onOpen, showProgram = false }) {
-  const doc = useMemo(() => projectChecklist(program, project), [program, project])
+  const annShard = useAnnouncements(universityIdOfProgram(program.p))
+  const doc = useMemo(() => projectChecklist(program, project, undefined, announcementFor(annShard, program.p, project)), [program, project, annShard])
   const key = doc?.id
   const p = doc ? projectProgress(doc, checkedMap[key]) : { done: 0, total: 0, pct: 0 }
   const tone = ROUND_TONE[project.r]
@@ -195,6 +207,9 @@ function ChecklistView({ doc, tone, onBack }) {
 
       <footer className="thai-font text-xs text-ink-soft flex flex-col gap-2">
         <span>ที่มา: <ExtLink href={doc.source?.url}>{doc.source?.label}</ExtLink> · ตรวจล่าสุด {doc.verifiedAt}</span>
+        {doc.announcement && (
+          <span>รายการที่ระบุ “ตามประกาศ” อ่านจาก <ExtLink href={doc.announcement.url}>ประกาศของโครงการ</ExtLink> เมื่อ {thaiDate(doc.announcement.at)}</span>
+        )}
         {p.done > 0 && (
           confirmReset ? (
             <span className="flex items-center gap-2">
@@ -250,7 +265,8 @@ function ProjectScreen({ programId, projectKey: key, onBack }) {
   const { status, shard } = useShard(universityIdOfProgram(programId))
   const program = findProgram(shard, programId)
   const found = program?.j.map((project, i) => ({ project, key: projectKey(programId, project, i) })).find((x) => x.key === key)
-  const doc = useMemo(() => (program && found ? projectChecklist(program, found.project) : null), [program, found])
+  const annShard = useAnnouncements(universityIdOfProgram(programId))
+  const doc = useMemo(() => (program && found ? projectChecklist(program, found.project, undefined, announcementFor(annShard, programId, found.project)) : null), [program, found, annShard, programId])
   if (doc) return <ChecklistView doc={doc} tone={ROUND_TONE[found.project.r]} onBack={onBack} />
   return (
     <div className="p-4 sm:p-6 max-w-2xl mx-auto flex flex-col gap-4">

@@ -8,6 +8,7 @@ import { SCORE_LABELS } from '../constants/scoreLabels'
 import { safeUrl, uniLinks } from './checklistLogic'
 
 export const PROJECTS_BASE = '/data/checklist/projects'
+export const ANNOUNCEMENTS_BASE = '/data/checklist/announcements'
 export const ROUNDS = [1, 2, 3, 4]
 export const ROUND_NAMES = { 1: 'รอบ 1 Portfolio', 2: 'รอบ 2 Quota', 3: 'รอบ 3 Admission', 4: 'รอบ 4 Direct Admission' }
 
@@ -39,7 +40,22 @@ export function loadProjectManifest() {
   return manifestPromise
 }
 
-export const resetProjectCaches = () => { shards.clear(); manifestPromise = null }
+const annShards = new Map()
+// Announcement-derived items of one university { u, at, docs: [{ url, src?, at, groups }], map } or null (most have none).
+export function loadUniversityAnnouncements(universityId) {
+  const id = String(universityId ?? '')
+  if (!/^\d{3}$/.test(id)) return Promise.resolve(null)
+  if (!annShards.has(id)) annShards.set(id, fetchJson(`${ANNOUNCEMENTS_BASE}/${id}.json`))
+  return annShards.get(id)
+}
+
+// The announcement doc of one project in a shard from loadUniversityAnnouncements, or null.
+export function announcementFor(annShard, programId, project) {
+  const i = annShard?.map?.[`${programId}:${project.k}`]
+  return Number.isInteger(i) ? annShard.docs[i] ?? null : null
+}
+
+export const resetProjectCaches = () => { shards.clear(); annShards.clear(); manifestPromise = null }
 
 // MyTCAS program ids start with the 4-char year/university prefix: 1 + university id (e.g. 10010121300001A -> '001').
 export const universityIdOfProgram = (programId) => (typeof programId === 'string' && /^\d{4}/.test(programId) ? programId.slice(1, 4) : null)
@@ -84,7 +100,8 @@ const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null)
 const fmt = (v) => (Number.isInteger(v) ? String(v) : v.toFixed(2).replace(/0+$/, '').replace(/\.$/, ''))
 
 // Build the checklist document of one project. `program` = { p, n, f }.
-export function projectChecklist(program, project, index = Math.max(0, program.j?.indexOf(project) ?? 0)) {
+// `ann` = the project's announcement doc (announcementFor) when its items were read from the real announcement.
+export function projectChecklist(program, project, index = Math.max(0, program.j?.indexOf(project) ?? 0), ann = null) {
   const round = templates.rounds[String(project.r)]
   if (!round) return null
   const groups = []
@@ -129,7 +146,14 @@ export function projectChecklist(program, project, index = Math.max(0, program.j
     group('f', 'แฟ้มสะสมผลงาน (TCAS FOLIO) ของโครงการนี้', items, 'หัวข้อที่โครงการกำหนดให้ใส่ในแฟ้ม (จากข้อมูล TCAS FOLIO ของ MyTCAS)')
   }
 
-  group('d', 'เอกสารที่ต้องเตรียม', round.docs.map((d) => ({ ...d })), 'รายการทั่วไปของรอบนี้ แต่ละโครงการอาจขอไม่เหมือนกัน ตรวจกับประกาศ')
+  // Items read from the real announcement (with the section they came from); a documents list from the announcement replaces the generic one.
+  const annUrl = safeUrl(ann?.src ?? ann?.url)
+  const annDocs = ann?.groups?.some((g) => g.id === 'xdocs')
+  for (const g of ann?.groups ?? []) {
+    const shown = g.items.map((it) => ({ k: it.id, t: it.t, ...(it.n || it.ref ? { n: [it.n, it.ref ? `จากหัวข้อ “${it.ref}” ของประกาศ` : ''].filter(Boolean).join(NL) } : {}) }))
+    group(g.id, g.t, shown, 'อ่านจากประกาศจริงของโครงการ ถ้าต่างจากฉบับเต็ม ให้ยึดประกาศ')
+  }
+  if (!annDocs) group('d', 'เอกสารที่ต้องเตรียม', round.docs.map((d) => ({ ...d })), 'รายการทั่วไปของรอบนี้ แต่ละโครงการอาจขอไม่เหมือนกัน ตรวจกับประกาศ')
 
   const steps = round.steps.map((s) => ({ ...s }))
   const interview = [project.il, project.iw, project.it].filter(Boolean).join(' · ')
@@ -144,6 +168,7 @@ export function projectChecklist(program, project, index = Math.max(0, program.j
     subtitle: [program.f, program.n, majorName(program, project)].filter(Boolean).join(' · '),
     source: { label: safeUrl(project.l) ? 'ประกาศของโครงการ (ลิงก์จาก MyTCAS)' : 'เว็บรับสมัครของมหาวิทยาลัย', url: announce ?? 'https://www.mytcas.com/' },
     verifiedAt: templates.verifiedAt,
+    ...(ann && annUrl ? { announcement: { url: annUrl, at: ann.at } } : {}),
     meta: { seats: seatsText(project) },
     groups,
   }
