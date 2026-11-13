@@ -72,12 +72,13 @@ const Empty = ({ children }) => <p className="thai-font text-xs text-ink-soft se
 
 // A row of an exam list: coloured bar, subject + date, days left.
 function ExamRow({ r }) {
+  const bar = urgency(r.days) === 'soon' ? URGENT.base : 'var(--color-zone-sci)'
   return (
-    <li className="flex items-center gap-2">
-      <span className="w-1.5 h-6 rounded-full shrink-0" style={{ background: urgency(r.days) === 'soon' ? URGENT.base : 'var(--color-zone-sci)' }} aria-hidden="true" />
-      <span className="min-w-0 flex-1 leading-tight">
-        <span className="thai-font text-sm font-bold block truncate">{r.subject}</span>
-        <span className="thai-font text-xs text-ink-soft block truncate">{thaiDate(r.date)}{r.session ? ` · ${r.session}` : ''}</span>
+    <li className="flex items-center gap-2 min-h-[22px]">
+      <span className="w-1.5 h-4 rounded-full shrink-0" style={{ background: bar }} aria-hidden="true" />
+      <span className="min-w-0 flex-1 flex items-baseline gap-2">
+        <span className="thai-font text-sm font-bold truncate">{r.subject}</span>
+        <span className="thai-font text-xs text-ink-soft truncate shrink-0">{thaiDate(r.date)}{r.session ? ` · ${r.session}` : ''}</span>
       </span>
       <span className="thai-font text-xs font-bold tabular-nums shrink-0" style={{ color: dayColor(r.days) }}>{formatDays(r.days)}</span>
     </li>
@@ -115,7 +116,7 @@ function Countdown({ size, onOpen }) {
         <div className="h-full flex flex-col gap-2">
           <ExamHero next={next} ringSize={76} />
           <ul className="flex-1 min-h-0 flex flex-col justify-between border-t-2 border-hairline pt-2">
-            {rows.slice(1, 5).map((r) => <ExamRow key={r.subject} r={r} />)}
+            {rows.slice(1, best ? 4 : 5).map((r) => <ExamRow key={r.subject} r={r} />)}
           </ul>
           {best && (
             <p className="thai-font text-xs rounded-md px-2 py-1 truncate" style={{ background: TONES.biz.chip, color: TONES.biz.deep }}>
