@@ -21,11 +21,11 @@ describe('homeAppIds', () => {
 })
 
 describe('registry content', () => {
-  it('has the five apps and the thirteen store websites', () => {
+  it('has the five apps and the fourteen store websites', () => {
     const ids = OS_APPS.map((a) => a.id)
     for (const id of ['goal', 'habit', 'reading', 'community', 'secretary']) expect(ids).toContain(id)
     const links = OS_APPS.filter((a) => a.url && a.id.startsWith('link-'))
-    expect(links).toHaveLength(13)
+    expect(links).toHaveLength(14)
     expect(links.every((a) => a.url.startsWith('https://') && a.installable)).toBe(true)
     expect(new Set(ids).size).toBe(ids.length)
   })
