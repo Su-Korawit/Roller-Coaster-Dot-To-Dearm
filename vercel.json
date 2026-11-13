@@ -62,6 +62,12 @@
       "permanent": true
     }
   ],
+  "headers": [
+    {
+      "source": "/data/checklist/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800" }]
+    }
+  ],
   "rewrites": [
     { "source": "/sitemap.xml", "has": [{ "type": "host", "value": "ilovetcas.com" }], "destination": "/api/content?route=sitemap" },
     { "source": "/blog/:slug", "has": [{ "type": "host", "value": "ilovetcas.com" }], "destination": "/api/content?route=article&slug=:slug" },

@@ -46,3 +46,6 @@ coverage/
 
 # Personal learning notes, not project documentation
 when_ai_gone.md
+
+# raw announcement/rounds caches (never commit)
+.cache/
