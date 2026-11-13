@@ -8,6 +8,8 @@ import VoiceSecretaryPanel from '../../components/voice/VoiceSecretaryPanel'
 import { useLifeStore } from '../../stores/useLifeStore'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useSecretaryStore } from '../../stores/useSecretaryStore'
+import { useAiUsageStore } from '../../stores/useAiUsageStore'
+import { limitMessage } from '../aiLimit'
 import { todayKey } from '../lifeLogic'
 import { daysUntil, planSuccess } from '../studyPlan'
 import { effectiveExamDate } from '../goalLogic'
@@ -217,6 +219,7 @@ function ChatTab() {
   const { secretaryId, notes } = useSecretaryStore()
   const storedEvents = useTcasEventsStore((s) => s.events)
   const secretary = secretaryById(secretaryId)
+  const limit = useAiUsageStore((s) => s.status())
   const [messages, setMessages] = useState([])
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
@@ -230,10 +233,16 @@ function ChatTab() {
     const history = messages
     setMessages((m) => [...m, { role: 'user', text: q }])
     setText('')
+    const limit = useAiUsageStore.getState().status()
+    if (!limit.allowed) {
+      setMessages((m) => [...m, { role: 'ai', text: limitMessage(limit.reason) }])
+      return
+    }
     setBusy(true)
     try {
       const deadlines = upcomingDeadlines(eventsWithFallback(storedEvents), todayKey(), 14)
       const answer = await askSecretary({ question: q, history, name: secretary.name, context: buildSecretaryContext(useLifeStore.getState(), todayKey(), { notes, deadlines }) })
+      useAiUsageStore.getState().record()
       setMessages((m) => [...m, { role: 'ai', text: answer }])
     } catch (e) {
       console.error('[SecretaryApp] ask failed:', e)
@@ -254,6 +263,11 @@ function ChatTab() {
         {busy && <span className="thai-font text-xs text-ink-soft self-start">พี่กำลังพิมพ์...</span>}
         <span ref={end} />
       </div>
+      <p className={`thai-font text-xs ${limit.allowed ? 'text-ink-soft' : 'text-zone-health-deep font-bold'}`} aria-live="polite">
+        {limit.allowed
+          ? `วันนี้เหลือ ${limit.dayLeft} ข้อความ · สัปดาห์นี้เหลือ ${limit.weekLeft} (สูงสุด ${limit.limits.day}/วัน, ${limit.limits.week}/สัปดาห์)`
+          : limitMessage(limit.reason)}
+      </p>
       <div className="flex flex-wrap gap-2">
         {QUICK.map((q) => (
           <button key={q} type="button" disabled={busy} onClick={() => ask(q)} className="px-btn px-3 py-1 thai-font text-xs font-bold bg-paper disabled:opacity-50">{q}</button>
@@ -275,7 +289,11 @@ export default function SecretaryApp({ onOpenApp }) {
   const [tab, setTab] = useState('home')
   const secretaryId = useSecretaryStore((s) => s.secretaryId)
 
-  useEffect(() => { if (uid) useSecretaryStore.getState().adoptUser(uid) }, [uid])
+  useEffect(() => {
+    if (!uid) return
+    useSecretaryStore.getState().adoptUser(uid)
+    useAiUsageStore.getState().adoptUser(uid)
+  }, [uid])
 
   return (
     <div className="max-w-2xl mx-auto flex flex-col">

@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { ShoppingBag, Target, CalendarCheck, CalendarDays, BookOpen, Users, Bot, Landmark, MessageSquarePlus, Settings, School, MessagesSquare, SmilePlus, Blocks, ListChecks } from 'lucide-react'
+import { ShoppingBag, Target, CalendarCheck, CalendarDays, BookOpen, Users, Bot, Landmark, MessageSquarePlus, Settings, School, MessagesSquare, SmilePlus, Blocks, ListChecks, Timer } from 'lucide-react'
 import { STORE_LINKS } from './storeLinks'
 import { UNIVERSITY_ROWS, NO_EMBED_IDS, uniAppName } from '../data/universityApps'
 
@@ -172,6 +172,19 @@ const RAW_APPS = [
     defaultInstalled: true,
     features: ['เนื้อหา TGAT1–3, TPAT2–5 และ A-Level 16 วิชา ตามโครงสร้างข้อสอบของ ทปอ.', 'โครงการทั้ง 4 รอบ (Portfolio, Quota, Admission, Direct) ของทุกมหาวิทยาลัยจาก MyTCAS พร้อมเกณฑ์ หัวข้อแฟ้ม เอกสาร และลิงก์ประกาศ', 'เชื่อมกับ Goal: เป้าหมายของคุณแสดงโครงการที่สมัครได้ทันที', 'ขั้นตอนที่ตรวจจากประกาศทางการของมหาวิทยาลัยหลายแห่ง', 'ติ๊กแล้วจำให้ ดูเปอร์เซ็นต์ความคืบหน้าแต่ละรายการ'],
     load: () => import('./apps/ChecklistApp'),
+  },
+  {
+    id: 'countdown',
+    name: 'Countdown',
+    tagline: 'นับถอยหลังวันสอบรายวิชา และวันยื่นพอร์ต',
+    description: 'นับวันถอยหลังถึงสอบของแต่ละวิชาตามเป้าหมายใน Goal (TGAT, TPAT, A-Level แยกวันและคาบ) วันส่งแฟ้มสะสมผลงานรอบ 1 ของโครงการที่เลือกไว้ และวันสำคัญของ TCAS ทั้งฤดูกาล',
+    Icon: Timer,
+    tone: 'var(--color-zone-health)',
+    installable: true,
+    category: 'study',
+    defaultInstalled: true,
+    features: ['นับถอยหลังแยกรายวิชา พร้อมวันและคาบสอบ ดึงจากเป้าหมายใน Goal', 'วันส่งพอร์ตรอบ 1 ของทุกเป้าหมาย (จาก TCAS FOLIO ของ MyTCAS)', 'วันเปิด/ปิดรับสมัครและประกาศผลของทุกรอบ TCAS', 'ใช้วันสอบที่ตั้งเองใน Goal ได้ถ้าต้องการ'],
+    load: () => import('./apps/CountdownApp'),
   },
   {
     id: 'secretary',
