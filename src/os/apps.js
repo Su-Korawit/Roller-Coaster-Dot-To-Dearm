@@ -1,7 +1,7 @@
 import { lazy } from 'react'
 import { ShoppingBag, Target, CalendarCheck, CalendarDays, BookOpen, Users, Bot, Landmark, MessageSquarePlus, Settings, School, MessagesSquare, SmilePlus, Blocks, ListChecks } from 'lucide-react'
 import { STORE_LINKS } from './storeLinks'
-import { UNIVERSITY_ROWS, NO_EMBED_IDS, shortUniName } from '../data/universityApps'
+import { UNIVERSITY_ROWS, NO_EMBED_IDS, uniAppName } from '../data/universityApps'
 
 // The OS app registry — the one place to add an app to the OS.
 //   id           unique, kebab-case
@@ -257,7 +257,7 @@ const RAW_APPS = [
   // (programmes and scores live in Goal). KU keeps its original "KU Admission" tile above.
   ...UNIVERSITY_ROWS.filter(([id]) => id !== '002').map(([id, full, url]) => ({
     id: `uni-${id}`,
-    name: shortUniName(full),
+    name: uniAppName(id, full),
     tagline: full,
     description: `เว็บรับสมัครทางการของ ${full} เปิดดูในหน้าต่างของ I LOVE TCAS (ถ้าเว็บไม่อนุญาตให้ฝัง จะเปิดในแท็บใหม่แทน)`,
     Icon: Landmark,

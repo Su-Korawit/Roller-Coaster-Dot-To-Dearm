@@ -16,6 +16,7 @@ const BASE_LINKS = [
   { id: 'link-alltcas', category: 'admission', logo: '/assets/os/logos/link-alltcas.webp', name: 'ALLTCAS', tagline: 'รวมข้อมูล TCAS ครบในที่เดียว', url: 'https://alltcas.com/', Icon: Search, tone: 'var(--color-accent-orange, var(--color-brand))' },
   { id: 'link-contester', category: 'activity', logo: '/assets/os/logos/link-contester.webp', name: 'Contester', tagline: 'รวมโอกาสและงานแข่งจากทั่วโลก', url: 'https://contester.life/', Icon: Trophy, tone: 'var(--color-accent-pink)' },
   { id: 'link-smartmathpro', category: 'learn', logo: '/assets/os/logos/link-smartmathpro.webp', name: 'SmartMathPro', tagline: 'เรียนและฝึกคณิตศาสตร์', url: 'https://www.smartmathpro.com/', Icon: Calculator, tone: 'var(--color-zone-health)' },
+  { id: 'link-chestudygroup', category: 'learn', name: "Che's Study Group", tagline: 'ติว TGAT / A-Level พร้อม Mock Test และ ReadingLab', url: 'https://chestudygroup.com/', Icon: GraduationCap, tone: 'var(--color-zone-sci)' },
   { id: 'link-dekd', category: 'news', embed: false, logo: '/assets/os/logos/link-dekd.webp', name: 'Dek-D', tagline: 'ชุมชนและข่าวสารวัยเรียน', url: 'https://www.dek-d.com/', Icon: Newspaper, tone: 'var(--color-zone-arts)' },
   { id: 'link-dekd-pre', category: 'admission', embed: false, logo: '/assets/os/logos/link-dekd-pre.webp', name: 'Dek-D Admission', tagline: 'ข้อมูลรับตรง/แอดมิชชัน', url: 'https://www.dek-d.com/pre-admission/', Icon: Medal, tone: 'var(--color-zone-soc)' },
 ]

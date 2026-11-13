@@ -97,6 +97,27 @@ export const UNIVERSITY_ROWS = [
 ]
 
 // Label for a tile: "มหาวิทยาลัยเกษตรศาสตร์" → "ม.เกษตรศาสตร์", "จุฬาลงกรณ์มหาวิทยาลัย" → "จุฬาฯ".
+// Name each university's admission system goes by on its own site (read from the page titles, 2026-11-13).
+// Universities not listed keep their short Thai name.
+export const ADMISSION_SYSTEM_NAMES = {
+  '003': 'KKU Admissions',
+  '004': 'CMU Admission',
+  '006': 'Mahidol TCAS',
+  '008': 'Silpakorn Admission',
+  '016': 'KMITL Admission',
+  '020': 'NU Admission',
+  '023': "Entry's WU",
+  '025': 'PNUCM System',
+  '027': 'Phayao Admission',
+  '036': 'MBU Admission',
+  '037': 'MCU Admission',
+  '110': 'Santapol Admission',
+  '148': 'ENTRANCE NRRU',
+  '912': 'PYU e-Admission',
+}
+
+export const uniAppName = (id, full) => ADMISSION_SYSTEM_NAMES[id] ?? shortUniName(full)
+
 export const shortUniName = (full) =>
   full.replace(/^จุฬาลงกรณ์มหาวิทยาลัย$/, 'จุฬาฯ').replace(/^มหาวิทยาลัย/, 'ม.')
 
