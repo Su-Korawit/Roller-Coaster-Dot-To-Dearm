@@ -87,3 +87,10 @@ export function nearestPortfolio(byGoal = {}, goals = []) {
   }
   return best
 }
+
+// Upcoming portfolio deadlines across all goals, soonest first: [{ ...row, goal }] (at most `n`).
+export function upcomingPortfolios(byGoal = {}, goals = [], n = 3) {
+  const all = []
+  for (const g of goals) for (const r of byGoal[g.id]?.rows ?? []) if (r.days != null && r.days >= 0) all.push({ ...r, goal: g })
+  return all.sort((a, b) => a.days - b.days).slice(0, n)
+}

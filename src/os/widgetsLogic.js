@@ -2,28 +2,40 @@
 // layout and the numbers they show. The user's choice is an ordered list of ids in useOsStore; the
 // cards themselves are in WidgetCards.jsx.
 //
-// Sizes follow the phone convention: 'small' = a 2-column square-ish card with ONE key number,
-// 'medium' = a 4-column card with a few rows and several tap targets. Every widget shows something that
-// changes (days left, tasks, minutes), never just a shortcut to the app.
+// Sizes follow the phone convention: 'small' = a 2-column card with ONE key number, 'medium' = a
+// 4-column card with a few rows and several tap targets, 'large' = 4 columns x 2 rows with the whole
+// picture. Every widget shows something that changes (days left, tasks, minutes), never just a shortcut.
 import { shiftKey } from './lifeLogic'
 import { weekStartKey } from './studyPlan'
 
-export const MAX_WIDGETS = 4
-export const DEFAULT_WIDGETS = ['exam-next']
-export const SPAN = { small: 2, medium: 4 }   // columns of the Home grid
+export const MAX_WIDGETS = 6
+export const DEFAULT_WIDGETS = ['countdown:small']
+export const SIZES = ['small', 'medium', 'large']
+export const SIZE_LABEL = { small: 'เล็ก', medium: 'กลาง', large: 'ใหญ่' }
+export const SPAN = { small: 2, medium: 4, large: 4 }   // columns of the Home grid
+export const ROWS = { small: 1, medium: 1, large: 2 }   // rows of the Home grid
 
-// id = widget id, appId = the app it opens (and must be available for the widget to show).
-export const WIDGET_DEFS = [
-  { id: 'exam-next', appId: 'countdown', size: 'small', tone: 'health', name: 'สอบถัดไป', hint: 'วันที่เหลือถึงวิชาสอบที่ใกล้ที่สุด' },
-  { id: 'exam-list', appId: 'countdown', size: 'medium', tone: 'health', name: 'ตารางสอบ 3 วิชาถัดไป', hint: 'วิชา วันสอบ และคาบ ของ 3 วิชาที่ใกล้ที่สุด' },
-  { id: 'plan-today', appId: 'habit', size: 'medium', tone: 'earth', name: 'แผนวันนี้', hint: 'ติ๊กงานของวันนี้ได้จากหน้า Home เลย' },
-  { id: 'reading-week', appId: 'reading', size: 'medium', tone: 'sci', name: 'อ่านหนังสือสัปดาห์นี้', hint: 'กราฟเวลาอ่านรายวัน และวันต่อเนื่อง' },
-  { id: 'portfolio', appId: 'countdown', size: 'small', tone: 'biz', name: 'ยื่นพอร์ต', hint: 'วันส่งแฟ้มรอบ 1 ที่ใกล้ที่สุดของเป้าหมาย' },
-  { id: 'secretary', appId: 'secretary', size: 'small', tone: 'brand', name: 'โควตาเลขา AI', hint: 'ข้อความที่เหลือกับพี่ใจดีวันนี้' },
+// One widget family per app; each comes in several sizes and the user picks the size (like a phone).
+// A widget on Home is identified by `<family>:<size>`. appId = the app it opens (must be available).
+export const WIDGET_FAMILIES = [
+  { id: 'countdown', appId: 'countdown', tone: 'health', name: 'นับถอยหลังสอบ', hint: 'สอบถัดไป · ตารางสอบ · สรุปทั้งหมดพร้อมยื่นพอร์ต', sizes: ['small', 'medium', 'large'] },
+  { id: 'plan', appId: 'habit', tone: 'earth', name: 'แผนวันนี้', hint: 'ความคืบหน้า · ติ๊กงานจากหน้า Home ได้เลย', sizes: ['small', 'medium', 'large'] },
+  { id: 'reading', appId: 'reading', tone: 'sci', name: 'อ่านหนังสือ', hint: 'เวลาและวันต่อเนื่อง · กราฟรายวัน · สถิติสัปดาห์', sizes: ['small', 'medium', 'large'] },
+  { id: 'portfolio', appId: 'countdown', tone: 'biz', name: 'ยื่นพอร์ต', hint: 'วันส่งแฟ้มรอบ 1 ที่ใกล้ที่สุดของเป้าหมาย', sizes: ['small', 'medium'] },
+  { id: 'secretary', appId: 'secretary', tone: 'brand', name: 'เลขา AI', hint: 'โควตาข้อความที่เหลือกับพี่ใจดี', sizes: ['small', 'medium'] },
 ]
 
-// Ids used by the first version of widgets.
-const LEGACY = { countdown: 'exam-next', habit: 'plan-today', reading: 'reading-week' }
+export const widgetId = (family, size) => `${family}:${size}`
+
+// Flat list of every widget that can be placed: { id, family, size, appId, tone, name, hint }.
+export const WIDGET_DEFS = WIDGET_FAMILIES.flatMap((f) => f.sizes.map((size) => ({ id: widgetId(f.id, size), family: f.id, size, appId: f.appId, tone: f.tone, name: f.name, hint: f.hint })))
+
+// Ids used by earlier versions.
+const LEGACY = {
+  countdown: 'countdown:small', habit: 'plan:medium', reading: 'reading:medium',
+  'exam-next': 'countdown:small', 'exam-list': 'countdown:medium', 'plan-today': 'plan:medium',
+  'reading-week': 'reading:medium', portfolio: 'portfolio:small', secretary: 'secretary:small',
+}
 
 const known = (id, defs) => defs.some((d) => d.id === id)
 
@@ -52,6 +64,7 @@ export function visibleWidgets(ids, has, defs = WIDGET_DEFS) {
 
 // Grid columns a widget takes on a Home grid of `cols` columns (never more than the grid has).
 export const widgetSpan = (size, cols) => Math.min(cols, SPAN[size] ?? SPAN.small)
+export const widgetRows = (size) => ROWS[size] ?? 1
 
 // Today's tasks: { done, total, percent }.
 export function todayProgress(tasks = [], today) {
@@ -84,3 +97,10 @@ export function barRatios(bars, floor = 60) {
 
 // 0..1 ring fill for "days left": empty when 100+ days away, full on the day.
 export const urgencyRing = (days, horizon = 100) => (days == null ? 0 : Math.max(0, Math.min(1, 1 - days / horizon)))
+
+// Totals of a weekBars() list: { total, activeDays, avg (per active day), best (minutes) }.
+export function weekStats(bars) {
+  const active = bars.filter((b) => b.minutes > 0)
+  const total = active.reduce((a, b) => a + b.minutes, 0)
+  return { total, activeDays: active.length, avg: active.length ? Math.round(total / active.length) : 0, best: Math.max(0, ...bars.map((b) => b.minutes)) }
+}

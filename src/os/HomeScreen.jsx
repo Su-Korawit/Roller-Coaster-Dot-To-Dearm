@@ -8,7 +8,7 @@ import AppDetailsSheet from './AppDetailsSheet'
 import WallpaperSheet from './WallpaperSheet'
 import WidgetCard from './WidgetCards'
 import WidgetSheet from './WidgetSheet'
-import { visibleWidgets, widgetSpan } from './widgetsLogic'
+import { visibleWidgets, widgetSpan, widgetRows } from './widgetsLogic'
 import AvatarSheet from './AvatarSheet'
 import ProfileAvatar from './ProfileAvatar'
 import { HELP_APP, HELP_BUTTON_ENABLED, OS_APPS, findApp, paginate } from './apps'
@@ -190,8 +190,8 @@ export default function HomeScreen({ user, onOpenApp, onLock, windows = [], topI
             aria-label="วิดเจ็ต"
           >
             {widgets.map((w) => (
-              <div key={w.id} style={{ gridColumn: `span ${widgetSpan(w.size, cols)}` }} className="min-w-0 animate-[osWidgetIn_360ms_cubic-bezier(0.34,1.35,0.5,1)_backwards]">
-                <WidgetCard id={w.id} onOpen={() => { const a = findApp(w.appId); if (a) onOpenApp(a) }} />
+              <div key={w.id} style={{ gridColumn: `span ${widgetSpan(w.size, cols)}`, gridRow: `span ${widgetRows(w.size)}` }} className="min-w-0 animate-[osWidgetIn_360ms_cubic-bezier(0.34,1.35,0.5,1)_backwards]">
+                <WidgetCard family={w.family} size={w.size} onOpen={() => { const a = findApp(w.appId); if (a) onOpenApp(a) }} />
               </div>
             ))}
           </div>

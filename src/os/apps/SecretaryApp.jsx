@@ -8,7 +8,7 @@ import VoiceSecretaryPanel from '../../components/voice/VoiceSecretaryPanel'
 import { useLifeStore } from '../../stores/useLifeStore'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useSecretaryStore } from '../../stores/useSecretaryStore'
-import { useAiUsageStore } from '../../stores/useAiUsageStore'
+import { useAiUsageStore, useAiLimit } from '../../stores/useAiUsageStore'
 import { limitMessage } from '../aiLimit'
 import { todayKey } from '../lifeLogic'
 import { daysUntil, planSuccess } from '../studyPlan'
@@ -219,7 +219,7 @@ function ChatTab() {
   const { secretaryId, notes } = useSecretaryStore()
   const storedEvents = useTcasEventsStore((s) => s.events)
   const secretary = secretaryById(secretaryId)
-  const limit = useAiUsageStore((s) => s.status())
+  const limit = useAiLimit()
   const [messages, setMessages] = useState([])
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)

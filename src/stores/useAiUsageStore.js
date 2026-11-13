@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { checkLimit, recordUse } from '../os/aiLimit'
@@ -17,3 +18,11 @@ export const useAiUsageStore = create(
     { name: 'rc-ai-usage', version: 1, partialize: (s) => ({ ownerUid: s.ownerUid, log: s.log }) },
   ),
 )
+
+// The limit state for React components. Select the stable `log`, derive the object with useMemo:
+// selecting a freshly built object from the store loops forever.
+export function useAiLimit() {
+  const log = useAiUsageStore((s) => s.log)
+  const today = todayKey()
+  return useMemo(() => checkLimit(log, today), [log, today])
+}

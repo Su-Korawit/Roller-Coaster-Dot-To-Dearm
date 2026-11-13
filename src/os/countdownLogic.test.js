@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatDays, urgency, subjectCountdowns, nextCountdown, portfolioDeadlines, seasonMilestones, nearestPortfolio } from './countdownLogic'
+import { formatDays, urgency, subjectCountdowns, nextCountdown, portfolioDeadlines, seasonMilestones, nearestPortfolio, upcomingPortfolios } from './countdownLogic'
 
 const TODAY = '2026-11-13'
 
@@ -102,5 +102,14 @@ describe('nearestPortfolio', () => {
   it('null when nothing is upcoming', () => {
     expect(nearestPortfolio({ a: { rows: [{ days: -1 }] } }, goals)).toBeNull()
     expect(nearestPortfolio({}, [])).toBeNull()
+  })
+})
+
+describe('upcomingPortfolios', () => {
+  it('lists upcoming ones across goals, soonest first, capped', () => {
+    const goals = [{ id: 'a' }, { id: 'b' }]
+    const byGoal = { a: { rows: [{ title: 'A', days: 5 }, { title: 'old', days: -1 }, { title: 'A2', days: 40 }] }, b: { rows: [{ title: 'B', days: 2 }] } }
+    expect(upcomingPortfolios(byGoal, goals, 2).map((r) => r.title)).toEqual(['B', 'A'])
+    expect(upcomingPortfolios({}, goals)).toEqual([])
   })
 })
