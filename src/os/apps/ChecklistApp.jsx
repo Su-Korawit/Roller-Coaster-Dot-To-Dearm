@@ -8,12 +8,12 @@ import {
 } from '../checklistLogic'
 import {
   loadUniversityProjects, loadProjectManifest, universityIdOfProgram, goalProjects, findProgram,
-  projectChecklist, projectProgress, projectKey, projectTitle, ROUND_NAMES,
+  projectChecklist, projectProgress, projectKey, projectTitle, majorName, ROUND_NAMES, ROUNDS,
 } from '../checklistProjects'
 import { goalTitle, goalSubtitle } from '../goalLogic'
 
-const GROUP_TONE = { tgat: 'var(--color-zone-sci)', alevel: 'var(--color-zone-health)', portfolio: 'var(--color-accent-pink)' }
-const ROUND_TONE = { 1: 'var(--color-accent-pink)', 2: 'var(--color-zone-biz)' }
+const GROUP_TONE = { tgat: 'var(--color-zone-sci)', tpat: 'var(--color-zone-arts)', alevel: 'var(--color-zone-health)', portfolio: 'var(--color-accent-pink)' }
+const ROUND_TONE = { 1: 'var(--color-accent-pink)', 2: 'var(--color-zone-biz)', 3: 'var(--color-zone-sci)', 4: 'var(--color-zone-earth)' }
 const PAGE = 40
 
 function Bar({ pct, tone = 'var(--color-brand)' }) {
@@ -96,7 +96,7 @@ function ProjectRow({ program, project, checkedMap, onOpen, showProgram = false 
   const tone = ROUND_TONE[project.r]
   return (
     <Row
-      title={projectTitle(project)} subtitle={showProgram ? program.n : ROUND_NAMES[project.r]} tone={tone} pct={p.pct}
+      title={projectTitle(project)} subtitle={[showProgram ? program.n : project.n ? ROUND_NAMES[project.r] : '', majorName(program, project)].filter(Boolean).join(' · ')} tone={tone} pct={p.pct}
       badge={`รอบ ${project.r}`} foot={`รับ ${project.s || '-'} คน · ทำแล้ว ${p.done} / ${p.total}`}
       onClick={() => onOpen({ type: 'project', programId: program.p, key })}
     />
@@ -275,11 +275,20 @@ function GoalBlock({ goal, checkedMap, onOpen }) {
       {!goal.programId && <Notice>เป้าหมายนี้ไม่ได้เลือกจาก MyTCAS จึงยังไม่มีรายการโครงการ เลือกหลักสูตรใหม่ใน Goal หรือดูขั้นตอนของมหาวิทยาลัยที่แท็บ "สมัคร"</Notice>}
       {goal.programId && status === 'loading' && <Skeleton />}
       {goal.programId && status === 'error' && <Notice>โหลดข้อมูลโครงการของมหาวิทยาลัยนี้ไม่สำเร็จ ลองเปิดแท็บนี้ใหม่</Notice>}
-      {goal.programId && status === 'ready' && !found && <Notice>ไม่พบหลักสูตรนี้ในข้อมูลรอบ 1–2 ของ TCAS70 อาจไม่เปิดรับรอบ Portfolio / Quota</Notice>}
-      {found && found.projects.length === 0 && <Notice>หลักสูตรนี้ไม่เปิดรอบ 1 Portfolio และรอบ 2 Quota ในข้อมูลล่าสุด</Notice>}
+      {goal.programId && status === 'ready' && !found && <Notice>ไม่พบหลักสูตรนี้ในข้อมูลโครงการของ TCAS70 ที่ MyTCAS เผยแพร่</Notice>}
+      {found && found.projects.length === 0 && <Notice>หลักสูตรนี้ยังไม่มีโครงการในข้อมูลล่าสุด</Notice>}
       {found && found.projects.length > 0 && (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {found.program.j.map((project, i) => <ProjectRow key={found.projects[i].key} program={found.program} project={project} checkedMap={checkedMap} onOpen={onOpen} />)}
+        <div className="flex flex-col gap-3">
+          {ROUNDS.map((r) => {
+            const items = found.program.j.map((project, i) => ({ project, key: found.projects[i].key })).filter((x) => x.project.r === r)
+            if (!items.length) return null
+            return (
+              <div key={r} className="flex flex-col gap-2">
+                <h4 className="thai-font text-xs font-bold text-ink-soft">{ROUND_NAMES[r]} · {items.length} โครงการ</h4>
+                <div className="grid gap-3 sm:grid-cols-2">{items.map(({ project, key }) => <ProjectRow key={key} program={found.program} project={project} checkedMap={checkedMap} onOpen={onOpen} />)}</div>
+              </div>
+            )
+          })}
         </div>
       )}
     </section>
@@ -292,7 +301,7 @@ function GoalsTab({ onOpen, onGoApply }) {
   if (!goals?.length) {
     return (
       <div className="flex flex-col gap-3">
-        <Notice>ยังไม่มีเป้าหมาย ตั้งเป้าหมายใน Goal ก่อน แล้วโครงการรอบ 1 Portfolio และรอบ 2 Quota ของหลักสูตรนั้นจะมาอยู่ที่นี่ หรือเลือกมหาวิทยาลัยดูเองที่แท็บ "สมัคร"</Notice>
+        <Notice>ยังไม่มีเป้าหมาย ตั้งเป้าหมายใน Goal ก่อน แล้วโครงการทุกรอบของหลักสูตรนั้นจะมาอยู่ที่นี่ หรือเลือกมหาวิทยาลัยดูเองที่แท็บ "สมัคร"</Notice>
         <button type="button" onClick={onGoApply} className="px-btn self-start px-3 py-1.5 thai-font text-sm font-bold bg-paper">ไปแท็บสมัคร</button>
       </div>
     )
@@ -316,7 +325,7 @@ function StudyTab({ onOpen }) {
       {lists.length === 0 ? <Notice>ไม่พบวิชาที่ค้นหา</Notice> : (
         <div className="grid gap-3 sm:grid-cols-2">{lists.map((l) => <ListCard key={l.id} entry={l} checkedMap={checked} onOpen={onOpen} />)}</div>
       )}
-      <p className="thai-font text-xs text-ink-soft">เนื้อหาจากโครงสร้างข้อสอบทางการของ ทปอ. (mytcas.com/blueprint) ตรวจล่าสุด {CHECKLIST_INDEX.verifiedAt}</p>
+      <p className="thai-font text-xs text-ink-soft">เนื้อหาจากโครงสร้างข้อสอบทางการของ ทปอ. (mytcas.com/blueprint) ตรวจล่าสุด {CHECKLIST_INDEX.verifiedAt} · TPAT1 (กสพท.) ประกาศโดย กสพท. ไม่อยู่ในหน้าโครงสร้างข้อสอบของ ทปอ. จึงยังไม่มีในรายการนี้</p>
     </div>
   )
 }
@@ -330,10 +339,11 @@ function ApplyTab({ onOpen }) {
   useEffect(() => { let live = true; loadProjectManifest().then((m) => { if (live) setManifest(m) }); return () => { live = false } }, [])
   const unis = useMemo(() => (manifest?.universities ?? []).filter((u) => !q.trim() || u.name.includes(q.trim())), [manifest, q])
   const processLists = CHECKLIST_INDEX.lists.filter((l) => l.group === 'portfolio')
+  const noData = useMemo(() => (manifest?.withoutProjects ?? []).flatMap((x) => uniLinks([x.id])), [manifest])
   return (
     <div className="flex flex-col gap-4">
       <section className="flex flex-col gap-2" aria-label="ทุกมหาวิทยาลัย">
-        <h3 className="thai-font font-bold text-sm flex items-center gap-1.5"><School size={14} aria-hidden="true" /> เลือกมหาวิทยาลัย ดูโครงการรอบ 1 และรอบ 2 ทั้งหมด</h3>
+        <h3 className="thai-font font-bold text-sm flex items-center gap-1.5"><School size={14} aria-hidden="true" /> เลือกมหาวิทยาลัย ดูโครงการทุกรอบ (1 Portfolio · 2 Quota · 3 Admission · 4 Direct)</h3>
         <label className="px-card flex items-center gap-2 px-3 py-2 focus-within:ring-2 focus-within:ring-brand">
           <Search size={16} aria-hidden="true" className="text-ink-soft" />
           <span className="sr-only">ค้นหามหาวิทยาลัย</span>
@@ -349,7 +359,7 @@ function ApplyTab({ onOpen }) {
                 <button type="button" onClick={() => onOpen({ type: 'uni', id: u.id })} className="w-full px-card p-3 text-left flex items-center justify-between gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
                   <span className="min-w-0">
                     <span className="thai-font font-bold text-sm block truncate">{u.name}</span>
-                    <span className="thai-font text-xs text-ink-soft">{u.programs} หลักสูตร · รอบ 1 {u.r1} โครงการ · รอบ 2 {u.r2} โครงการ</span>
+                    <span className="thai-font text-xs text-ink-soft">{u.programs} หลักสูตร · รอบ 1: {u.r1} · รอบ 2: {u.r2} · รอบ 3: {u.r3} · รอบ 4: {u.r4}</span>
                   </span>
                   <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-ink-soft" />
                 </button>
@@ -357,7 +367,13 @@ function ApplyTab({ onOpen }) {
             ))}
           </ul>
         )}
-        {manifest && <p className="thai-font text-xs text-ink-soft">ข้อมูลโครงการจาก MyTCAS อัปเดตล่าสุด {manifest.builtAt} ก่อนสมัครให้เปิดประกาศของโครงการอีกครั้ง</p>}
+        {manifest && <p className="thai-font text-xs text-ink-soft">ข้อมูลโครงการจาก MyTCAS อัปเดตล่าสุด {manifest.builtAt} · รอบ 4 Direct Admission ยังไม่มีโครงการที่ MyTCAS เผยแพร่ ก่อนสมัครให้เปิดประกาศของโครงการอีกครั้ง</p>}
+        {noData.length > 0 && (
+          <div className="px-card p-3 flex flex-col gap-2">
+            <h4 className="thai-font text-xs font-bold">มหาวิทยาลัยที่ MyTCAS ยังไม่เผยแพร่โครงการ TCAS70 ({noData.length} แห่ง) ดูประกาศที่เว็บของมหาวิทยาลัยเอง</h4>
+            <div className="flex flex-wrap gap-x-4 gap-y-1">{noData.map((u) => <ExtLink key={u.id} href={u.url}>{u.name}</ExtLink>)}</div>
+          </div>
+        )}
       </section>
 
       <section className="flex flex-col gap-2" aria-label="ขั้นตอนของมหาวิทยาลัย">
@@ -433,7 +449,7 @@ function ProgramScreen({ programId, onBack, onOpen }) {
             <h2 className="thai-font font-bold text-lg leading-snug">{program.n}</h2>
             <p className="thai-font text-sm text-ink-soft">{[shard.name, program.f, program.cm].filter(Boolean).join(' · ')}</p>
           </header>
-          {[1, 2].map((r) => {
+          {ROUNDS.map((r) => {
             const items = program.j.filter((x) => x.r === r)
             return (
               <section key={r} className="flex flex-col gap-2" aria-label={ROUND_NAMES[r]}>
@@ -466,7 +482,7 @@ function Home({ tab, setTab, onOpen }) {
     <div className="p-4 sm:p-6 max-w-2xl mx-auto flex flex-col gap-4">
       <section className="px-card p-4 bg-brand-soft flex flex-col gap-2" aria-label="ภาพรวม">
         <h3 className="thai-font font-bold flex items-center gap-2"><ListChecks size={18} aria-hidden="true" /> Checklist เตรียมสอบและสมัคร</h3>
-        <p className="thai-font text-sm text-ink-soft">เนื้อหา TGAT / A-Level และเอกสารที่ต้องเตรียมสำหรับรอบ 1 Portfolio และรอบ 2 Quota ของโครงการจริง ติ๊กไปทีละข้อ ระบบจำให้</p>
+        <p className="thai-font text-sm text-ink-soft">เนื้อหา TGAT / A-Level และสิ่งที่ต้องเตรียมสำหรับโครงการจริงทั้ง 4 รอบ ติ๊กไปทีละข้อ ระบบจำให้</p>
         <Bar pct={total ? Math.round((done / total) * 100) : 0} />
         <p className="thai-font text-xs text-ink-soft">เนื้อหาและขั้นตอนมหาวิทยาลัย ทำแล้ว {done} / {total} รายการ</p>
       </section>

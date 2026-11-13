@@ -27,7 +27,7 @@ projects, each with a checklist the student can tick.
 - Programme without a `programId` (manual goal): falls back to university process lists.
 
 ## Tasks
-- [x] Crawl + snapshot script, run, check manifest counts (73 universities, 3,992 programmes, 11,290 R1 + 6,395 R2 projects)
+- [x] Crawl + snapshot script, run, check manifest counts (77 universities, all 4,252 programmes, R1 11,290 · R2 6,395 · R3 3,875 · R4 0 not yet published)
 - [x] `checklistProjects.js` logic + tests
 - [x] Store: ticks per project key (same store, key = programId:round:projectId)
 - [x] UI: goals tab, project list per goal, project checklist, university browser

@@ -1,13 +1,15 @@
-// Checklist <-> Goal: round 1 (Portfolio) and round 2 (Quota) projects per programme.
+// Checklist <-> Goal: the projects of every TCAS round (1 Portfolio, 2 Quota, 3 Admission, 4 Direct) per programme.
 // Data: public/data/checklist/projects/<universityId>.json (built by scripts/buildChecklistProjects.mjs),
 // fetched per university on demand. Pure helpers below turn one project into a checklist document of the
 // same shape as src/data/checklists/*.json, so the same UI renders both.
 import templates from '../data/checklists/round-templates.json'
+import criteria from '../data/checklists/criteria-labels.json'
 import { SCORE_LABELS } from '../constants/scoreLabels'
-import { safeUrl } from './checklistLogic'
+import { safeUrl, uniLinks } from './checklistLogic'
 
 export const PROJECTS_BASE = '/data/checklist/projects'
-export const ROUND_NAMES = { 1: 'รอบ 1 Portfolio', 2: 'รอบ 2 Quota' }
+export const ROUNDS = [1, 2, 3, 4]
+export const ROUND_NAMES = { 1: 'รอบ 1 Portfolio', 2: 'รอบ 2 Quota', 3: 'รอบ 3 Admission', 4: 'รอบ 4 Direct Admission' }
 
 const shards = new Map()
 let manifestPromise = null
@@ -44,13 +46,38 @@ export const universityIdOfProgram = (programId) => (typeof programId === 'strin
 
 export const findProgram = (shard, programId) => shard?.programs?.find((p) => p.p === programId) ?? null
 
-// Stable key for ticks: programme + round + project id (or its position when a project has no id).
-export const projectKey = (programId, project, index = 0) => `${programId}:${project.r}:${project.id ?? `i${index}`}`
+// Stable key for ticks: programme + the project's own key (round : id : major, built by the snapshot script).
+export const projectKey = (programId, project, index = 0) => `${programId}:${project.k ?? `${project.r}:${project.id ?? `i${index}`}:${project.m ?? ''}`}`
 
 export const projectTitle = (project) => project.n || ROUND_NAMES[project.r] || 'โครงการ'
 
+// Major names of a programme { A: 'ภาษาไทย', ... } -> label of a project's major (or '').
+export const majorName = (program, project) => (project.m ? program?.mj?.[project.m] ?? `สาขาย่อย ${project.m}` : '')
+
 export function trackLabels(tracks = []) {
   return tracks.map((t) => templates.tracks[t]).filter(Boolean)
+}
+
+const MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
+// 'YYYY-MM-DD' (Gregorian) -> '12 พ.ย. 2569' ('' when it is not a date).
+export function thaiDate(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso ?? '')
+  if (!m) return ''
+  return `${Number(m[3])} ${MONTHS[Number(m[2]) - 1] ?? ''} ${Number(m[1]) + 543}`
+}
+
+const NL = String.fromCharCode(10)
+
+// A multi-line prompt -> { t: first line, n: the rest }.
+function splitPrompt(text) {
+  const [first, ...rest] = String(text).split(NL).map((x) => x.trim()).filter(Boolean)
+  return { t: first ?? '', ...(rest.length ? { n: rest.join(NL) } : {}) }
+}
+
+function seatsText(project) {
+  if (!project.s) return undefined
+  const [m, f] = project.gs ?? []
+  return `รับ ${project.s} คน${m || f ? ` (ชาย ${m ?? 0} · หญิง ${f ?? 0})` : ''}`
 }
 
 const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null)
@@ -66,26 +93,46 @@ export function projectChecklist(program, project, index = Math.max(0, program.j
   const elig = []
   const tracks = trackLabels(project.t)
   if (tracks.length) elig.push({ k: 'track', t: 'ตรวจว่าเป็นผู้สมัครประเภทที่โครงการรับ', n: `รับ: ${tracks.join(', ')}` })
-  const gpax = num(project.g)
-  if (gpax != null && gpax > 0) elig.push({ k: 'gpax', t: `GPAX ไม่ต่ำกว่า ${fmt(gpax)}` })
-  const total = num(project.ms)
-  if (total != null && total > 0) elig.push({ k: 'total', t: `คะแนนรวมขั้นต่ำ ${fmt(total)}` })
+  // every criterion MyTCAS labels (GPAX, GPA / credits per subject group, age, height, total score, ...)
+  for (const [key, value] of Object.entries(project.q ?? {})) {
+    const label = criteria[key]?.l
+    if (!label) continue
+    elig.push({ k: `q-${key}`, t: `${label} ${typeof value === 'number' ? fmt(value) : value}` })
+  }
   const scoreKeys = Object.keys(project.sc ?? {})
   for (const k of scoreKeys) {
     const w = num(project.sc[k])
     elig.push({ k: `sc-${k}`, t: `มีผลสอบ ${SCORE_LABELS[k] ?? k}`, ...(w ? { n: `น้ำหนัก ${fmt(w)}%` } : {}) })
   }
+  const FLAG_KEYS = { gc: 'grad_current', ts: 't_score', gp: 'gatpat_current' }
+  for (const f of project.f ?? []) {
+    const label = criteria[FLAG_KEYS[f]]?.l
+    if (label) elig.push({ k: `f-${f}`, t: label })
+  }
   group('e', 'คุณสมบัติและเกณฑ์', elig)
 
-  const read = [{ k: 'ann', t: 'อ่านประกาศรับสมัครของโครงการทั้งฉบับ', ...(safeUrl(project.l) ? { href: project.l } : {}) }]
+  // The project's own announcement; when MyTCAS has none, the university's admission site.
+  const uni = uniLinks([universityIdOfProgram(program.p)])[0]
+  const announce = safeUrl(project.l) ?? uni?.url ?? null
+  const read = [{ k: 'ann', t: safeUrl(project.l) ? 'อ่านประกาศรับสมัครของโครงการทั้งฉบับ' : 'อ่านประกาศรับสมัคร (เว็บรับสมัครของมหาวิทยาลัย)', ...(announce ? { href: announce } : {}) }]
   if (project.c) read.push({ k: 'cond', t: 'เงื่อนไขของโครงการ (จากข้อมูล MyTCAS)', n: project.c })
   if (project.d) read.push({ k: 'desc', t: 'รายละเอียดเพิ่มเติม', n: project.d })
   group('r', 'ประกาศและเงื่อนไข', read, 'ข้อความเงื่อนไขมาจากมหาวิทยาลัยผ่าน MyTCAS ถ้าต่างจากประกาศฉบับเต็ม ให้ยึดประกาศ')
 
+  const fo = project.fo
+  if (fo) {
+    const items = []
+    if (fo.pl) items.push({ k: 'pl', t: `แฟ้มสะสมผลงานไม่เกิน ${fo.pl} หน้า` })
+    if (fo.cd) items.push({ k: 'cd', t: `ส่งแฟ้มภายใน ${thaiDate(fo.cd)}`, ...(fo.ce ? { n: `แก้ไขได้ถึง ${thaiDate(fo.ce)}` } : {}) })
+    ;(fo.q ?? []).forEach((q, i) => items.push({ k: `q${i + 1}`, ...splitPrompt(q.t) }))
+    if (fo.cr) items.push({ k: 'cr', t: 'อ่านเกณฑ์การให้คะแนนแฟ้มและการสัมภาษณ์', n: fo.cr })
+    group('f', 'แฟ้มสะสมผลงาน (TCAS FOLIO) ของโครงการนี้', items, 'หัวข้อที่โครงการกำหนดให้ใส่ในแฟ้ม (จากข้อมูล TCAS FOLIO ของ MyTCAS)')
+  }
+
   group('d', 'เอกสารที่ต้องเตรียม', round.docs.map((d) => ({ ...d })), 'รายการทั่วไปของรอบนี้ แต่ละโครงการอาจขอไม่เหมือนกัน ตรวจกับประกาศ')
 
   const steps = round.steps.map((s) => ({ ...s }))
-  const interview = [project.il, project.id2].filter(Boolean).join(' · ')
+  const interview = [project.il, project.iw, project.it].filter(Boolean).join(' · ')
   if (interview) steps.push({ k: 'iv', t: 'การสอบสัมภาษณ์/สอบปฏิบัติ', n: interview })
   group('s', 'ขั้นตอนสมัคร', steps)
   group('a', 'หลังสมัคร', round.after.map((s) => ({ ...s })))
@@ -94,10 +141,10 @@ export function projectChecklist(program, project, index = Math.max(0, program.j
     id: projectKey(program.p, project, index),
     kind: 'project',
     title: projectTitle(project),
-    subtitle: [program.f, program.n].filter(Boolean).join(' · '),
-    source: { label: 'ประกาศของโครงการ (ลิงก์จาก MyTCAS)', url: safeUrl(project.l) ?? 'https://www.mytcas.com/' },
+    subtitle: [program.f, program.n, majorName(program, project)].filter(Boolean).join(' · '),
+    source: { label: safeUrl(project.l) ? 'ประกาศของโครงการ (ลิงก์จาก MyTCAS)' : 'เว็บรับสมัครของมหาวิทยาลัย', url: announce ?? 'https://www.mytcas.com/' },
     verifiedAt: templates.verifiedAt,
-    meta: { seats: project.s ? `รับ ${project.s} คน` : undefined },
+    meta: { seats: seatsText(project) },
     groups,
   }
 }
