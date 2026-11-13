@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { ShoppingBag, Target, CalendarCheck, CalendarDays, BookOpen, Users, Bot, Landmark, MessageSquarePlus, Settings, School, MessagesSquare, SmilePlus, Blocks } from 'lucide-react'
+import { ShoppingBag, Target, CalendarCheck, CalendarDays, BookOpen, Users, Bot, Landmark, MessageSquarePlus, Settings, School, MessagesSquare, SmilePlus, Blocks, ListChecks } from 'lucide-react'
 import { STORE_LINKS } from './storeLinks'
 import { UNIVERSITY_ROWS, NO_EMBED_IDS, shortUniName } from '../data/universityApps'
 
@@ -156,6 +156,22 @@ const RAW_APPS = [
     defaultInstalled: true,
     features: ['ต่อบล็อกเป็นเส้นทางสู่เป้าหมาย', 'ลากเส้นเชื่อมและจัดวางได้อิสระ', 'บันทึกในบัญชีอัตโนมัติ', 'แชร์ลิงก์ให้เพื่อนหรือครูดูได้'],
     load: () => import('./apps/BlockApp'),
+  },
+  {
+    id: 'checklist',
+    name: 'Checklist',
+    tagline: 'เช็กลิสต์เนื้อหา TGAT / A-Level และเอกสารรอบ Portfolio',
+    description: 'ติ๊กเนื้อหาที่ต้องเรียนของ TGAT และ A-Level ตามโครงสร้างข้อสอบทางการ และรายการเอกสาร/แฟ้มสะสมผลงานที่ต้องเตรียมสำหรับรอบ Portfolio พร้อมลิงก์ไปดูคุณสมบัติและประกาศ ข้อมูลเตรียมไว้ล่วงหน้า เปิดเร็ว และจำที่ติ๊กไว้ในเครื่องนี้',
+    Icon: ListChecks,
+    tone: 'var(--color-zone-health)',
+    installable: true,
+    splash: '/assets/os/splash/checklist.webp',
+    logo: '/assets/os/apps/checklist.webp',
+    logoFull: true,
+    category: 'study',
+    defaultInstalled: true,
+    features: ['เนื้อหา TGAT1–3 และ A-Level 9 วิชา ตามโครงสร้างข้อสอบของ ทปอ.', 'เอกสารรอบ Portfolio และโครงสร้างแฟ้ม TCAS FOLIO พร้อมตัวอย่างประกาศมหิดล', 'ลิงก์ไปดูประกาศและคุณสมบัติของมหาวิทยาลัย', 'ติ๊กแล้วจำให้ ดูเปอร์เซ็นต์ความคืบหน้าแต่ละรายการ'],
+    load: () => import('./apps/ChecklistApp'),
   },
   {
     id: 'secretary',
