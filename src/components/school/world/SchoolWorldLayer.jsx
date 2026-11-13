@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../../stores/useAuthStore'
 import { useSchoolWorldStore } from '../../../stores/useSchoolWorldStore'
-import { enterSchoolHub, leaveSchoolHub } from '../../../services/schoolWorld'
+import { leaveSchoolHub } from '../../../services/schoolWorld'
 import { EMOTE_DURATION_MS } from '../../../constants/emotes'
 import { shareRoomImage } from '../../../utils/shareRoomImage'
 import { playSound, startRain, stopRain } from '../../../lib/sfx'
@@ -31,7 +31,6 @@ export default function SchoolWorldLayer({ gameRef, onOpenView, active = true })
   const uid = authUser?.uid ?? null
   const inHub = useSchoolWorldStore((s) => s.inHub)
   const room = useSchoolWorldStore((s) => s.room)
-  const enterStatus = useSchoolWorldStore((s) => s.enterStatus)
   const enterError = useSchoolWorldStore((s) => s.enterError)
   const panel = useSchoolWorldStore((s) => s.panel)
   const ambient = useSchoolWorldStore((s) => s.ambient)
@@ -107,15 +106,6 @@ export default function SchoolWorldLayer({ gameRef, onOpenView, active = true })
       {inHub && <FocusHud />}
 
       <div className="absolute left-[4.75rem] top-20 z-20 flex flex-col items-start gap-2 pointer-events-none">
-        {!inHub && uid && (
-          <button
-            onClick={() => enterSchoolHub(uid)}
-            disabled={enterStatus === 'entering'}
-            className="pointer-events-auto px-btn rpg-btn-primary pixel-font text-xs px-3 py-2 rounded-lg disabled:opacity-60"
-          >
-            🏫 {enterStatus === 'entering' ? 'กำลังเข้า…' : 'เข้าโรงเรียน'}
-          </button>
-        )}
         {!inHub && enterError && (
           <p role="alert" className="pointer-events-auto px-slab max-w-56 p-2 thai-font text-xs text-accent-pink">
             {ENTER_ERRORS[enterError] ?? ENTER_ERRORS.FAILED}
