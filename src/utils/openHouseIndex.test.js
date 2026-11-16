@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { BUILDINGS, BUILDING_BY_ID, ZONES } from '../constants/openHouseBuildings'
 import {
   splitGroup90, classifyBuilding, dedupePrograms, thaiNormalize, summariseRounds, summariseBuilding,
-  filterUniversities, universityTypes, seatsFor,
+  filterUniversities, universityTypes, seatsFor, roundSeats,
 } from './openHouseIndex'
 
 const row = (over = {}) => ({
@@ -197,5 +197,26 @@ describe('universityTypes / seatsFor', () => {
   it('sums a university’s seats in one round', () => {
     expect(seatsFor(DATA[1], 1)).toBe(40)
     expect(seatsFor(DATA[1], 3)).toBe(0)
+  })
+})
+
+describe('roundSeats (no double counting)', () => {
+  it('counts a project listed twice only once', () => {
+    expect(roundSeats([proj(4, { nameTh: 'โครงการจุฬาฯ-ชนบท' }), proj(4, { nameTh: 'โครงการจุฬาฯ-ชนบท' }), proj(5, { nameTh: 'อื่น' })])).toBe(9)
+  })
+  it('counts "เลือกสอบ" alternatives that share one quota once (largest), keeps other projects', () => {
+    const alts = ['ภาษาจีน', 'ภาษาเยอรมัน', 'ภาษาญี่ปุ่น'].map((l) => proj(187, { nameTh: `สาขาวิชาอักษรศาสตร์ เลือกสอบวิชา${l}` }))
+    expect(roundSeats([...alts, proj(5, { nameTh: 'สาขาวิชาสารสนเทศศึกษา' })])).toBe(192)
+  })
+  it('keeps distinct projects with equal seats and tolerates junk', () => {
+    expect(roundSeats([proj(5, { nameTh: 'ก' }), proj(5, { nameTh: 'ข' })])).toBe(10)
+    expect(roundSeats(undefined)).toBe(0)
+  })
+  it('seatsFor and summariseRounds use it', () => {
+    const projects = [proj(4, { nameTh: 'ก' }), proj(4, { nameTh: 'ก' })]
+    const u = uni('x', 'x', 'ทปอ.', [prog('z', [{ round: 2, seats: 8, projects }])])
+    expect(seatsFor(u, 2)).toBe(4)
+    expect(seatsFor(u)).toBe(4)
+    expect(summariseRounds([u])[2].seats).toBe(4)
   })
 })

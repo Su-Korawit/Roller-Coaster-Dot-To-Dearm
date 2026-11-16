@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { ShoppingBag, Target, CalendarCheck, CalendarDays, BookOpen, Users, Bot, Landmark, MessageSquarePlus, Settings, School, MessagesSquare, SmilePlus, Blocks, ListChecks } from 'lucide-react'
+import { ShoppingBag, Target, CalendarCheck, CalendarDays, BookOpen, Users, Bot, Landmark, MessageSquarePlus, Settings, School, MessagesSquare, SmilePlus, Blocks, ListChecks, Timer } from 'lucide-react'
 import { STORE_LINKS } from './storeLinks'
 import { UNIVERSITY_ROWS, NO_EMBED_IDS, uniAppName } from '../data/universityApps'
 
@@ -174,6 +174,19 @@ const RAW_APPS = [
     load: () => import('./apps/ChecklistApp'),
   },
   {
+    id: 'countdown',
+    name: 'Countdown',
+    tagline: 'นับถอยหลังวันสอบรายวิชา และวันยื่นพอร์ต',
+    description: 'นับวันถอยหลังถึงสอบของแต่ละวิชาตามเป้าหมายใน Goal (TGAT, TPAT, A-Level แยกวันและคาบ) วันส่งแฟ้มสะสมผลงานรอบ 1 ของโครงการที่เลือกไว้ และวันสำคัญของ TCAS ทั้งฤดูกาล',
+    Icon: Timer,
+    tone: 'var(--color-zone-health)',
+    installable: true,
+    category: 'study',
+    defaultInstalled: true,
+    features: ['นับถอยหลังแยกรายวิชา พร้อมวันและคาบสอบ ดึงจากเป้าหมายใน Goal', 'วันส่งพอร์ตรอบ 1 ของทุกเป้าหมาย (จาก TCAS FOLIO ของ MyTCAS)', 'วันเปิด/ปิดรับสมัครและประกาศผลของทุกรอบ TCAS', 'ใช้วันสอบที่ตั้งเองใน Goal ได้ถ้าต้องการ'],
+    load: () => import('./apps/CountdownApp'),
+  },
+  {
     id: 'secretary',
     name: 'Secretary',
     tagline: "เลขาส่วนตัว AI พี่ใจดี ทักและจัดการงานให้",
@@ -249,6 +262,7 @@ const RAW_APPS = [
     category: l.category,
     embed: l.embed !== false,
     url: l.url,
+    shots: 1,   // public/assets/os/shots/<id>-1.webp from scripts/shotLinks.mjs; hidden if missing
     features: ['เปิดเว็บไซต์จริงในหน้าต่างของเรา', l.tagline],
     installable: true,
     load: () => import('./apps/LinkApp'),
@@ -332,6 +346,7 @@ export const CATEGORIES = [
   { id: 'admission', label: 'สมัครและข้อมูลรับเข้า' },
   { id: 'university', label: 'มหาวิทยาลัย' },
   { id: 'learn', label: 'เรียนและติว' },
+  { id: 'exam', label: 'คลังข้อสอบ' },
   { id: 'activity', label: 'ค่ายและกิจกรรม' },
   { id: 'news', label: 'ชุมชนและข่าวสาร' },
 ]

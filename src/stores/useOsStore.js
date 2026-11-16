@@ -8,6 +8,7 @@ import {
   layoutTokens, moveToken, dropAction, folderFromDrop, addToFolder, removeFromFolder, renameFolder, fileToken, folderToken,
 } from '../os/homeLayout'
 import { deleteHomeFile } from '../os/homeFiles'
+import { DEFAULT_WIDGETS, toggleWidgetId } from '../os/widgetsLogic'
 
 // OS shell preferences, per device (like a phone's home screen): wallpaper + installed apps.
 // The user's own photo is kept in IndexedDB (too big for localStorage); only its crop, aspect and
@@ -28,6 +29,7 @@ export const useOsStore = create(
       folders: [],             // { id, name, appIds }
       files: [],               // { id, name, size, type } — bytes in IndexedDB (homeFiles)
       cloudUid: null,          // account whose installed apps / layout this device has merged with
+      widgets: DEFAULT_WIDGETS, // Home widgets (ids, see widgetsLogic)
       guideSeen: false,        // the welcome tour has been shown on this device
 
       // Called at login: true the first time this device meets this account (merge instead of overwrite).
@@ -71,6 +73,7 @@ export const useOsStore = create(
         }),
 
       markGuideSeen: () => set({ guideSeen: true }),
+      toggleWidget: (id) => set((s) => ({ widgets: toggleWidgetId(s.widgets, id) })),
       installApp: (id) => set((s) => (s.installed.includes(id) ? s : { installed: [...s.installed, id] })),
       // Home drag and drop. `onto` null = dropped on empty space (goes to the end); mode 'folder' =
       // dropped on the middle of an app (touch), which makes a folder of the two.

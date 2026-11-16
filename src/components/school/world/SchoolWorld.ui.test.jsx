@@ -67,10 +67,9 @@ beforeEach(() => {
 afterEach(cleanup)
 
 describe('SchoolWorldLayer', () => {
-  it('shows the enter button outside the hub and calls the service with the uid', () => {
+  it('has no floating enter button outside the hub (entering goes through the warp sheet)', () => {
     renderLayer()
-    fireEvent.click(screen.getByText(/เข้าโรงเรียน/))
-    expect(svc.enterSchoolHub).toHaveBeenCalledWith('me')
+    expect(screen.queryByText(/เข้าโรงเรียน/)).toBeNull()
   })
 
   it('explains NO_SCHOOL and ROOM_FULL in Thai instead of failing silently', () => {

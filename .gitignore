@@ -12,6 +12,7 @@ dist
 dist-ssr
 .env
 .env.*
+!.env.example
 *.local
 # Allow functions/.env (non-secret config defaults for deploy params)
 !functions/.env
@@ -42,10 +43,16 @@ docs/art-review/
 coverage/
 *.aseprite
 
-.iloveskill/
+.lv/
 
 # Personal learning notes, not project documentation
 when_ai_gone.md
 
 # raw announcement/rounds caches (never commit)
 .cache/
+
+# promo video pipeline: recordings, intermediates and final renders stay local
+promo/raw/
+promo/out/*
+!promo/out/*.md
+promo/work/

@@ -20,3 +20,49 @@
 }
 .os-bob { animation: osBob 1.2s steps(2) infinite; }
 @media (prefers-reduced-motion: reduce) { .os-bob { animation: none; } }
+
+/* ── Window motion (Apple-like): spring in, glide on maximize, shrink to the taskbar, fade out ── */
+.os-win {
+  transform-origin: 50% 100%;
+  transition:
+    left 340ms cubic-bezier(0.32, 0.72, 0, 1),
+    top 340ms cubic-bezier(0.32, 0.72, 0, 1),
+    width 340ms cubic-bezier(0.32, 0.72, 0, 1),
+    height 340ms cubic-bezier(0.32, 0.72, 0, 1),
+    translate 300ms cubic-bezier(0.32, 0.72, 0, 1),
+    scale 300ms cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 220ms ease-out,
+    visibility 0s;
+}
+.os-win-drag { transition: none; will-change: transform; }
+.os-win-enter { animation: osWinIn 380ms cubic-bezier(0.34, 1.35, 0.5, 1) backwards; }
+@keyframes osWinIn {
+  from { opacity: 0; scale: 0.9; translate: 0 28px; }
+  to { opacity: 1; scale: 1; translate: 0 0; }
+}
+.os-win-min {
+  opacity: 0;
+  scale: 0.3;
+  translate: 0 45vh;
+  visibility: hidden;
+  pointer-events: none;
+  transition-property: left, top, width, height, translate, scale, opacity, visibility;
+  transition-delay: 0s, 0s, 0s, 0s, 0s, 0s, 0s, 300ms;
+}
+.os-win-out {
+  opacity: 0;
+  scale: 0.94;
+  pointer-events: none;
+  transition: scale 200ms ease-in, opacity 200ms ease-in;
+}
+@media (prefers-reduced-motion: reduce) {
+  .os-win, .os-win-min, .os-win-out { transition: opacity 120ms linear, visibility 0s; }
+  .os-win-enter { animation: none; }
+  .os-win-min, .os-win-out { scale: 1; translate: 0 0; }
+}
+
+@keyframes osWidgetIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { [class*='osWidgetIn'] { animation: none; } }
