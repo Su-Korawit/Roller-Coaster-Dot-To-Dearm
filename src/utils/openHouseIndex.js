@@ -59,31 +59,13 @@ export function thaiNormalize(value) {
 }
 
 const projectsOf = (program, round) => program.rounds?.find((r) => r.round === round)?.projects ?? []
-const ELECTIVE = /\s*เลือกสอบ/
-
-// Seats of one round's projects without double counting: a project listed twice counts once, and
-// "เลือกสอบวิชา…" alternatives of one program share a single quota (count the largest once).
+// Seats of one round: the plain sum of every project's seats, exactly what the project cards show.
 export function roundSeats(projects) {
-  const seen = new Set()
-  const electives = new Map()
   let total = 0
   for (const p of Array.isArray(projects) ? projects : []) {
     const seats = Number(p?.seats)
-    if (!Number.isFinite(seats) || seats <= 0) continue
-    const name = typeof p.nameTh === 'string' ? p.nameTh.trim() : ''
-    if (name) {
-      const key = `${name}|${seats}`
-      if (seen.has(key)) continue
-      seen.add(key)
-      if (ELECTIVE.test(name)) {
-        const group = name.split(ELECTIVE)[0]
-        electives.set(group, Math.max(electives.get(group) ?? 0, seats))
-        continue
-      }
-    }
-    total += seats
+    if (Number.isFinite(seats) && seats > 0) total += seats
   }
-  for (const v of electives.values()) total += v
   return total
 }
 
