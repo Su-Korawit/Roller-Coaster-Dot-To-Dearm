@@ -1,7 +1,7 @@
 // Pure logic of scripts/refreshOpenHouseIndex.mjs (ADR-0026): turn MyTCAS course rows plus the
 // per-program rounds into the Open House index files. No I/O of its own — the upstream call, the
 // clock and the sleep are injected so it runs under test.
-import { dedupePrograms, classifyBuilding, summariseRounds, summariseBuilding } from '../src/utils/openHouseIndex.js'
+import { dedupePrograms, roundSeats, classifyBuilding, summariseRounds, summariseBuilding } from '../src/utils/openHouseIndex.js'
 import { SCORE_LABELS } from '../src/constants/scoreLabels.js'
 
 const LOGO_BASE = 'https://assets.mytcas.com/i/logo'
@@ -21,7 +21,6 @@ export function formatProgramRounds(rawRows, year) {
     const place = typeof r.interview_location === 'string' ? r.interview_location.trim() : ''
     const entry = byRound.get(round) ?? { round, seats: 0, projects: [] }
     const seats = Number.isFinite(r.receive_student_number) ? r.receive_student_number : 0
-    entry.seats += seats
     entry.projects.push({
       nameTh: r.project_name_th && r.project_name_th !== '0' ? r.project_name_th : null,
       seats,
@@ -32,6 +31,7 @@ export function formatProgramRounds(rawRows, year) {
     })
     byRound.set(round, entry)
   }
+  for (const entry of byRound.values()) entry.seats = roundSeats(entry.projects)
   return [...byRound.values()].sort((a, b) => a.round - b.round)
 }
 
