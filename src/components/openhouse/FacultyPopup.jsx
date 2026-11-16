@@ -128,10 +128,10 @@ export default function FacultyPopup({ buildingId, onClose }) {
       <section
         role="dialog"
         aria-label={building.nameTh}
-        className="relative flex flex-col overflow-hidden w-full h-[84%] md:h-auto md:w-[420px] md:m-4 bg-paper border-2 border-line rounded-t-sheet md:rounded-slot"
+        className="relative flex flex-col overflow-hidden w-full h-[92%] md:h-auto md:w-[420px] md:m-3 bg-paper border-2 border-line rounded-t-sheet md:rounded-slot"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <header className="flex items-start gap-3 px-4 pt-3 pb-2.5 border-b-2 border-line shrink-0" style={{ background: zone.soft }}>
+        <header className="flex items-start gap-3 px-3 pt-2 pb-1.5 border-b-2 border-line shrink-0" style={{ background: zone.soft }}>
           <div className="min-w-0 flex-1">
             <h2 className="pixel-font text-lg leading-tight text-ink">{building.nameTh}</h2>
             <p className="thai-font text-xs text-ink-soft mt-0.5">
@@ -161,9 +161,8 @@ export default function FacultyPopup({ buildingId, onClose }) {
 
         {body}
 
-        <footer className="px-3 py-2 border-t-2 border-line bg-mist thai-font text-xs text-ink-soft shrink-0">
-          <p>{updated ? `ข้อมูลจาก MyTCAS อัปเดต ${updated}` : 'ข้อมูลจาก MyTCAS'}</p>
-          <p className="mt-0.5">* ที่นั่งรวมทุกโครงการในรอบนี้ บางโครงการใช้โควตาร่วมกัน จำนวนรับจริงอาจน้อยกว่า ตรวจที่เว็บมหาวิทยาลัยอีกครั้ง</p>
+        <footer className="px-3 py-1 border-t-2 border-line bg-mist thai-font text-xs text-ink-soft shrink-0 truncate">
+          {updated ? `ข้อมูลจาก MyTCAS อัปเดต ${updated}` : 'ข้อมูลจาก MyTCAS'}
         </footer>
       </section>
     </div>

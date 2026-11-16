@@ -200,23 +200,20 @@ describe('universityTypes / seatsFor', () => {
   })
 })
 
-describe('roundSeats (no double counting)', () => {
-  it('counts a project listed twice only once', () => {
-    expect(roundSeats([proj(4, { nameTh: 'โครงการจุฬาฯ-ชนบท' }), proj(4, { nameTh: 'โครงการจุฬาฯ-ชนบท' }), proj(5, { nameTh: 'อื่น' })])).toBe(9)
+describe('roundSeats (plain sum of project seats)', () => {
+  it('adds every project, including same-named ones and "เลือกสอบ" variants', () => {
+    expect(roundSeats([proj(4, { nameTh: 'ก' }), proj(4, { nameTh: 'ก' }), proj(5, { nameTh: 'อื่น' })])).toBe(13)
+    expect(roundSeats([proj(187, { nameTh: 'ก เลือกสอบวิชาจีน' }), proj(187, { nameTh: 'ก เลือกสอบวิชาญี่ปุ่น' })])).toBe(374)
   })
-  it('counts "เลือกสอบ" alternatives that share one quota once (largest), keeps other projects', () => {
-    const alts = ['ภาษาจีน', 'ภาษาเยอรมัน', 'ภาษาญี่ปุ่น'].map((l) => proj(187, { nameTh: `สาขาวิชาอักษรศาสตร์ เลือกสอบวิชา${l}` }))
-    expect(roundSeats([...alts, proj(5, { nameTh: 'สาขาวิชาสารสนเทศศึกษา' })])).toBe(192)
-  })
-  it('keeps distinct projects with equal seats and tolerates junk', () => {
-    expect(roundSeats([proj(5, { nameTh: 'ก' }), proj(5, { nameTh: 'ข' })])).toBe(10)
+  it('ignores junk', () => {
     expect(roundSeats(undefined)).toBe(0)
+    expect(roundSeats([proj(0, {}), { seats: 'x' }, null])).toBe(0)
   })
   it('seatsFor and summariseRounds use it', () => {
     const projects = [proj(4, { nameTh: 'ก' }), proj(4, { nameTh: 'ก' })]
     const u = uni('x', 'x', 'ทปอ.', [prog('z', [{ round: 2, seats: 8, projects }])])
-    expect(seatsFor(u, 2)).toBe(4)
-    expect(seatsFor(u)).toBe(4)
-    expect(summariseRounds([u])[2].seats).toBe(4)
+    expect(seatsFor(u, 2)).toBe(8)
+    expect(seatsFor(u)).toBe(8)
+    expect(summariseRounds([u])[2].seats).toBe(8)
   })
 })
